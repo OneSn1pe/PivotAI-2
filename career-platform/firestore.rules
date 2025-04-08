@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Authentication required for all operations
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // User profiles - users can only read/write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null; // All authenticated users can read profiles
+      allow write: if request.auth.uid == userId; // Only write to own profile
+    }
+    
+    // Roadmaps - candidates can read/write their own roadmaps
+    match /roadmaps/{roadmapId} {
+      allow read, write: if request.auth != null && 
+        resource.data.candidateId == request.auth.uid;
+    }
+  }
+}
