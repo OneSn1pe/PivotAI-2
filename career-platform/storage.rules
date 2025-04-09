@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Resume storage - users can only read/write their own resumes
+    match /resumes/{userId}/{resumeFile} {
+      allow read, write: if request.auth.uid == userId;
+    }
+  }
+}
