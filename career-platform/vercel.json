@@ -1,25 +1,3 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "buildCommand": "npm run vercel-build",
-        "outputDirectory": ".next"
-      }
-    }
-  ],
-  "outputDirectory": ".",
-  "rootDirectory": "career-platform",
-  "buildOptions": {
-    "debug": true
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1",
-      "check": true
-    }
-  ]
+  "version": 2
 } 
