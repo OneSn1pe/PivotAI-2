@@ -31,23 +31,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      
-      if (user) {
-        // Fetch user profile from Firestore
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserProfile(userDoc.data() as User);
+      if (!mounted) return;
+
+      try {
+        setCurrentUser(user);
+        
+        if (user) {
+          // Fetch user profile from Firestore
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            setUserProfile(userDoc.data() as User);
+          }
+        } else {
+          setUserProfile(null);
         }
-      } else {
-        setUserProfile(null);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Don't set error state here to prevent infinite error loops
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const register = async (email: string, password: string, role: UserRole, displayName: string) => {

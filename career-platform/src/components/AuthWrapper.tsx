@@ -12,6 +12,14 @@ export default function AuthWrapper({ children }: { children: React.ReactNode })
     setLoaded(true);
   }, []);
 
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-red-50 p-4">
