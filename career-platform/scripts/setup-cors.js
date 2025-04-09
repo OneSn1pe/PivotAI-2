@@ -1,32 +1,26 @@
 const { Storage } = require('@google-cloud/storage');
-const fs = require('fs');
-const path = require('path');
 
-// Initialize Google Cloud Storage
+// Initialize storage with your project credentials
 const storage = new Storage({
-  projectId: 'pivotai-2-2',
-  keyFilename: path.join(__dirname, '../service-account.json')
+  projectId: 'pivotai-7f6ef',
+  keyFilename: './service-account.json'
 });
 
-const bucketName = 'pivotai-2-2.appspot.com';
-const corsConfigPath = path.join(__dirname, '../cors.json');
+const bucketName = 'pivotai-7f6ef.appspot.com';
 
-async function setupCors() {
+async function configureCORS() {
   try {
-    // Read CORS configuration
-    const corsConfig = JSON.parse(fs.readFileSync(corsConfigPath, 'utf8'));
-    
-    // Get the bucket
     const bucket = storage.bucket(bucketName);
     
-    // Set CORS configuration
-    await bucket.setCorsConfiguration(corsConfig);
+    // Read CORS configuration from file
+    const corsConfiguration = require('./cors.json');
     
-    console.log('CORS configuration has been successfully set.');
+    // Set CORS configuration on the bucket
+    await bucket.setCorsConfiguration(corsConfiguration);
+    console.log(`CORS configuration set successfully for bucket: ${bucketName}`);
   } catch (error) {
     console.error('Error setting CORS configuration:', error);
-    process.exit(1);
   }
 }
 
-setupCors(); 
+configureCORS(); 

@@ -1,13 +1,13 @@
 [
   {
-    "origin": ["http://localhost:3000", "https://pivotai-2-2.web.app"],
-    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "origin": ["*"],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "responseHeader": [
       "Content-Type",
+      "Access-Control-Allow-Origin",
       "Authorization",
-      "Content-Length",
-      "User-Agent",
-      "x-goog-*"
+      "X-Requested-With",
+      "X-HTTP-Method-Override"
     ],
     "maxAgeSeconds": 3600
   }
