@@ -1,0 +1,63 @@
+/* eslint-disable */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* eslint-enable */
+
+html, body {
+  height: 100%;
+}
+
+/* Basic reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+/* Form elements consistency */
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+/* Focus styles for accessibility */
+:focus {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* Utility classes */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Progress bars */
+/* eslint-disable */
+.progress-bar {
+  @apply w-full bg-gray-200 rounded-full h-2 mb-2;
+}
+
+.progress-bar-fill {
+  @apply h-2 rounded-full bg-blue-600;
+}
+/* eslint-enable */ 
