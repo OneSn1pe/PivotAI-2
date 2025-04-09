@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { UserRole } from '@/types/user';
@@ -17,12 +17,38 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
+  const getErrorMessage = (error: AuthError) => {
+    switch (error.code) {
+      case 'auth/invalid-credential':
+        return 'Invalid email or password. Please check your credentials and try again.';
+      case 'auth/user-not-found':
+        return 'No account found with this email. Please check your email or sign up.';
+      case 'auth/wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'auth/invalid-email':
+        return 'Invalid email format. Please enter a valid email address.';
+      case 'auth/user-disabled':
+        return 'This account has been disabled. Please contact support.';
+      case 'auth/too-many-requests':
+        return 'Too many failed login attempts. Please try again later.';
+      default:
+        return 'An error occurred during sign in. Please try again.';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
+      // Validate email format
+      if (!email.includes('@')) {
+        setError('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
       // Sign in with Firebase
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
@@ -33,7 +59,6 @@ export default function LoginForm() {
         const userData = userDoc.data();
         
         // Set session cookie
-        // Note: In a real app, you'd handle this on the server side
         document.cookie = `session=${userCredential.user.uid}; path=/; max-age=86400`;
         
         // Redirect based on user role
@@ -44,10 +69,12 @@ export default function LoginForm() {
         } else {
           router.push(callbackUrl);
         }
+      } else {
+        setError('User profile not found. Please contact support.');
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      setError(error.message || 'Failed to sign in');
+      setError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -73,7 +100,7 @@ export default function LoginForm() {
             autoComplete="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value.trim())}
             className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>

@@ -14,7 +14,7 @@ export default function Navbar() {
     // Clear session cookie
     document.cookie = 'session=; path=/; max-age=0';
     
-    router.push('/login');
+    router.push('/auth/login');
   };
 
   return (

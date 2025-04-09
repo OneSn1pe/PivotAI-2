@@ -8,7 +8,7 @@ import { CareerRoadmap, CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
 
 export default function CandidateDashboard() {
-  const { userProfile } = useAuth();
+  const { userProfile, logout } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const router = useRouter();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
@@ -41,13 +41,31 @@ export default function CandidateDashboard() {
     fetchRoadmap();
   }, [candidateProfile]);
 
+  const handleLogout = async () => {
+    await logout();
+    // Clear session cookie
+    document.cookie = 'session=; path=/; max-age=0';
+    router.push('/auth/login');
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Your Career Dashboard</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Your Career Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V7.414l-5-5H3zm7 8a1 1 0 01-2 0V6.414l-1.293 1.293a1 1 0 01-1.414-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L10 6.414V11z" clipRule="evenodd" />
+          </svg>
+          Logout
+        </button>
+      </div>
       
       {!candidateProfile?.resumeUrl && (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
