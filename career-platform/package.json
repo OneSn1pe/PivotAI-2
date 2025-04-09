@@ -4,10 +4,11 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
+        "build": "echo 'Starting build process...' && next build --debug && node scripts/verify-build.js && echo 'Build completed'",
         "start": "next start",
         "lint": "next lint",
-        "setup-cors": "node scripts/setup-cors.js"
+        "setup-cors": "node scripts/setup-cors.js",
+        "vercel-build": "echo 'Starting Vercel build...' && next build --debug && node scripts/verify-build.js && echo 'Vercel build completed'"
     },
     "dependencies": {
         "firebase": "^10.6.0",

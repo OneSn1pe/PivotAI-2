@@ -3,9 +3,23 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "buildCommand": "npm run vercel-build",
+        "outputDirectory": ".next"
+      }
     }
   ],
   "outputDirectory": ".",
-  "rootDirectory": "career-platform"
+  "rootDirectory": "career-platform",
+  "buildOptions": {
+    "debug": true
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1",
+      "check": true
+    }
+  ]
 } 
