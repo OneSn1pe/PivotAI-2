@@ -89,13 +89,13 @@ export default function RoadmapPage() {
           </p>
           <div className="flex justify-center gap-4">
             <button
-              onClick={() => router.push('/candidate/profile')}
+              onClick={() => router.push('/protected/candidate/profile')}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
               Complete Profile
             </button>
             <button
-              onClick={() => router.push('/candidate/preferences')}
+              onClick={() => router.push('/protected/candidate/preferences')}
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
             >
               Set Job Preferences

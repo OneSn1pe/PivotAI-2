@@ -16,16 +16,16 @@ export default function Sidebar() {
   const isRecruiter = userProfile.role === UserRole.RECRUITER;
 
   const candidateLinks = [
-    { href: '/candidate/dashboard', label: 'Dashboard', icon: 'home' },
-    { href: '/candidate/profile', label: 'Profile', icon: 'user' },
-    { href: '/candidate/roadmap', label: 'Career Roadmap', icon: 'map' },
-    { href: '/candidate/preferences', label: 'Job Preferences', icon: 'settings' },
+    { href: '/protected/candidate/dashboard', label: 'Dashboard', icon: 'home' },
+    { href: '/protected/candidate/profile', label: 'Profile', icon: 'user' },
+    { href: '/protected/candidate/roadmap', label: 'Career Roadmap', icon: 'map' },
+    { href: '/protected/candidate/preferences', label: 'Job Preferences', icon: 'settings' },
   ];
 
   const recruiterLinks = [
-    { href: '/recruiter/dashboard', label: 'Dashboard', icon: 'home' },
-    { href: '/recruiter/search', label: 'Search Candidates', icon: 'search' },
-    { href: '/recruiter/bookmarks', label: 'Bookmarked Candidates', icon: 'bookmark' },
+    { href: '/protected/recruiter/dashboard', label: 'Dashboard', icon: 'home' },
+    { href: '/protected/recruiter/search', label: 'Search Candidates', icon: 'search' },
+    { href: '/protected/recruiter/bookmarks', label: 'Bookmarked Candidates', icon: 'bookmark' },
   ];
 
   const links = isCandidate ? candidateLinks : isRecruiter ? recruiterLinks : [];
@@ -33,7 +33,7 @@ export default function Sidebar() {
   return (
     <aside className="bg-blue-700 text-white w-64 flex-shrink-0 hidden md:block">
       <div className="p-6">
-        <Link href={isCandidate ? '/candidate/dashboard' : '/recruiter/dashboard'} className="text-xl font-bold">
+        <Link href={isCandidate ? '/protected/candidate/dashboard' : '/protected/recruiter/dashboard'} className="text-xl font-bold">
           Career Platform
         </Link>
       </div>

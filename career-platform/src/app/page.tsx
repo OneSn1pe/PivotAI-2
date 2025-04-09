@@ -9,13 +9,13 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold text-gray-900">Career Platform</h1>
           <div>
             <Link 
-              href="/login"
+              href="/auth/login"
               className="mr-4 text-blue-600 hover:text-blue-800 font-medium"
             >
               Login
             </Link>
             <Link 
-              href="/register"
+              href="/auth/register"
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
             >
               Get Started
@@ -36,7 +36,7 @@ export default function HomePage() {
                   Get personalized career roadmaps, skill recommendations, and connect with recruiters looking for talent like you.
                 </p>
                 <Link 
-                  href="/register"
+                  href="/auth/register"
                   className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-medium text-lg inline-block"
                 >
                   Start Your Journey
@@ -96,7 +96,7 @@ export default function HomePage() {
                     Find candidates with the exact skills and career goals that match your opportunities. Our AI-powered platform helps you connect with the right talent faster.
                   </p>
                   <Link 
-                    href="/register"
+                    href="/auth/register"
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium inline-block"
                   >
                     Join as a Recruiter
@@ -121,10 +121,10 @@ export default function HomePage() {
             </div>
             
             <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-8">
-              <Link href="/register" className="text-gray-300 hover:text-white">
+              <Link href="/auth/register" className="text-gray-300 hover:text-white">
                 Get Started
               </Link>
-              <Link href="/login" className="text-gray-300 hover:text-white">
+              <Link href="/auth/login" className="text-gray-300 hover:text-white">
                 Login
               </Link>
               <Link href="#" className="text-gray-300 hover:text-white">

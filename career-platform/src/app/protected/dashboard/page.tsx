@@ -12,7 +12,7 @@ export default function DashboardRedirect() {
   useEffect(() => {
     if (!loading && userProfile) {
       if (userProfile.role === UserRole.CANDIDATE) {
-        router.push('/candidate/dashboard');
+        router.push('/protected/candidate/dashboard');
       } else if (userProfile.role === UserRole.RECRUITER) {
         router.push('/recruiter/dashboard');
       }

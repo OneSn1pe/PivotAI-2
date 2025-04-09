@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CandidateProfile, UserRole } from '@/types/user';
+import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
 import Link from 'next/link';
 
 export default function RecruiterDashboard() {
   const { userProfile } = useAuth();
+  const recruiterProfile = userProfile as RecruiterProfile | null;
   const [recentCandidates, setRecentCandidates] = useState<CandidateProfile[]>([]);
   const [bookmarkedCandidates, setBookmarkedCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function RecruiterDashboard() {
 
   useEffect(() => {
     async function fetchDashboardData() {
-      if (!userProfile) return;
+      if (!recruiterProfile) return;
       
       try {
         // Fetch recent candidates
@@ -41,10 +42,10 @@ export default function RecruiterDashboard() {
         const totalSnapshot = await getDocs(totalQuery);
         
         // Fetch bookmarked candidates
-        if (userProfile.bookmarkedCandidates && userProfile.bookmarkedCandidates.length > 0) {
+        if (recruiterProfile.bookmarkedCandidates && recruiterProfile.bookmarkedCandidates.length > 0) {
           const bookmarkedProfiles = [];
           
-          for (const candidateId of userProfile.bookmarkedCandidates.slice(0, 5)) {
+          for (const candidateId of recruiterProfile.bookmarkedCandidates.slice(0, 5)) {
             const candidateDoc = await getDocs(
               query(collection(db, 'users'), where('uid', '==', candidateId))
             );
@@ -59,7 +60,7 @@ export default function RecruiterDashboard() {
         
         setStats({
           totalCandidates: totalSnapshot.size,
-          bookmarkedCandidates: userProfile.bookmarkedCandidates?.length || 0,
+          bookmarkedCandidates: recruiterProfile.bookmarkedCandidates?.length || 0,
         });
         
         setLoading(false);
@@ -70,7 +71,7 @@ export default function RecruiterDashboard() {
     }
     
     fetchDashboardData();
-  }, [userProfile]);
+  }, [recruiterProfile]);
 
   if (loading) {
     return (

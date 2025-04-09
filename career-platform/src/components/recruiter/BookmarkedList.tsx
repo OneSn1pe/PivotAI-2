@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CandidateProfile } from '@/types/user';
+import { CandidateProfile, RecruiterProfile } from '@/types/user';
 
 interface BookmarkedListProps {
   limit?: number;
@@ -13,12 +13,13 @@ interface BookmarkedListProps {
 
 export default function BookmarkedList({ limit, onViewAll }: BookmarkedListProps) {
   const { userProfile } = useAuth();
+  const recruiterProfile = userProfile as RecruiterProfile | null;
   const [bookmarkedCandidates, setBookmarkedCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchBookmarkedCandidates() {
-      if (!userProfile || !userProfile.bookmarkedCandidates) {
+      if (!recruiterProfile || !recruiterProfile.bookmarkedCandidates) {
         setLoading(false);
         return;
       }
@@ -28,8 +29,8 @@ export default function BookmarkedList({ limit, onViewAll }: BookmarkedListProps
         
         // Apply limit if provided
         const bookmarkIds = limit 
-          ? userProfile.bookmarkedCandidates.slice(0, limit) 
-          : userProfile.bookmarkedCandidates;
+          ? recruiterProfile.bookmarkedCandidates.slice(0, limit) 
+          : recruiterProfile.bookmarkedCandidates;
         
         for (const candidateId of bookmarkIds) {
           const candidateDoc = await getDoc(doc(db, 'users', candidateId));
@@ -48,19 +49,19 @@ export default function BookmarkedList({ limit, onViewAll }: BookmarkedListProps
     }
     
     fetchBookmarkedCandidates();
-  }, [userProfile, limit]);
+  }, [recruiterProfile, limit]);
 
   const handleRemoveBookmark = async (candidateId: string) => {
-    if (!userProfile) return;
+    if (!recruiterProfile) return;
     
     try {
       // Update local state
       setBookmarkedCandidates(bookmarkedCandidates.filter(c => c.uid !== candidateId));
       
       // Update in Firestore
-      const updatedBookmarks = userProfile.bookmarkedCandidates?.filter(id => id !== candidateId) || [];
+      const updatedBookmarks = recruiterProfile.bookmarkedCandidates?.filter((id: string) => id !== candidateId) || [];
       
-      await updateDoc(doc(db, 'users', userProfile.uid), {
+      await updateDoc(doc(db, 'users', recruiterProfile.uid), {
         bookmarkedCandidates: updatedBookmarks,
       });
     } catch (error) {

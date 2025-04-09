@@ -38,9 +38,9 @@ export default function LoginForm() {
         
         // Redirect based on user role
         if (userData.role === UserRole.CANDIDATE) {
-          router.push('/candidate/dashboard');
+          router.push('/protected/candidate/dashboard');
         } else if (userData.role === UserRole.RECRUITER) {
-          router.push('/recruiter/dashboard');
+          router.push('/protected/recruiter/dashboard');
         } else {
           router.push(callbackUrl);
         }

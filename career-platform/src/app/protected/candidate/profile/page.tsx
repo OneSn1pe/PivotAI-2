@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ResumeUpload from '@/components/candidate/ResumeUpload';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const { userProfile } = useAuth();
@@ -12,6 +13,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(userProfile?.email || '');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const router = useRouter();
   
   if (!userProfile) {
     return (
@@ -92,6 +94,15 @@ export default function ProfilePage() {
         <div>
           <ResumeUpload />
         </div>
+      </div>
+      
+      <div className="mt-8">
+        <button
+          onClick={() => router.push('/protected/candidate/preferences')}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
+        >
+          View Preferences
+        </button>
       </div>
     </div>
   );

@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CandidateProfile, UserRole } from '@/types/user';
+import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
 
 export default function CandidateSearch() {
   const { userProfile } = useAuth();
+  const recruiterProfile = userProfile as RecruiterProfile | null;
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
@@ -44,8 +45,8 @@ export default function CandidateSearch() {
         setRoles(Array.from(uniqueRoles));
         
         // Set bookmarked candidates if user is logged in
-        if (userProfile && userProfile.bookmarkedCandidates) {
-          setBookmarkedCandidates(userProfile.bookmarkedCandidates);
+        if (recruiterProfile && recruiterProfile.bookmarkedCandidates) {
+          setBookmarkedCandidates(recruiterProfile.bookmarkedCandidates);
         }
       } catch (error) {
         console.error('Error fetching filters:', error);
@@ -53,7 +54,7 @@ export default function CandidateSearch() {
     }
     
     fetchFilters();
-  }, [userProfile]);
+  }, [recruiterProfile]);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -74,7 +75,7 @@ export default function CandidateSearch() {
         filteredCandidates = filteredCandidates.filter(candidate => {
           if (!candidate.resumeAnalysis?.skills) return false;
           return selectedSkills.some(skill => 
-            candidate.resumeAnalysis.skills.includes(skill)
+            candidate.resumeAnalysis!.skills.includes(skill)
           );
         });
       }
@@ -114,7 +115,7 @@ export default function CandidateSearch() {
   };
 
   const toggleBookmark = async (candidateId: string) => {
-    if (!userProfile) return;
+    if (!recruiterProfile) return;
     
     try {
       const isBookmarked = bookmarkedCandidates.includes(candidateId);
@@ -132,7 +133,7 @@ export default function CandidateSearch() {
       setBookmarkedCandidates(updatedBookmarks);
       
       // Update in Firestore
-      await updateDoc(doc(db, 'users', userProfile.uid), {
+      await updateDoc(doc(db, 'users', recruiterProfile.uid), {
         bookmarkedCandidates: updatedBookmarks,
       });
     } catch (error) {

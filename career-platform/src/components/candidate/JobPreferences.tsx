@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { JobPreferences } from '@/types/user';
+import { JobPreferences, CandidateProfile } from '@/types/user';
+import { useRouter } from 'next/navigation';
+import { generateCareerRoadmap } from '@/services/openai';
 
 export default function JobPreferencesForm() {
   const { userProfile } = useAuth();
+  const router = useRouter();
+  const candidateProfile = userProfile as CandidateProfile | null;
   const [preferences, setPreferences] = useState<JobPreferences>({
     roles: [],
     locations: [],
@@ -24,10 +28,10 @@ export default function JobPreferencesForm() {
   useEffect(() => {
     // Load existing preferences if available
     async function loadPreferences() {
-      if (!userProfile) return;
+      if (!candidateProfile) return;
       
       try {
-        const userDoc = await getDoc(doc(db, 'users', userProfile.uid));
+        const userDoc = await getDoc(doc(db, 'users', candidateProfile.uid));
         if (userDoc.exists() && userDoc.data().jobPreferences) {
           setPreferences(userDoc.data().jobPreferences);
         }
@@ -37,7 +41,7 @@ export default function JobPreferencesForm() {
     }
     
     loadPreferences();
-  }, [userProfile]);
+  }, [candidateProfile]);
   
   const handleAddRole = () => {
     if (role && !preferences.roles.includes(role)) {
@@ -79,23 +83,34 @@ export default function JobPreferencesForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userProfile) return;
+    if (!candidateProfile) return;
     
     setSaving(true);
     setSuccess(false);
     
     try {
-      await updateDoc(doc(db, 'users', userProfile.uid), {
+      // Update user preferences
+      await updateDoc(doc(db, 'users', candidateProfile.uid), {
         jobPreferences: preferences,
       });
       
-      setSuccess(true);
-      
-      // If user has resume but no roadmap, generate one
-      if (userProfile.resumeAnalysis) {
-        // In the full implementation, this would trigger the roadmap generation
-        console.log('Would generate roadmap here');
+      // If user has resume analysis, generate a new roadmap
+      if (candidateProfile.resumeAnalysis) {
+        const roadmap = await generateCareerRoadmap(
+          candidateProfile.resumeAnalysis,
+          preferences
+        );
+        
+        // Save the roadmap to Firestore
+        await setDoc(doc(db, 'roadmaps', candidateProfile.uid), {
+          ...roadmap,
+          candidateId: candidateProfile.uid,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
       }
+      
+      setSuccess(true);
     } catch (error) {
       console.error('Error saving job preferences:', error);
     } finally {
@@ -111,6 +126,13 @@ export default function JobPreferencesForm() {
         {success && (
           <div className="bg-green-50 border-l-4 border-green-500 p-4">
             <p className="text-green-700">Your job preferences have been saved successfully!</p>
+            <button
+              type="button"
+              onClick={() => router.push('/protected/candidate/dashboard')}
+              className="mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded w-full"
+            >
+              Back to Dashboard
+            </button>
           </div>
         )}
         

@@ -4,16 +4,17 @@ import React, { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CandidateProfile } from '@/types/user';
+import { CandidateProfile, RecruiterProfile } from '@/types/user';
 
 export default function BookmarkedCandidatesPage() {
   const { userProfile } = useAuth();
+  const recruiterProfile = userProfile as RecruiterProfile | null;
   const [bookmarkedCandidates, setBookmarkedCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchBookmarkedCandidates() {
-      if (!userProfile || !userProfile.bookmarkedCandidates) {
+      if (!recruiterProfile || !recruiterProfile.bookmarkedCandidates) {
         setLoading(false);
         return;
       }
@@ -21,7 +22,7 @@ export default function BookmarkedCandidatesPage() {
       try {
         const candidatesData: CandidateProfile[] = [];
         
-        for (const candidateId of userProfile.bookmarkedCandidates) {
+        for (const candidateId of recruiterProfile.bookmarkedCandidates) {
           const candidateDoc = await getDoc(doc(db, 'users', candidateId));
           
           if (candidateDoc.exists()) {
@@ -38,19 +39,19 @@ export default function BookmarkedCandidatesPage() {
     }
     
     fetchBookmarkedCandidates();
-  }, [userProfile]);
+  }, [recruiterProfile]);
 
   const handleRemoveBookmark = async (candidateId: string) => {
-    if (!userProfile) return;
+    if (!recruiterProfile) return;
     
     try {
       // Update local state
       setBookmarkedCandidates(bookmarkedCandidates.filter(c => c.uid !== candidateId));
       
       // Update in Firestore
-      const updatedBookmarks = userProfile.bookmarkedCandidates?.filter(id => id !== candidateId) || [];
+      const updatedBookmarks = recruiterProfile.bookmarkedCandidates?.filter((id: string) => id !== candidateId) || [];
       
-      await updateDoc(doc(db, 'users', userProfile.uid), {
+      await updateDoc(doc(db, 'users', recruiterProfile.uid), {
         bookmarkedCandidates: updatedBookmarks,
       });
     } catch (error) {

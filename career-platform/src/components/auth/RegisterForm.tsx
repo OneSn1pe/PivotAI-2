@@ -53,9 +53,9 @@ export default function RegisterForm() {
       
       // Redirect based on user role
       if (role === UserRole.CANDIDATE) {
-        router.push('/candidate/dashboard');
+        router.push('/protected/candidate/dashboard');
       } else {
-        router.push('/recruiter/dashboard');
+        router.push('/protected/recruiter/dashboard');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
