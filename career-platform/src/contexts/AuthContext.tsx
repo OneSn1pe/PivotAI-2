@@ -9,7 +9,9 @@ import {
   onAuthStateChanged,
   getAuth,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
@@ -22,6 +24,7 @@ interface AuthContextType {
   loading: boolean;
   register: (email: string, password: string, role: UserRole, displayName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (role?: UserRole) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -135,6 +138,65 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const loginWithGoogle = async (role?: UserRole) => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const { user } = await signInWithPopup(auth, provider);
+      
+      // Check if user already exists in Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // If role is not provided, default to candidate
+        const actualRole = role || UserRole.CANDIDATE;
+        
+        // New user, create profile
+        const userData: User = {
+          uid: user.uid,
+          email: user.email!,
+          displayName: user.displayName || user.email!.split('@')[0],
+          role: actualRole,
+          createdAt: new Date(),
+          lastLogin: new Date(),
+        };
+        
+        await setDoc(doc(db, 'users', user.uid), userData);
+        setUserProfile(userData);
+      } else {
+        // Existing user, update last login
+        await setDoc(doc(db, 'users', user.uid), 
+          { lastLogin: new Date() }, 
+          { merge: true }
+        );
+        setUserProfile(userDoc.data() as User);
+      }
+      
+      // Get and set the token
+      const token = await user.getIdToken();
+      document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+      
+      // Redirect based on user role
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as User;
+        if (userData.role === UserRole.CANDIDATE) {
+          router.push('/protected/candidate/dashboard');
+        } else {
+          router.push('/protected/recruiter/dashboard');
+        }
+      } else {
+        // For new users
+        if (role === UserRole.RECRUITER) {
+          router.push('/protected/recruiter/dashboard');
+        } else {
+          router.push('/protected/candidate/dashboard');
+        }
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -153,6 +215,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loading,
     register,
     login,
+    loginWithGoogle,
     logout,
   };
 
