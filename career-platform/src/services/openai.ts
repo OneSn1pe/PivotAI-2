@@ -1,4 +1,4 @@
-import { ResumeAnalysis, JobPreferences, CareerRoadmap } from '@/types/user';
+import { ResumeAnalysis, TargetCompany, CareerRoadmap } from '@/types/user';
 
 export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis> {
   const response = await fetch('/api/analyze-resume', {
@@ -18,14 +18,14 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
 
 export async function generateCareerRoadmap(
   resumeAnalysis: ResumeAnalysis,
-  jobPreferences: JobPreferences
+  targetCompanies: TargetCompany[]
 ): Promise<CareerRoadmap> {
   const response = await fetch('/api/generate-roadmap', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ resumeAnalysis, jobPreferences }),
+    body: JSON.stringify({ resumeAnalysis, targetCompanies }),
   });
 
   if (!response.ok) {

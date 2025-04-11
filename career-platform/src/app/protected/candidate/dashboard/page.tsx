@@ -141,78 +141,35 @@ export default function CandidateDashboard() {
           )}
         </div>
 
-        {/* Job Preferences */}
+        {/* Target Companies */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-bold mb-4">Your Job Preferences</h2>
+          <h2 className="text-xl font-bold mb-4">Your Target Companies</h2>
           
-          {candidateProfile?.jobPreferences ? (
+          {candidateProfile?.targetCompanies && candidateProfile.targetCompanies.length > 0 ? (
             <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Desired Roles</h3>
-                <div className="flex flex-wrap gap-2">
-                  {candidateProfile.jobPreferences.roles.map((role, index) => (
-                    <span 
-                      key={index}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {role}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Preferred Locations</h3>
-                <div className="flex flex-wrap gap-2">
-                  {candidateProfile.jobPreferences.locations.map((location, index) => (
-                    <span 
-                      key={index}
-                      className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {location}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Work Preference</h3>
-                <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm capitalize">
-                  {candidateProfile.jobPreferences.remotePreference}
-                </span>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Salary Expectation</h3>
-                <span className="text-gray-800">
-                  ${candidateProfile.jobPreferences.salaryExpectation.toLocaleString()} / year
-                </span>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-700 mb-2">Target Industries</h3>
-                <div className="flex flex-wrap gap-2">
-                  {candidateProfile.jobPreferences.industries.map((industry, index) => (
-                    <span 
-                      key={index}
-                      className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {industry}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <ul className="divide-y divide-gray-200">
+                {candidateProfile.targetCompanies.map((company, index) => (
+                  <li key={index} className="py-3">
+                    <div className="flex flex-col">
+                      <h3 className="font-semibold text-gray-800">{company.name}</h3>
+                      {company.position && (
+                        <p className="text-gray-600 text-sm mt-1">Position: {company.position}</p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : (
             <div className="text-center py-4">
               <p className="text-gray-500 mb-4">
-                No job preferences set yet.
+                No target companies set yet.
               </p>
               <button
                 onClick={() => router.push('/protected/candidate/preferences')}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
               >
-                Set Job Preferences
+                Add Target Companies
               </button>
             </div>
           )}
@@ -270,13 +227,13 @@ export default function CandidateDashboard() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">
-                No career roadmap available yet. Complete your profile and job preferences to generate one.
+                No career roadmap available yet. Complete your profile and add target companies to generate one.
               </p>
               <button
                 onClick={() => router.push('/protected/candidate/preferences')}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
               >
-                Set Job Preferences
+                Add Target Companies
               </button>
             </div>
           )}

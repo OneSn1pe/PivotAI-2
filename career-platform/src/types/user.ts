@@ -17,7 +17,7 @@ export enum UserRole {
     resumeUrl?: string;
     resumeAnalysis?: ResumeAnalysis;
     jobPreferences?: JobPreferences;
-    targetCompanies?: string[];
+    targetCompanies?: TargetCompany[];
     skills?: string[];
   }
   
@@ -43,6 +43,11 @@ export enum UserRole {
     remotePreference: 'remote' | 'hybrid' | 'onsite';
     salaryExpectation: number;
     industries: string[];
+  }
+
+  export interface TargetCompany {
+    name: string;
+    position: string;
   }
   
   export interface CareerRoadmap {
