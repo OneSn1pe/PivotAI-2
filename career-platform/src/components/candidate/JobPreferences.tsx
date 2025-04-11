@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { JobPreferences, CandidateProfile } from '@/types/user';
+import { JobPreferences, CandidateProfile, TargetCompany } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import { generateCareerRoadmap } from '@/services/openai';
 
@@ -96,9 +96,15 @@ export default function JobPreferencesForm() {
       
       // If user has resume analysis, generate a new roadmap
       if (candidateProfile.resumeAnalysis) {
+        // Convert job preferences to target companies format
+        const targetCompanies: TargetCompany[] = preferences.roles.map(role => ({
+          name: preferences.industries[0] || "General",
+          position: role
+        }));
+        
         const roadmap = await generateCareerRoadmap(
           candidateProfile.resumeAnalysis,
-          preferences
+          targetCompanies
         );
         
         // Save the roadmap to Firestore
@@ -288,13 +294,15 @@ export default function JobPreferencesForm() {
           </div>
         </div>
         
-        <button
-          type="submit"
-          disabled={saving}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
-        >
-          {saving ? 'Saving...' : 'Save Preferences'}
-        </button>
+        <div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+          >
+            {saving ? 'Saving...' : 'Save Preferences'}
+          </button>
+        </div>
       </form>
     </div>
   );
