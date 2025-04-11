@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/config/firebase';
+import { storage, auth } from '@/config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export function useFileUpload() {
   const [uploading, setUploading] = useState(false);
@@ -14,8 +15,21 @@ export function useFileUpload() {
     setError(null);
 
     try {
+      // Check if user is authenticated
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('User must be authenticated to upload files');
+      }
+
+      // Get a fresh token
+      const token = await user.getIdToken();
+
       const storageRef = ref(storage, `${path}/${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const uploadTask = uploadBytesResumable(storageRef, file, {
+        customMetadata: {
+          'firebaseStorageDownloadTokens': token
+        }
+      });
 
       return new Promise((resolve, reject) => {
         uploadTask.on(
