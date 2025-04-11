@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
+import { CandidateProfile, UserRole, RecruiterProfile, TargetCompany } from '@/types/user';
 import { useRouter } from 'next/navigation';
 
 export default function InterestedCandidatesPage() {
@@ -19,14 +19,32 @@ export default function InterestedCandidatesPage() {
       if (!recruiterProfile) return;
       
       try {
-        const interestedQuery = query(
+        // Get all candidates
+        const candidatesQuery = query(
           collection(db, 'users'),
-          where('role', '==', UserRole.CANDIDATE),
-          where('targetCompanies', 'array-contains', recruiterProfile.company)
+          where('role', '==', UserRole.CANDIDATE)
         );
         
-        const snapshot = await getDocs(interestedQuery);
-        setCandidates(snapshot.docs.map(doc => doc.data() as CandidateProfile));
+        const snapshot = await getDocs(candidatesQuery);
+        
+        // Filter candidates who have the recruiter's company in their target companies
+        const interestedCandidates = snapshot.docs
+          .map(doc => doc.data() as CandidateProfile)
+          .filter(candidate => {
+            if (!candidate.targetCompanies) return false;
+            
+            // Check if any of the target companies match the recruiter's company
+            return candidate.targetCompanies.some(targetCompany => {
+              // Handle both old format (string) and new format (object)
+              if (typeof targetCompany === 'string') {
+                return targetCompany === recruiterProfile.company;
+              } else {
+                return targetCompany.name === recruiterProfile.company;
+              }
+            });
+          });
+        
+        setCandidates(interestedCandidates);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching interested candidates:', error);
@@ -62,6 +80,26 @@ export default function InterestedCandidatesPage() {
           {candidates.map((candidate, index) => (
             <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
               <h3 className="font-semibold text-xl mb-4">{candidate.displayName}</h3>
+              
+              {/* Show position if available */}
+              {candidate.targetCompanies?.find(tc => 
+                (typeof tc === 'string' && tc === recruiterProfile?.company) || 
+                (typeof tc === 'object' && tc.name === recruiterProfile?.company)
+              ) && (
+                <div className="mb-4 bg-blue-50 p-3 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">Interested in Position</h4>
+                  <p className="font-semibold">
+                    {typeof candidate.targetCompanies.find(tc => 
+                      (typeof tc === 'object' && tc.name === recruiterProfile?.company)
+                    ) === 'object' 
+                      ? (candidate.targetCompanies.find(tc => 
+                          typeof tc === 'object' && tc.name === recruiterProfile?.company
+                        ) as TargetCompany).position || 'Not specified'
+                      : 'Not specified'
+                    }
+                  </p>
+                </div>
+              )}
               
               {candidate.resumeAnalysis?.skills && (
                 <div className="mb-4">

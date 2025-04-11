@@ -23,14 +23,30 @@ export default function RecruiterDashboard() {
       if (!recruiterProfile) return;
       
       try {
-        // Fetch candidates interested in recruiter's company
-        const interestedQuery = query(
+        // Get all candidates
+        const candidatesQuery = query(
           collection(db, 'users'),
-          where('role', '==', UserRole.CANDIDATE),
-          where('targetCompanies', 'array-contains', recruiterProfile.company)
+          where('role', '==', UserRole.CANDIDATE)
         );
         
-        const interestedSnapshot = await getDocs(interestedQuery);
+        const candidatesSnapshot = await getDocs(candidatesQuery);
+        
+        // Filter candidates who have the recruiter's company in their target companies
+        const interestedCandidates = candidatesSnapshot.docs
+          .map(doc => doc.data() as CandidateProfile)
+          .filter(candidate => {
+            if (!candidate.targetCompanies) return false;
+            
+            // Check if any of the target companies match the recruiter's company
+            return candidate.targetCompanies.some(targetCompany => {
+              // Handle both old format (string) and new format (object)
+              if (typeof targetCompany === 'string') {
+                return targetCompany === recruiterProfile.company;
+              } else {
+                return targetCompany.name === recruiterProfile.company;
+              }
+            });
+          });
         
         // Fetch bookmarked candidates
         if (recruiterProfile.bookmarkedCandidates && recruiterProfile.bookmarkedCandidates.length > 0) {
@@ -51,7 +67,7 @@ export default function RecruiterDashboard() {
         
         setStats({
           bookmarkedCandidates: recruiterProfile.bookmarkedCandidates?.length || 0,
-          interestedCandidates: interestedSnapshot.size,
+          interestedCandidates: interestedCandidates.length,
         });
         
         setLoading(false);
