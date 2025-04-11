@@ -6,6 +6,8 @@ import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CareerRoadmap, CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/config/firebase';
 
 export default function CandidateDashboard() {
   const { userProfile, logout } = useAuth();
@@ -42,10 +44,12 @@ export default function CandidateDashboard() {
   }, [candidateProfile]);
 
   const handleLogout = async () => {
-    await logout();
-    // Clear session cookie
-    document.cookie = 'session=; path=/; max-age=0';
-    router.push('/auth/login');
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   if (loading) {
@@ -54,15 +58,12 @@ export default function CandidateDashboard() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Your Career Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Candidate Dashboard</h1>
         <button
           onClick={handleLogout}
-          className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md transition-colors"
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V7.414l-5-5H3zm7 8a1 1 0 01-2 0V6.414l-1.293 1.293a1 1 0 01-1.414-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L10 6.414V11z" clipRule="evenodd" />
-          </svg>
           Logout
         </button>
       </div>

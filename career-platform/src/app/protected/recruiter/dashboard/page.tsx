@@ -6,6 +6,8 @@ import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/config/firebase';
 
 export default function RecruiterDashboard() {
   const { userProfile } = useAuth();
@@ -17,6 +19,15 @@ export default function RecruiterDashboard() {
     interestedCandidates: 0,
   });
   const router = useRouter();
+  
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -90,7 +101,15 @@ export default function RecruiterDashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-8">Recruiter Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Recruiter Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+        >
+          Logout
+        </button>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-lg">
