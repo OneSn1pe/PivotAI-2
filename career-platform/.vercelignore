@@ -1,6 +1,4 @@
 .git
-.env
-.env.local
 node_modules
 .next
-scripts/verify-build.js 
+.vercel 
