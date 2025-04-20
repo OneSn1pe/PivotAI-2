@@ -22,6 +22,12 @@ const ApiTester = dynamic(
   { ssr: false }
 );
 
+// Import DiagnosticTools with dynamic loading
+const DiagnosticTools = dynamic(
+  () => import('@/components/debugger/DiagnosticTools'),
+  { ssr: false }
+);
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -48,6 +54,9 @@ export default function RootLayout({
           
           {/* Include API Tester (visible with Alt+T) */}
           <ApiTester />
+          
+          {/* Include Advanced Diagnostics (visible with Alt+G) */}
+          <DiagnosticTools />
         </AuthProvider>
       </body>
     </html>
