@@ -17,7 +17,8 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 } 
