@@ -15,26 +15,73 @@ export default function ResumeUpload() {
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setError(null); // Clear any previous errors
-      
-      // For text extraction (simplified - in a real app you'd use a PDF parser)
+  const extractTextFromFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = async (e) => {
+      
+      reader.onload = (event) => {
         try {
-          const text = e.target?.result as string;
-          setResumeText(text);
+          if (!event.target || !event.target.result) {
+            reject(new Error('Failed to read file content'));
+            return;
+          }
+          
+          // For text files, we can use the result directly
+          if (file.type === 'text/plain') {
+            resolve(event.target.result as string);
+            return;
+          }
+          
+          // For PDFs and other complex files, we use a simplified extraction
+          // In a real app, you would use a proper PDF parser library
+          const content = event.target.result as string;
+          
+          // Remove non-printable characters and normalize whitespace
+          const cleanedText = content
+            .replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '') // Remove control characters
+            .replace(/\s+/g, ' ') // Normalize whitespace
+            .trim();
+          
+          if (cleanedText.length < 100) {
+            // If the text is too short, it's likely we couldn't extract meaningful content
+            console.warn('Extracted text is too short, might be binary content');
+            resolve(`This appears to be a binary or image-based file. 
+            File name: ${file.name}
+            File type: ${file.type}
+            File size: ${file.size} bytes
+            This is a resume for parsing. Please extract any visible text from this document.`);
+          } else {
+            resolve(cleanedText);
+          }
         } catch (err) {
-          console.error('Error reading file:', err);
-          setError('Error reading file. Please try a different file format.');
+          console.error('Error extracting text:', err);
+          reject(err);
         }
       };
+      
       reader.onerror = () => {
-        setError('Failed to read the file. Please try a different file.');
+        reject(new Error(`Failed to read file: ${file.name}`));
       };
-      reader.readAsText(e.target.files[0]);
+      
+      // Read as text for now, in a real app you'd use different methods based on file type
+      reader.readAsText(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      setError(null); // Clear any previous errors
+      
+      try {
+        const extractedText = await extractTextFromFile(selectedFile);
+        console.log('Extracted text length:', extractedText.length);
+        setResumeText(extractedText);
+      } catch (err) {
+        console.error('Error reading file:', err);
+        setError('Could not read the file content. Please try a different file format.');
+      }
     }
   };
 
@@ -56,6 +103,9 @@ export default function ResumeUpload() {
       if (!resumeText || resumeText.trim() === '') {
         throw new Error('Unable to extract text from file. Please try a different file format.');
       }
+      
+      // Use a sample of the text for debugging
+      console.log('Text sample:', resumeText.substring(0, 200) + '...');
       
       const resumeAnalysis = await analyzeResume(resumeText);
       setAnalysis(resumeAnalysis);

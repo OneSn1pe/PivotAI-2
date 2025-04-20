@@ -1,5 +1,15 @@
 import { ResumeAnalysis, TargetCompany, CareerRoadmap } from '@/types/user';
 
+// Get base URL for API calls, with fallback for local development
+const getApiBaseUrl = () => {
+  // Check if we're in the browser
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  // Fallback for server-side
+  return 'http://localhost:3000';
+};
+
 export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis> {
   try {
     // Validate input before sending to API
@@ -8,8 +18,12 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
     }
     
     console.log('Sending resume text for analysis...');
+    const baseUrl = getApiBaseUrl();
+    const apiUrl = `${baseUrl}/api/analyze-resume`;
     
-    const response = await fetch('/api/analyze-resume', {
+    console.log('API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +60,10 @@ export async function generateCareerRoadmap(
   resumeAnalysis: ResumeAnalysis,
   targetCompanies: TargetCompany[]
 ): Promise<CareerRoadmap> {
-  const response = await fetch('/api/generate-roadmap', {
+  const baseUrl = getApiBaseUrl();
+  const apiUrl = `${baseUrl}/api/generate-roadmap`;
+  
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

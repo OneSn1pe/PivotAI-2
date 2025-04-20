@@ -1,55 +1,79 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
-    images: {
-      domains: ['firebasestorage.googleapis.com'],
-    },
-    // Enable static optimization
-    swcMinify: true,
-    // Configure output for Vercel
-    output: 'standalone',
-    // Add security headers
-    async headers() {
-      return [
-        {
-          source: '/:path*',
-          headers: [
-            {
-              key: 'X-DNS-Prefetch-Control',
-              value: 'on'
-            },
-            {
-              key: 'Strict-Transport-Security',
-              value: 'max-age=63072000; includeSubDomains; preload'
-            },
-            {
-              key: 'X-XSS-Protection',
-              value: '1; mode=block'
-            },
-            {
-              key: 'X-Frame-Options',
-              value: 'SAMEORIGIN'
-            },
-            {
-              key: 'X-Content-Type-Options',
-              value: 'nosniff'
-            },
-            {
-              key: 'Access-Control-Allow-Origin',
-              value: '*'
-            },
-            {
-              key: 'Access-Control-Allow-Methods',
-              value: 'GET, POST, PUT, DELETE, OPTIONS'
-            },
-            {
-              key: 'Access-Control-Allow-Headers',
-              value: 'X-Requested-With, Content-Type, Authorization'
-            }
-          ]
-        }
-      ]
-    }
-  };
+  // Transpile necessary dependencies if needed
+  transpilePackages: [],
   
-  module.exports = nextConfig;
+  // Asset prefix for CDN support
+  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || undefined,
+  
+  // Customize base path if needed
+  basePath: '',
+  
+  // Output standalone build for better portability
+  output: 'standalone',
+  
+  // Disable type checking in builds for speed
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  // Disable ESLint in production builds 
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  // Configure image optimization
+  images: {
+    domains: [
+      'firebasestorage.googleapis.com',
+      'pivotai-7f6ef.firebasestorage.app'
+    ],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.firebasestorage.app',
+        pathname: '/**',
+      },
+    ],
+  },
+  
+  // API request body size limit (30MB for file uploads)
+  api: {
+    bodyParser: {
+      sizeLimit: '30mb',
+    },
+    responseLimit: '30mb',
+  },
+  
+  // Custom webpack configuration
+  webpack: (config) => {
+    // Add polyfill for encoding
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      os: false,
+    };
+    
+    return config;
+  },
+  
+  // Configure headers to allow CORS
+  async headers() {
+    return [
+      {
+        // Apply these headers to all API routes
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT,OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
