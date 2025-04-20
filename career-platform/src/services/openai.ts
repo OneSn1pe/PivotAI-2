@@ -1,23 +1,41 @@
 import { ResumeAnalysis, TargetCompany, CareerRoadmap } from '@/types/user';
 
-// Debug helper
+// Debug helper with support for production environment
 const debug = {
   log: (...args: any[]) => {
-    console.log('[CLIENT:openai-service]', ...args);
+    if (typeof window !== 'undefined') {
+      console.log('[CLIENT:openai-service]', ...args);
+    }
   },
   error: (...args: any[]) => {
-    console.error('[CLIENT:openai-service:ERROR]', ...args);
+    if (typeof window !== 'undefined') {
+      console.error('[CLIENT:openai-service:ERROR]', ...args);
+    }
   }
 };
 
-// Get base URL for API calls, with fallback for local development
+// Get base URL for API calls in both development and production
 const getApiBaseUrl = () => {
-  // Check if we're in the browser
+  // In browser environment
   if (typeof window !== 'undefined') {
+    // Use the current origin (works in both dev and production)
     return window.location.origin;
   }
-  // Fallback for server-side
-  return 'http://localhost:3000';
+  // Server-side rendering fallback
+  return process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3000';
+};
+
+/**
+ * Safe JSON parse with error handling
+ */
+const safeJsonParse = (text: string) => {
+  try {
+    return { data: JSON.parse(text), error: null };
+  } catch (err) {
+    return { data: null, error: err };
+  }
 };
 
 /**
@@ -29,28 +47,25 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
   debug.log('analyzeResume called');
   
   try {
-    // Validate input before sending to API
+    // Validate input
     if (!resumeText || resumeText.trim() === '') {
-      debug.error('Empty resume text provided');
       throw new Error('Resume text is empty. Please upload a valid resume file.');
     }
     
-    // Sample the text for debugging
-    debug.log('Resume text length:', resumeText.length);
-    debug.log('Sample:', resumeText.substring(0, 100) + '...');
+    debug.log(`Resume text length: ${resumeText.length}`);
     
     // Build API URL
     const baseUrl = getApiBaseUrl();
     const apiUrl = `${baseUrl}/api/analyze-resume`;
-    debug.log('API URL:', apiUrl);
+    debug.log(`API URL: ${apiUrl}`);
     
     // Set up request with timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
     
-    debug.log('Sending API request...');
-    
     try {
+      debug.log('Sending API request...');
+      
       // Make API request
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -61,31 +76,49 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         signal: controller.signal
       });
       
-      // Clear timeout since request completed
+      // Clear timeout
       clearTimeout(timeoutId);
       
-      debug.log('Response received, status:', response.status);
+      debug.log(`Response received, status: ${response.status}`);
       
-      // Check response status
+      // Check if response is ok
       if (!response.ok) {
-        let errorMessage = `Failed to analyze resume (HTTP ${response.status})`;
-        
+        // Get response text first
+        let responseText = '';
         try {
-          const errorData = await response.json();
-          debug.error('API response error:', response.status, errorData);
-          errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch (jsonError) {
-          debug.error('Failed to parse error response:', jsonError);
+          responseText = await response.text();
+          debug.log('Error response text:', responseText);
+        } catch (textErr) {
+          debug.error('Failed to get response text:', textErr);
+        }
+        
+        // Try to parse the error response
+        let errorMessage = `Failed to analyze resume (HTTP ${response.status})`;
+        if (responseText) {
+          const { data, error } = safeJsonParse(responseText);
+          if (data) {
+            errorMessage = data.message || data.error || errorMessage;
+          } else {
+            debug.error('Error parsing response:', error);
+          }
         }
         
         throw new Error(errorMessage);
       }
       
-      // Parse response data
-      const data = await response.json();
-      debug.log('Successfully parsed response data');
+      // Get the response text
+      const responseText = await response.text();
+      debug.log('Got response text, length:', responseText.length);
       
-      // Validate returned data has required fields
+      // Safely parse JSON
+      const { data, error } = safeJsonParse(responseText);
+      
+      if (error) {
+        debug.error('Failed to parse API response:', error);
+        throw new Error('Failed to parse analysis results. Please try again.');
+      }
+      
+      // Validate response data
       if (!data.skills || !Array.isArray(data.skills) || 
           !data.strengths || !Array.isArray(data.strengths) ||
           !data.recommendations || !Array.isArray(data.recommendations)) {
@@ -93,11 +126,13 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         throw new Error('Resume analysis returned invalid data format');
       }
       
-      debug.log('Analysis successfully completed');
-      return data;
+      debug.log('Analysis successful!');
+      return data as ResumeAnalysis;
       
     } catch (fetchError: any) {
       // Handle network errors including timeouts
+      clearTimeout(timeoutId);
+      
       if (fetchError.name === 'AbortError') {
         debug.error('Request timeout after 60 seconds');
         throw new Error('Resume analysis timed out. Please try again.');
@@ -122,29 +157,58 @@ export async function generateCareerRoadmap(
   try {
     const baseUrl = getApiBaseUrl();
     const apiUrl = `${baseUrl}/api/generate-roadmap`;
-    debug.log('API URL:', apiUrl);
+    debug.log(`API URL: ${apiUrl}`);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
     
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ resumeAnalysis, targetCompanies }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      debug.error('API error generating roadmap:', response.status, errorData);
-      throw new Error(errorData.message || 'Failed to generate roadmap');
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeAnalysis, targetCompanies }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        let errorMessage = `Failed to generate roadmap (HTTP ${response.status})`;
+        
+        try {
+          const responseText = await response.text();
+          const { data, error } = safeJsonParse(responseText);
+          if (data) {
+            errorMessage = data.message || data.error || errorMessage;
+          }
+        } catch (err) {
+          debug.error('Error parsing error response:', err);
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const responseText = await response.text();
+      const { data, error } = safeJsonParse(responseText);
+      
+      if (error) {
+        throw new Error('Failed to parse roadmap results. Please try again.');
+      }
+      
+      return data as CareerRoadmap;
+      
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Roadmap generation timed out. Please try again.');
+      }
+      
+      throw fetchError;
     }
     
-    return response.json();
   } catch (error) {
     debug.error('Error generating roadmap:', error);
     throw error;

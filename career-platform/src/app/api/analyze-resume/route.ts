@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Debug helper
+// Environment check for production
+const isProd = process.env.NODE_ENV === 'production';
+
+// Debug helper that respects production environment
 const debug = {
   log: (...args: any[]) => {
-    console.log('[API:analyze-resume]', ...args);
+    if (!isProd) {
+      console.log('[API:analyze-resume]', ...args);
+    }
   },
   error: (...args: any[]) => {
+    // Always log errors even in production
     console.error('[API:analyze-resume:ERROR]', ...args);
   }
 };
@@ -21,6 +27,16 @@ if (!process.env.OPENAI_API_KEY) {
   debug.error('OPENAI_API_KEY is not defined in environment variables');
 }
 
+// Safe JSON stringify with error handling
+const safeStringify = (obj: any) => {
+  try {
+    return JSON.stringify(obj);
+  } catch (err) {
+    debug.error('Error stringifying object:', err);
+    return JSON.stringify({ error: 'Failed to serialize response' });
+  }
+};
+
 // Set CORS headers helper function
 const setCorsHeaders = (response: NextResponse) => {
   debug.log('Setting CORS headers');
@@ -34,8 +50,34 @@ const setCorsHeaders = (response: NextResponse) => {
 // Create standard response format
 const createResponse = (data: any, status = 200) => {
   debug.log(`Creating response with status ${status}`);
-  const response = NextResponse.json(data, { status });
-  return setCorsHeaders(response);
+  try {
+    // Ensure the data is serializable
+    const serializedData = safeStringify(data);
+    const response = new NextResponse(serializedData, { 
+      status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400'
+      }
+    });
+    
+    return response;
+  } catch (err) {
+    debug.error('Error creating response:', err);
+    // Fallback for unserializable data
+    return new NextResponse(JSON.stringify({ error: 'Internal server error' }), { 
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    });
+  }
 };
 
 // Handle OPTIONS requests (CORS preflight)
@@ -72,8 +114,17 @@ export async function POST(request: NextRequest) {
     }
     
     // Extract the body text for debugging
-    const requestText = await request.text();
-    debug.log('Request body length:', requestText.length);
+    let requestText;
+    try {
+      requestText = await request.text();
+      debug.log('Request body length:', requestText.length);
+    } catch (textError) {
+      debug.error('Failed to read request body:', textError);
+      return createResponse({ 
+        error: 'Request body error',
+        message: 'Failed to read request body'
+      }, 400);
+    }
     
     // Parse JSON body
     let body;
@@ -153,6 +204,17 @@ export async function POST(request: NextRequest) {
       }
       
       debug.log('Analysis successfully parsed and returning to client');
+      
+      // Verify the analysis has the expected structure before sending
+      if (!analysis.skills || !Array.isArray(analysis.skills) ||
+          !analysis.strengths || !Array.isArray(analysis.strengths) ||
+          !analysis.recommendations || !Array.isArray(analysis.recommendations)) {
+        debug.error('OpenAI returned an incomplete analysis:', analysis);
+        return createResponse({
+          error: 'Incomplete analysis',
+          message: 'AI analysis was incomplete, missing required fields'
+        }, 500);
+      }
       
       // Return successful response
       return createResponse(analysis);
