@@ -6,7 +6,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Career Platform',
+  title: 'PivotAI',
   description: 'AI-powered career development platform for candidates and recruiters',
 };
 

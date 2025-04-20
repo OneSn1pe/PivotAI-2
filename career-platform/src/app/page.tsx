@@ -6,7 +6,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Career Platform</h1>
+          <h1 className="text-2xl font-bold text-gray-900">PivotAI</h1>
           <div>
             <Link 
               href="/auth/login"
@@ -116,7 +116,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <h2 className="text-xl font-bold text-white">Career Platform</h2>
+              <h2 className="text-xl font-bold text-white">PivotAI</h2>
               <p className="mt-2">AI-powered career development</p>
             </div>
             
@@ -137,7 +137,7 @@ export default function HomePage() {
           </div>
           
           <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} Career Platform. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} PivotAI. All rights reserved.</p>
           </div>
         </div>
       </footer>
