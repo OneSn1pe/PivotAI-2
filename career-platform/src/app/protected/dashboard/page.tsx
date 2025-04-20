@@ -14,7 +14,7 @@ export default function DashboardRedirect() {
       if (userProfile.role === UserRole.CANDIDATE) {
         router.push('/protected/candidate/dashboard');
       } else if (userProfile.role === UserRole.RECRUITER) {
-        router.push('/recruiter/dashboard');
+        router.push('/protected/recruiter/dashboard');
       }
     }
   }, [userProfile, loading, router]);
