@@ -21,15 +21,8 @@ export function useFileUpload() {
         throw new Error('User must be authenticated to upload files');
       }
 
-      // Get a fresh token
-      const token = await user.getIdToken(true);
-
       const storageRef = ref(storage, `${path}/${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file, {
-        customMetadata: {
-          'firebaseStorageDownloadTokens': token
-        }
-      });
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
       return new Promise((resolve, reject) => {
         uploadTask.on(
