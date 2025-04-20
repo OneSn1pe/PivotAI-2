@@ -10,6 +10,18 @@ const ApiDebugger = dynamic(
   { ssr: false }
 );
 
+// Import ErrorDebugger with dynamic loading
+const ErrorDebugger = dynamic(
+  () => import('@/components/debugger/ErrorDebugger'),
+  { ssr: false }
+);
+
+// Import ApiTester with dynamic loading
+const ApiTester = dynamic(
+  () => import('@/components/debugger/ApiTester'),
+  { ssr: false }
+);
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -30,6 +42,12 @@ export default function RootLayout({
           
           {/* Include API Debugger (visible with Alt+D) */}
           <ApiDebugger />
+          
+          {/* Include Error Debugger (visible with Alt+E) */}
+          <ErrorDebugger />
+          
+          {/* Include API Tester (visible with Alt+T) */}
+          <ApiTester />
         </AuthProvider>
       </body>
     </html>
