@@ -65,7 +65,11 @@ export function initializeErrorDebugger() {
         const responseBody = await responseClone.text();
         
         errorLog.status = response.status;
-        errorLog.responseHeaders = Object.fromEntries([...response.headers.entries()]);
+        const responseHeaders: Record<string, string> = {};
+        response.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+        errorLog.responseHeaders = responseHeaders;
         errorLog.responseBody = responseBody;
         errorLog.message = response.ok ? 'Success' : `HTTP Error ${response.status}`;
         
