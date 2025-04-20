@@ -8,7 +8,11 @@
         "start": "next start",
         "lint": "next lint",
         "setup-cors": "node scripts/setup-cors.js",
-        "deploy-storage-rules": "firebase deploy --only storage"
+        "deploy-storage-rules": "firebase deploy --only storage",
+        "debug-firebase": "node scripts/debug-firebase.js",
+        "setup-service-account": "node scripts/setup-service-account.js",
+        "fix-cors": "node scripts/fix-cors.js",
+        "debug": "npm run debug-firebase && npm run setup-service-account && npm run fix-cors"
     },
     "dependencies": {
         "@google-cloud/storage": "^7.7.0",
@@ -27,6 +31,8 @@
         "@types/react-dom": "^18.2.17",
         "@types/uuid": "^9.0.7",
         "autoprefixer": "^10.4.16",
+        "dotenv": "^16.5.0",
+        "dotenv-cli": "^7.4.4",
         "eslint": "^8.55.0",
         "eslint-config-next": "^14.0.4",
         "firebase-admin": "^13.2.0",

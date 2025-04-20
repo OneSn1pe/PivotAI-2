@@ -22,7 +22,7 @@ export function useFileUpload() {
       }
 
       // Get a fresh token
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true);
 
       const storageRef = ref(storage, `${path}/${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file, {
@@ -44,14 +44,22 @@ export function useFileUpload() {
             reject(error);
           },
           async () => {
-            const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-            setUrl(downloadUrl);
-            setUploading(false);
-            resolve(downloadUrl);
+            try {
+              const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              setUrl(downloadUrl);
+              setUploading(false);
+              resolve(downloadUrl);
+            } catch (downloadError) {
+              console.error('Error getting download URL:', downloadError);
+              setError('Failed to get download URL');
+              setUploading(false);
+              reject(downloadError);
+            }
           }
         );
       });
     } catch (err) {
+      console.error('Upload error:', err);
       setError('An error occurred during upload');
       setUploading(false);
       throw err;

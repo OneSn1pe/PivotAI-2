@@ -1,35 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is a recruiter
-    function isRecruiter() {
-      let user = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return user != null && user.data.role == 'recruiter';
-    }
-
-    // User profiles
-    match /users/{userId} {
-      // Allow users to read and write their own data
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      // Allow recruiters to read and query all users
-      allow read, list: if request.auth != null && isRecruiter();
+    // Allow public read/write access during development
+    match /{document=**} {
+      allow read, write: if true;
     }
     
-    // Roadmaps
-    match /roadmaps/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && isRecruiter();
-    }
+    // Use these stricter rules in production
+    // match /users/{userId} {
+    //   allow read: if request.auth != null && request.auth.uid == userId;
+    //   allow write: if request.auth != null && request.auth.uid == userId;
+    // }
     
-    // Resumes
-    match /resumes/{resumeId} {
-      allow read: if request.auth != null && (
-        resource.data.candidateId == request.auth.uid || 
-        isRecruiter()
-      );
-      allow write: if request.auth != null && 
-        resource.data.candidateId == request.auth.uid;
-    }
+    // match /debug-tests/{testId} {
+    //   allow read, write: if true;
+    // }
   }
 }
