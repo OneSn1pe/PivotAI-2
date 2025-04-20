@@ -53,7 +53,7 @@ const createResponse = (data: any, status = 200) => {
   try {
     // Ensure the data is serializable
     const serializedData = safeStringify(data);
-    const response = new NextResponse(serializedData, { 
+    const response = new NextResponse(serializedData, {
       status,
       headers: {
         'Content-Type': 'application/json',
@@ -63,12 +63,12 @@ const createResponse = (data: any, status = 200) => {
         'Access-Control-Max-Age': '86400'
       }
     });
-    
+
     return response;
   } catch (err) {
     debug.error('Error creating response:', err);
     // Fallback for unserializable data
-    return new NextResponse(JSON.stringify({ error: 'Internal server error' }), { 
+    return new NextResponse(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -84,22 +84,22 @@ const createResponse = (data: any, status = 200) => {
 export async function OPTIONS(request: NextRequest) {
   debug.log('OPTIONS request received');
   return new NextResponse(null, {
-    status: 200,
+    status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Requested-With, Authorization',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400'
     }
   });
 }
 
-// Handle GET requests (for testing)
+// Handle GET requests (for testing or explicit rejection)
 export async function GET(request: NextRequest) {
-  debug.log('GET request received (not supported)');
-  return createResponse({ 
-    error: "Method not allowed",
-    message: "This endpoint requires a POST request with JSON payload" 
+  debug.log('GET request received (explicitly not supported)');
+  return createResponse({
+    error: "Method Not Allowed",
+    message: "This endpoint only supports POST requests."
   }, 405);
 }
 
@@ -114,8 +114,8 @@ export async function POST(request: NextRequest) {
     
     if (!contentType || !contentType.includes('application/json')) {
       debug.error('Invalid Content-Type header');
-      return createResponse({ 
-        error: 'Invalid content type',
+      return createResponse({
+        error: 'Unsupported Media Type',
         message: 'Content-Type must be application/json'
       }, 415);
     }
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
       debug.log('Request body length:', requestText.length);
     } catch (textError) {
       debug.error('Failed to read request body:', textError);
-      return createResponse({ 
-        error: 'Request body error',
+      return createResponse({
+        error: 'Bad Request',
         message: 'Failed to read request body'
       }, 400);
     }
@@ -139,8 +139,8 @@ export async function POST(request: NextRequest) {
       body = JSON.parse(requestText);
     } catch (err) {
       debug.error('Failed to parse request body:', err);
-      return createResponse({ 
-        error: 'Invalid JSON',
+      return createResponse({
+        error: 'Bad Request',
         message: 'Request body must be valid JSON'
       }, 400);
     }
@@ -151,9 +151,9 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!resumeText || typeof resumeText !== 'string' || resumeText.trim() === '') {
       debug.error('Resume text is empty or not a string');
-      return createResponse({ 
-        error: 'Bad request',
-        message: 'Resume text is required and must be a non-empty string'
+      return createResponse({
+        error: 'Bad Request',
+        message: 'resumeText is required in the JSON body and must be a non-empty string'
       }, 400);
     }
     
@@ -161,9 +161,9 @@ export async function POST(request: NextRequest) {
     
     if (!process.env.OPENAI_API_KEY) {
       debug.error('OpenAI API key is missing');
-      return createResponse({ 
-        error: 'Server configuration error',
-        message: 'OpenAI API key is not configured'
+      return createResponse({
+        error: 'Internal Server Error',
+        message: 'Server configuration error: OpenAI API key is not configured'
       }, 500);
     }
     
@@ -204,9 +204,9 @@ export async function POST(request: NextRequest) {
         analysis = JSON.parse(analysisText);
       } catch (err) {
         debug.error('Failed to parse OpenAI response:', err);
-        return createResponse({ 
-          error: 'Processing error',
-          message: 'Failed to parse AI response'
+        return createResponse({
+          error: 'Internal Server Error',
+          message: 'Failed to parse AI analysis response'
         }, 500);
       }
       
@@ -224,22 +224,22 @@ export async function POST(request: NextRequest) {
       }
       
       // Return successful response
-      return createResponse(analysis);
+      return createResponse(analysis, 200);
       
     } catch (openaiError) {
       debug.error('OpenAI API call failed:', openaiError);
-      return createResponse({ 
-        error: 'AI processing error',
-        message: 'Failed to process resume with AI'
+      return createResponse({
+        error: 'Internal Server Error',
+        message: 'Failed to process resume with AI service'
       }, 500);
     }
     
   } catch (error: any) {
-    // Log and handle errors
-    debug.error('Unhandled error:', error);
-    return createResponse({ 
-      error: 'Server error',
-      message: 'An unexpected error occurred while processing the request'
+    // Log and handle unexpected errors
+    debug.error('Unhandled error in POST handler:', error);
+    return createResponse({
+      error: 'Internal Server Error',
+      message: 'An unexpected server error occurred'
     }, 500);
   }
 }
