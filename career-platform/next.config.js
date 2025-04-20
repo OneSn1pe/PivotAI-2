@@ -38,14 +38,6 @@ const nextConfig = {
     ],
   },
   
-  // API request body size limit (30MB for file uploads)
-  api: {
-    bodyParser: {
-      sizeLimit: '30mb',
-    },
-    responseLimit: '30mb',
-  },
-  
   // Custom webpack configuration
   webpack: (config) => {
     // Add polyfill for encoding
@@ -63,8 +55,8 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Apply these headers to all API routes
-        source: '/api/:path*',
+        // Apply these headers to all routes
+        source: '/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
