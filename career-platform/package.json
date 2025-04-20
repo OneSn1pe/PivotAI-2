@@ -10,13 +10,14 @@
         "setup-cors": "node scripts/setup-cors.js"
     },
     "dependencies": {
+        "@google-cloud/storage": "^7.7.0",
         "firebase": "^10.6.0",
         "next": "^14.0.4",
         "openai": "^4.24.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "uuid": "^9.0.1",
-        "@google-cloud/storage": "^7.7.0"
+        "vercel": "^41.6.1"
     },
     "devDependencies": {
         "@types/node": "^20.10.4",
