@@ -4,7 +4,7 @@ import { analyzeResume } from '@/services/openai';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { ResumeAnalysis } from '@/types/user';
+import { ResumeAnalysis, CandidateProfile } from '@/types/user';
 
 export default function ResumeUpload() {
   const { userProfile } = useAuth();
@@ -14,6 +14,7 @@ export default function ResumeUpload() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const extractTextFromFile = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -90,9 +91,11 @@ export default function ResumeUpload() {
     
     try {
       setError(null); // Clear any previous errors
+      setSuccessMessage(null); // Clear any previous success messages
       
       // Upload file to Firebase Storage
       console.log('Starting file upload to Firebase Storage...');
+      console.log('This will replace any existing resume file');
       const resumeUrl = await uploadFile(file, `resumes/${userProfile.uid}`);
       console.log('File uploaded successfully:', resumeUrl);
       
@@ -119,6 +122,7 @@ export default function ResumeUpload() {
       
       console.log('User profile updated with resume data');
       setAnalyzing(false);
+      setSuccessMessage('Resume uploaded and analyzed successfully! Previous resume (if any) has been replaced.');
     } catch (error: any) {
       console.error('Error uploading resume:', error);
       setError(error.message || 'Failed to process resume. Please try again.');
@@ -126,13 +130,33 @@ export default function ResumeUpload() {
     }
   };
 
+  // Check if userProfile has a resumeUrl (it's a CandidateProfile)
+  const hasExistingResume = userProfile && 
+    typeof userProfile === 'object' && 
+    'resumeUrl' in userProfile && 
+    Boolean(userProfile.resumeUrl);
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-4">Upload Your Resume</h2>
+      <p className="text-sm text-gray-600 mb-4">Uploading a new resume will replace any existing resume in your profile.</p>
       
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
+        </div>
+      )}
+      
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          {successMessage}
+        </div>
+      )}
+      
+      {hasExistingResume && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded">
+          <p className="font-medium">You have an existing resume uploaded.</p>
+          <p className="text-sm">Uploading a new one will replace it.</p>
         </div>
       )}
       
@@ -157,7 +181,7 @@ export default function ResumeUpload() {
           disabled={uploading || analyzing}
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
         >
-          {uploading ? `Uploading: ${Math.round(progress)}%` : analyzing ? 'Analyzing...' : 'Upload and Analyze'}
+          {uploading ? `Uploading: ${Math.round(progress)}%` : analyzing ? 'Analyzing...' : 'Upload and Replace'}
         </button>
       )}
       
