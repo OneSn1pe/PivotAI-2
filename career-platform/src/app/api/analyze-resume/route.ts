@@ -83,15 +83,8 @@ const createResponse = (data: any, status = 200) => {
 // Handle OPTIONS requests (CORS preflight)
 export async function OPTIONS(request: NextRequest) {
   debug.log('OPTIONS request received');
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-      'Access-Control-Max-Age': '86400'
-    }
-  });
+  // Return successful preflight response with CORS headers
+  return createResponse({}, 200);
 }
 
 // Handle GET requests (for testing)
