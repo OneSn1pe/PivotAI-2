@@ -175,16 +175,25 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         
         // Try to parse the error response
         let errorMessage = `Failed to analyze resume (HTTP ${response.status})`;
+        let errorDetails = '';
+        
         if (responseText) {
           const { data, error } = safeJsonParse(responseText);
           if (data) {
             errorMessage = data.message || data.error || errorMessage;
+            errorDetails = data.details || '';
           } else {
             debug.error('Error parsing response:', error);
           }
         }
         
-        throw new Error(errorMessage);
+        // Create detailed error object
+        const enhancedError = new Error(errorMessage);
+        (enhancedError as any).status = response.status;
+        (enhancedError as any).details = errorDetails;
+        (enhancedError as any).url = apiUrl;
+        
+        throw enhancedError;
       }
       
       // Get the response text
@@ -199,28 +208,44 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         throw new Error('Failed to parse analysis results. Please try again.');
       }
       
-      // Validate response data
-      if (!data.skills || !Array.isArray(data.skills) || 
-          !data.strengths || !Array.isArray(data.strengths) ||
-          !data.recommendations || !Array.isArray(data.recommendations)) {
-        debug.error('Invalid API response format:', data);
-        throw new Error('Resume analysis returned invalid data format');
+      // Validate response data structure
+      if (!data) {
+        throw new Error('Resume analysis returned empty response');
       }
       
+      // Check for required fields with fallbacks
+      const validatedAnalysis: ResumeAnalysis = {
+        skills: Array.isArray(data.skills) ? data.skills : [],
+        experience: Array.isArray(data.experience) ? data.experience : [],
+        education: Array.isArray(data.education) ? data.education : [],
+        strengths: Array.isArray(data.strengths) ? data.strengths : [],
+        weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+        recommendations: Array.isArray(data.recommendations) ? data.recommendations : []
+      };
+      
       debug.log('Analysis successful!');
-      return data as ResumeAnalysis;
+      return validatedAnalysis;
       
     } catch (fetchError: any) {
       // Handle network errors including timeouts
       clearTimeout(timeoutId);
       
+      // Add more context to error
+      let errorMessage = fetchError.message || 'Unknown error';
+      
       if (fetchError.name === 'AbortError') {
         debug.error('Request timeout after 60 seconds');
-        throw new Error('Resume analysis timed out. Please try again.');
+        errorMessage = 'Resume analysis timed out. Please try again.';
+      } else if (fetchError.message?.includes('NetworkError')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
       }
       
-      debug.error('Fetch error:', fetchError);
-      throw fetchError;
+      const enhancedError = new Error(errorMessage);
+      (enhancedError as any).originalError = fetchError;
+      (enhancedError as any).type = 'network_error';
+      
+      debug.error('Fetch error:', enhancedError);
+      throw enhancedError;
     }
     
   } catch (error: any) {

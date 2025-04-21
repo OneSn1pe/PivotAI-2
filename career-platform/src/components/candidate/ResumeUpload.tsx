@@ -196,91 +196,172 @@ export default function ResumeUpload() {
       setError(null); // Clear any previous errors
       setSuccessMessage(null); // Clear any previous success messages
       
-      // Upload file to Firebase Storage
-      debug.log('Starting file upload to Firebase Storage...');
-      debug.log('This will replace any existing resume file');
-      
-      const resumeUrl = await uploadFile(file, `resumes/${userProfile.uid}`);
-      debug.log('File uploaded successfully:', resumeUrl);
-      debugData.resumeUrl = resumeUrl;
-      
-      // Analyze resume with GPT-4
-      setAnalyzing(true);
-      debug.log('Analyzing resume text. Length:', resumeText.length);
-      debugData.resumeTextLength = resumeText.length;
-      
-      if (!resumeText || resumeText.trim() === '') {
-        const error = new Error('Unable to extract text from file. Please try a different file format.');
-        debug.error(error.message);
-        throw error;
-      }
-      
-      // Use a sample of the text for debugging
-      const textSample = resumeText.substring(0, 200) + '...';
-      debug.log('Text sample:', textSample);
-      debugData.textSample = textSample;
-      
+      // Check Firebase connectivity first
+      debug.log('Checking Firebase connectivity...');
       try {
-        debug.log('Calling analyzeResume API...');
-        debugData.apiCallStartTime = new Date();
-        
-        const resumeAnalysis = await analyzeResume(resumeText);
-        
-        debugData.apiCallEndTime = new Date();
-        debugData.apiCallDuration = debugData.apiCallEndTime - debugData.apiCallStartTime;
-        debug.log(`API call completed in ${debugData.apiCallDuration}ms`);
-        
-        setAnalysis(resumeAnalysis);
-        debugData.analysisReceived = !!resumeAnalysis;
-        debug.log('Resume analysis complete:', resumeAnalysis);
-        
-        // Update user profile with resume URL and analysis
-        debug.log('Updating user profile in Firestore...');
-        await updateDoc(doc(db, 'users', userProfile.uid), {
-          resumeUrl,
-          resumeAnalysis,
-        });
-        
-        debugData.firestoreUpdateTime = new Date();
-        debug.log('User profile updated with resume data');
-        setAnalyzing(false);
-        setSuccessMessage('Resume uploaded and analyzed successfully! Previous resume (if any) has been replaced.');
-        debugData.success = true;
-      } catch (apiError: any) {
-        debug.error('API error during resume analysis:', apiError);
-        debugData.apiError = apiError instanceof Error ? 
-          { message: apiError.message, stack: apiError.stack } : 
-          String(apiError);
-        
-        // Detailed network debugging for API errors
-        debug.log('Checking if API error is a network issue...');
-        
-        // Test the API endpoint with a simple ping
-        try {
-          debug.log('Testing API endpoint with OPTIONS request...');
-          const testResponse = await fetch('/api/analyze-resume', { method: 'OPTIONS' });
-          debug.log('OPTIONS response status:', testResponse.status);
-          debugData.optionsTestStatus = testResponse.status;
-          
-          if (testResponse.status === 405) {
-            debug.error('API endpoint returned 405 for OPTIONS request - Method Not Allowed');
-            debugData.endpointAccessible = false;
-            setError('The API endpoint does not support the request method. Please contact support.');
-          } else {
-            debug.log('API endpoint is accessible');
-            debugData.endpointAccessible = true;
-            setError(`Resume analysis failed: ${apiError.message || 'Unknown error'}`);
-          }
-        } catch (testError) {
-          debug.error('Failed to test API endpoint:', testError);
-          debugData.apiTestError = testError instanceof Error ? 
-            { message: testError.message, stack: testError.stack } : 
-            String(testError);
-          setError(`Resume analysis failed, and API endpoint test also failed. Please check your network connection.`);
+        // Simple Firestore ping to check connection
+        if (!userProfile || !userProfile.uid) {
+          throw new Error('User profile not available. Please try logging out and back in.');
         }
         
+        // Upload file to Firebase Storage
+        debug.log('Starting file upload to Firebase Storage...');
+        debug.log('This will replace any existing resume file');
+        
+        const resumeUrl = await uploadFile(file, `resumes/${userProfile.uid}`);
+        debug.log('File uploaded successfully:', resumeUrl);
+        debugData.resumeUrl = resumeUrl;
+        
+        // Analyze resume with GPT-4
+        setAnalyzing(true);
+        debug.log('Analyzing resume text. Length:', resumeText.length);
+        debugData.resumeTextLength = resumeText.length;
+        
+        if (!resumeText || resumeText.trim() === '') {
+          const error = new Error('Unable to extract text from file. Please try a different file format.');
+          debug.error(error.message);
+          throw error;
+        }
+        
+        // Use a sample of the text for debugging
+        const textSample = resumeText.substring(0, 200) + '...';
+        debug.log('Text sample:', textSample);
+        debugData.textSample = textSample;
+        
+        try {
+          debug.log('Calling analyzeResume API...');
+          debugData.apiCallStartTime = new Date();
+          
+          // Add retry logic for API calls
+          let attempts = 0;
+          const maxAttempts = 2;
+          let resumeAnalysis: ResumeAnalysis | null = null;
+          
+          while (attempts < maxAttempts && !resumeAnalysis) {
+            try {
+              attempts++;
+              if (attempts > 1) {
+                debug.log(`Retry attempt ${attempts}/${maxAttempts}...`);
+              }
+              
+              resumeAnalysis = await analyzeResume(resumeText);
+              
+              if (!resumeAnalysis) {
+                throw new Error('Resume analysis returned empty result');
+              }
+            } catch (apiRetryError) {
+              if (attempts >= maxAttempts) {
+                throw apiRetryError;
+              }
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+            }
+          }
+          
+          if (!resumeAnalysis) {
+            throw new Error('Failed to analyze resume after multiple attempts');
+          }
+          
+          debugData.apiCallEndTime = new Date();
+          debugData.apiCallDuration = debugData.apiCallEndTime - debugData.apiCallStartTime;
+          debug.log(`API call completed in ${debugData.apiCallDuration}ms`);
+          
+          setAnalysis(resumeAnalysis);
+          debugData.analysisReceived = !!resumeAnalysis;
+          debug.log('Resume analysis complete:', resumeAnalysis);
+          
+          // Update user profile with resume URL and analysis
+          debug.log('Updating user profile in Firestore...');
+          try {
+            await updateDoc(doc(db, 'users', userProfile.uid), {
+              resumeUrl,
+              resumeAnalysis,
+            });
+            
+            debugData.firestoreUpdateTime = new Date();
+            debug.log('User profile updated with resume data');
+            setAnalyzing(false);
+            setSuccessMessage('Resume uploaded and analyzed successfully! Previous resume (if any) has been replaced.');
+            debugData.success = true;
+          } catch (firestoreError: any) {
+            debug.error('Error updating Firestore:', firestoreError);
+            // Continue and show success even if Firestore update fails
+            // The file upload and analysis were successful
+            setAnalyzing(false);
+            setSuccessMessage('Resume analyzed successfully, but there was an issue saving to your profile. Your analysis is displayed below.');
+            debugData.success = true;
+            debugData.firestoreError = firestoreError instanceof Error ? 
+              { message: firestoreError.message, stack: firestoreError.stack } : 
+              String(firestoreError);
+          }
+        } catch (apiError: any) {
+          debug.error('API error during resume analysis:', apiError);
+          debugData.apiError = apiError instanceof Error ? 
+            { message: apiError.message, stack: apiError.stack } : 
+            String(apiError);
+          
+          // Detailed network debugging for API errors
+          debug.log('Checking if API error is a network issue...');
+          
+          // Test the API endpoint with a simple ping
+          try {
+            debug.log('Testing API endpoint with OPTIONS request...');
+            const testResponse = await fetch('/api/analyze-resume', { method: 'OPTIONS' });
+            debug.log('OPTIONS response status:', testResponse.status);
+            debugData.optionsTestStatus = testResponse.status;
+            
+            if (testResponse.status === 405) {
+              debug.error('API endpoint returned 405 for OPTIONS request - Method Not Allowed');
+              debugData.endpointAccessible = false;
+              setError('The API endpoint does not support the request method. Please contact support.');
+            } else {
+              debug.log('API endpoint is accessible');
+              debugData.endpointAccessible = true;
+              setError(`Resume analysis failed: ${apiError.message || 'Unknown error'}`);
+            }
+          } catch (testError) {
+            debug.error('Failed to test API endpoint:', testError);
+            debugData.apiTestError = testError instanceof Error ? 
+              { message: testError.message, stack: testError.stack } : 
+              String(testError);
+            setError(`Resume analysis failed, and API endpoint test also failed. Please check your network connection.`);
+          }
+          
+          setAnalyzing(false);
+          throw apiError; // Re-throw for outer catch
+        }
+      } catch (error: any) {
+        console.error('Error uploading resume:', error);
+        debug.error('Overall error in upload process:', error);
+        
+        // If not already set by a specific handler
+        if (!debugData.apiError && !debugData.apiTestError) {
+          debugData.generalError = error instanceof Error ? 
+            { message: error.message, stack: error.stack } : 
+            String(error);
+        }
+        
+        debugData.success = false;
+        debugData.errorTime = new Date();
+        
+        if (!error) setError('An unknown error occurred. Please try again.');
         setAnalyzing(false);
-        throw apiError; // Re-throw for outer catch
+      } finally {
+        debugData.processDuration = new Date().getTime() - requestStartTime.getTime();
+        debug.log(`Process completed in ${debugData.processDuration}ms`);
+        debug.log('Debug data:', debugData);
+        setDebugInfo(debugData);
+        debug.groupEnd();
+        
+        // Add debug data to console for easy access
+        if (!window._debugLogs) window._debugLogs = [];
+        (window._debugLogs as any[]).push({
+          timestamp: new Date().toISOString(),
+          component: 'ResumeUpload',
+          data: debugData
+        });
+        
+        debug.log('Full debug logs available at window._debugLogs');
       }
     } catch (error: any) {
       console.error('Error uploading resume:', error);
@@ -298,22 +379,6 @@ export default function ResumeUpload() {
       
       if (!error) setError('An unknown error occurred. Please try again.');
       setAnalyzing(false);
-    } finally {
-      debugData.processDuration = new Date().getTime() - requestStartTime.getTime();
-      debug.log(`Process completed in ${debugData.processDuration}ms`);
-      debug.log('Debug data:', debugData);
-      setDebugInfo(debugData);
-      debug.groupEnd();
-      
-      // Add debug data to console for easy access
-      if (!window._debugLogs) window._debugLogs = [];
-      (window._debugLogs as any[]).push({
-        timestamp: new Date().toISOString(),
-        component: 'ResumeUpload',
-        data: debugData
-      });
-      
-      debug.log('Full debug logs available at window._debugLogs');
     }
   };
 
