@@ -272,11 +272,11 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: "system",
-            content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return the analysis in JSON format with skills, experience, education, strengths, weaknesses, and recommendations as arrays of strings."
+            content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings."
           },
           {
             role: "user",
-            content: `Analyze this resume and extract the following information in JSON format:
+            content: `Analyze this resume and extract the following information:
             - skills (array of strings)
             - experience (array of strings describing roles and responsibilities)
             - education (array of strings)
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
             - weaknesses (array of strings)
             - recommendations (array of strings with career advice)
             
-            Format your response as a valid JSON object without any explanation or preamble.
+            IMPORTANT: Format your response as a valid JSON object WITHOUT any explanation, preamble, or markdown. Your response should be parseable by JSON.parse() directly.
             
             Here's the resume: ${resumeText}`
           }
@@ -339,11 +339,33 @@ export async function POST(request: NextRequest) {
       
     } catch (openaiError: any) {
       debug.error('OpenAI API call failed:', openaiError);
+      
+      // Enhanced error handling with more detailed diagnostics
+      let errorMessage = 'Failed to process resume with AI service';
+      let errorDetails = openaiError.message || String(openaiError);
+      let statusCode = 500;
+      
+      // Check for specific OpenAI error types
+      if (openaiError.status === 429) {
+        errorMessage = 'OpenAI API rate limit exceeded';
+        statusCode = 503; // Service Unavailable
+      } else if (openaiError.status === 401) {
+        errorMessage = 'OpenAI API authentication error';
+        errorDetails = 'Invalid API key or unauthorized access';
+      } else if (openaiError.status === 400) {
+        errorMessage = 'OpenAI API request error';
+        // For parameter errors, be more specific
+        if (errorDetails.includes('param') || errorDetails.includes('parameter')) {
+          errorDetails = `API parameter error: ${errorDetails}`;
+        }
+      }
+      
       return createResponse({
-        error: 'Internal Server Error',
-        message: 'Failed to process resume with AI service',
-        details: openaiError.message || String(openaiError)
-      }, 500);
+        error: errorMessage,
+        message: 'The AI analysis service encountered an error',
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      }, statusCode);
     }
     
   } catch (error: any) {

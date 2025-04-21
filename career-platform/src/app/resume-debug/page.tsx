@@ -49,6 +49,9 @@ export default function ResumeDebugPage() {
             className="w-full border border-gray-300 rounded p-3 h-40 font-mono text-sm"
             placeholder="Enter resume text to analyze..."
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Include details like skills, experience, education, etc. to get meaningful results.
+          </p>
         </div>
         
         <button
@@ -56,7 +59,7 @@ export default function ResumeDebugPage() {
           disabled={loading || !resumeText.trim()}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
         >
-          {loading ? 'Testing...' : 'Test Resume Analysis'}
+          {loading ? 'Analyzing...' : 'Analyze Resume'}
         </button>
         
         {error && (
@@ -67,43 +70,129 @@ export default function ResumeDebugPage() {
         )}
         
         {response && (
-          <div className="mt-4">
-            <h3 className="font-bold">Response</h3>
-            <div className="mt-2">
-              <h4 className="font-semibold">Status: {response.status} {response.ok ? '✅' : '❌'}</h4>
+          <div className="mt-6">
+            <h3 className="font-bold text-xl mb-2">Analysis Results</h3>
+            <div className="mt-4">
+              <h4 className="font-semibold">Status: 
+                <span className={response.status === 200 ? "text-green-600" : "text-red-600"}>
+                  {" " + response.status} {response.ok ? '✅' : '❌'}
+                </span>
+              </h4>
               
               {response.data && (
-                <div className="mt-2">
-                  <h4 className="font-semibold">Skills:</h4>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {response.data.skills && response.data.skills.length > 0 ? (
-                      response.data.skills.map((skill: string, index: number) => (
-                        <span key={index} className="bg-gray-200 px-3 py-1 rounded-full text-sm">
-                          {skill}
-                        </span>
-                      ))
-                    ) : (
-                      <p className="text-gray-500">No skills detected</p>
-                    )}
+                <div className="mt-4 space-y-6">
+                  <div>
+                    <h4 className="font-semibold text-lg">Skills:</h4>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {response.data.skills && response.data.skills.length > 0 ? (
+                        response.data.skills.map((skill: string, index: number) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No skills detected</p>
+                      )}
+                    </div>
                   </div>
                   
-                  <h4 className="font-semibold mt-3">Strengths:</h4>
-                  <ul className="list-disc pl-5 mt-1">
-                    {response.data.strengths && response.data.strengths.length > 0 ? (
-                      response.data.strengths.map((strength: string, index: number) => (
-                        <li key={index}>{strength}</li>
-                      ))
-                    ) : (
-                      <p className="text-gray-500">No strengths detected</p>
-                    )}
-                  </ul>
+                  <div>
+                    <h4 className="font-semibold text-lg">Experience:</h4>
+                    <ul className="list-disc pl-5 mt-2">
+                      {response.data.experience && response.data.experience.length > 0 ? (
+                        response.data.experience.map((exp: string, index: number) => (
+                          <li key={index} className="text-gray-700">{exp}</li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No experience detected</p>
+                      )}
+                    </ul>
+                  </div>
                   
-                  <h4 className="font-semibold mt-3">Raw Response:</h4>
-                  <pre className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded overflow-auto text-sm">
+                  <div>
+                    <h4 className="font-semibold text-lg">Education:</h4>
+                    <ul className="list-disc pl-5 mt-2">
+                      {response.data.education && response.data.education.length > 0 ? (
+                        response.data.education.map((edu: string, index: number) => (
+                          <li key={index} className="text-gray-700">{edu}</li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No education detected</p>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-lg">Strengths:</h4>
+                    <ul className="list-disc pl-5 mt-2">
+                      {response.data.strengths && response.data.strengths.length > 0 ? (
+                        response.data.strengths.map((strength: string, index: number) => (
+                          <li key={index} className="text-gray-700">{strength}</li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No strengths detected</p>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-lg">Weaknesses:</h4>
+                    <ul className="list-disc pl-5 mt-2">
+                      {response.data.weaknesses && response.data.weaknesses.length > 0 ? (
+                        response.data.weaknesses.map((weakness: string, index: number) => (
+                          <li key={index} className="text-gray-700">{weakness}</li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No weaknesses detected</p>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-lg">Recommendations:</h4>
+                    <ul className="list-disc pl-5 mt-2">
+                      {response.data.recommendations && response.data.recommendations.length > 0 ? (
+                        response.data.recommendations.map((rec: string, index: number) => (
+                          <li key={index} className="text-gray-700">{rec}</li>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No recommendations detected</p>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <h4 className="font-semibold text-lg">Debug Info:</h4>
+                    <pre className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded overflow-auto text-sm">
+                      {JSON.stringify(response.data._debug || {}, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <button 
+                  onClick={() => {
+                    const el = document.createElement('textarea');
+                    el.value = JSON.stringify(response, null, 2);
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    alert('Response copied to clipboard!');
+                  }}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm"
+                >
+                  Copy Full Response
+                </button>
+                
+                <div className="mt-2">
+                  <h4 className="font-semibold">Full Response:</h4>
+                  <pre className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded overflow-auto text-xs max-h-96">
                     {JSON.stringify(response, null, 2)}
                   </pre>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}
