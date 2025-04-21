@@ -66,6 +66,11 @@ const nextConfig = {
       },
     ];
   },
+  
+  // Environment variables available at build time
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+  },
 };
 
 module.exports = nextConfig;

@@ -21,10 +21,10 @@ const getApiBaseUrl = () => {
     // Use the current origin (works in both dev and production)
     return window.location.origin;
   }
-  // Server-side rendering fallback
+  // Server-side rendering fallback for Vercel deployment
   return process.env.VERCEL_URL 
     ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000';
+    : process.env.NEXT_PUBLIC_API_URL || '';
 };
 
 /**
