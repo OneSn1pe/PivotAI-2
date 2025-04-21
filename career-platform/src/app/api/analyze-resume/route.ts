@@ -44,6 +44,11 @@ const debug = {
     } catch (err) {
       console.error('[API:analyze-resume:ERROR] Failed to log request:', err);
     }
+  },
+  // Add to the debug object additional functionality to track middleware
+  middleware: {
+    received: false,
+    modifiedHeaders: {}
   }
 };
 
@@ -172,6 +177,11 @@ export async function POST(request: NextRequest) {
   debug.log('POST request received');
   debug.request(request);
   
+  // Track middleware effects
+  const middlewareReceived = Boolean(request.headers.get('x-middleware-processed'));
+  debug.middleware.received = middlewareReceived;
+  debug.log('Middleware processed:', middlewareReceived);
+  
   const requestStartTime = performance.now();
   
   try {
@@ -179,12 +189,24 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type');
     debug.log('Content-Type:', contentType);
     
+    // Check and log all request headers for debugging
+    const requestHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      requestHeaders[key] = value;
+    });
+    debug.log('All request headers:', requestHeaders);
+    
     if (!contentType || !contentType.includes('application/json')) {
       debug.error('Invalid Content-Type header');
       return createResponse({
         error: 'Unsupported Media Type',
         message: 'Content-Type must be application/json',
-        received: contentType
+        received: contentType,
+        middlewareProcessed: middlewareReceived,
+        debug: {
+          headers: requestHeaders,
+          method: request.method
+        }
       }, 415);
     }
     
@@ -250,7 +272,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: "system",
-            content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis."
+            content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return the analysis in JSON format with skills, experience, education, strengths, weaknesses, and recommendations as arrays of strings."
           },
           {
             role: "user",
@@ -262,10 +284,11 @@ export async function POST(request: NextRequest) {
             - weaknesses (array of strings)
             - recommendations (array of strings with career advice)
             
+            Format your response as a valid JSON object without any explanation or preamble.
+            
             Here's the resume: ${resumeText}`
           }
-        ],
-        response_format: { type: "json_object" }
+        ]
       });
       
       const openaiDuration = performance.now() - openaiStartTime;

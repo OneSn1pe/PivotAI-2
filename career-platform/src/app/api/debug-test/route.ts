@@ -6,14 +6,33 @@ import { NextRequest, NextResponse } from 'next/server';
  * to help diagnose issues with API calls
  */
 
-// Helper to extract headers into a plain object
-const headersToObject = (headers: Headers): Record<string, string> => {
-  const obj: Record<string, string> = {};
-  headers.forEach((value, key) => {
-    obj[key] = value;
-  });
-  return obj;
+// Debug helper
+const debug = {
+  log: (...args: any[]) => console.log('[API:debug-test]', ...args),
+  error: (...args: any[]) => console.error('[API:debug-test:ERROR]', ...args)
 };
+
+// Log detailed request information
+function logRequestDetails(req: NextRequest) {
+  try {
+    const headersObj: Record<string, string> = {};
+    req.headers.forEach((value, key) => {
+      headersObj[key] = value;
+    });
+    
+    debug.log('Request details:', {
+      method: req.method,
+      url: req.url,
+      nextUrl: {
+        pathname: req.nextUrl.pathname,
+        search: req.nextUrl.search,
+      },
+      headers: headersObj
+    });
+  } catch (err) {
+    debug.error('Error logging request:', err);
+  }
+}
 
 // Set CORS headers helper function
 const setCorsHeaders = (response: NextResponse) => {
@@ -49,19 +68,10 @@ const createDebugResponse = (data: any, status = 200) => {
 
 // Handle OPTIONS requests (CORS preflight)
 export async function OPTIONS(request: NextRequest) {
-  console.log('[DEBUG-TEST] OPTIONS request received');
+  debug.log('OPTIONS request received');
+  logRequestDetails(request);
   
-  // Log the details of the request
-  const requestInfo = {
-    method: 'OPTIONS',
-    url: request.url,
-    headers: headersToObject(request.headers),
-    timestamp: new Date().toISOString()
-  };
-  
-  console.log('[DEBUG-TEST] Request details:', requestInfo);
-  
-  // Return standard OPTIONS response
+  // Manually set CORS headers
   return new NextResponse(null, {
     status: 204,
     headers: {
@@ -75,66 +85,34 @@ export async function OPTIONS(request: NextRequest) {
 
 // Handle GET requests
 export async function GET(request: NextRequest) {
-  console.log('[DEBUG-TEST] GET request received');
+  debug.log('GET request received');
+  logRequestDetails(request);
   
-  // Log the details of the request
-  const requestInfo = {
+  return NextResponse.json({
+    message: 'Debug endpoint is working (GET)',
     method: 'GET',
-    url: request.url,
-    headers: headersToObject(request.headers),
     timestamp: new Date().toISOString()
-  };
-  
-  console.log('[DEBUG-TEST] Request details:', requestInfo);
-  
-  return createDebugResponse({
-    message: "Debug API endpoint is functioning correctly",
-    request: requestInfo,
-    status: "Success"
   });
 }
 
 // Handle POST requests
 export async function POST(request: NextRequest) {
-  console.log('[DEBUG-TEST] POST request received');
+  debug.log('POST request received');
+  logRequestDetails(request);
   
-  // Log the details of the request
+  let body = '';
   try {
-    const clonedRequest = request.clone();
-    const body = await clonedRequest.text();
-    
-    const requestInfo = {
-      method: 'POST',
-      url: request.url,
-      headers: headersToObject(request.headers),
-      bodyText: body.substring(0, 500) + (body.length > 500 ? '...' : ''),
-      bodyLength: body.length,
-      timestamp: new Date().toISOString()
-    };
-    
-    console.log('[DEBUG-TEST] Request details:', requestInfo);
-    
-    // Attempt to parse body as JSON for debugging
-    let parsedBody: any = null;
-    try {
-      parsedBody = JSON.parse(body);
-      console.log('[DEBUG-TEST] Request JSON body:', parsedBody);
-    } catch (e) {
-      console.log('[DEBUG-TEST] Request body is not valid JSON');
-    }
-    
-    return createDebugResponse({
-      message: "Debug API endpoint received POST successfully",
-      request: requestInfo,
-      parsedBody,
-      status: "Success"
-    });
-  } catch (error) {
-    console.error('[DEBUG-TEST] Error processing POST request:', error);
-    return createDebugResponse({
-      message: "Error processing debug request",
-      error: String(error),
-      status: "Error"
-    }, 500);
+    body = await request.text();
+    debug.log('Request body:', body);
+  } catch (err) {
+    debug.error('Error reading body:', err);
   }
+
+  return NextResponse.json({
+    message: 'Debug endpoint is working (POST)',
+    method: 'POST',
+    receivedBody: body,
+    bodyLength: body.length,
+    timestamp: new Date().toISOString()
+  });
 } 

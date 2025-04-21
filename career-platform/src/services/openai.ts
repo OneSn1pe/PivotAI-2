@@ -39,6 +39,87 @@ const safeJsonParse = (text: string) => {
 };
 
 /**
+ * Debug function to test API endpoints with various HTTP methods
+ */
+export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' | 'OPTIONS' = 'GET', body?: any): Promise<any> {
+  debug.log(`Testing ${method} ${endpoint}...`);
+  
+  const baseUrl = getApiBaseUrl();
+  const apiUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+  debug.log(`Full URL: ${apiUrl}`);
+  
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+  };
+  
+  if (method === 'POST' && body) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  try {
+    debug.log(`Sending ${method} request to ${apiUrl}`);
+    debug.log('Headers:', headers);
+    if (body) debug.log('Body:', body);
+    
+    const options: RequestInit = {
+      method,
+      headers,
+      credentials: 'same-origin',
+      mode: 'cors',
+    };
+    
+    if (method === 'POST' && body) {
+      options.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+    
+    const response = await fetch(apiUrl, options);
+    
+    debug.log(`Response status: ${response.status} ${response.statusText}`);
+    
+    // Log response headers
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+    debug.log('Response headers:', responseHeaders);
+    
+    // Only try to parse body for non-OPTIONS requests
+    if (method !== 'OPTIONS') {
+      const responseText = await response.text();
+      debug.log('Response body (text):', responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
+      
+      const { data, error } = safeJsonParse(responseText);
+      if (error) {
+        debug.error('Failed to parse response as JSON:', error);
+        return { 
+          ok: response.ok, 
+          status: response.status, 
+          headers: responseHeaders,
+          text: responseText,
+          parseError: error
+        };
+      }
+      
+      return { 
+        ok: response.ok, 
+        status: response.status, 
+        headers: responseHeaders,
+        data 
+      };
+    }
+    
+    return { 
+      ok: response.ok, 
+      status: response.status, 
+      headers: responseHeaders
+    };
+  } catch (error) {
+    debug.error(`Request error (${method} ${apiUrl}):`, error);
+    throw error;
+  }
+}
+
+/**
  * Analyzes a resume text using OpenAI
  * @param resumeText The text content of the resume
  * @returns A structured analysis of the resume
