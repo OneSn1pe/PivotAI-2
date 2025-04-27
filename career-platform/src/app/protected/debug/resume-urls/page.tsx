@@ -22,6 +22,7 @@ export default function ResumeUrlDebugPage() {
   const [storageFiles, setStorageFiles] = useState<{name: string, path: string, url: string}[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [resumeFileName, setResumeFileName] = useState<string | null>(null);
   
   useEffect(() => {
     if (!candidateProfile) return;
@@ -38,6 +39,7 @@ export default function ResumeUrlDebugPage() {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setResumeUrl(userData.resumeUrl || null);
+          setResumeFileName(userData.resumeFileName || null);
         }
         
         // Get files from storage
@@ -159,7 +161,7 @@ export default function ResumeUrlDebugPage() {
     }
   };
   
-  const updateResumeUrl = async (newUrl: string) => {
+  const updateResumeUrl = async (newUrl: string, filename?: string) => {
     if (!candidateProfile) return;
     
     try {
@@ -167,10 +169,36 @@ export default function ResumeUrlDebugPage() {
       setError(null);
       setSuccess(null);
       
-      // Update database
-      await updateDoc(doc(db, 'users', candidateProfile.uid), {
-        resumeUrl: newUrl,
-      });
+      // Get filename from the storage item if not provided
+      let newFilename = filename;
+      if (!newFilename) {
+        // Try to extract from the URL or path
+        const file = storageFiles.find(f => f.url === newUrl);
+        if (file) {
+          // Extract the original filename without the timestamp prefix
+          const parts = file.name.split('_');
+          if (parts.length > 1) {
+            // Remove timestamp prefix
+            parts.shift(); 
+            newFilename = parts.join('_');
+          } else {
+            newFilename = file.name;
+          }
+        }
+      }
+      
+      // Update database with both URL and filename
+      const updateData: Record<string, any> = {
+        resumeUrl: newUrl
+      };
+      
+      if (newFilename) {
+        updateData.resumeFileName = newFilename;
+        // Update local state immediately
+        setResumeFileName(newFilename);
+      }
+      
+      await updateDoc(doc(db, 'users', candidateProfile.uid), updateData);
       
       setResumeUrl(newUrl);
       setSuccess("Resume URL successfully updated in database");
@@ -224,9 +252,20 @@ export default function ResumeUrlDebugPage() {
           
           {/* Current Resume URL */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Current Resume URL</h2>
+            <h2 className="text-xl font-bold mb-4">Current Resume</h2>
             
             <div className="space-y-4">
+              {resumeFileName && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Filename
+                  </label>
+                  <div className="p-2 border border-gray-300 rounded bg-gray-50 font-medium">
+                    {resumeFileName}
+                  </div>
+                </div>
+              )}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   URL in Database
@@ -308,10 +347,20 @@ export default function ResumeUrlDebugPage() {
                                 {downloading ? 'Downloading...' : 'Download'}
                               </button>
                               <button
-                                onClick={() => updateResumeUrl(file.url)}
+                                onClick={() => {
+                                  // Extract the original filename without the timestamp prefix
+                                  const parts = file.name.split('_');
+                                  let displayName = file.name;
+                                  if (parts.length > 1) {
+                                    // Remove timestamp prefix
+                                    parts.shift(); 
+                                    displayName = parts.join('_');
+                                  }
+                                  updateResumeUrl(file.url, displayName);
+                                }}
                                 className="text-green-600 hover:text-green-800 text-sm"
                               >
-                                Use This URL
+                                Use This File
                               </button>
                             </div>
                           </td>
@@ -325,7 +374,7 @@ export default function ResumeUrlDebugPage() {
                   <p className="font-semibold">How to fix 404 errors:</p>
                   <ol className="list-decimal pl-5 mt-1 space-y-1">
                     <li>Check if the current resume URL is valid</li>
-                    <li>If not, click "Use This URL" on the most recent file (highlighted at the top)</li>
+                    <li>If not, click "Use This File" on the most recent file (highlighted at the top)</li>
                     <li>Go back to your dashboard and try viewing the resume again</li>
                   </ol>
                 </div>

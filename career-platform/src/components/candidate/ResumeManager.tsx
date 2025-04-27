@@ -26,11 +26,19 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [validatedResumeUrl, setValidatedResumeUrl] = useState<string | null>(null);
   const [validatingUrl, setValidatingUrl] = useState(false);
+  const [displayFileName, setDisplayFileName] = useState<string | null>(candidateProfile?.resumeFileName || null);
   
   // Validate resume URL on component mount
   useEffect(() => {
     forceGetLatestResume();
   }, []);
+  
+  // Update local filename state when profile changes
+  useEffect(() => {
+    if (candidateProfile?.resumeFileName) {
+      setDisplayFileName(candidateProfile.resumeFileName);
+    }
+  }, [candidateProfile?.resumeFileName]);
   
   // Force get the latest resume from Storage rather than relying on the database URL
   const forceGetLatestResume = async () => {
@@ -182,6 +190,9 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       // Set the validated URL to the new URL
       setValidatedResumeUrl(resumeUrl);
       
+      // Update local state with new filename immediately
+      setDisplayFileName(originalFileName);
+      
       setAnalyzing(false);
       setSuccessMessage('Resume updated and analyzed successfully!');
       
@@ -268,8 +279,8 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-lg mb-2">Current Resume</h3>
           <p className="text-sm text-gray-600 mb-3">
-            {candidateProfile.resumeFileName ? (
-              <>File: <span className="font-medium">{candidateProfile.resumeFileName}</span> • </>
+            {displayFileName ? (
+              <>File: <span className="font-medium">{displayFileName}</span> • </>
             ) : null}
             Last updated: {candidateProfile.updatedAt ? 
               (candidateProfile.updatedAt instanceof Date ? 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getDocs, collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { getDocs, collection, query, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CareerRoadmap, CandidateProfile } from '@/types/user';
@@ -22,6 +22,7 @@ export default function CandidateDashboard() {
   const [showResumeManager, setShowResumeManager] = useState(false);
   const [validatedResumeUrl, setValidatedResumeUrl] = useState<string | null>(null);
   const [validatingUrl, setValidatingUrl] = useState(false);
+  const [displayFileName, setDisplayFileName] = useState<string | null>(candidateProfile?.resumeFileName || null);
 
   useEffect(() => {
     async function fetchRoadmap() {
@@ -57,6 +58,12 @@ export default function CandidateDashboard() {
     }
   }, [candidateProfile?.resumeUrl]);
 
+  useEffect(() => {
+    if (candidateProfile?.resumeFileName) {
+      setDisplayFileName(candidateProfile.resumeFileName);
+    }
+  }, [candidateProfile?.resumeFileName]);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -71,6 +78,24 @@ export default function CandidateDashboard() {
     if (candidateProfile) {
       // Clear validated URL cache to force re-fetching
       setValidatedResumeUrl(null);
+      
+      // Get the latest filename from user document
+      const fetchLatestData = async () => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', candidateProfile.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            // Update local display filename immediately
+            if (userData.resumeFileName) {
+              setDisplayFileName(userData.resumeFileName);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching latest user data:', err);
+        }
+      };
+      
+      fetchLatestData();
       
       // Force revalidation to get the newest file
       setTimeout(() => {
@@ -367,8 +392,8 @@ export default function CandidateDashboard() {
                   </div>
                   
                   <p className="text-gray-600 text-sm mb-4">
-                    {candidateProfile.resumeFileName && (
-                      <span className="block mb-1">File: <span className="font-medium">{candidateProfile.resumeFileName}</span></span>
+                    {displayFileName && (
+                      <span className="block mb-1">File: <span className="font-medium">{displayFileName}</span></span>
                     )}
                     Update your resume to get a fresh analysis of your skills and areas for improvement.
                   </p>
