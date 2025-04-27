@@ -204,7 +204,7 @@ export default function CandidateDashboard() {
                       <p className="text-gray-600 mb-2">{milestone.description}</p>
                       
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {milestone.skills.map((skill, skillIndex) => (
+                        {milestone.skills && milestone.skills.map((skill, skillIndex) => (
                           <span key={skillIndex} className="bg-gray-200 px-2 py-1 rounded text-xs">
                             {skill}
                           </span>
@@ -215,7 +215,10 @@ export default function CandidateDashboard() {
                         <span className="text-sm text-gray-500">{milestone.timeframe}</span>
                         
                         {!milestone.completed && (
-                          <button className="text-blue-600 text-sm hover:underline">
+                          <button 
+                            onClick={() => router.push('/protected/candidate/roadmap')}
+                            className="text-blue-600 text-sm hover:underline"
+                          >
                             Mark as Complete
                           </button>
                         )}
@@ -224,6 +227,15 @@ export default function CandidateDashboard() {
                   </div>
                 ))}
               </div>
+              
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => router.push('/protected/candidate/roadmap')}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                >
+                  View Full Roadmap
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">
@@ -231,7 +243,7 @@ export default function CandidateDashboard() {
                 No career roadmap available yet. Complete your profile and add target companies to generate one.
               </p>
               <button
-                onClick={() => router.push('/protected/candidate/preferences')}
+                onClick={() => router.push('/protected/candidate/roadmap')}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
               >
                 Add Target Companies
