@@ -9,6 +9,12 @@ export function useFileUpload() {
   const [error, setError] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
+  // Helper function to extract directory path from a full path
+  const getDirectoryPath = (fullPath: string): string => {
+    const lastSlashIndex = fullPath.lastIndexOf('/');
+    return lastSlashIndex > 0 ? fullPath.substring(0, lastSlashIndex) : fullPath;
+  };
+
   // Helper function to delete all files in a directory
   const deleteFilesInDirectory = async (directoryPath: string): Promise<void> => {
     try {
@@ -38,10 +44,17 @@ export function useFileUpload() {
         throw new Error('User must be authenticated to upload files');
       }
 
+      // For directory-based cleanup, get directory path 
+      const directoryPath = getDirectoryPath(path);
+      
       // Delete any existing files in the directory before uploading
-      await deleteFilesInDirectory(path);
+      // Only if the path has a directory structure
+      if (directoryPath !== path) {
+        await deleteFilesInDirectory(directoryPath);
+      }
 
-      const storageRef = ref(storage, `${path}/${file.name}`);
+      // Use the exact path provided including filename
+      const storageRef = ref(storage, path);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       return new Promise((resolve, reject) => {

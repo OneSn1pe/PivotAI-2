@@ -62,6 +62,18 @@ export default function CandidateDashboard() {
     }
   };
 
+  const handleViewResume = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    
+    if (!candidateProfile?.resumeUrl) {
+      console.error('Resume URL not found');
+      return;
+    }
+    
+    // Open the resume URL in a new tab
+    window.open(candidateProfile.resumeUrl, '_blank');
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -183,9 +195,8 @@ export default function CandidateDashboard() {
                   
                   <div className="flex space-x-3">
                     <a 
-                      href={candidateProfile.resumeUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                      href="#"
+                      onClick={handleViewResume}
                       className="text-blue-600 hover:text-blue-800 text-sm underline"
                     >
                       View Resume
