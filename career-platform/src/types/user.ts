@@ -15,6 +15,7 @@ export enum UserRole {
   export interface CandidateProfile extends User {
     role: UserRole.CANDIDATE;
     resumeUrl?: string;
+    resumeFileName?: string;
     resumeAnalysis?: ResumeAnalysis;
     jobPreferences?: JobPreferences;
     targetCompanies?: TargetCompany[];

@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { analyzeResume } from '@/services/openai';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
-import { ref, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL, listAll } from 'firebase/storage';
 
 interface ResumeManagerProps {
   onUpdateComplete?: () => void;
@@ -22,6 +22,76 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [validatedResumeUrl, setValidatedResumeUrl] = useState<string | null>(null);
+  const [validatingUrl, setValidatingUrl] = useState(false);
+  
+  // Validate resume URL on component mount
+  useEffect(() => {
+    validateResumeUrl();
+  }, [candidateProfile?.resumeUrl]);
+  
+  // Function to validate resume URL
+  const validateResumeUrl = async () => {
+    if (!candidateProfile?.resumeUrl) return;
+    
+    setValidatingUrl(true);
+    setError(null);
+    
+    try {
+      // Try to fetch the URL directly first
+      await fetch(candidateProfile.resumeUrl, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            setValidatedResumeUrl(candidateProfile.resumeUrl || null);
+            return;
+          }
+          throw new Error('URL not accessible');
+        })
+        .catch(async () => {
+          // If direct fetch fails, try to find the most recent resume file in storage
+          if (!userProfile?.uid) throw new Error('User not authenticated');
+          
+          const userResumesRef = ref(storage, `resumes/${userProfile.uid}`);
+          
+          try {
+            // List all files in the user's resume directory
+            const filesList = await listAll(userResumesRef);
+            
+            if (filesList.items.length === 0) {
+              throw new Error('No resume files found in storage');
+            }
+            
+            // Sort by name to get the most recent one (since we use timestamps in filenames)
+            const sortedItems = [...filesList.items].sort((a, b) => {
+              return b.name.localeCompare(a.name);
+            });
+            
+            // Get the download URL of the most recent file
+            const latestFileUrl = await getDownloadURL(sortedItems[0]);
+            
+            if (latestFileUrl !== candidateProfile.resumeUrl) {
+              // Update the database with the correct URL
+              await updateDoc(doc(db, 'users', userProfile.uid), {
+                resumeUrl: latestFileUrl,
+              });
+              
+              console.log('Updated resume URL in database to match most recent file');
+            }
+            
+            setValidatedResumeUrl(latestFileUrl);
+          } catch (storageErr) {
+            console.error('Storage error:', storageErr);
+            throw new Error('Could not find resume in storage');
+          }
+        });
+    } catch (err) {
+      console.error('Resume URL validation error:', err);
+      setError('Cannot access resume file. It may have been moved or deleted.');
+      setValidatedResumeUrl(null);
+    } finally {
+      setValidatingUrl(false);
+    }
+  };
   
   // Function to extract text from various file types
   const extractTextFromFile = useCallback(async (file: File): Promise<string> => {
@@ -90,6 +160,9 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       setError(null);
       setSuccessMessage(null);
       
+      // Store the original file name in user-friendly format
+      const originalFileName = file.name;
+      
       // Create a unique path for the file that includes file extension
       const fileExtension = file.name.split('.').pop() || '';
       const timestamp = Date.now();
@@ -115,9 +188,13 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       // Update user profile with the new URL and analysis
       await updateDoc(doc(db, 'users', userProfile.uid), {
         resumeUrl,
+        resumeFileName: originalFileName, // Store original filename for display
         resumeAnalysis,
         updatedAt: new Date(),
       });
+      
+      // Set the validated URL to the new URL
+      setValidatedResumeUrl(resumeUrl);
       
       setAnalyzing(false);
       setSuccessMessage('Resume updated and analyzed successfully!');
@@ -133,17 +210,24 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
     }
   };
   
-  // Function to view resume - ensures URL is valid
+  // Function to view resume - uses validated URL
   const handleViewResume = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
-    if (!candidateProfile?.resumeUrl) {
-      setError('Resume URL not found');
+    if (validatingUrl) {
+      setError('Please wait, validating resume access...');
       return;
     }
     
-    // Open the resume URL in a new tab
-    window.open(candidateProfile.resumeUrl, '_blank');
+    if (!validatedResumeUrl) {
+      // Try to validate again
+      validateResumeUrl();
+      setError('Cannot access resume file. Trying to locate it...');
+      return;
+    }
+    
+    // Open the validated resume URL in a new tab
+    window.open(validatedResumeUrl, '_blank');
   };
   
   return (
@@ -154,6 +238,9 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-lg mb-2">Current Resume</h3>
           <p className="text-sm text-gray-600 mb-3">
+            {candidateProfile.resumeFileName ? (
+              <>File: <span className="font-medium">{candidateProfile.resumeFileName}</span> • </>
+            ) : null}
             Last updated: {candidateProfile.updatedAt ? new Date(candidateProfile.updatedAt).toLocaleDateString() : 'Unknown'}
           </p>
           
@@ -161,13 +248,14 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             <a 
               href="#"
               onClick={handleViewResume}
-              className="inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200"
+              className={`inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 ${validatingUrl ? 'opacity-50 cursor-wait' : ''}`}
+              aria-disabled={validatingUrl}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              View Current Resume
+              {validatingUrl ? 'Validating...' : 'View Current Resume'}
             </a>
           </div>
         </div>
