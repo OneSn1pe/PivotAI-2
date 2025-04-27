@@ -8,6 +8,7 @@ import { CareerRoadmap, CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/config/firebase';
+import ResumeManager from '@/components/candidate/ResumeManager';
 
 export default function CandidateDashboard() {
   const { userProfile, logout } = useAuth();
@@ -15,6 +16,7 @@ export default function CandidateDashboard() {
   const router = useRouter();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showResumeManager, setShowResumeManager] = useState(false);
 
   useEffect(() => {
     async function fetchRoadmap() {
@@ -49,6 +51,14 @@ export default function CandidateDashboard() {
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  };
+
+  const handleResumeUpdate = () => {
+    // Refresh dashboard data after resume update
+    if (candidateProfile) {
+      // Re-fetch data or reset state to ensure refreshed data is displayed
+      router.refresh();
     }
   };
 
@@ -139,6 +149,69 @@ export default function CandidateDashboard() {
             </div>
           ) : (
             <p className="text-gray-500 italic">Upload your resume to analyze your skills</p>
+          )}
+        </div>
+
+        {/* Resume Management */}
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Your Resume</h2>
+            <button
+              onClick={() => setShowResumeManager(!showResumeManager)}
+              className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+            >
+              {showResumeManager ? 'Hide' : 'Manage Resume'}
+            </button>
+          </div>
+          
+          {showResumeManager ? (
+            <ResumeManager onUpdateComplete={handleResumeUpdate} />
+          ) : (
+            <div>
+              {candidateProfile?.resumeUrl ? (
+                <div>
+                  <div className="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-green-600 font-semibold">Resume uploaded</span>
+                  </div>
+                  
+                  <p className="text-gray-600 text-sm mb-4">
+                    Update your resume to get a fresh analysis of your skills and areas for improvement.
+                  </p>
+                  
+                  <div className="flex space-x-3">
+                    <a 
+                      href={candidateProfile.resumeUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      View Resume
+                    </a>
+                    <button
+                      onClick={() => setShowResumeManager(true)}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline"
+                    >
+                      Update Resume
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-500 mb-4">
+                    No resume uploaded yet.
+                  </p>
+                  <button
+                    onClick={() => setShowResumeManager(true)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Upload Resume
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 

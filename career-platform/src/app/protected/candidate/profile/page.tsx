@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import ResumeUpload from '@/components/candidate/ResumeUpload';
+import ResumeManager from '@/components/candidate/ResumeManager';
 import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
@@ -22,7 +22,7 @@ export default function ProfilePage() {
       <h1 className="text-3xl font-bold mb-8">Your Profile</h1>
       
       <div className="mx-auto max-w-lg">
-        <ResumeUpload />
+        <ResumeManager onUpdateComplete={() => router.refresh()} />
       </div>
       
       <div className="mt-8">

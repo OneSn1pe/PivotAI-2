@@ -19,6 +19,7 @@ export enum UserRole {
     jobPreferences?: JobPreferences;
     targetCompanies?: TargetCompany[];
     skills?: string[];
+    updatedAt?: Date;
   }
   
   export interface RecruiterProfile extends User {
