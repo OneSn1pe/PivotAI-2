@@ -389,6 +389,21 @@ export default function ResumeUrlDebugPage() {
                 Refresh File List
               </button>
             </div>
+            
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h3 className="text-lg font-medium mb-2">Advanced Debugging</h3>
+              <div className="flex space-x-4">
+                <a 
+                  href="/protected/debug/resume-analysis" 
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Test Resume Analysis API
+                </a>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                If you're experiencing issues with resume analysis, use the debugging tool to test the API directly.
+              </p>
+            </div>
           </div>
         </div>
       )}

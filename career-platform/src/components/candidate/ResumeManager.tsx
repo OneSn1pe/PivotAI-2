@@ -151,6 +151,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
     }
     
     try {
+      console.log('Starting resume upload and analysis process...');
       setError(null);
       setSuccessMessage(null);
       
@@ -162,8 +163,11 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       const timestamp = Date.now();
       const filePath = `resumes/${userProfile.uid}/${timestamp}_resume.${fileExtension}`;
       
+      console.log(`Uploading file ${originalFileName} to path: ${filePath}`);
+      
       // Upload file to storage
       const resumeUrl = await uploadFile(file, filePath);
+      console.log('File uploaded successfully, URL:', resumeUrl);
       
       // Analyze resume
       setAnalyzing(true);
@@ -171,37 +175,60 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         throw new Error('Unable to extract text from the file. Please try a different format.');
       }
       
-      const resumeAnalysis = await analyzeResume(resumeText);
+      console.log(`Starting resume analysis. Text length: ${resumeText.length}`);
+      console.log('First 100 chars of resumeText:', resumeText.substring(0, 100));
       
-      if (!resumeAnalysis) {
-        throw new Error('Resume analysis failed. Please try again.');
-      }
-      
-      setAnalysis(resumeAnalysis);
-      
-      // Update user profile with the new URL and analysis
-      await updateDoc(doc(db, 'users', userProfile.uid), {
-        resumeUrl,
-        resumeFileName: originalFileName, // Store original filename for display
-        resumeAnalysis,
-        updatedAt: serverTimestamp(),  // Use Firebase server timestamp for consistent timing
-      });
-      
-      // Set the validated URL to the new URL
-      setValidatedResumeUrl(resumeUrl);
-      
-      // Update local state with new filename immediately
-      setDisplayFileName(originalFileName);
-      
-      setAnalyzing(false);
-      setSuccessMessage('Resume updated and analyzed successfully!');
-      
-      // Notify parent component of update
-      if (onUpdateComplete) {
-        onUpdateComplete();
+      try {
+        console.log('Calling analyzeResume API...');
+        const analysisStartTime = performance.now();
+        
+        const resumeAnalysis = await analyzeResume(resumeText);
+        
+        const analysisTime = performance.now() - analysisStartTime;
+        console.log(`Resume analysis completed in ${Math.round(analysisTime)}ms`);
+        
+        if (!resumeAnalysis) {
+          console.error('Resume analysis returned null or undefined');
+          throw new Error('Resume analysis failed. Please try again.');
+        }
+        
+        console.log('Analysis results:', resumeAnalysis);
+        
+        setAnalysis(resumeAnalysis);
+        
+        // Update user profile with the new URL and analysis
+        console.log('Updating user profile in Firestore...');
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          resumeUrl,
+          resumeFileName: originalFileName, // Store original filename for display
+          resumeAnalysis,
+          updatedAt: serverTimestamp(),  // Use Firebase server timestamp for consistent timing
+        });
+        
+        console.log('Firestore update completed, updating UI state...');
+        
+        // Set the validated URL to the new URL
+        setValidatedResumeUrl(resumeUrl);
+        
+        // Update local state with new filename immediately
+        setDisplayFileName(originalFileName);
+        
+        setAnalyzing(false);
+        setSuccessMessage('Resume updated and analyzed successfully!');
+        
+        // Notify parent component of update
+        if (onUpdateComplete) {
+          console.log('Notifying parent of update completion');
+          onUpdateComplete();
+        }
+        
+      } catch (analysisError) {
+        console.error('Error during resume analysis:', analysisError);
+        throw analysisError; // Re-throw to be caught by outer catch block
       }
       
     } catch (err) {
+      console.error('Overall error in handleUpload:', err);
       setAnalyzing(false);
       setError('Error: ' + (err instanceof Error ? err.message : String(err)));
     }
