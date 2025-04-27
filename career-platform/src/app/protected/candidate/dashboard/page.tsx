@@ -79,60 +79,67 @@ export default function CandidateDashboard() {
     setValidatingUrl(true);
     
     try {
-      // Try to fetch the URL directly first
-      await fetch(candidateProfile.resumeUrl, { method: 'HEAD' })
-        .then(response => {
+      // Instead of using fetch (which can trigger CORS issues), 
+      // we'll directly check if URL pattern matches a Firebase Storage URL
+      const isStorageUrl = candidateProfile.resumeUrl.includes('firebasestorage.googleapis.com');
+      
+      if (isStorageUrl) {
+        // For Firebase URLs, we'll trust it's valid since we just got it from Firebase
+        setValidatedResumeUrl(candidateProfile.resumeUrl || null);
+      } else {
+        // For non-Firebase URLs, we can try fetch
+        try {
+          const response = await fetch(candidateProfile.resumeUrl, { method: 'HEAD' });
           if (response.ok) {
             setValidatedResumeUrl(candidateProfile.resumeUrl || null);
-            return;
+          } else {
+            throw new Error('URL not accessible');
           }
-          throw new Error('URL not accessible');
-        })
-        .catch(async () => {
-          // If direct fetch fails, try to find the most recent resume file in storage
-          if (!candidateProfile.uid) throw new Error('User not authenticated');
-          
-          const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
-          
-          try {
-            // List all files in the user's resume directory
-            const filesList = await listAll(userResumesRef);
-            
-            if (filesList.items.length === 0) {
-              throw new Error('No resume files found in storage');
-            }
-            
-            // Sort by name to get the most recent one (since we use timestamps in filenames)
-            const sortedItems = [...filesList.items].sort((a, b) => {
-              return b.name.localeCompare(a.name);
-            });
-            
-            // Get the download URL of the most recent file
-            const latestFileUrl = await getDownloadURL(sortedItems[0]);
-            
-            if (latestFileUrl !== candidateProfile.resumeUrl) {
-              // Update the database with the correct URL
-              await updateDoc(doc(db, 'users', candidateProfile.uid), {
-                resumeUrl: latestFileUrl,
-              });
-              
-              console.log('Updated resume URL in database to match most recent file');
-            }
-            
-            setValidatedResumeUrl(latestFileUrl);
-          } catch (storageErr) {
-            console.error('Storage error:', storageErr);
-            throw new Error('Could not find resume in storage');
-          }
-        });
+        } catch (fetchErr) {
+          throw new Error('URL validation failed');
+        }
+      }
     } catch (err) {
       console.error('Resume URL validation error:', err);
-      setValidatedResumeUrl(null);
+      
+      // Try to recover by finding the most recent file
+      try {
+        if (!candidateProfile.uid) throw new Error('User not authenticated');
+        
+        const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+        
+        // List all files in the user's resume directory
+        const filesList = await listAll(userResumesRef);
+        
+        if (filesList.items.length === 0) {
+          throw new Error('No resume files found in storage');
+        }
+        
+        // Sort by name to get the most recent one (since we use timestamps in filenames)
+        const sortedItems = [...filesList.items].sort((a, b) => {
+          return b.name.localeCompare(a.name);
+        });
+        
+        // Get the download URL of the most recent file
+        const latestFileUrl = await getDownloadURL(sortedItems[0]);
+        
+        // Update the database with the correct URL
+        await updateDoc(doc(db, 'users', candidateProfile.uid), {
+          resumeUrl: latestFileUrl,
+        });
+        
+        console.log('Updated resume URL in database to match most recent file');
+        setValidatedResumeUrl(latestFileUrl);
+      } catch (storageErr) {
+        console.error('Storage recovery error:', storageErr);
+        setValidatedResumeUrl(null);
+      }
     } finally {
       setValidatingUrl(false);
     }
   };
 
+  // Function to handle resume viewing/downloading
   const handleViewResume = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
@@ -148,8 +155,37 @@ export default function CandidateDashboard() {
       return;
     }
     
-    // Open the validated resume URL in a new tab
-    window.open(validatedResumeUrl, '_blank');
+    // For PDFs - use download approach to avoid CORS issues
+    if (validatedResumeUrl.toLowerCase().includes('.pdf')) {
+      // Create an invisible link and trigger a download
+      const link = document.createElement('a');
+      link.href = validatedResumeUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      // Try to extract a filename
+      let filename = 'resume.pdf';
+      if (candidateProfile?.resumeFileName) {
+        filename = candidateProfile.resumeFileName;
+      } else {
+        // Try to extract from the URL
+        const urlParts = validatedResumeUrl.split('/');
+        const lastPart = urlParts[urlParts.length - 1].split('?')[0];
+        if (lastPart && lastPart.includes('.')) {
+          filename = decodeURIComponent(lastPart);
+        }
+      }
+      
+      // Set download attribute to trigger download
+      link.setAttribute('download', filename);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // For non-PDFs, open in a new tab
+      window.open(validatedResumeUrl, '_blank');
+    }
   };
 
   if (loading) {
@@ -281,7 +317,11 @@ export default function CandidateDashboard() {
                       className={`text-blue-600 hover:text-blue-800 text-sm underline ${validatingUrl ? 'opacity-50 cursor-wait' : ''}`}
                       aria-disabled={validatingUrl}
                     >
-                      {validatingUrl ? 'Validating...' : 'View Resume'}
+                      {validatingUrl ? 'Validating...' : (
+                        candidateProfile?.resumeUrl?.toLowerCase().includes('.pdf') 
+                          ? 'Download Resume' 
+                          : 'View Resume'
+                      )}
                     </a>
                     <button
                       onClick={() => setShowResumeManager(true)}

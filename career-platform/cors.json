@@ -1,6 +1,6 @@
 [
   {
-    "origin": ["*"],
+    "origin": ["https://www.pivotai.me", "http://www.pivotai.me", "https://pivotai.me", "http://pivotai.me", "http://localhost:3000"],
     "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "responseHeader": [
       "Content-Type",

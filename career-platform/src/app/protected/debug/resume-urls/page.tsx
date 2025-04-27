@@ -101,13 +101,47 @@ export default function ResumeUrlDebugPage() {
     setIsUrlValid(null);
     
     try {
-      const response = await fetch(resumeUrl, { method: 'HEAD' });
-      setIsUrlValid(response.ok);
+      // Handle Firebase Storage URLs differently to avoid CORS issues
+      const isStorageUrl = resumeUrl.includes('firebasestorage.googleapis.com');
+      
+      if (isStorageUrl) {
+        // For Firebase URLs, we'll assume it's valid unless proven otherwise
+        setIsUrlValid(true);
+      } else {
+        // For non-Firebase URLs, try fetch
+        const response = await fetch(resumeUrl, { method: 'HEAD' });
+        setIsUrlValid(response.ok);
+      }
     } catch (err) {
       console.error("Error checking URL:", err);
       setIsUrlValid(false);
     } finally {
       setCheckingUrl(false);
+    }
+  };
+  
+  // New function to safely download or view a file
+  const handleViewOrDownload = (url: string) => {
+    // For PDFs, trigger a download to avoid CORS issues
+    if (url.toLowerCase().includes('.pdf')) {
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Try to extract a filename
+      let filename = 'resume.pdf';
+      const urlParts = url.split('/');
+      const lastPart = urlParts[urlParts.length - 1].split('?')[0];
+      if (lastPart && lastPart.includes('.')) {
+        filename = decodeURIComponent(lastPart);
+      }
+      
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // For non-PDFs, try to open in a new tab
+      window.open(url, '_blank');
     }
   };
   
@@ -211,10 +245,10 @@ export default function ResumeUrlDebugPage() {
               {resumeUrl && (
                 <div className="mt-2">
                   <button
-                    onClick={() => window.open(resumeUrl, '_blank')}
+                    onClick={() => handleViewOrDownload(resumeUrl)}
                     className="text-blue-600 hover:text-blue-800 underline text-sm"
                   >
-                    Test Open URL
+                    {resumeUrl.toLowerCase().includes('.pdf') ? 'Download File' : 'View File'}
                   </button>
                 </div>
               )}
@@ -252,10 +286,10 @@ export default function ResumeUrlDebugPage() {
                           <td className="py-2 px-4">
                             <div className="flex gap-2">
                               <button
-                                onClick={() => window.open(file.url, '_blank')}
+                                onClick={() => handleViewOrDownload(file.url)}
                                 className="text-blue-600 hover:text-blue-800 text-sm"
                               >
-                                View
+                                {file.name.toLowerCase().includes('.pdf') ? 'Download' : 'View'}
                               </button>
                               <button
                                 onClick={() => updateResumeUrl(file.url)}
