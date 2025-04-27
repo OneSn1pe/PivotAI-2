@@ -468,7 +468,7 @@ export default function CandidateDashboard() {
                 No target companies set yet.
               </p>
               <button
-                onClick={() => router.push('/protected/candidate/preferences')}
+                onClick={() => router.push('/protected/candidate/roadmap')}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
               >
                 Add Target Companies
@@ -547,7 +547,7 @@ export default function CandidateDashboard() {
                 onClick={() => router.push('/protected/candidate/roadmap')}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
               >
-                Add Target Companies
+                Generate Career Roadmap
               </button>
             </div>
           )}

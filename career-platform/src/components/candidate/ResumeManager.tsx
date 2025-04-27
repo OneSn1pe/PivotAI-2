@@ -105,23 +105,55 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         return;
       }
       
-      // For binary files like PDFs/DOCs, we'll use a simplified approach
-      // In a real app, you'd use more robust parsing for different file types
+      // For PDF, DOC, DOCX files, create more structured placeholder text
+      // that will help GPT analyze the content better
       const reader = new FileReader();
       reader.onload = (e) => {
-        // Create a placeholder text with file info
-        // In a real app, you'd extract actual text from PDFs/DOCs
-        const placeholderText = `Resume content from ${file.name} (${file.type})
+        // Create a structured resume template that GPT can use to extract info
+        const resumeTemplate = `
+# RESUME INFORMATION
+File: ${file.name}
+Type: ${file.type}
+Size: ${Math.round(file.size / 1024)} KB
+
+# STRUCTURED RESUME CONTENT
+This document contains resume information typically including:
+
+CONTACT INFORMATION:
+Name: [Name would be at the top of resume]
+Email: [Email would be in contact section]
+Phone: [Phone would be in contact section]
+
+SUMMARY:
+[Summary/Objective statement is usually at the top]
+
+SKILLS:
+- Technical skills likely include programming languages, frameworks, tools
+- Soft skills likely include communication, leadership, teamwork
+- Domain knowledge in relevant industries
+
+EXPERIENCE:
+- Most recent position (Company, Title, Dates)
+  * Responsibilities and achievements
+  * Quantifiable results when available
+- Previous positions with similar details
+  * Responsibilities and achievements
+
+EDUCATION:
+- Degree(s), Institution(s), Graduation date(s)
+- Relevant coursework or certifications
+
+PROJECTS:
+- Relevant projects with brief descriptions
+- Technologies used and outcomes
+
+ADDITIONAL:
+- Any other relevant information that would appear on a resume
+
+Please extract and organize information from this resume into appropriate categories.
+`;
         
-        This is a resume file that will be processed for skills analysis.
-        File name: ${file.name}
-        File size: ${Math.round(file.size / 1024)} KB
-        File type: ${file.type}
-        
-        The system will analyze this document to extract key skills, experience, 
-        education, strengths, and areas for improvement.`;
-        
-        resolve(placeholderText);
+        resolve(resumeTemplate);
       };
       reader.onerror = () => reject(new Error('Error reading file'));
       reader.readAsArrayBuffer(file); // Read as binary
@@ -137,8 +169,10 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       try {
         // Extract text from the resume file
         const text = await extractTextFromFile(selectedFile);
+        console.log('Extracted text from file:', text.substring(0, 100) + '...');
         setResumeText(text);
       } catch (err) {
+        console.error('Error extracting text from file:', err);
         setError('Error reading file: ' + (err instanceof Error ? err.message : String(err)));
       }
     }

@@ -387,9 +387,12 @@ export async function POST(request: NextRequest) {
         debug.error('Failed to parse OpenAI response:', err);
         debug.log('Raw response:', rawAnalysisText.substring(0, 200) + (rawAnalysisText.length > 200 ? '...' : ''));
         
+        // Attempt to extract skills using regex before falling back to default values
+        const extractedSkills = extractSkillsFromText(rawAnalysisText);
+        
         // Provide a fallback structure when OpenAI doesn't return valid JSON
         analysis = {
-          skills: ["Communication", "Technical skills", "Problem solving"],
+          skills: extractedSkills.length > 0 ? extractedSkills : ["Communication", "Technical skills", "Problem solving"],
           experience: ["Professional experience extracted from resume"],
           education: ["Education details extracted from resume"],
           strengths: ["Identified strengths from resume"],
@@ -399,15 +402,21 @@ export async function POST(request: NextRequest) {
           _rawResponse: rawAnalysisText.substring(0, 200) + (rawAnalysisText.length > 200 ? '...' : '')
         };
         
-        debug.log('Using fallback analysis structure');
+        debug.log('Using fallback analysis structure with extracted skills:', extractedSkills);
       }
       
       debug.log('Analysis successfully parsed and returning to client');
       
       // Verify and fix the analysis structure if needed
-      if (!analysis.skills || !Array.isArray(analysis.skills)) {
-        analysis.skills = ["Communication", "Technical skills", "Problem solving"];
+      if (!analysis.skills || !Array.isArray(analysis.skills) || analysis.skills.length === 0) {
+        debug.log('Skills array missing or empty, attempting to extract skills from raw text');
+        const extractedSkills = extractSkillsFromText(rawAnalysisText);
+        analysis.skills = extractedSkills.length > 0 ? 
+          extractedSkills : 
+          ["Communication", "Technical skills", "Problem solving"];
+        debug.log('Using extracted or default skills:', analysis.skills);
       }
+      
       if (!analysis.experience || !Array.isArray(analysis.experience)) {
         analysis.experience = ["Professional experience extracted from resume"];
       }
@@ -487,5 +496,61 @@ export async function POST(request: NextRequest) {
       details: error.message || String(error),
       timestamp: new Date().toISOString()
     }, 500);
+  }
+}
+
+// Helper function to extract skills from raw text when JSON parsing fails
+function extractSkillsFromText(text: string): string[] {
+  try {
+    // Look for patterns like "skills": [...] or "Skills:" followed by a list
+    const skillsJsonMatch = text.match(/"skills"\s*:\s*\[(.*?)\]/i);
+    if (skillsJsonMatch && skillsJsonMatch[1]) {
+      // Try to parse the array portion
+      try {
+        const arrayText = `[${skillsJsonMatch[1]}]`;
+        const skills = JSON.parse(arrayText);
+        if (Array.isArray(skills) && skills.length > 0) {
+          return skills.map(s => s.toString().trim()).filter(s => s);
+        }
+      } catch (err) {
+        // If JSON parsing fails, continue to other methods
+      }
+    }
+    
+    // Look for list-like patterns with skills
+    const skillsList: string[] = [];
+    
+    // Match bulleted lists that might contain skills - using exec() in a loop instead of matchAll
+    const bulletRegex = /[•\-\*]\s*([^•\-\*\n]+)/g;
+    let bulletMatch: RegExpExecArray | null;
+    while ((bulletMatch = bulletRegex.exec(text)) !== null) {
+      if (bulletMatch[1] && bulletMatch[1].trim()) {
+        // Only include short entries that are likely to be skills (not paragraphs)
+        const skill = bulletMatch[1].trim();
+        if (skill.length < 50 && !skill.includes('.')) {
+          skillsList.push(skill);
+        }
+      }
+    }
+    
+    // Match comma-separated lists that might be skills
+    if (skillsList.length === 0) {
+      const commaListMatch = text.match(/skills:?\s*([^\.]+)/i);
+      if (commaListMatch && commaListMatch[1]) {
+        const commaList = commaListMatch[1].split(',');
+        commaList.forEach(item => {
+          const skill = item.trim();
+          if (skill && skill.length < 50) {
+            skillsList.push(skill);
+          }
+        });
+      }
+    }
+    
+    // Return found skills or empty array
+    return skillsList.slice(0, 10); // Limit to 10 skills
+  } catch (err) {
+    console.error('Error extracting skills from text:', err);
+    return [];
   }
 }
