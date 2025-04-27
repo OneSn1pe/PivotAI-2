@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap as RoadmapType, Milestone } from '@/types/user';
 import { generateCareerRoadmap } from '@/services/openai';
 import CareerRoadmap from './CareerRoadmap';
+import { useAuth } from '@/contexts/AuthContext';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 
 interface RoadmapGeneratorProps {
   resumeAnalysis: ResumeAnalysis | null;
@@ -12,12 +15,43 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
   resumeAnalysis,
   onRoadmapGenerated
 }) => {
+  const { userProfile } = useAuth();
   const [targetCompanies, setTargetCompanies] = useState<TargetCompany[]>([
     { name: '', position: '' }
   ]);
   const [generating, setGenerating] = useState(false);
   const [generatedRoadmap, setGeneratedRoadmap] = useState<RoadmapType | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load existing target companies from user profile
+  useEffect(() => {
+    async function loadTargetCompanies() {
+      if (!userProfile) return;
+      
+      try {
+        setLoading(true);
+        const userDoc = await getDoc(doc(db, 'users', userProfile.uid));
+        
+        if (userDoc.exists() && userDoc.data().targetCompanies) {
+          const savedCompanies = userDoc.data().targetCompanies;
+          
+          if (savedCompanies.length > 0) {
+            console.log('Loaded target companies from profile:', savedCompanies);
+            setTargetCompanies(savedCompanies);
+          }
+        } else {
+          console.log('No target companies found in user profile');
+        }
+      } catch (error) {
+        console.error('Error loading target companies:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadTargetCompanies();
+  }, [userProfile]);
 
   // Add a new empty target company field
   const addTargetCompany = () => {

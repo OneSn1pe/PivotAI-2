@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
-import { collection, addDoc, Firestore } from 'firebase/firestore';
+import { collection, addDoc, Firestore, getDoc, doc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
 
 // Check if OpenAI API key is available
@@ -22,6 +22,36 @@ export async function POST(request: NextRequest) {
     }
 
     const { resumeAnalysis, targetCompanies, candidateId } = await request.json();
+
+    // Check if targetCompanies is provided and valid
+    let companiesForRoadmap = targetCompanies;
+
+    // If no target companies were provided or the array is empty, fetch from user profile
+    if (!companiesForRoadmap || companiesForRoadmap.length === 0) {
+      console.log('No target companies provided, attempting to fetch from user profile');
+      
+      if (!candidateId) {
+        throw new Error('Cannot generate roadmap: No target companies provided and no candidateId to fetch them');
+      }
+      
+      // Fetch the user profile to get target companies
+      const userDoc = await getDoc(doc(db as Firestore, 'users', candidateId));
+      
+      if (!userDoc.exists()) {
+        throw new Error('User profile not found');
+      }
+      
+      const userData = userDoc.data();
+      companiesForRoadmap = userData.targetCompanies || [];
+      
+      console.log(`Found ${companiesForRoadmap.length} target companies in user profile`);
+      
+      // If still no target companies, use a default
+      if (companiesForRoadmap.length === 0) {
+        console.log('No target companies found in user profile, using default');
+        companiesForRoadmap = [{ name: 'Tech Company', position: 'Software Developer' }];
+      }
+    }
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -43,7 +73,7 @@ export async function POST(request: NextRequest) {
           - completed (boolean): Always false for new milestones
           
           Resume Analysis: ${JSON.stringify(resumeAnalysis)}
-          Target Companies: ${JSON.stringify(targetCompanies)}`
+          Target Companies: ${JSON.stringify(companiesForRoadmap)}`
         }
       ],
       response_format: { type: "json_object" }
