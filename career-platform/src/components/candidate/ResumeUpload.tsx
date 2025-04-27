@@ -448,34 +448,107 @@ export default function ResumeUpload() {
         <div className="mt-6">
           <h3 className="text-xl font-bold mb-2">Resume Analysis</h3>
           
+          {/* Check for fallback/placeholder data */}
+          {analysis._error && (
+            <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded">
+              <p className="font-medium">Note: Some analysis data may be using placeholder values.</p>
+              <p className="text-sm">The AI had difficulty processing some aspects of your resume. We've provided basic analysis where possible.</p>
+              <button 
+                onClick={() => console.log('Analysis raw data:', analysis)} 
+                className="text-xs underline mt-1"
+              >
+                View raw data in console
+              </button>
+            </div>
+          )}
+          
           <div className="mb-4">
             <h4 className="font-bold">Skills</h4>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {analysis.skills.map((skill, index) => (
-                <span key={index} className="bg-gray-200 px-3 py-1 rounded-full text-sm">
-                  {skill}
-                </span>
-              ))}
-            </div>
+            {analysis.skills && analysis.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {analysis.skills.map((skill, index) => (
+                  <span key={index} className="bg-gray-200 px-3 py-1 rounded-full text-sm">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No skills detected</p>
+            )}
+          </div>
+          
+          <div className="mb-4">
+            <h4 className="font-bold">Experience</h4>
+            {analysis.experience && analysis.experience.length > 0 ? (
+              <ul className="list-disc pl-5 mt-1">
+                {analysis.experience.map((exp, index) => (
+                  <li key={index}>{exp}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No experience detected</p>
+            )}
+          </div>
+          
+          <div className="mb-4">
+            <h4 className="font-bold">Education</h4>
+            {analysis.education && analysis.education.length > 0 ? (
+              <ul className="list-disc pl-5 mt-1">
+                {analysis.education.map((edu, index) => (
+                  <li key={index}>{edu}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No education detected</p>
+            )}
           </div>
           
           <div className="mb-4">
             <h4 className="font-bold">Strengths</h4>
-            <ul className="list-disc pl-5 mt-1">
-              {analysis.strengths.map((strength, index) => (
-                <li key={index}>{strength}</li>
-              ))}
-            </ul>
+            {analysis.strengths && analysis.strengths.length > 0 ? (
+              <ul className="list-disc pl-5 mt-1">
+                {analysis.strengths.map((strength, index) => (
+                  <li key={index}>{strength}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No strengths detected</p>
+            )}
+          </div>
+          
+          <div className="mb-4">
+            <h4 className="font-bold">Areas for Improvement</h4>
+            {analysis.weaknesses && analysis.weaknesses.length > 0 ? (
+              <ul className="list-disc pl-5 mt-1">
+                {analysis.weaknesses.map((weakness, index) => (
+                  <li key={index}>{weakness}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No areas for improvement detected</p>
+            )}
           </div>
           
           <div className="mb-4">
             <h4 className="font-bold">Recommendations</h4>
-            <ul className="list-disc pl-5 mt-1">
-              {analysis.recommendations.map((recommendation, index) => (
-                <li key={index}>{recommendation}</li>
-              ))}
-            </ul>
+            {analysis.recommendations && analysis.recommendations.length > 0 ? (
+              <ul className="list-disc pl-5 mt-1">
+                {analysis.recommendations.map((recommendation, index) => (
+                  <li key={index}>{recommendation}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No recommendations available</p>
+            )}
           </div>
+          
+          {/* Debug information for non-production environments */}
+          {process.env.NODE_ENV !== 'production' && analysis._debug && (
+            <div className="mt-4 p-3 bg-gray-100 border border-gray-300 rounded text-xs">
+              <p className="font-bold">Debug Info</p>
+              <pre>{JSON.stringify(analysis._debug, null, 2)}</pre>
+            </div>
+          )}
         </div>
       )}
       

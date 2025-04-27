@@ -35,6 +35,16 @@ export enum UserRole {
     strengths: string[];
     weaknesses: string[];
     recommendations: string[];
+    _error?: string;
+    _rawResponse?: string;
+    _debug?: {
+      processingTime?: number;
+      openaiTime?: number;
+      resumeLength?: number;
+      resumeTruncated?: boolean;
+      timestamp?: string;
+      [key: string]: any;
+    };
   }
   
   export interface JobPreferences {
