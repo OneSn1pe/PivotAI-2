@@ -256,7 +256,8 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
 
 export async function generateCareerRoadmap(
   resumeAnalysis: ResumeAnalysis,
-  targetCompanies: TargetCompany[]
+  targetCompanies: TargetCompany[],
+  candidateId?: string
 ): Promise<CareerRoadmap> {
   debug.log('generateCareerRoadmap called');
   
@@ -268,6 +269,10 @@ export async function generateCareerRoadmap(
     
     if (!targetCompanies || !Array.isArray(targetCompanies) || targetCompanies.length === 0) {
       throw new Error('At least one target company is required');
+    }
+    
+    if (!candidateId) {
+      debug.log('Warning: candidateId not provided');
     }
     
     // Ensure all expected arrays exist in resumeAnalysis
@@ -296,7 +301,8 @@ export async function generateCareerRoadmap(
         },
         body: JSON.stringify({ 
           resumeAnalysis: validatedAnalysis, 
-          targetCompanies
+          targetCompanies,
+          candidateId
         }),
         signal: controller.signal
       });

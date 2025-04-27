@@ -23,6 +23,11 @@ export async function POST(request: NextRequest) {
 
     const { resumeAnalysis, targetCompanies, candidateId } = await request.json();
 
+    // Validate candidateId is provided
+    if (!candidateId) {
+      throw new Error('candidateId is required to generate a roadmap');
+    }
+
     // Check if targetCompanies is provided and valid
     let companiesForRoadmap = targetCompanies;
 
@@ -177,14 +182,17 @@ export async function POST(request: NextRequest) {
       ];
     }
     
-    // Create roadmap document
+    // Create roadmap document with validated candidateId
     const roadmap: CareerRoadmap = {
       id: uuidv4(),
-      candidateId,
+      candidateId: candidateId.toString(), // Ensure candidateId is a string
       milestones,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+    
+    // Log the roadmap data before storing to debug
+    console.log('Storing roadmap with candidateId:', candidateId);
     
     // Store in Firestore
     await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);

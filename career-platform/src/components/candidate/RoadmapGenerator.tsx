@@ -97,7 +97,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
 
   // Generate roadmap based on resume analysis and target companies
   const handleGenerateRoadmap = async () => {
-    if (!validateInput() || !resumeAnalysis) return;
+    if (!validateInput() || !resumeAnalysis || !userProfile) return;
     
     // Ensure resumeAnalysis has all required fields with fallbacks
     const validatedResumeAnalysis = {
@@ -119,7 +119,13 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
-      const roadmap = await generateCareerRoadmap(validatedResumeAnalysis, validTargetCompanies);
+      // Ensure candidateId is passed to the generateCareerRoadmap function
+      const roadmap = await generateCareerRoadmap(
+        validatedResumeAnalysis, 
+        validTargetCompanies,
+        userProfile.uid
+      );
+      
       setGeneratedRoadmap(roadmap);
       
       // Notify parent component
