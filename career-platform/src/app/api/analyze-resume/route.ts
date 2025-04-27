@@ -172,6 +172,33 @@ export async function GET(request: NextRequest) {
   return response;
 }
 
+// Add retry helper with exponential backoff
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs = 1000): Promise<T> {
+  let retries = 0;
+  let lastError: any;
+
+  while (retries <= maxRetries) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Only retry on rate limit errors
+      if (error.status === 429 && retries < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, retries);
+        debug.log(`Rate limited (429), retrying in ${delay}ms (retry ${retries + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        retries++;
+      } else {
+        // Other errors or max retries reached, rethrow
+        throw error;
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
 // Main POST handler for resume analysis
 export async function POST(request: NextRequest) {
   debug.log('POST request received');
@@ -265,31 +292,33 @@ export async function POST(request: NextRequest) {
     debug.log('Calling OpenAI API...');
     const openaiStartTime = performance.now();
     
-    // Call OpenAI API to analyze the resume
+    // Call OpenAI API to analyze the resume with retry logic
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings."
-          },
-          {
-            role: "user",
-            content: `Analyze this resume and extract the following information:
-            - skills (array of strings)
-            - experience (array of strings describing roles and responsibilities)
-            - education (array of strings)
-            - strengths (array of strings)
-            - weaknesses (array of strings)
-            - recommendations (array of strings with career advice)
-            
-            IMPORTANT: Format your response as a valid JSON object WITHOUT any explanation, preamble, or markdown. Your response should be parseable by JSON.parse() directly.
-            
-            Here's the resume: ${resumeText}`
-          }
-        ]
-      });
+      const completion = await withRetry(async () => {
+        return await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: [
+            {
+              role: "system",
+              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings."
+            },
+            {
+              role: "user",
+              content: `Analyze this resume and extract the following information:
+              - skills (array of strings)
+              - experience (array of strings describing roles and responsibilities)
+              - education (array of strings)
+              - strengths (array of strings)
+              - weaknesses (array of strings)
+              - recommendations (array of strings with career advice)
+              
+              IMPORTANT: Format your response as a valid JSON object WITHOUT any explanation, preamble, or markdown. Your response should be parseable by JSON.parse() directly.
+              
+              Here's the resume: ${resumeText}`
+            }
+          ]
+        });
+      }, 3, 1000); // retry up to 3 times with 1s initial delay
       
       const openaiDuration = performance.now() - openaiStartTime;
       debug.log(`OpenAI response received successfully (${Math.round(openaiDuration)}ms)`);
@@ -349,6 +378,7 @@ export async function POST(request: NextRequest) {
       if (openaiError.status === 429) {
         errorMessage = 'OpenAI API rate limit exceeded';
         statusCode = 503; // Service Unavailable
+        errorDetails = 'The AI service is currently experiencing high demand. Please try again in a few moments.';
       } else if (openaiError.status === 401) {
         errorMessage = 'OpenAI API authentication error';
         errorDetails = 'Invalid API key or unauthorized access';
