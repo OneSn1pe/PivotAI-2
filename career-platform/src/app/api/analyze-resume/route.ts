@@ -334,7 +334,7 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings."
+              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text or formatting. DO NOT use markdown formatting like ```json. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings."
             },
             {
               role: "user",
@@ -346,7 +346,11 @@ export async function POST(request: NextRequest) {
               - weaknesses (array of strings)
               - recommendations (array of strings with career advice)
               
-              IMPORTANT: Format your response as a valid JSON object WITHOUT any explanation, preamble, or markdown. Your response should be parseable by JSON.parse() directly.
+              VERY IMPORTANT: 
+              1. Format your response as a raw JSON object with NO markdown formatting
+              2. Do NOT use code blocks, backticks, or any other markdown syntax
+              3. Your response should be parseable by JSON.parse() directly
+              4. Do NOT include any explanation, preamble, or additional text
               
               Here's the resume: ${truncatedResume}`
             }
@@ -358,14 +362,30 @@ export async function POST(request: NextRequest) {
       debug.log(`OpenAI response received successfully (${Math.round(openaiDuration)}ms)`);
       
       // Parse the response from OpenAI
-      const analysisText = completion.choices[0].message.content || '{}';
+      const rawAnalysisText = completion.choices[0].message.content || '{}';
+      let analysisText = rawAnalysisText;
       let analysis;
+      
+      // Clean up the response by removing any markdown formatting
+      if (analysisText.startsWith('```')) {
+        // Find the first and last occurrence of code block markers
+        const firstBlockEnd = analysisText.indexOf('\n');
+        let lastBlockStart = analysisText.lastIndexOf('```');
+        
+        // Extract only the content between the markers
+        if (firstBlockEnd !== -1 && lastBlockStart !== -1 && lastBlockStart > firstBlockEnd) {
+          analysisText = analysisText.substring(firstBlockEnd + 1, lastBlockStart).trim();
+        } else if (firstBlockEnd !== -1) {
+          analysisText = analysisText.substring(firstBlockEnd + 1).trim();
+        }
+      }
       
       try {
         analysis = JSON.parse(analysisText);
         debug.trace('Parsed analysis:', analysis);
       } catch (err) {
         debug.error('Failed to parse OpenAI response:', err);
+        debug.log('Raw response:', rawAnalysisText.substring(0, 200) + (rawAnalysisText.length > 200 ? '...' : ''));
         
         // Provide a fallback structure when OpenAI doesn't return valid JSON
         analysis = {
@@ -376,7 +396,7 @@ export async function POST(request: NextRequest) {
           weaknesses: ["Areas for improvement based on resume"],
           recommendations: ["Suggestions for career development"],
           _error: "Generated fallback due to parsing error",
-          _rawResponse: analysisText.substring(0, 200) + (analysisText.length > 200 ? '...' : '')
+          _rawResponse: rawAnalysisText.substring(0, 200) + (rawAnalysisText.length > 200 ? '...' : '')
         };
         
         debug.log('Using fallback analysis structure');

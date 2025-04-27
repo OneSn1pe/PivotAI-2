@@ -58,13 +58,13 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a career development expert. Generate a personalized career roadmap based on resume analysis and target companies. Return ONLY valid JSON with a 'milestones' array."
+          content: "You are a career development expert. Generate a personalized career roadmap based on resume analysis and target companies. Your response MUST be a valid JSON object with ONLY a 'milestones' array. DO NOT include any explanations, markdown formatting (like ```json), or additional text before or after the JSON."
         },
         {
           role: "user",
           content: `Create a career roadmap with 5 milestones to help this candidate achieve their career goals with their target companies.
           
-          Return the roadmap as a JSON object containing an array of milestone objects with the following structure:
+          Return the roadmap as a plain JSON object containing an array of milestone objects with the following structure:
           {
             "milestones": [
               {
@@ -79,12 +79,13 @@ export async function POST(request: NextRequest) {
             ]
           }
           
-          Remember to: 
-          1. Generate exactly 5 milestones
-          2. Include realistic skills needed for each milestone
-          3. Create a logical progression toward the target positions
-          4. Each milestone must have its own unique ID
-          5. Return ONLY the JSON object with no additional text
+          VERY IMPORTANT: 
+          1. Do NOT use markdown code blocks or any other formatting
+          2. Your response must be ONLY the raw JSON object with no extra text
+          3. Generate exactly 5 milestones
+          4. Include realistic skills needed for each milestone
+          5. Create a logical progression toward the target positions
+          6. Each milestone must have its own unique ID
           
           Resume Analysis: ${JSON.stringify(resumeAnalysis)}
           Target Companies: ${JSON.stringify(companiesForRoadmap)}`
@@ -95,19 +96,41 @@ export async function POST(request: NextRequest) {
     // Parse the milestones from the OpenAI response
     let milestones;
     try {
-      // Try to parse the JSON response
+      // Get the raw response content
       const responseContent = completion.choices[0].message.content || '{}';
-      const parsedResponse = JSON.parse(responseContent);
+      
+      // Clean up the response content by removing any markdown formatting
+      let cleanedContent = responseContent.trim();
+      
+      // Remove markdown code block formatting if present
+      if (cleanedContent.startsWith('```')) {
+        // Find the first and last occurrence of code block markers
+        const firstBlockEnd = cleanedContent.indexOf('\n');
+        let lastBlockStart = cleanedContent.lastIndexOf('```');
+        
+        // Extract only the content between the markers
+        if (firstBlockEnd !== -1 && lastBlockStart !== -1 && lastBlockStart > firstBlockEnd) {
+          cleanedContent = cleanedContent.substring(firstBlockEnd + 1, lastBlockStart).trim();
+        } else if (firstBlockEnd !== -1) {
+          cleanedContent = cleanedContent.substring(firstBlockEnd + 1).trim();
+        }
+      }
+      
+      console.log('Cleaned content for parsing:', cleanedContent.substring(0, 100) + '...');
+      
+      // Try to parse the cleaned JSON response
+      const parsedResponse = JSON.parse(cleanedContent);
       
       // Check if the response has the expected milestones array
       if (parsedResponse.milestones && Array.isArray(parsedResponse.milestones)) {
         milestones = parsedResponse.milestones;
       } else {
         // If the structure is wrong, throw an error to trigger fallback
-        throw new Error('Invalid response structure');
+        throw new Error('Invalid response structure - missing milestones array');
       }
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
+      console.log('Raw response content:', completion.choices[0].message.content?.substring(0, 200) + '...');
       
       // Fallback: generate synthetic milestones
       milestones = [
@@ -115,7 +138,7 @@ export async function POST(request: NextRequest) {
           id: uuidv4(),
           title: "Skill Development",
           description: "Focus on developing core skills needed for target roles",
-          skills: resumeAnalysis.skills.slice(0, 3),
+          skills: resumeAnalysis?.skills?.slice(0, 3) || ["Technical Skills", "Communication", "Problem Solving"],
           timeframe: "1-3 months",
           completed: false
         },
