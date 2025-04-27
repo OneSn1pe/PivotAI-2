@@ -10,30 +10,20 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   debug.log(`Processing ${request.method} request for ${path}`);
 
-  // Define public paths that don't require authentication
+  // Define paths that are public/auth related - API paths are handled separately
   const isPublicPath = path === '/' || 
     path === '/auth/login' || 
     path === '/auth/register' ||
-    path.startsWith('/_next') ||
-    path.startsWith('/api');
+    path.startsWith('/_next');
+    
+  // Define API paths (handled differently)
+  const isApiPath = path.startsWith('/api');
 
   // Get the token from the session
   const token = request.cookies.get('session')?.value;
 
-  // Redirect authenticated users away from auth pages
-  if (isPublicPath && token) {
-    debug.log(`Redirecting authenticated user from ${path} to dashboard`);
-    return NextResponse.redirect(new URL('/protected/dashboard', request.url));
-  }
-
-  // Redirect unauthenticated users to login
-  if (!isPublicPath && !token) {
-    debug.log(`Redirecting unauthenticated user from ${path} to login`);
-    return NextResponse.redirect(new URL('/auth/login', request.url));
-  }
-
-  // Only run this middleware for API routes
-  if (path.startsWith('/api/')) {
+  // Handle API routes separately - don't redirect them
+  if (isApiPath) {
     debug.log(`Processing API route: ${request.method} ${path}`);
     
     // Handle OPTIONS request for CORS
@@ -57,7 +47,7 @@ export function middleware(request: NextRequest) {
     }
 
     // Modify response for all API requests
-    debug.log(`Modifying response for ${request.method} request`);
+    debug.log(`Modifying response for ${request.method} API request to ${path}`);
     const response = NextResponse.next();
     
     // Add CORS headers to response
@@ -69,6 +59,18 @@ export function middleware(request: NextRequest) {
     response.headers.set('x-middleware-processed', 'true');
     
     return response;
+  }
+
+  // Only redirect authenticated users away from auth pages, not APIs
+  if (isPublicPath && token) {
+    debug.log(`Redirecting authenticated user from ${path} to dashboard`);
+    return NextResponse.redirect(new URL('/protected/dashboard', request.url));
+  }
+
+  // Redirect unauthenticated users to login
+  if (!isPublicPath && !token) {
+    debug.log(`Redirecting unauthenticated user from ${path} to login`);
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   debug.log(`Passing through request: ${request.method} ${path}`);
