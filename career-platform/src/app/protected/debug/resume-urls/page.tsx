@@ -7,11 +7,13 @@ import { db, storage } from '@/config/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { CandidateProfile } from '@/types/user';
+import { useFileDownload } from '@/hooks/useFileDownload';
 
 export default function ResumeUrlDebugPage() {
   const { userProfile } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const router = useRouter();
+  const { downloadAndSaveFile, downloading } = useFileDownload();
   
   const [loading, setLoading] = useState(true);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
@@ -121,26 +123,38 @@ export default function ResumeUrlDebugPage() {
   };
   
   // New function to safely download or view a file
-  const handleViewOrDownload = (url: string) => {
-    // For PDFs, trigger a download to avoid CORS issues
-    if (url.toLowerCase().includes('.pdf')) {
-      const link = document.createElement('a');
-      link.href = url;
-      
-      // Try to extract a filename
-      let filename = 'resume.pdf';
-      const urlParts = url.split('/');
-      const lastPart = urlParts[urlParts.length - 1].split('?')[0];
-      if (lastPart && lastPart.includes('.')) {
-        filename = decodeURIComponent(lastPart);
+  const handleViewOrDownload = async (url: string) => {
+    try {
+      if (!candidateProfile?.uid) {
+        throw new Error('User not authenticated');
       }
       
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      // For non-PDFs, try to open in a new tab
+      // Try to extract the storage path from URL
+      let path = '';
+      let filename = 'resume';
+      
+      // Extract path from the Firebase Storage URL
+      if (url.includes('firebasestorage.googleapis.com')) {
+        const pathMatch = url.match(/\/o\/([^?]+)/);
+        if (pathMatch && pathMatch[1]) {
+          path = decodeURIComponent(pathMatch[1]);
+          
+          // Extract filename from path
+          const pathParts = path.split('/');
+          filename = pathParts[pathParts.length - 1];
+        } else {
+          throw new Error('Unable to parse storage path from URL');
+        }
+      } else {
+        throw new Error('Not a Firebase Storage URL');
+      }
+      
+      // Use the file download hook
+      await downloadAndSaveFile(path, filename);
+      
+    } catch (err) {
+      console.error('Error downloading file:', err);
+      // Fallback to direct URL open
       window.open(url, '_blank');
     }
   };
@@ -246,9 +260,10 @@ export default function ResumeUrlDebugPage() {
                 <div className="mt-2">
                   <button
                     onClick={() => handleViewOrDownload(resumeUrl)}
-                    className="text-blue-600 hover:text-blue-800 underline text-sm"
+                    disabled={downloading}
+                    className={`text-blue-600 hover:text-blue-800 underline text-sm ${downloading ? 'opacity-50 cursor-wait' : ''}`}
                   >
-                    {resumeUrl.toLowerCase().includes('.pdf') ? 'Download File' : 'View File'}
+                    {downloading ? 'Downloading...' : 'Download File'}
                   </button>
                 </div>
               )}
@@ -287,9 +302,10 @@ export default function ResumeUrlDebugPage() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleViewOrDownload(file.url)}
-                                className="text-blue-600 hover:text-blue-800 text-sm"
+                                disabled={downloading}
+                                className={`text-blue-600 hover:text-blue-800 text-sm ${downloading ? 'opacity-50 cursor-wait' : ''}`}
                               >
-                                {file.name.toLowerCase().includes('.pdf') ? 'Download' : 'View'}
+                                {downloading ? 'Downloading...' : 'Download'}
                               </button>
                               <button
                                 onClick={() => updateResumeUrl(file.url)}

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useFileDownload } from '@/hooks/useFileDownload';
 import { analyzeResume } from '@/services/openai';
 import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
@@ -15,6 +16,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const { userProfile } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const { uploadFile, uploading, progress } = useFileUpload();
+  const { downloadAndSaveFile, downloading } = useFileDownload();
   
   const [file, setFile] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState('');
@@ -217,7 +219,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
     }
   };
   
-  // Function to view resume - modified to handle CORS issues
+  // Function to view/download resume using the new hook
   const handleViewResume = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
@@ -234,53 +236,63 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
     }
     
     try {
-      // Set loading state
-      setValidatingUrl(true);
+      // Extract file path from the validatedResumeUrl
+      // The URL format from Firebase usually contains a token and other information
+      // We need to extract the path part
       
-      // For all file types - fetch the file contents first to avoid cross-origin issues
-      const response = await fetch(validatedResumeUrl);
-      if (!response.ok) throw new Error('Could not download the file');
-      
-      const blob = await response.blob();
-      
-      // Create a local blob URL that doesn't have cross-origin restrictions
-      const blobUrl = URL.createObjectURL(blob);
-      
-      // Create an invisible link and trigger a download
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      
-      // Try to extract a filename
-      let filename = 'resume.pdf';
-      if (candidateProfile?.resumeFileName) {
-        filename = candidateProfile.resumeFileName;
-      } else {
-        // Try to extract from the URL
-        const urlParts = validatedResumeUrl.split('/');
-        const lastPart = urlParts[urlParts.length - 1].split('?')[0];
-        if (lastPart && lastPart.includes('.')) {
-          filename = decodeURIComponent(lastPart);
-        }
+      if (!candidateProfile?.uid) {
+        throw new Error('User not authenticated');
       }
       
-      // Set download attribute 
-      link.setAttribute('download', filename);
+      // Determine path and filename based on available information
+      let resumePath = '';
+      let filename = 'resume';
       
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Check if we have a stored filename first
+      if (candidateProfile.resumeFileName) {
+        filename = candidateProfile.resumeFileName;
+      }
       
-      // Clean up the blob URL to avoid memory leaks
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      // If we have a valid URL, we need to extract the storage path if possible
+      if (validatedResumeUrl.includes('firebasestorage.googleapis.com')) {
+        // For Firebase URLs, we can try to extract the path after /o/ and before ?
+        const pathMatch = validatedResumeUrl.match(/\/o\/([^?]+)/);
+        if (pathMatch && pathMatch[1]) {
+          // URL decode the path
+          resumePath = decodeURIComponent(pathMatch[1]);
+        } else {
+          // Fallback: try to find most recent file
+          const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+          const filesList = await listAll(userResumesRef);
+          
+          if (filesList.items.length === 0) {
+            throw new Error('No resume files found in storage');
+          }
+          
+          // Sort by name to get the most recent one
+          const sortedItems = [...filesList.items].sort((a, b) => {
+            return b.name.localeCompare(a.name);
+          });
+          
+          resumePath = sortedItems[0].fullPath;
+        }
+      } else {
+        // For non-Firebase URLs or if path extraction failed,
+        // construct the path using userID and filename
+        resumePath = `resumes/${candidateProfile.uid}/${filename}`;
+      }
       
-      setSuccessMessage('Download started successfully');
+      // Use our custom hook to download the file
+      await downloadAndSaveFile(resumePath, filename);
+      
+      setSuccessMessage('Resume download initiated');
+      
     } catch (err) {
-      setError('Error downloading file: ' + (err instanceof Error ? err.message : String(err)));
+      console.error('Resume download error:', err);
+      setError('Error downloading resume: ' + (err instanceof Error ? err.message : String(err)));
       
-      // Fallback: open in a new tab
+      // Fallback: open in a new tab if all else fails
       window.open(validatedResumeUrl, '_blank');
-    } finally {
-      setValidatingUrl(false);
     }
   };
   
@@ -314,17 +326,14 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             <a 
               href="#"
               onClick={handleViewResume}
-              className={`inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 ${validatingUrl ? 'opacity-50 cursor-wait' : ''}`}
-              aria-disabled={validatingUrl}
+              className={`inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 ${(validatingUrl || downloading) ? 'opacity-50 cursor-wait' : ''}`}
+              aria-disabled={validatingUrl || downloading}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              {validatingUrl ? 'Validating...' : (
-                candidateProfile.resumeUrl?.toLowerCase().includes('.pdf') 
-                  ? 'Download Resume' 
-                  : 'View Resume'
-              )}
+              {validatingUrl ? 'Validating...' : 
+               downloading ? 'Downloading...' : 'Download Resume'}
             </a>
           </div>
         </div>

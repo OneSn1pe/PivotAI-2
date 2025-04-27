@@ -10,11 +10,13 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import ResumeManager from '@/components/candidate/ResumeManager';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
+import { useFileDownload } from '@/hooks/useFileDownload';
 
 export default function CandidateDashboard() {
   const { userProfile, logout } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const router = useRouter();
+  const { downloadAndSaveFile, downloading } = useFileDownload();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
   const [showResumeManager, setShowResumeManager] = useState(false);
@@ -140,7 +142,7 @@ export default function CandidateDashboard() {
   };
 
   // Function to handle resume viewing/downloading
-  const handleViewResume = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleViewResume = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
     if (validatingUrl) {
@@ -155,35 +157,57 @@ export default function CandidateDashboard() {
       return;
     }
     
-    // For PDFs - use download approach to avoid CORS issues
-    if (validatedResumeUrl.toLowerCase().includes('.pdf')) {
-      // Create an invisible link and trigger a download
-      const link = document.createElement('a');
-      link.href = validatedResumeUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      
-      // Try to extract a filename
-      let filename = 'resume.pdf';
-      if (candidateProfile?.resumeFileName) {
-        filename = candidateProfile.resumeFileName;
-      } else {
-        // Try to extract from the URL
-        const urlParts = validatedResumeUrl.split('/');
-        const lastPart = urlParts[urlParts.length - 1].split('?')[0];
-        if (lastPart && lastPart.includes('.')) {
-          filename = decodeURIComponent(lastPart);
-        }
+    try {
+      // Extract file path from the validatedResumeUrl
+      if (!candidateProfile?.uid) {
+        throw new Error('User not authenticated');
       }
       
-      // Set download attribute to trigger download
-      link.setAttribute('download', filename);
+      // Determine path and filename based on available information
+      let resumePath = '';
+      let filename = 'resume';
       
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      // For non-PDFs, open in a new tab
+      // Check if we have a stored filename first
+      if (candidateProfile.resumeFileName) {
+        filename = candidateProfile.resumeFileName;
+      }
+      
+      // If we have a valid URL, we need to extract the storage path if possible
+      if (validatedResumeUrl.includes('firebasestorage.googleapis.com')) {
+        // For Firebase URLs, we can try to extract the path after /o/ and before ?
+        const pathMatch = validatedResumeUrl.match(/\/o\/([^?]+)/);
+        if (pathMatch && pathMatch[1]) {
+          // URL decode the path
+          resumePath = decodeURIComponent(pathMatch[1]);
+        } else {
+          // Fallback: try to find most recent file
+          const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+          const filesList = await listAll(userResumesRef);
+          
+          if (filesList.items.length === 0) {
+            throw new Error('No resume files found in storage');
+          }
+          
+          // Sort by name to get the most recent one
+          const sortedItems = [...filesList.items].sort((a, b) => {
+            return b.name.localeCompare(a.name);
+          });
+          
+          resumePath = sortedItems[0].fullPath;
+        }
+      } else {
+        // For non-Firebase URLs or if path extraction failed,
+        // construct the path using userID and filename
+        resumePath = `resumes/${candidateProfile.uid}/${filename}`;
+      }
+      
+      // Use our custom hook to download the file
+      await downloadAndSaveFile(resumePath, filename);
+      
+    } catch (err) {
+      console.error('Resume download error:', err);
+      
+      // Fallback: open in a new tab if all else fails
       window.open(validatedResumeUrl, '_blank');
     }
   };
@@ -314,14 +338,11 @@ export default function CandidateDashboard() {
                     <a 
                       href="#"
                       onClick={handleViewResume}
-                      className={`text-blue-600 hover:text-blue-800 text-sm underline ${validatingUrl ? 'opacity-50 cursor-wait' : ''}`}
-                      aria-disabled={validatingUrl}
+                      className={`text-blue-600 hover:text-blue-800 text-sm underline ${validatingUrl || downloading ? 'opacity-50 cursor-wait' : ''}`}
+                      aria-disabled={validatingUrl || downloading}
                     >
-                      {validatingUrl ? 'Validating...' : (
-                        candidateProfile?.resumeUrl?.toLowerCase().includes('.pdf') 
-                          ? 'Download Resume' 
-                          : 'View Resume'
-                      )}
+                      {validatingUrl ? 'Validating...' : 
+                       downloading ? 'Downloading...' : 'Download Resume'}
                     </a>
                     <button
                       onClick={() => setShowResumeManager(true)}
