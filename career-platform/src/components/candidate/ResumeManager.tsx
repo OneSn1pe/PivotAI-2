@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { analyzeResume } from '@/services/openai';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
@@ -197,7 +197,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         resumeUrl,
         resumeFileName: originalFileName, // Store original filename for display
         resumeAnalysis,
-        updatedAt: new Date(),
+        updatedAt: serverTimestamp(),  // Use Firebase server timestamp for consistent timing
       });
       
       // Set the validated URL to the new URL
@@ -218,7 +218,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   };
   
   // Function to view resume - modified to handle CORS issues
-  const handleViewResume = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleViewResume = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
     if (validatingUrl) {
@@ -233,14 +233,22 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       return;
     }
     
-    // For PDFs - since direct viewing might have CORS issues in some browsers,
-    // offer to download the file instead of viewing it in browser
-    if (validatedResumeUrl.toLowerCase().includes('.pdf')) {
+    try {
+      // Set loading state
+      setValidatingUrl(true);
+      
+      // For all file types - fetch the file contents first to avoid cross-origin issues
+      const response = await fetch(validatedResumeUrl);
+      if (!response.ok) throw new Error('Could not download the file');
+      
+      const blob = await response.blob();
+      
+      // Create a local blob URL that doesn't have cross-origin restrictions
+      const blobUrl = URL.createObjectURL(blob);
+      
       // Create an invisible link and trigger a download
       const link = document.createElement('a');
-      link.href = validatedResumeUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.href = blobUrl;
       
       // Try to extract a filename
       let filename = 'resume.pdf';
@@ -255,15 +263,24 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         }
       }
       
-      // Set download attribute to trigger download instead of navigation
+      // Set download attribute 
       link.setAttribute('download', filename);
       
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } else {
-      // For non-PDFs, open in a new tab
+      
+      // Clean up the blob URL to avoid memory leaks
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+      
+      setSuccessMessage('Download started successfully');
+    } catch (err) {
+      setError('Error downloading file: ' + (err instanceof Error ? err.message : String(err)));
+      
+      // Fallback: open in a new tab
       window.open(validatedResumeUrl, '_blank');
+    } finally {
+      setValidatingUrl(false);
     }
   };
   
@@ -278,7 +295,19 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             {candidateProfile.resumeFileName ? (
               <>File: <span className="font-medium">{candidateProfile.resumeFileName}</span> • </>
             ) : null}
-            Last updated: {candidateProfile.updatedAt ? new Date(candidateProfile.updatedAt).toLocaleDateString() : 'Unknown'}
+            Last updated: {candidateProfile.updatedAt ? 
+              (candidateProfile.updatedAt instanceof Date ? 
+                candidateProfile.updatedAt.toLocaleDateString() : 
+                // Handle Firebase Timestamp or string conversion
+                (typeof candidateProfile.updatedAt === 'object' && candidateProfile.updatedAt !== null && 'toDate' in candidateProfile.updatedAt) ? 
+                  (candidateProfile.updatedAt as { toDate(): Date }).toDate().toLocaleDateString() :
+                  new Date(candidateProfile.updatedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })
+              ) : 'Unknown'
+            }
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3">
