@@ -329,7 +329,7 @@ export async function POST(request: NextRequest) {
     try {
       const completion = await withRetry(async () => {
         return await openai.chat.completions.create({
-          model: "gpt-3.5-turbo", // Using gpt-3.5-turbo instead of gpt-4 for faster response
+          model: "gpt-4o", // Using GPT-4o for higher quality analysis
           temperature: 0.3, // Lower temperature for more deterministic output
           messages: [
             {

@@ -99,6 +99,17 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
   const handleGenerateRoadmap = async () => {
     if (!validateInput() || !resumeAnalysis) return;
     
+    // Ensure resumeAnalysis has all required fields with fallbacks
+    const validatedResumeAnalysis = {
+      ...resumeAnalysis,
+      skills: Array.isArray(resumeAnalysis.skills) ? resumeAnalysis.skills : [],
+      experience: Array.isArray(resumeAnalysis.experience) ? resumeAnalysis.experience : [],
+      education: Array.isArray(resumeAnalysis.education) ? resumeAnalysis.education : [],
+      strengths: Array.isArray(resumeAnalysis.strengths) ? resumeAnalysis.strengths : [],
+      weaknesses: Array.isArray(resumeAnalysis.weaknesses) ? resumeAnalysis.weaknesses : [],
+      recommendations: Array.isArray(resumeAnalysis.recommendations) ? resumeAnalysis.recommendations : []
+    };
+    
     // Filter out empty target companies
     const validTargetCompanies = targetCompanies.filter(
       company => company.name.trim() !== '' && company.position.trim() !== ''
@@ -108,7 +119,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
-      const roadmap = await generateCareerRoadmap(resumeAnalysis, validTargetCompanies);
+      const roadmap = await generateCareerRoadmap(validatedResumeAnalysis, validTargetCompanies);
       setGeneratedRoadmap(roadmap);
       
       // Notify parent component

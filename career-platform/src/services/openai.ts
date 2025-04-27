@@ -261,6 +261,26 @@ export async function generateCareerRoadmap(
   debug.log('generateCareerRoadmap called');
   
   try {
+    // Validate inputs to prevent API errors
+    if (!resumeAnalysis) {
+      throw new Error('Resume analysis is required');
+    }
+    
+    if (!targetCompanies || !Array.isArray(targetCompanies) || targetCompanies.length === 0) {
+      throw new Error('At least one target company is required');
+    }
+    
+    // Ensure all expected arrays exist in resumeAnalysis
+    const validatedAnalysis = {
+      ...resumeAnalysis,
+      skills: Array.isArray(resumeAnalysis.skills) ? resumeAnalysis.skills : [],
+      experience: Array.isArray(resumeAnalysis.experience) ? resumeAnalysis.experience : [],
+      education: Array.isArray(resumeAnalysis.education) ? resumeAnalysis.education : [],
+      strengths: Array.isArray(resumeAnalysis.strengths) ? resumeAnalysis.strengths : [],
+      weaknesses: Array.isArray(resumeAnalysis.weaknesses) ? resumeAnalysis.weaknesses : [],
+      recommendations: Array.isArray(resumeAnalysis.recommendations) ? resumeAnalysis.recommendations : []
+    };
+    
     const baseUrl = getApiBaseUrl();
     const apiUrl = `${baseUrl}/api/generate-roadmap`;
     debug.log(`API URL: ${apiUrl}`);
@@ -274,7 +294,10 @@ export async function generateCareerRoadmap(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ resumeAnalysis, targetCompanies }),
+        body: JSON.stringify({ 
+          resumeAnalysis: validatedAnalysis, 
+          targetCompanies
+        }),
         signal: controller.signal
       });
       
@@ -282,25 +305,37 @@ export async function generateCareerRoadmap(
       
       if (!response.ok) {
         let errorMessage = `Failed to generate roadmap (HTTP ${response.status})`;
+        let errorDetails = '';
         
         try {
           const responseText = await response.text();
+          debug.log('Error response:', responseText);
+          
           const { data, error } = safeJsonParse(responseText);
           if (data) {
             errorMessage = data.message || data.error || errorMessage;
+            errorDetails = data.details || '';
           }
         } catch (err) {
           debug.error('Error parsing error response:', err);
         }
         
-        throw new Error(errorMessage);
+        throw new Error(`${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`);
       }
       
       const responseText = await response.text();
+      debug.log(`Response received, length: ${responseText.length}`);
+      
       const { data, error } = safeJsonParse(responseText);
       
       if (error) {
+        debug.error('Failed to parse roadmap response:', error);
         throw new Error('Failed to parse roadmap results. Please try again.');
+      }
+      
+      if (!data || !data.id || !Array.isArray(data.milestones)) {
+        debug.error('Invalid roadmap data structure:', data);
+        throw new Error('Invalid roadmap data returned from server');
       }
       
       return data as CareerRoadmap;
@@ -309,9 +344,11 @@ export async function generateCareerRoadmap(
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
+        debug.error('Request timeout');
         throw new Error('Roadmap generation timed out. Please try again.');
       }
       
+      debug.error('Fetch error:', fetchError);
       throw fetchError;
     }
     
