@@ -69,6 +69,14 @@ export default function CandidateDashboard() {
   const handleResumeUpdate = () => {
     // Refresh dashboard data after resume update
     if (candidateProfile) {
+      // Clear validated URL cache to force re-fetching
+      setValidatedResumeUrl(null);
+      
+      // Force revalidation to get the newest file
+      setTimeout(() => {
+        forceRevalidateResume();
+      }, 1000); // Small delay to ensure Firebase consistency
+      
       // Re-fetch data or reset state to ensure refreshed data is displayed
       router.refresh();
     }
@@ -145,6 +153,9 @@ export default function CandidateDashboard() {
   const handleViewResume = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
+    // Force revalidation to ensure we're using the latest resume URL
+    await forceRevalidateResume();
+    
     if (validatingUrl) {
       console.log('Please wait, validating resume access...');
       return;
@@ -152,7 +163,6 @@ export default function CandidateDashboard() {
     
     if (!validatedResumeUrl) {
       // Try to validate again
-      validateResumeUrl();
       console.error('Cannot access resume file. Trying to locate it...');
       return;
     }
@@ -172,36 +182,22 @@ export default function CandidateDashboard() {
         filename = candidateProfile.resumeFileName;
       }
       
-      // If we have a valid URL, we need to extract the storage path if possible
-      if (validatedResumeUrl.includes('firebasestorage.googleapis.com')) {
-        // For Firebase URLs, we can try to extract the path after /o/ and before ?
-        const pathMatch = validatedResumeUrl.match(/\/o\/([^?]+)/);
-        if (pathMatch && pathMatch[1]) {
-          // URL decode the path
-          resumePath = decodeURIComponent(pathMatch[1]);
-        } else {
-          // Fallback: try to find most recent file
-          const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
-          const filesList = await listAll(userResumesRef);
-          
-          if (filesList.items.length === 0) {
-            throw new Error('No resume files found in storage');
-          }
-          
-          // Sort by name to get the most recent one
-          const sortedItems = [...filesList.items].sort((a, b) => {
-            return b.name.localeCompare(a.name);
-          });
-          
-          resumePath = sortedItems[0].fullPath;
-        }
-      } else {
-        // For non-Firebase URLs or if path extraction failed,
-        // construct the path using userID and filename
-        resumePath = `resumes/${candidateProfile.uid}/${filename}`;
+      // Find the most recent file directly from storage
+      const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+      const filesList = await listAll(userResumesRef);
+      
+      if (filesList.items.length === 0) {
+        throw new Error('No resume files found in storage');
       }
       
-      // Use our custom hook to download the file
+      // Sort by name to get the most recent one (timestamps in names)
+      const sortedItems = [...filesList.items].sort((a, b) => {
+        return b.name.localeCompare(a.name);
+      });
+      
+      resumePath = sortedItems[0].fullPath;
+      
+      // Use the file download hook with the most recent file's path
       await downloadAndSaveFile(resumePath, filename);
       
     } catch (err) {
@@ -209,6 +205,49 @@ export default function CandidateDashboard() {
       
       // Fallback: open in a new tab if all else fails
       window.open(validatedResumeUrl, '_blank');
+    }
+  };
+
+  // Force revalidation of resume reference to get the latest file
+  const forceRevalidateResume = async () => {
+    if (!candidateProfile?.uid) return;
+    
+    setValidatingUrl(true);
+    
+    try {
+      // Get the user's resume directory
+      const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+      
+      // List all files in the user's resume directory
+      const filesList = await listAll(userResumesRef);
+      
+      if (filesList.items.length === 0) {
+        throw new Error('No resume files found in storage');
+      }
+      
+      // Sort by name to get the most recent one (since we use timestamps in filenames)
+      const sortedItems = [...filesList.items].sort((a, b) => {
+        return b.name.localeCompare(a.name);
+      });
+      
+      // Get the download URL of the most recent file
+      const latestFileUrl = await getDownloadURL(sortedItems[0]);
+      
+      // Update the database with the correct URL if needed
+      if (candidateProfile.resumeUrl !== latestFileUrl) {
+        await updateDoc(doc(db, 'users', candidateProfile.uid), {
+          resumeUrl: latestFileUrl,
+        });
+        
+        console.log('Updated resume URL in database to match most recent file');
+      }
+      
+      setValidatedResumeUrl(latestFileUrl);
+    } catch (err) {
+      console.error('Force revalidation error:', err);
+      setValidatedResumeUrl(null);
+    } finally {
+      setValidatingUrl(false);
     }
   };
 

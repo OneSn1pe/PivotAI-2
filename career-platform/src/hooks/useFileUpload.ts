@@ -16,19 +16,32 @@ export function useFileUpload() {
   };
 
   // Helper function to delete all files in a directory
-  const deleteFilesInDirectory = async (directoryPath: string): Promise<void> => {
+  const deleteFilesInDirectory = async (directoryPath: string): Promise<string[]> => {
     try {
       const directoryRef = ref(storage, directoryPath);
       const filesList = await listAll(directoryRef);
       
+      // Track deleted file paths for debugging
+      const deletedPaths: string[] = [];
+      
       // Delete each file in the directory
-      const deletionPromises = filesList.items.map(fileRef => deleteObject(fileRef));
+      const deletionPromises = filesList.items.map(async fileRef => {
+        try {
+          await deleteObject(fileRef);
+          deletedPaths.push(fileRef.fullPath);
+        } catch (err) {
+          console.error(`Failed to delete file ${fileRef.fullPath}:`, err);
+        }
+      });
+      
       await Promise.all(deletionPromises);
       
-      console.log(`Deleted ${filesList.items.length} previous files in ${directoryPath}`);
+      console.log(`Deleted ${deletedPaths.length} previous files in ${directoryPath}:`, deletedPaths);
+      return deletedPaths;
     } catch (error) {
       console.error('Error deleting previous files:', error);
       // Continue with upload even if deletion fails
+      return [];
     }
   };
 
@@ -49,8 +62,9 @@ export function useFileUpload() {
       
       // Delete any existing files in the directory before uploading
       // Only if the path has a directory structure
+      let deletedFiles: string[] = [];
       if (directoryPath !== path) {
-        await deleteFilesInDirectory(directoryPath);
+        deletedFiles = await deleteFilesInDirectory(directoryPath);
       }
 
       // Use the exact path provided including filename
@@ -73,6 +87,13 @@ export function useFileUpload() {
             try {
               const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
               setUrl(downloadUrl);
+              
+              // Log success with details about old files deleted
+              console.log(
+                `Upload successful. New file: ${path}, URL: ${downloadUrl}`,
+                deletedFiles.length > 0 ? `Replaced files: ${deletedFiles.join(', ')}` : 'No previous files found'
+              );
+              
               setUploading(false);
               resolve(downloadUrl);
             } catch (downloadError) {

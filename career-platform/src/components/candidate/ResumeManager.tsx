@@ -29,74 +29,51 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   
   // Validate resume URL on component mount
   useEffect(() => {
-    validateResumeUrl();
-  }, [candidateProfile?.resumeUrl]);
+    forceGetLatestResume();
+  }, []);
   
-  // Function to validate resume URL
-  const validateResumeUrl = async () => {
-    if (!candidateProfile?.resumeUrl) return;
+  // Force get the latest resume from Storage rather than relying on the database URL
+  const forceGetLatestResume = async () => {
+    if (!userProfile?.uid) return;
     
     setValidatingUrl(true);
     setError(null);
     
     try {
-      // Instead of using fetch (which can trigger CORS issues), 
-      // we'll directly check if URL pattern matches a Firebase Storage URL
-      const isStorageUrl = candidateProfile.resumeUrl.includes('firebasestorage.googleapis.com');
+      // Go directly to storage to find the most recent file
+      const userResumesRef = ref(storage, `resumes/${userProfile.uid}`);
       
-      if (isStorageUrl) {
-        // For Firebase URLs, we'll trust it's valid since we just got it from Firebase
-        // Direct fetch validation can cause CORS errors
-        setValidatedResumeUrl(candidateProfile.resumeUrl || null);
-      } else {
-        // For non-Firebase URLs, we can try fetch
-        try {
-          const response = await fetch(candidateProfile.resumeUrl, { method: 'HEAD' });
-          if (response.ok) {
-            setValidatedResumeUrl(candidateProfile.resumeUrl || null);
-          } else {
-            throw new Error('URL not accessible');
-          }
-        } catch (fetchErr) {
-          throw new Error('URL validation failed');
-        }
+      // List all files in the user's resume directory
+      const filesList = await listAll(userResumesRef);
+      
+      if (filesList.items.length === 0) {
+        // No files found, but don't throw error as this might be first upload
+        setValidatedResumeUrl(null);
+        setValidatingUrl(false);
+        return;
       }
-    } catch (err) {
-      console.error('Resume URL validation error:', err);
       
-      // Try to recover by finding the most recent file
-      try {
-        if (!userProfile?.uid) throw new Error('User not authenticated');
-        
-        const userResumesRef = ref(storage, `resumes/${userProfile.uid}`);
-        
-        // List all files in the user's resume directory
-        const filesList = await listAll(userResumesRef);
-        
-        if (filesList.items.length === 0) {
-          throw new Error('No resume files found in storage');
-        }
-        
-        // Sort by name to get the most recent one (since we use timestamps in filenames)
-        const sortedItems = [...filesList.items].sort((a, b) => {
-          return b.name.localeCompare(a.name);
-        });
-        
-        // Get the download URL of the most recent file
-        const latestFileUrl = await getDownloadURL(sortedItems[0]);
-        
-        // Update the database with the correct URL
+      // Sort by name to get the most recent one (since we use timestamps in filenames)
+      const sortedItems = [...filesList.items].sort((a, b) => {
+        return b.name.localeCompare(a.name);
+      });
+      
+      // Get the download URL of the most recent file
+      const latestFileUrl = await getDownloadURL(sortedItems[0]);
+      
+      // Update the database with the correct URL if it doesn't match
+      if (candidateProfile?.resumeUrl !== latestFileUrl) {
+        console.log('URL in database does not match the latest file, updating...');
         await updateDoc(doc(db, 'users', userProfile.uid), {
           resumeUrl: latestFileUrl,
         });
-        
-        console.log('Updated resume URL in database to match most recent file');
-        setValidatedResumeUrl(latestFileUrl);
-      } catch (storageErr) {
-        console.error('Storage recovery error:', storageErr);
-        setError('Cannot access resume file. It may have been moved or deleted.');
-        setValidatedResumeUrl(null);
       }
+      
+      setValidatedResumeUrl(latestFileUrl);
+    } catch (err) {
+      console.error('Error getting latest resume:', err);
+      setError('Cannot access resume files. Please try again later.');
+      setValidatedResumeUrl(null);
     } finally {
       setValidatingUrl(false);
     }
@@ -223,66 +200,51 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const handleViewResume = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     
+    // Force refresh to get latest resume
+    await forceGetLatestResume();
+    
     if (validatingUrl) {
       setError('Please wait, validating resume access...');
       return;
     }
     
     if (!validatedResumeUrl) {
-      // Try to validate again
-      validateResumeUrl();
-      setError('Cannot access resume file. Trying to locate it...');
+      setError('Cannot access resume file. No resume found.');
       return;
     }
     
     try {
-      // Extract file path from the validatedResumeUrl
-      // The URL format from Firebase usually contains a token and other information
-      // We need to extract the path part
-      
       if (!candidateProfile?.uid) {
         throw new Error('User not authenticated');
       }
       
-      // Determine path and filename based on available information
-      let resumePath = '';
-      let filename = 'resume';
+      // Get all files in storage to find most recent
+      const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+      const filesList = await listAll(userResumesRef);
       
-      // Check if we have a stored filename first
+      if (filesList.items.length === 0) {
+        throw new Error('No resume files found in storage');
+      }
+      
+      // Sort by name to get the most recent one
+      const sortedItems = [...filesList.items].sort((a, b) => {
+        return b.name.localeCompare(a.name);
+      });
+      
+      // Use the most recent file's path directly
+      const resumePath = sortedItems[0].fullPath;
+      
+      // Determine filename
+      let filename = 'resume';
       if (candidateProfile.resumeFileName) {
         filename = candidateProfile.resumeFileName;
-      }
-      
-      // If we have a valid URL, we need to extract the storage path if possible
-      if (validatedResumeUrl.includes('firebasestorage.googleapis.com')) {
-        // For Firebase URLs, we can try to extract the path after /o/ and before ?
-        const pathMatch = validatedResumeUrl.match(/\/o\/([^?]+)/);
-        if (pathMatch && pathMatch[1]) {
-          // URL decode the path
-          resumePath = decodeURIComponent(pathMatch[1]);
-        } else {
-          // Fallback: try to find most recent file
-          const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
-          const filesList = await listAll(userResumesRef);
-          
-          if (filesList.items.length === 0) {
-            throw new Error('No resume files found in storage');
-          }
-          
-          // Sort by name to get the most recent one
-          const sortedItems = [...filesList.items].sort((a, b) => {
-            return b.name.localeCompare(a.name);
-          });
-          
-          resumePath = sortedItems[0].fullPath;
-        }
       } else {
-        // For non-Firebase URLs or if path extraction failed,
-        // construct the path using userID and filename
-        resumePath = `resumes/${candidateProfile.uid}/${filename}`;
+        // Extract filename from path if available
+        const pathParts = resumePath.split('/');
+        filename = pathParts[pathParts.length - 1];
       }
       
-      // Use our custom hook to download the file
+      // Use our custom hook to download the file directly from storage
       await downloadAndSaveFile(resumePath, filename);
       
       setSuccessMessage('Resume download initiated');
@@ -292,7 +254,9 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       setError('Error downloading resume: ' + (err instanceof Error ? err.message : String(err)));
       
       // Fallback: open in a new tab if all else fails
-      window.open(validatedResumeUrl, '_blank');
+      if (validatedResumeUrl) {
+        window.open(validatedResumeUrl, '_blank');
+      }
     }
   };
   
