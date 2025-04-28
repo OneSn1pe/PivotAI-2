@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileDownload } from '@/hooks/useFileDownload';
@@ -7,12 +9,11 @@ import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
 import { ref, getDownloadURL, listAll } from 'firebase/storage';
-// Import PDF.js and mammoth for document processing
-import * as pdfjsLib from 'pdfjs-dist';
+// Import mammoth for DOCX processing
 import mammoth from 'mammoth';
 
-// PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Dynamically import PDF.js only on client side
+let pdfjsLib: any = null;
 
 interface ResumeManagerProps {
   onUpdateComplete?: () => void;
@@ -33,6 +34,28 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const [validatedResumeUrl, setValidatedResumeUrl] = useState<string | null>(null);
   const [validatingUrl, setValidatingUrl] = useState(false);
   const [displayFileName, setDisplayFileName] = useState<string | null>(candidateProfile?.resumeFileName || null);
+  const [isPdfJsLoaded, setIsPdfJsLoaded] = useState(false);
+  
+  // Load PDF.js library on client side only
+  useEffect(() => {
+    const loadPdfJs = async () => {
+      try {
+        // Dynamic import of PDF.js
+        pdfjsLib = await import('pdfjs-dist');
+        
+        // Set the worker source URL
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        
+        setIsPdfJsLoaded(true);
+        console.log('PDF.js loaded successfully');
+      } catch (err) {
+        console.error('Failed to load PDF.js:', err);
+        setError('Failed to load PDF processing library. PDF uploads may not work correctly.');
+      }
+    };
+    
+    loadPdfJs();
+  }, []);
   
   // Validate resume URL on component mount
   useEffect(() => {
@@ -117,6 +140,10 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       
       // For PDF files, use PDF.js to extract text
       if (file.type === 'application/pdf') {
+        if (!pdfjsLib || !isPdfJsLoaded) {
+          throw new Error('PDF.js library not loaded. Please try again or use a different file format.');
+        }
+        
         console.log('Converting PDF to plaintext');
         const arrayBuffer = await file.arrayBuffer();
         
@@ -132,7 +159,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const pageText = textContent.items
-            .map(item => 'str' in item ? item.str : '')
+            .map((item: any) => 'str' in item ? item.str : '')
             .join(' ');
           
           plaintext += pageText + '\n\n';
@@ -169,7 +196,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       console.error('Error converting file to plaintext:', error);
       throw new Error(`Failed to convert file: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }, []);
+  }, [isPdfJsLoaded]);
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
