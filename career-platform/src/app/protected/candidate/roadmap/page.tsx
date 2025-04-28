@@ -104,6 +104,17 @@ export default function RoadmapPage() {
   if (!roadmap && !showGenerator) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center mb-8">
+          <button
+            onClick={() => router.push('/protected/candidate/dashboard')}
+            className="text-blue-600 hover:text-blue-800 flex items-center mr-4"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+            </svg>
+            Back to Dashboard
+          </button>
+        </div>
         <div className="text-center py-12 bg-white rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold mb-4">No Career Roadmap Found</h2>
           <p className="text-gray-600 mb-6">
@@ -140,7 +151,18 @@ export default function RoadmapPage() {
   if (showGenerator) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Create Your Career Roadmap</h1>
+        <div className="flex items-center mb-8">
+          <button
+            onClick={() => router.push('/protected/candidate/dashboard')}
+            className="text-blue-600 hover:text-blue-800 flex items-center mr-4"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+            </svg>
+            Back to Dashboard
+          </button>
+          <h1 className="text-3xl font-bold">Create Your Career Roadmap</h1>
+        </div>
         <RoadmapGenerator 
           resumeAnalysis={candidateProfile?.resumeAnalysis || null} 
           onRoadmapGenerated={handleRoadmapGenerated}
@@ -160,7 +182,18 @@ export default function RoadmapPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Your Career Roadmap</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/protected/candidate/dashboard')}
+            className="text-blue-600 hover:text-blue-800 flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+            </svg>
+            Back to Dashboard
+          </button>
+          <h1 className="text-3xl font-bold">Your Career Roadmap</h1>
+        </div>
         <button
           onClick={() => setShowGenerator(true)}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
