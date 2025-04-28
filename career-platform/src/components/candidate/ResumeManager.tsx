@@ -67,36 +67,17 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       });
       
       // Get the download URL of the most recent file
-      try {
-        const latestFileUrl = await getDownloadURL(sortedItems[0]);
-        console.log('Retrieved authenticated download URL:', latestFileUrl.substring(0, 50) + '...');
-        
-        // Verify the URL is accessible with a HEAD request
-        try {
-          const response = await fetch(latestFileUrl, { method: 'HEAD' });
-          if (!response.ok) {
-            console.error('Resume file URL validation failed:', response.status, response.statusText);
-            throw new Error(`Resume file cannot be accessed (HTTP ${response.status})`);
-          }
-          console.log('Resume file URL validated successfully:', response.status);
-        } catch (fetchErr) {
-          console.error('Error validating resume URL:', fetchErr);
-          // Continue anyway since getDownloadURL should have given us a valid URL
-        }
+      const latestFileUrl = await getDownloadURL(sortedItems[0]);
       
-        // Update the database with the correct URL if it doesn't match
-        if (candidateProfile?.resumeUrl !== latestFileUrl) {
-          console.log('URL in database does not match the latest file, updating...');
-          await updateDoc(doc(db, 'users', userProfile.uid), {
-            resumeUrl: latestFileUrl,
-          });
-        }
-        
-        setValidatedResumeUrl(latestFileUrl);
-      } catch (downloadErr) {
-        console.error('Error getting download URL:', downloadErr);
-        throw new Error('Cannot generate an authenticated download URL for your resume. Please try uploading it again.');
+      // Update the database with the correct URL if it doesn't match
+      if (candidateProfile?.resumeUrl !== latestFileUrl) {
+        console.log('URL in database does not match the latest file, updating...');
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          resumeUrl: latestFileUrl,
+        });
       }
+      
+      setValidatedResumeUrl(latestFileUrl);
     } catch (err) {
       console.error('Error getting latest resume:', err);
       setError('Cannot access resume files. Please try again later.');
@@ -429,29 +410,11 @@ Please extract and organize information from this resume into appropriate catego
         filename = pathParts[pathParts.length - 1];
       }
       
-      console.log('Using file path for download:', resumePath);
-      
       // Use our custom hook to download the file directly from storage
-      try {
-        await downloadAndSaveFile(resumePath, filename);
-        setSuccessMessage('Resume download initiated');
-      } catch (downloadErr) {
-        console.error('Error with downloadAndSaveFile:', downloadErr);
-        
-        // Fallback: Try to use the validatedResumeUrl directly
-        console.log('Falling back to direct URL download using:', validatedResumeUrl.substring(0, 50) + '...');
-        
-        // Create a download link with the authenticated URL
-        const downloadLink = document.createElement('a');
-        downloadLink.href = validatedResumeUrl;
-        downloadLink.download = filename;
-        downloadLink.target = '_blank'; 
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        
-        setSuccessMessage('Resume download initiated via fallback method');
-      }
+      await downloadAndSaveFile(resumePath, filename);
+      
+      setSuccessMessage('Resume download initiated');
+      
     } catch (err) {
       console.error('Resume download error:', err);
       setError('Error downloading resume: ' + (err instanceof Error ? err.message : String(err)));
