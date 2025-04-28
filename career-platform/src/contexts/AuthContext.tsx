@@ -52,21 +52,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setCurrentUser(user);
         
         if (user) {
-          // Get a fresh token with a longer expiration
-          const token = await user.getIdToken(true);
+          // Get the ID token
+          const token = await user.getIdToken();
           
-          // Set the token in a cookie with a longer expiration (24 hours)
-          document.cookie = `session=${token}; path=/; max-age=86400; secure; samesite=strict`;
-          
-          // Set up token refresh every 30 minutes
-          const refreshInterval = setInterval(async () => {
-            try {
-              const newToken = await user.getIdToken(true);
-              document.cookie = `session=${newToken}; path=/; max-age=86400; secure; samesite=strict`;
-            } catch (error) {
-              console.error('Error refreshing token:', error);
-            }
-          }, 30 * 60 * 1000); // 30 minutes
+          // Set the token in a cookie
+          document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
           
           // Fetch user profile from Firestore
           const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -80,11 +70,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               { merge: true }
             );
           }
-
-          // Clean up interval on unmount
-          return () => {
-            clearInterval(refreshInterval);
-          };
         } else {
           setUserProfile(null);
           // Clear the session cookie
