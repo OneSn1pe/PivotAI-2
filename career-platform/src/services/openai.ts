@@ -1,5 +1,4 @@
 import { ResumeAnalysis, TargetCompany, CareerRoadmap } from '@/types/user';
-import { OpenAI } from 'openai';
 
 // Debug helper with support for production environment
 const debug = {
@@ -27,15 +26,6 @@ const getApiBaseUrl = () => {
     ? `https://${process.env.VERCEL_URL}`
     : process.env.NEXT_PUBLIC_API_URL || '';
 };
-
-// Initialize OpenAI with API key from environment
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
-
-// Maximum length of resume text to analyze (to avoid token limits)
-const MAX_RESUME_LENGTH = 8000;
 
 /**
  * Safe JSON parse with error handling
@@ -130,129 +120,140 @@ export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' |
 }
 
 /**
- * Analyzes resume text and extracts structured information
- * @param resumeText - The text content of the resume to analyze
- * @returns Promise<ResumeAnalysis> - Structured resume analysis
+ * Analyzes a resume text using OpenAI
+ * @param resumeText The text content of the resume
+ * @returns A structured analysis of the resume
  */
 export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis> {
-  if (!resumeText || resumeText.trim().length === 0) {
-    console.error('Resume text is empty');
-    throw new Error('Resume text is empty or invalid');
-  }
-
-  // Debug start time
-  const startTime = performance.now();
-  console.log('Starting resume analysis of text length:', resumeText.length);
-
-  // Truncate resume text if it's too long
-  const truncated = resumeText.length > MAX_RESUME_LENGTH;
-  const processedResumeText = truncated ? resumeText.slice(0, MAX_RESUME_LENGTH) : resumeText;
+  debug.log('analyzeResume called');
   
-  if (truncated) {
-    console.log(`Resume text truncated from ${resumeText.length} to ${MAX_RESUME_LENGTH} characters`);
-  }
-
   try {
-    // Create a timeout promise to abort if it takes too long
-    const timeoutDuration = 30000; // 30 seconds
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`Resume analysis timed out after ${timeoutDuration/1000} seconds`)), timeoutDuration);
-    });
-
-    // OpenAI API call with timeout
-    const openaiStartTime = performance.now();
-    const response = await Promise.race([
-      openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert resume analyzer. Extract the following information from the resume:
-            - Skills: A comma-separated list of technical and soft skills mentioned
-            - Experience: Key professional experiences with company names and roles
-            - Education: Educational background with institutions and degrees
-            - Strengths: Areas where the candidate shows strong capabilities
-            - Weaknesses: Areas where the candidate could improve
-            - Recommendations: Suggestions for improving the resume
-            
-            Format your response as a valid JSON object with these keys: skills (array), experience (array), education (array), strengths (array), weaknesses (array), recommendations (array).
-            Ensure your response is ONLY the JSON object with no additional text.`
-          },
-          {
-            role: "user",
-            content: processedResumeText
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000,
-      }),
-      timeoutPromise
-    ]);
-    
-    const openaiEndTime = performance.now();
-    console.log(`OpenAI API call completed in ${Math.round(openaiEndTime - openaiStartTime)}ms`);
-
-    // Extract and parse the JSON response
-    const jsonStr = response.choices[0].message.content?.trim();
-    
-    if (!jsonStr) {
-      console.error('OpenAI returned empty response content');
-      throw new Error('Failed to generate analysis: Empty response');
+    // Validate input
+    if (!resumeText || resumeText.trim() === '') {
+      throw new Error('Resume text is empty. Please upload a valid resume file.');
     }
     
-    console.log('Parsing JSON response from OpenAI');
+    debug.log(`Resume text length: ${resumeText.length}`);
+    
+    // Build API URL
+    const baseUrl = getApiBaseUrl();
+    const apiUrl = `${baseUrl}/api/analyze-resume`;
+    debug.log(`API URL: ${apiUrl}`);
+    
+    // Set up request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     
     try {
-      const analysis = JSON.parse(jsonStr) as ResumeAnalysis;
+      debug.log('Sending API request...');
       
-      // Validate analysis structure
-      const requiredFields = ['skills', 'experience', 'education', 'strengths', 'weaknesses', 'recommendations'];
-      const missingFields = requiredFields.filter(field => !analysis[field as keyof ResumeAnalysis]);
-      
-      if (missingFields.length > 0) {
-        console.warn(`Analysis missing fields: ${missingFields.join(', ')}`);
-        // Initialize any missing fields as empty arrays
-        missingFields.forEach(field => {
-          analysis[field as keyof ResumeAnalysis] = [] as any;
-        });
-      }
-      
-      // Add debug info to help track processing issues
-      (analysis as any)._debug = {
-        processingTime: Math.round(performance.now() - startTime),
-        openaiTime: Math.round(openaiEndTime - openaiStartTime),
-        resumeLength: resumeText.length,
-        resumeTruncated: truncated,
-        timestamp: new Date().toISOString()
-      };
-      
-      console.log('Resume analysis completed successfully', {
-        skills: analysis.skills.length,
-        processing_time_ms: Math.round(performance.now() - startTime)
+      // Make API request - ensure we're using POST method
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeText }),
+        signal: controller.signal
       });
       
-      return analysis;
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', parseError);
-      console.error('Raw response content:', jsonStr);
-      throw new Error('Failed to parse analysis results');
-    }
-  } catch (error) {
-    console.error('Resume analysis error:', error);
-    
-    // Provide a more helpful error message
-    if (error instanceof Error) {
-      if (error.message.includes('timed out')) {
-        throw new Error('Analysis timed out. The resume may be too complex or the service is temporarily busy.');
-      } else if (error.message.includes('429')) {
-        throw new Error('Too many requests. Please try again in a few minutes.');
-      } else if (error.message.includes('401')) {
-        throw new Error('OpenAI API key is invalid or expired.');
+      // Clear timeout
+      clearTimeout(timeoutId);
+      
+      debug.log(`Response received, status: ${response.status}`);
+      
+      // Check if response is ok
+      if (!response.ok) {
+        // Get response text first
+        let responseText = '';
+        try {
+          responseText = await response.text();
+          debug.log('Error response text:', responseText);
+        } catch (textErr) {
+          debug.error('Failed to get response text:', textErr);
+        }
+        
+        // Try to parse the error response
+        let errorMessage = `Failed to analyze resume (HTTP ${response.status})`;
+        let errorDetails = '';
+        
+        if (responseText) {
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+            errorDetails = errorData.details || '';
+            debug.log('Parsed error response:', errorData);
+          } catch (parseErr) {
+            debug.error('Error parsing error response:', parseErr);
+            // Use the raw text if parsing fails
+            errorMessage = responseText.substring(0, 100) || errorMessage;
+          }
+        }
+        
+        // Create detailed error object
+        const enhancedError = new Error(errorMessage);
+        (enhancedError as any).status = response.status;
+        (enhancedError as any).details = errorDetails;
+        (enhancedError as any).url = apiUrl;
+        
+        throw enhancedError;
       }
-      throw error;
+      
+      // Get the response text
+      const responseText = await response.text();
+      debug.log('Got response text, length:', responseText.length);
+      
+      // Safely parse JSON
+      const { data, error } = safeJsonParse(responseText);
+      
+      if (error) {
+        debug.error('Failed to parse API response:', error);
+        throw new Error('Failed to parse analysis results. Please try again.');
+      }
+      
+      // Validate response data structure
+      if (!data) {
+        throw new Error('Resume analysis returned empty response');
+      }
+      
+      // Check for required fields with fallbacks
+      const validatedAnalysis: ResumeAnalysis = {
+        skills: Array.isArray(data.skills) ? data.skills : [],
+        experience: Array.isArray(data.experience) ? data.experience : [],
+        education: Array.isArray(data.education) ? data.education : [],
+        strengths: Array.isArray(data.strengths) ? data.strengths : [],
+        weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+        recommendations: Array.isArray(data.recommendations) ? data.recommendations : []
+      };
+      
+      debug.log('Analysis successful!');
+      return validatedAnalysis;
+      
+    } catch (fetchError: any) {
+      // Handle network errors including timeouts
+      clearTimeout(timeoutId);
+      
+      // Add more context to error
+      let errorMessage = fetchError.message || 'Unknown error';
+      
+      if (fetchError.name === 'AbortError') {
+        debug.error('Request timeout after 60 seconds');
+        errorMessage = 'Resume analysis timed out. Please try again.';
+      } else if (fetchError.message?.includes('NetworkError')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      }
+      
+      const enhancedError = new Error(errorMessage);
+      (enhancedError as any).originalError = fetchError;
+      (enhancedError as any).type = 'network_error';
+      
+      debug.error('Fetch error:', enhancedError);
+      throw enhancedError;
     }
     
-    throw new Error('Failed to analyze resume: Unknown error');
+  } catch (error: any) {
+    debug.error('Resume analysis error:', error);
+    throw error;
   }
 }
 
