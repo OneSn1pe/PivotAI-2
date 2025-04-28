@@ -63,13 +63,11 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a career development expert. Generate a personalized career roadmap based on resume analysis and target companies. Your response MUST be a valid JSON object with ONLY a 'milestones' array. DO NOT include any explanations, markdown formatting (like ```json), or additional text before or after the JSON."
+          content: "You are a career development expert. Generate a personalized career roadmap based on resume analysis and target companies. Return ONLY a valid JSON object with a 'milestones' array."
         },
         {
           role: "user",
-          content: `Create a career roadmap with 5 milestones to help this candidate achieve their career goals with their target companies.
-          
-          Return the roadmap as a plain JSON object containing an array of milestone objects with the following structure:
+          content: `Create a 5-milestone career roadmap with this structure:
           {
             "milestones": [
               {
@@ -79,18 +77,16 @@ export async function POST(request: NextRequest) {
                 "skills": ["Skill 1", "Skill 2"],
                 "timeframe": "3-6 months",
                 "completed": false
-              },
-              ...
+              }
             ]
           }
           
-          VERY IMPORTANT: 
-          1. Do NOT use markdown code blocks or any other formatting
-          2. Your response must be ONLY the raw JSON object with no extra text
-          3. Generate exactly 5 milestones
-          4. Include realistic skills needed for each milestone
-          5. Create a logical progression toward the target positions
-          6. Each milestone must have its own unique ID
+          Requirements:
+          - Raw JSON only, no formatting
+          - 5 milestones total
+          - Each milestone needs unique ID
+          - Include realistic skills
+          - Logical progression toward target positions
           
           Resume Analysis: ${JSON.stringify(resumeAnalysis)}
           Target Companies: ${JSON.stringify(companiesForRoadmap)}`

@@ -320,36 +320,30 @@ export async function POST(request: NextRequest) {
     try {
       const completion = await withRetry(async () => {
         return await openai.chat.completions.create({
-          model: "gpt-4o", // Using GPT-4o for higher quality analysis
-          temperature: 0.1, // Lower temperature for much more deterministic output
+          model: "gpt-4o",
+          temperature: 0.1,
           messages: [
             {
               role: "system",
-              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text or formatting. DO NOT use markdown formatting like ```json. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings.\n\nFor skills: CRITICALLY IMPORTANT: ONLY include skills that appear VERBATIM in the resume text. DO NOT include general categories like 'Programming languages', 'Frameworks', 'Tools', 'Communication', 'Leadership', 'Teamwork', or 'Domain knowledge' - these are NOT specific skills. Only extract EXPLICIT skill names like 'Python', 'React', 'Docker', etc. It is FAR BETTER to return an empty skills array than to hallucinate or generalize skills that aren't explicitly stated in the text."
+              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no formatting. Include these keys as arrays of strings: skills, experience, education, strengths, weaknesses, recommendations.\n\nCRITICAL: For skills, ONLY include verbatim skills from the text (e.g., 'Python', 'React', 'Docker'). NO categories or inferred skills."
             },
             {
               role: "user",
-              content: `Analyze this resume and extract the following information:
-              - skills (array of strings) - ONLY extract skills that appear VERBATIM in the resume - NO category names or inferred skills whatsoever
-              - experience (array of strings describing roles and responsibilities)
-              - education (array of strings)
-              - strengths (array of strings)
-              - weaknesses (array of strings)
-              - recommendations (array of strings with career advice)
+              content: `Analyze this resume and return a JSON object with these arrays:
+              - skills (verbatim skills only, no categories)
+              - experience (roles and responsibilities)
+              - education
+              - strengths
+              - weaknesses
+              - recommendations
               
-              VERY IMPORTANT: 
-              1. Format your response as a raw JSON object with NO markdown formatting
-              2. Do NOT use code blocks, backticks, or any other markdown syntax
-              3. Your response should be parseable by JSON.parse() directly
-              4. Do NOT include any explanation, preamble, or additional text
-              5. For skills, ONLY extract skills that appear VERBATIM in the text. DO NOT include general categories like "Programming languages", "Frameworks", etc. Only extract specific skills like "Python", "React", "Docker", etc.
-              6. If no skills are explicitly mentioned, return an empty skills array
+              Format: Raw JSON only, no markdown or extra text.
               
-              Here's the resume: ${truncatedResume}`
+              Resume: ${truncatedResume}`
             }
           ]
         });
-      }, 2, 2000); // retry up to 2 times with 2s initial delay
+      }, 2, 2000);
       
       const openaiDuration = performance.now() - openaiStartTime;
       debug.log(`OpenAI response received successfully (${Math.round(openaiDuration)}ms)`);
