@@ -77,4 +77,9 @@ export enum UserRole {
     skills: string[];
     timeframe: string;
     completed: boolean;
+    resources: {
+      title: string;
+      url: string;
+      type: 'article' | 'video' | 'course' | 'book' | 'documentation';
+    }[];
   }

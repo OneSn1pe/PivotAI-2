@@ -113,6 +113,38 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
                       </div>
                     )}
                     
+                    {/* Resources for milestone */}
+                    {milestone.resources && milestone.resources.length > 0 ? (
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-sm text-gray-600 mb-2">Resources:</h4>
+                        <div className="space-y-2">
+                          {milestone.resources.map((resource, resourceIndex) => (
+                            <a
+                              key={resourceIndex}
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              <span className="mr-2">
+                                {resource.type === 'article' && '📄'}
+                                {resource.type === 'video' && '🎥'}
+                                {resource.type === 'course' && '📚'}
+                                {resource.type === 'book' && '📖'}
+                                {resource.type === 'documentation' && '📋'}
+                              </span>
+                              {resource.title}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-sm text-gray-600 mb-2">Resources:</h4>
+                        <p className="text-xs text-gray-500 italic">No resources listed for this milestone.</p>
+                      </div>
+                    )}
+                    
                     {/* Completion checkbox that triggers parent handler */}
                     {isEditable && (
                       <div className="flex items-center">

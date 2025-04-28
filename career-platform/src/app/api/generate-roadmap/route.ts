@@ -76,7 +76,14 @@ export async function POST(request: NextRequest) {
                 "description": "Detailed description from a recruiter's perspective",
                 "skills": ["Skill 1", "Skill 2"],
                 "timeframe": "3-6 months",
-                "completed": false
+                "completed": false,
+                "resources": [
+                  {
+                    "title": "Resource Title",
+                    "url": "https://example.com/resource",
+                    "type": "article"
+                  }
+                ]
               }
             ]
           }
@@ -89,6 +96,10 @@ export async function POST(request: NextRequest) {
           - Address weaknesses: ${JSON.stringify(resumeAnalysis.weaknesses)}
           - Leverage strengths: ${JSON.stringify(resumeAnalysis.strengths)}
           - Follow recommendations: ${JSON.stringify(resumeAnalysis.recommendations)}
+          - Include 2-3 specific resources per milestone
+          - Resources should be high-quality, free or low-cost, and directly relevant to the milestone
+          - Resource types can be: article, video, course, book, or documentation
+          - Prefer official documentation and well-known learning platforms
           
           Target Companies and Positions:
           ${JSON.stringify(companiesForRoadmap.map((c: TargetCompany) => ({
@@ -104,7 +115,8 @@ export async function POST(request: NextRequest) {
           2. Focus on skills and experiences that would make the candidate stand out
           3. Include specific technical and soft skills we look for
           4. Consider the typical career progression paths at these companies
-          5. Address any gaps between current skills and target position requirements`
+          5. Address any gaps between current skills and target position requirements
+          6. Include specific learning resources that would help achieve each milestone`
         }
       ]
     });
