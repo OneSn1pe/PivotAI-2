@@ -53,38 +53,9 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
     return a.timeframe.localeCompare(b.timeframe);
   });
 
-  // Helper for classification color
-  const classificationColor = (classification?: string) => {
-    switch (classification) {
-      case 'Core': return 'bg-blue-100 text-blue-800 border-blue-400';
-      case 'Optional': return 'bg-yellow-100 text-yellow-800 border-yellow-400';
-      case 'Stretch': return 'bg-purple-100 text-purple-800 border-purple-400';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
   return (
     <div className="w-full px-4 py-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Your Career Roadmap</h2>
-      {/* Progress Bar */}
-      <div className="bg-white rounded-lg shadow p-4 mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="font-semibold text-gray-700">Progress</span>
-          <span className="text-blue-600 font-semibold">
-            {roadmap.milestones.filter(m => m.completed).length} of {roadmap.milestones.length} completed
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-            style={{
-              width: `${Math.round(
-                (roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100
-              )}%`
-            }}
-          ></div>
-        </div>
-      </div>
       
       {sortedMilestones.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
@@ -117,13 +88,7 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
                   {/* Card content */}
                   <div className="w-full md:w-1/2 p-6 bg-white rounded-lg shadow border border-gray-200">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold text-gray-800">{milestone.title}</h3>
-                        {/* Classification badge */}
-                        {milestone.classification && (
-                          <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold border ${classificationColor(milestone.classification)}`}>{milestone.classification}</span>
-                        )}
-                      </div>
+                      <h3 className="text-xl font-bold text-gray-800">{milestone.title}</h3>
                       <span className="text-sm text-gray-500">{milestone.timeframe}</span>
                     </div>
                     
@@ -145,26 +110,6 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
                       <div className="mb-4">
                         <h4 className="font-semibold text-sm text-gray-600 mb-2">Skills to develop:</h4>
                         <p className="text-xs text-gray-500 italic">No specific skills listed for this milestone.</p>
-                      </div>
-                    )}
-                    
-                    {/* Resource links */}
-                    {milestone.resources && milestone.resources.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-sm text-gray-600 mb-2">Resources:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {milestone.resources.map((resource, rIdx) => (
-                            <a
-                              key={rIdx}
-                              href={resource.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-medium border border-blue-200 transition"
-                            >
-                              {resource.label}
-                            </a>
-                          ))}
-                        </div>
                       </div>
                     )}
                     
