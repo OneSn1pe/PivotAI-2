@@ -464,16 +464,19 @@ export default function ResumeUpload() {
           
           <div className="mb-4">
             <h4 className="font-bold">Skills</h4>
-            {analysis.skills && analysis.skills.length > 0 ? (
-              <div className="flex flex-wrap gap-2 mt-1">
+            {analysis.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
                 {analysis.skills.map((skill, index) => (
-                  <span key={index} className="bg-gray-200 px-3 py-1 rounded-full text-sm">
+                  <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                     {skill}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 italic">No skills detected</p>
+              <p className="text-sm text-gray-600 mb-3">
+                No specific skills were identified in your resume. 
+                Consider updating your resume to explicitly list your technical and professional skills.
+              </p>
             )}
           </div>
           

@@ -330,16 +330,16 @@ export async function POST(request: NextRequest) {
       const completion = await withRetry(async () => {
         return await openai.chat.completions.create({
           model: "gpt-4o", // Using GPT-4o for higher quality analysis
-          temperature: 0.3, // Lower temperature for more deterministic output
+          temperature: 0.2, // Lower temperature for more deterministic output
           messages: [
             {
               role: "system",
-              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text or formatting. DO NOT use markdown formatting like ```json. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings."
+              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text or formatting. DO NOT use markdown formatting like ```json. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings. For skills ONLY include skills explicitly mentioned in the resume - NEVER add skills that are not explicitly written in the text. It's better to return an empty skills array than to hallucinate skills."
             },
             {
               role: "user",
               content: `Analyze this resume and extract the following information:
-              - skills (array of strings)
+              - skills (array of strings) - ONLY skills explicitly mentioned in the resume text, no inferred or assumed skills
               - experience (array of strings describing roles and responsibilities)
               - education (array of strings)
               - strengths (array of strings)
@@ -351,6 +351,7 @@ export async function POST(request: NextRequest) {
               2. Do NOT use code blocks, backticks, or any other markdown syntax
               3. Your response should be parseable by JSON.parse() directly
               4. Do NOT include any explanation, preamble, or additional text
+              5. For skills, ONLY include skills explicitly mentioned in the resume - if no skills are clearly mentioned, return an empty array
               
               Here's the resume: ${truncatedResume}`
             }
@@ -392,7 +393,7 @@ export async function POST(request: NextRequest) {
         
         // Provide a fallback structure when OpenAI doesn't return valid JSON
         analysis = {
-          skills: extractedSkills.length > 0 ? extractedSkills : ["Communication", "Technical skills", "Problem solving"],
+          skills: extractedSkills.length > 0 ? extractedSkills : [],
           experience: ["Professional experience extracted from resume"],
           education: ["Education details extracted from resume"],
           strengths: ["Identified strengths from resume"],
@@ -408,13 +409,11 @@ export async function POST(request: NextRequest) {
       debug.log('Analysis successfully parsed and returning to client');
       
       // Verify and fix the analysis structure if needed
-      if (!analysis.skills || !Array.isArray(analysis.skills) || analysis.skills.length === 0) {
-        debug.log('Skills array missing or empty, attempting to extract skills from raw text');
+      if (!analysis.skills || !Array.isArray(analysis.skills)) {
+        debug.log('Skills array missing, attempting to extract skills from raw text');
         const extractedSkills = extractSkillsFromText(rawAnalysisText);
-        analysis.skills = extractedSkills.length > 0 ? 
-          extractedSkills : 
-          ["Communication", "Technical skills", "Problem solving"];
-        debug.log('Using extracted or default skills:', analysis.skills);
+        analysis.skills = extractedSkills.length > 0 ? extractedSkills : [];
+        debug.log('Using extracted skills or empty array:', analysis.skills);
       }
       
       if (!analysis.experience || !Array.isArray(analysis.experience)) {

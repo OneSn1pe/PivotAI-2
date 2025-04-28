@@ -351,16 +351,30 @@ export default function CandidateDashboard() {
           <h2 className="text-xl font-bold mb-4">Your Skills</h2>
           
           {candidateProfile?.resumeAnalysis?.skills ? (
-            <div className="flex flex-wrap gap-2">
-              {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
-                <span 
-                  key={index}
-                  className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+            candidateProfile.resumeAnalysis.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
+                  <span 
+                    key={index}
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="py-3">
+                <p className="text-gray-600">
+                  No specific skills were identified in your resume. Consider updating your resume to explicitly list your technical and professional skills.
+                </p>
+                <button
+                  onClick={() => setShowResumeManager(true)}
+                  className="mt-3 text-blue-600 hover:text-blue-800 text-sm underline"
                 >
-                  {skill}
-                </span>
-              ))}
-            </div>
+                  Update Resume
+                </button>
+              </div>
+            )
           ) : (
             <p className="text-gray-500 italic">Upload your resume to analyze your skills</p>
           )}

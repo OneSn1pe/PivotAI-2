@@ -441,13 +441,20 @@ Please extract and organize information from this resume into appropriate catego
           <div className="space-y-4">
             <div>
               <h4 className="font-medium text-gray-700 mb-2">Skills</h4>
-              <div className="flex flex-wrap gap-2">
-                {analysis.skills.map((skill, index) => (
-                  <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                    {skill}
-                  </span>
-                ))}
-              </div>
+              {analysis.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {analysis.skills.map((skill, index) => (
+                    <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 mb-3">
+                  No specific skills were identified in your resume. 
+                  Consider updating your resume to explicitly list your technical and professional skills.
+                </p>
+              )}
             </div>
             
             <div>
