@@ -40,14 +40,24 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   useEffect(() => {
     const loadPdfJs = async () => {
       try {
-        // Dynamic import of PDF.js
-        pdfjsLib = await import('pdfjs-dist');
+        // Only load PDF.js in browser environment
+        if (typeof window === 'undefined') {
+          return;
+        }
         
-        // Set the worker source URL
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        // Dynamically load pdf.js
+        const pdfjs = await import('pdfjs-dist');
         
+        // Get worker URL from the public folder where we copied the file
+        // This ensures the worker is properly served with your app
+        const workerUrl = '/pdf.worker.min.js'; // Served from the public directory
+        
+        // Set the worker source
+        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+        
+        pdfjsLib = pdfjs;
         setIsPdfJsLoaded(true);
-        console.log('PDF.js loaded successfully');
+        console.log('PDF.js loaded successfully. Worker at:', workerUrl);
       } catch (err) {
         console.error('Failed to load PDF.js:', err);
         setError('Failed to load PDF processing library. PDF uploads may not work correctly.');
