@@ -264,7 +264,21 @@ Please extract and organize information from this resume into appropriate catego
     } catch (err) {
       console.error('Overall error in handleUpload:', err);
       setAnalyzing(false);
-      setError('Error: ' + (err instanceof Error ? err.message : String(err)));
+      
+      // Provide more user-friendly error message
+      let errorMessage = 'Error: ' + (err instanceof Error ? err.message : String(err));
+      
+      // Check for specific API errors
+      if (err instanceof Error && 'status' in err) {
+        const apiError = err as Error & { status: number; details?: string };
+        if (apiError.status === 405) {
+          errorMessage = 'The resume analysis service is not accepting requests correctly. Please try again later.';
+        } else if (apiError.details) {
+          errorMessage = `${err.message}. ${apiError.details}`;
+        }
+      }
+      
+      setError(errorMessage);
     }
   };
   

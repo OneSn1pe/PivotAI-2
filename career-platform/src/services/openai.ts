@@ -142,12 +142,12 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
     
     // Set up request with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
     
     try {
       debug.log('Sending API request...');
       
-      // Make API request
+      // Make API request - ensure we're using POST method
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -178,12 +178,15 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         let errorDetails = '';
         
         if (responseText) {
-          const { data, error } = safeJsonParse(responseText);
-          if (data) {
-            errorMessage = data.message || data.error || errorMessage;
-            errorDetails = data.details || '';
-          } else {
-            debug.error('Error parsing response:', error);
+          try {
+            const errorData = JSON.parse(responseText);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+            errorDetails = errorData.details || '';
+            debug.log('Parsed error response:', errorData);
+          } catch (parseErr) {
+            debug.error('Error parsing error response:', parseErr);
+            // Use the raw text if parsing fails
+            errorMessage = responseText.substring(0, 100) || errorMessage;
           }
         }
         

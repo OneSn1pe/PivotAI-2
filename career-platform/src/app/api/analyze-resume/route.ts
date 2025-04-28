@@ -149,12 +149,20 @@ export async function OPTIONS(request: NextRequest) {
   return response;
 }
 
-// Handle GET requests (for testing or explicit rejection)
+// Helper to truncate resume to a manageable size
+function truncateResume(text: string, maxLength = 4000): string {
+  if (text.length <= maxLength) return text;
+  
+  debug.log(`Truncating resume from ${text.length} to ${maxLength} characters`);
+  return text.substring(0, maxLength) + '...';
+}
+
+// Handle GET requests with proper error message
 export async function GET(request: NextRequest) {
-  debug.log('GET request received (explicitly not supported)');
+  debug.log('GET request received - returning method not allowed error');
   debug.request(request);
   
-  const response = createResponse({
+  return createResponse({
     error: "Method Not Allowed",
     message: "This endpoint only supports POST requests for security reasons. To test connection, use OPTIONS method.",
     debug: {
@@ -163,15 +171,6 @@ export async function GET(request: NextRequest) {
       receivedAt: new Date().toISOString()
     }
   }, 405);
-  
-  // Safely log headers without using iterator
-  const headerObj: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
-    headerObj[key] = value;
-  });
-  debug.trace('GET response headers:', headerObj);
-  
-  return response;
 }
 
 // Add retry helper with exponential backoff
@@ -216,14 +215,6 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
   }
   
   throw lastError;
-}
-
-// Helper to truncate resume to a manageable size
-function truncateResume(text: string, maxLength = 4000): string {
-  if (text.length <= maxLength) return text;
-  
-  debug.log(`Truncating resume from ${text.length} to ${maxLength} characters`);
-  return text.substring(0, maxLength) + '...';
 }
 
 // Main POST handler for resume analysis
