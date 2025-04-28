@@ -330,16 +330,16 @@ export async function POST(request: NextRequest) {
       const completion = await withRetry(async () => {
         return await openai.chat.completions.create({
           model: "gpt-4o", // Using GPT-4o for higher quality analysis
-          temperature: 0.2, // Lower temperature for more deterministic output
+          temperature: 0.1, // Lower temperature for much more deterministic output
           messages: [
             {
               role: "system",
-              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text or formatting. DO NOT use markdown formatting like ```json. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings. For skills ONLY include skills explicitly mentioned in the resume - NEVER add skills that are not explicitly written in the text. It's better to return an empty skills array than to hallucinate skills."
+              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. You MUST ONLY return a valid JSON object with no other text or formatting. DO NOT use markdown formatting like ```json. Include the following keys: skills, experience, education, strengths, weaknesses, and recommendations. Each should be an array of strings.\n\nFor skills: CRITICALLY IMPORTANT: ONLY include skills that appear VERBATIM in the resume text. DO NOT include general categories like 'Programming languages', 'Frameworks', 'Tools', 'Communication', 'Leadership', 'Teamwork', or 'Domain knowledge' - these are NOT specific skills. Only extract EXPLICIT skill names like 'Python', 'React', 'Docker', etc. It is FAR BETTER to return an empty skills array than to hallucinate or generalize skills that aren't explicitly stated in the text."
             },
             {
               role: "user",
               content: `Analyze this resume and extract the following information:
-              - skills (array of strings) - ONLY skills explicitly mentioned in the resume text, no inferred or assumed skills
+              - skills (array of strings) - ONLY extract skills that appear VERBATIM in the resume - NO category names or inferred skills whatsoever
               - experience (array of strings describing roles and responsibilities)
               - education (array of strings)
               - strengths (array of strings)
@@ -351,7 +351,8 @@ export async function POST(request: NextRequest) {
               2. Do NOT use code blocks, backticks, or any other markdown syntax
               3. Your response should be parseable by JSON.parse() directly
               4. Do NOT include any explanation, preamble, or additional text
-              5. For skills, ONLY include skills explicitly mentioned in the resume - if no skills are clearly mentioned, return an empty array
+              5. For skills, ONLY extract skills that appear VERBATIM in the text. DO NOT include general categories like "Programming languages", "Frameworks", etc. Only extract specific skills like "Python", "React", "Docker", etc.
+              6. If no skills are explicitly mentioned, return an empty skills array
               
               Here's the resume: ${truncatedResume}`
             }

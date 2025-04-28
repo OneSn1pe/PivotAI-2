@@ -365,11 +365,17 @@ export default function CandidateDashboard() {
             ) : (
               <div className="py-3">
                 <p className="text-gray-600">
-                  No specific skills were identified in your resume. Consider updating your resume to explicitly list your technical and professional skills.
+                  No specific skills were found in your resume. For best results, your resume should include a dedicated "Skills" section that explicitly lists technical skills, tools, programming languages, and other relevant competencies.
                 </p>
+                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-700">Resume Tip:</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Add a clear "Skills" section to your resume with a bulleted list of specific skills like: Python, React, Docker, SQL, Project Management, etc.
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowResumeManager(true)}
-                  className="mt-3 text-blue-600 hover:text-blue-800 text-sm underline"
+                  className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
                 >
                   Update Resume
                 </button>

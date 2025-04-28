@@ -473,10 +473,22 @@ export default function ResumeUpload() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-600 mb-3">
-                No specific skills were identified in your resume. 
-                Consider updating your resume to explicitly list your technical and professional skills.
-              </p>
+              <div>
+                <p className="text-sm text-gray-600 mb-3">
+                  No specific skills were detected in your resume.
+                </p>
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
+                  <h5 className="text-sm font-medium text-yellow-800">Resume Tip:</h5>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Include a dedicated "Skills" section in your resume with explicitly listed skills like "Python", "React", "SQL", etc. Our system only extracts skills explicitly mentioned in your resume.
+                  </p>
+                  <p className="text-sm text-yellow-700 mt-2">
+                    Example format:
+                    <br />
+                    <span className="font-medium">Skills:</span> JavaScript, React, Node.js, SQL, Docker, Project Management, Technical Writing
+                  </p>
+                </div>
+              </div>
             )}
           </div>
           
