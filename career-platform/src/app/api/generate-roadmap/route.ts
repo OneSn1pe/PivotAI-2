@@ -12,6 +12,8 @@ if (!process.env.OPENAI_API_KEY) {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 30000, // 30 second timeout
+  maxRetries: 2,
 });
 
 export async function POST(request: NextRequest) {
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4-turbo-preview", // Updated to use the latest GPT-4 model
       messages: [
         {
           role: "system",
@@ -108,17 +110,11 @@ export async function POST(request: NextRequest) {
           })))}
           
           Current Experience: ${JSON.stringify(resumeAnalysis.experience)}
-          Education: ${JSON.stringify(resumeAnalysis.education)}
-          
-          As a recruiter at these companies, create milestones that:
-          1. Align with actual hiring criteria and interview processes
-          2. Focus on skills and experiences that would make the candidate stand out
-          3. Include specific technical and soft skills we look for
-          4. Consider the typical career progression paths at these companies
-          5. Address any gaps between current skills and target position requirements
-          6. Include specific learning resources that would help achieve each milestone`
+          Education: ${JSON.stringify(resumeAnalysis.education)}`
         }
-      ]
+      ],
+      temperature: 0.7,
+      max_tokens: 2000
     });
 
     // Parse the milestones from the OpenAI response
