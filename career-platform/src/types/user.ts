@@ -77,9 +77,4 @@ export enum UserRole {
     skills: string[];
     timeframe: string;
     completed: boolean;
-    subtasks?: { id: string; title: string; completed: boolean }[];
-    targetDate?: string;
-    completedDate?: string;
-    requiredSkills?: string[];
-    companyTags?: string[];
   }

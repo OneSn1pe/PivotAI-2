@@ -67,7 +67,33 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "user",
-          content: `Create a career roadmap with 5 milestones to help this candidate achieve their career goals with their target companies.\n\nReturn the roadmap as a plain JSON object containing an array of milestone objects with the following structure:\n{\n  "milestones": [\n    {\n      "id": "unique-id-1",\n      "title": "Milestone Title",\n      "description": "Detailed description",\n      "skills": ["Skill 1", "Skill 2"],\n      "timeframe": "3-6 months",\n      "completed": false,\n      "subtasks": [\n        { "id": "subtask-1", "title": "Subtask Title", "completed": false }\n      ],\n      "targetDate": "2024-12-31",\n      "requiredSkills": ["Skill 1", "Skill 2"],\n      "companyTags": ["Google", "Meta"]\n    },\n    ...\n  ]\n}\n\nVERY IMPORTANT: \n1. Do NOT use markdown code blocks or any other formatting\n2. Your response must be ONLY the raw JSON object with no extra text\n3. Generate exactly 5 milestones\n4. Each milestone should have at least 2 subtasks\n5. Each milestone should have a targetDate (ISO format), requiredSkills, and companyTags (from the provided target companies)\n6. Include realistic skills needed for each milestone\n7. Create a logical progression toward the target positions\n8. Each milestone must have its own unique ID\n\nResume Analysis: ${JSON.stringify(resumeAnalysis)}\nTarget Companies: ${JSON.stringify(companiesForRoadmap)}`
+          content: `Create a career roadmap with 5 milestones to help this candidate achieve their career goals with their target companies.
+          
+          Return the roadmap as a plain JSON object containing an array of milestone objects with the following structure:
+          {
+            "milestones": [
+              {
+                "id": "unique-id-1",
+                "title": "Milestone Title",
+                "description": "Detailed description",
+                "skills": ["Skill 1", "Skill 2"],
+                "timeframe": "3-6 months",
+                "completed": false
+              },
+              ...
+            ]
+          }
+          
+          VERY IMPORTANT: 
+          1. Do NOT use markdown code blocks or any other formatting
+          2. Your response must be ONLY the raw JSON object with no extra text
+          3. Generate exactly 5 milestones
+          4. Include realistic skills needed for each milestone
+          5. Create a logical progression toward the target positions
+          6. Each milestone must have its own unique ID
+          
+          Resume Analysis: ${JSON.stringify(resumeAnalysis)}
+          Target Companies: ${JSON.stringify(companiesForRoadmap)}`
         }
       ]
     });
@@ -119,14 +145,7 @@ export async function POST(request: NextRequest) {
           description: "Focus on developing core skills needed for target roles",
           skills: resumeAnalysis?.skills?.slice(0, 3) || ["Technical Skills", "Communication", "Problem Solving"],
           timeframe: "1-3 months",
-          completed: false,
-          subtasks: [
-            { id: uuidv4(), title: "Complete an online course", completed: false },
-            { id: uuidv4(), title: "Practice skills with a project", completed: false }
-          ],
-          targetDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 90).toISOString().slice(0, 10),
-          requiredSkills: resumeAnalysis?.skills?.slice(0, 3) || ["Technical Skills", "Communication", "Problem Solving"],
-          companyTags: companiesForRoadmap.map((c: any) => c.name)
+          completed: false
         },
         {
           id: uuidv4(),
@@ -134,14 +153,7 @@ export async function POST(request: NextRequest) {
           description: "Create portfolio showcasing your abilities",
           skills: ["Project Management", "Documentation"],
           timeframe: "2-4 months",
-          completed: false,
-          subtasks: [
-            { id: uuidv4(), title: "Build a personal website", completed: false },
-            { id: uuidv4(), title: "Upload 3 projects", completed: false }
-          ],
-          targetDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 120).toISOString().slice(0, 10),
-          requiredSkills: ["Project Management", "Documentation"],
-          companyTags: companiesForRoadmap.map((c: any) => c.name)
+          completed: false
         },
         {
           id: uuidv4(),
@@ -149,14 +161,7 @@ export async function POST(request: NextRequest) {
           description: "Expand professional network in target industry",
           skills: ["Communication", "Networking"],
           timeframe: "3-6 months",
-          completed: false,
-          subtasks: [
-            { id: uuidv4(), title: "Attend 2 industry events", completed: false },
-            { id: uuidv4(), title: "Connect with 5 professionals on LinkedIn", completed: false }
-          ],
-          targetDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 180).toISOString().slice(0, 10),
-          requiredSkills: ["Communication", "Networking"],
-          companyTags: companiesForRoadmap.map((c: any) => c.name)
+          completed: false
         },
         {
           id: uuidv4(),
@@ -164,14 +169,7 @@ export async function POST(request: NextRequest) {
           description: "Prepare for interviews at target companies",
           skills: ["Interview Skills", "Technical Knowledge"],
           timeframe: "1-2 months",
-          completed: false,
-          subtasks: [
-            { id: uuidv4(), title: "Practice mock interviews", completed: false },
-            { id: uuidv4(), title: "Review common interview questions", completed: false }
-          ],
-          targetDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 210).toISOString().slice(0, 10),
-          requiredSkills: ["Interview Skills", "Technical Knowledge"],
-          companyTags: companiesForRoadmap.map((c: any) => c.name)
+          completed: false
         },
         {
           id: uuidv4(),
@@ -179,14 +177,7 @@ export async function POST(request: NextRequest) {
           description: "Apply to target positions with customized materials",
           skills: ["Resume Writing", "Cover Letter Writing"],
           timeframe: "1-2 months",
-          completed: false,
-          subtasks: [
-            { id: uuidv4(), title: "Update resume and cover letter", completed: false },
-            { id: uuidv4(), title: "Submit 5 applications", completed: false }
-          ],
-          targetDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 240).toISOString().slice(0, 10),
-          requiredSkills: ["Resume Writing", "Cover Letter Writing"],
-          companyTags: companiesForRoadmap.map((c: any) => c.name)
+          completed: false
         }
       ];
     }
