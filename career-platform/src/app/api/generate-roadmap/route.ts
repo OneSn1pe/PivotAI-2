@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
 import { collection, addDoc, Firestore, getDoc, doc } from 'firebase/firestore';
-import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ResourceLink } from '@/types/user';
+import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
 
 // Check if OpenAI API key is available
 if (!process.env.OPENAI_API_KEY) {
@@ -63,21 +63,11 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert career coach with deep knowledge of industry-specific skill requirements, 
-          hiring practices, and professional development. Generate a highly personalized career roadmap
-          based on the candidate's resume analysis and target companies.
-          
-          Your response MUST be a valid JSON object with ONLY a 'milestones' array. DO NOT include any explanations, 
-          markdown formatting (like \`\`\`json), or additional text before or after the JSON.`
+          content: "You are a career development expert. Generate a personalized career roadmap based on resume analysis and target companies. Your response MUST be a valid JSON object with ONLY a 'milestones' array. DO NOT include any explanations, markdown formatting (like ```json), or additional text before or after the JSON."
         },
         {
           role: "user",
-          content: `Create a detailed career roadmap with 5 milestones to help this candidate achieve their career goals
-          with their target companies. The roadmap must be highly personalized based on:
-
-          1. The candidate's current skills, experience, education, strengths, and weaknesses
-          2. The specific requirements of their target companies and positions
-          3. Industry-standard career progression paths
+          content: `Create a career roadmap with 5 milestones to help this candidate achieve their career goals with their target companies.
           
           Return the roadmap as a plain JSON object containing an array of milestone objects with the following structure:
           {
@@ -85,36 +75,22 @@ export async function POST(request: NextRequest) {
               {
                 "id": "unique-id-1",
                 "title": "Milestone Title",
-                "description": "Detailed description of the milestone and its importance",
-                "skills": ["Specific Skill 1", "Specific Skill 2"],
+                "description": "Detailed description",
+                "skills": ["Skill 1", "Skill 2"],
                 "timeframe": "3-6 months",
-                "completed": false,
-                "resources": [
-                  {
-                    "title": "Resource Name",
-                    "url": "https://example.com/resource",
-                    "type": "course", // One of: course, article, video, book, tool, community, other
-                    "description": "Brief description of this resource"
-                  }
-                ],
-                "actionItems": [
-                  "Specific action 1 the candidate should take",
-                  "Specific action 2 the candidate should take"
-                ],
-                "companySpecificNotes": "How this milestone specifically helps with target companies"
+                "completed": false
               },
               ...
             ]
           }
           
-          IMPORTANT GUIDELINES:
-          1. Include 3-5 SPECIFIC resources for each milestone (courses, articles, tools, etc.) with REAL, WORKING URLs
-          2. Resources must be highly relevant to the candidate's target position and current skill gaps
-          3. Each milestone should have 3-5 concrete, actionable items
-          4. Provide company-specific advice for each milestone related to their target companies
-          5. Create a logical progression toward the target positions based on the candidate's current skills
+          VERY IMPORTANT: 
+          1. Do NOT use markdown code blocks or any other formatting
+          2. Your response must be ONLY the raw JSON object with no extra text
+          3. Generate exactly 5 milestones
+          4. Include realistic skills needed for each milestone
+          5. Create a logical progression toward the target positions
           6. Each milestone must have its own unique ID
-          7. Ensure all URLs point to real, existing resources
           
           Resume Analysis: ${JSON.stringify(resumeAnalysis)}
           Target Companies: ${JSON.stringify(companiesForRoadmap)}`
@@ -161,147 +137,47 @@ export async function POST(request: NextRequest) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', completion.choices[0].message.content?.substring(0, 200) + '...');
       
-      // Fallback: generate synthetic milestones with enhanced fields
+      // Fallback: generate synthetic milestones
       milestones = [
         {
           id: uuidv4(),
           title: "Skill Development",
-          description: "Focus on developing core skills needed for target roles based on your current skill gaps.",
+          description: "Focus on developing core skills needed for target roles",
           skills: resumeAnalysis?.skills?.slice(0, 3) || ["Technical Skills", "Communication", "Problem Solving"],
           timeframe: "1-3 months",
-          completed: false,
-          resources: [
-            {
-              title: "LinkedIn Learning",
-              url: "https://www.linkedin.com/learning/",
-              type: "course",
-              description: "Platform with courses on various professional skills"
-            },
-            {
-              title: "Coursera",
-              url: "https://www.coursera.org/",
-              type: "course",
-              description: "Online courses from top universities"
-            }
-          ],
-          actionItems: [
-            "Identify top 3 skill gaps based on job descriptions",
-            "Complete at least one course on a priority skill",
-            "Practice skills with real-world projects"
-          ],
-          companySpecificNotes: "Focus on skills frequently mentioned in target company job postings."
+          completed: false
         },
         {
           id: uuidv4(),
           title: "Portfolio Building",
-          description: "Create a professional portfolio showcasing your abilities relevant to target positions.",
-          skills: ["Project Management", "Documentation", "Web Development"],
+          description: "Create portfolio showcasing your abilities",
+          skills: ["Project Management", "Documentation"],
           timeframe: "2-4 months",
-          completed: false,
-          resources: [
-            {
-              title: "GitHub Pages",
-              url: "https://pages.github.com/",
-              type: "tool",
-              description: "Free hosting for your portfolio"
-            },
-            {
-              title: "Portfolio Examples",
-              url: "https://www.freecodecamp.org/news/15-web-developer-portfolios-to-inspire-you-137fb1743cae/",
-              type: "article",
-              description: "Examples of strong portfolios"
-            }
-          ],
-          actionItems: [
-            "Select 3-5 best projects to highlight",
-            "Create case studies for each project",
-            "Ensure portfolio is mobile-responsive"
-          ],
-          companySpecificNotes: "Research what your target companies value in portfolios."
+          completed: false
         },
         {
           id: uuidv4(),
           title: "Networking",
-          description: "Expand your professional network in the target industry to increase visibility and opportunities.",
-          skills: ["Communication", "Networking", "Personal Branding"],
+          description: "Expand professional network in target industry",
+          skills: ["Communication", "Networking"],
           timeframe: "3-6 months",
-          completed: false,
-          resources: [
-            {
-              title: "LinkedIn Network Building",
-              url: "https://www.linkedin.com/business/sales/blog/profile-best-practices/17-steps-to-a-better-linkedin-profile-in-2017",
-              type: "article",
-              description: "Guide to optimizing LinkedIn profile"
-            },
-            {
-              title: "Meetup",
-              url: "https://www.meetup.com/",
-              type: "community",
-              description: "Find local professional events"
-            }
-          ],
-          actionItems: [
-            "Connect with 5-10 professionals at target companies",
-            "Attend at least 2 industry events or meetups",
-            "Engage regularly on LinkedIn with industry content"
-          ],
-          companySpecificNotes: "Follow your target companies on social media and engage with their content."
+          completed: false
         },
         {
           id: uuidv4(),
           title: "Interview Preparation",
-          description: "Prepare thoroughly for interviews at target companies with research and practice.",
-          skills: ["Interview Skills", "Technical Knowledge", "Problem Solving"],
+          description: "Prepare for interviews at target companies",
+          skills: ["Interview Skills", "Technical Knowledge"],
           timeframe: "1-2 months",
-          completed: false,
-          resources: [
-            {
-              title: "Glassdoor",
-              url: "https://www.glassdoor.com/index.htm",
-              type: "tool",
-              description: "Research company interview questions"
-            },
-            {
-              title: "Pramp",
-              url: "https://www.pramp.com/",
-              type: "tool",
-              description: "Practice technical interviews"
-            }
-          ],
-          actionItems: [
-            "Research common interview questions for target roles",
-            "Practice responses to behavioral questions",
-            "Complete at least 5 mock interviews"
-          ],
-          companySpecificNotes: "Research interview processes at each target company and prepare accordingly."
+          completed: false
         },
         {
           id: uuidv4(),
           title: "Application Submission",
-          description: "Apply to target positions with customized materials that highlight your fit.",
-          skills: ["Resume Writing", "Cover Letter Writing", "Job Search Strategy"],
+          description: "Apply to target positions with customized materials",
+          skills: ["Resume Writing", "Cover Letter Writing"],
           timeframe: "1-2 months",
-          completed: false,
-          resources: [
-            {
-              title: "Resume Worded",
-              url: "https://resumeworded.com/",
-              type: "tool",
-              description: "AI-powered resume feedback"
-            },
-            {
-              title: "JobScan",
-              url: "https://www.jobscan.co/",
-              type: "tool",
-              description: "Optimize resume for ATS systems"
-            }
-          ],
-          actionItems: [
-            "Tailor resume for each application",
-            "Write customized cover letters",
-            "Follow up on applications after 1-2 weeks"
-          ],
-          companySpecificNotes: "Highlight experiences and skills most relevant to each company's values and needs."
+          completed: false
         }
       ];
     }
