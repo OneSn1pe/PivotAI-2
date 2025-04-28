@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/config/firebase';
 import { CareerRoadmap, Milestone, CandidateProfile } from '@/types/user';
@@ -78,14 +78,13 @@ export default function RoadmapPage() {
   const handleRoadmapGenerated = async (newRoadmapId: string) => {
     // Fetch the newly created roadmap
     try {
-      const roadmapDoc = await getDoc(doc(db, 'roadmaps', newRoadmapId));
+      const roadmapSnapshot = await getDocs(query(
+        collection(db, 'roadmaps'),
+        where('id', '==', newRoadmapId)
+      ));
       
-      if (roadmapDoc.exists()) {
-        const newRoadmap = {
-          ...roadmapDoc.data() as CareerRoadmap,
-          id: roadmapDoc.id
-        };
-        setRoadmap(newRoadmap);
+      if (!roadmapSnapshot.empty) {
+        setRoadmap(roadmapSnapshot.docs[0].data() as CareerRoadmap);
       }
       
       setShowGenerator(false);
