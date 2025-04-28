@@ -12,7 +12,8 @@
         "debug-firebase": "node scripts/debug-firebase.js",
         "setup-service-account": "node scripts/setup-service-account.js",
         "fix-cors": "node scripts/fix-cors.js",
-        "debug": "npm run debug-firebase && npm run setup-service-account && npm run fix-cors"
+        "debug": "npm run debug-firebase && npm run setup-service-account && npm run fix-cors",
+        "standardize-profiles": "node scripts/standardize-profiles.js"
     },
     "dependencies": {
         "@google-cloud/storage": "^7.7.0",
