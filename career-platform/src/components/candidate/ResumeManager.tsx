@@ -25,7 +25,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const { downloadAndSaveFile, downloading } = useFileDownload();
   
   const [file, setFile] = useState<File | null>(null);
-  const [resumeText, setResumeText] = useState('');
+  const [plainTextContent, setPlainTextContent] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,8 +94,8 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   };
   
   // Function to extract text from various file types
-  const extractTextFromFile = useCallback(async (file: File): Promise<string> => {
-    console.log(`Starting text extraction from ${file.name} (${file.type})`);
+  const convertToPlainText = useCallback(async (file: File): Promise<string> => {
+    console.log(`Converting ${file.name} (${file.type}) to plaintext`);
     
     try {
       // For plain text files, read directly
@@ -104,7 +104,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
           const reader = new FileReader();
           reader.onload = (e) => {
             if (e.target && typeof e.target.result === 'string') {
-              console.log(`Extracted ${e.target.result.length} characters from text file`);
+              console.log(`Read ${e.target.result.length} characters from text file`);
               resolve(e.target.result);
             } else {
               reject(new Error('Failed to read text file'));
@@ -117,128 +117,79 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       
       // For PDF files, use PDF.js to extract text
       if (file.type === 'application/pdf') {
-        console.log('Processing PDF file using PDF.js');
+        console.log('Converting PDF to plaintext');
         const arrayBuffer = await file.arrayBuffer();
         
         // Load PDF document
         const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
         const pdf = await loadingTask.promise;
-        console.log(`PDF loaded successfully. Pages: ${pdf.numPages}`);
+        console.log(`PDF loaded. Pages: ${pdf.numPages}`);
         
-        let fullText = '';
+        let plaintext = '';
         
         // Extract text from each page
         for (let i = 1; i <= pdf.numPages; i++) {
-          console.log(`Processing page ${i}/${pdf.numPages}`);
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const pageText = textContent.items
             .map(item => 'str' in item ? item.str : '')
             .join(' ');
           
-          fullText += pageText + '\n\n';
+          plaintext += pageText + '\n\n';
         }
         
-        console.log(`Extracted ${fullText.length} characters from PDF`);
+        console.log(`Extracted ${plaintext.length} characters from PDF`);
         
-        if (fullText.trim().length < 100) {
-          console.warn('Extracted PDF text is suspiciously short. The PDF may be image-based or have other issues.');
-          fullText += `\n\nNote: This PDF may contain images or scanned text that couldn't be fully extracted. 
+        if (plaintext.trim().length < 100) {
+          console.warn('PDF text is suspiciously short - may be image-based');
+          plaintext += `\n\nNote: This PDF may contain images or scanned text that couldn't be fully extracted. 
           File: ${file.name}
           Size: ${Math.round(file.size / 1024)} KB`;
         }
         
-        return fullText;
+        return plaintext;
       }
       
       // For DOCX files, use mammoth to extract text
       if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        console.log('Processing DOCX file using mammoth');
+        console.log('Converting DOCX to plaintext');
         const arrayBuffer = await file.arrayBuffer();
         
         const result = await mammoth.extractRawText({ arrayBuffer });
-        const text = result.value;
+        const plaintext = result.value;
         
-        console.log(`Extracted ${text.length} characters from DOCX`);
-        return text;
+        console.log(`Extracted ${plaintext.length} characters from DOCX`);
+        return plaintext;
       }
       
-      // For other file types, fallback to a structured template
-      console.log('Unsupported file type, using template approach');
-      return new Promise((resolve) => {
-        // Create a structured resume template that GPT can use to extract info
-        const resumeTemplate = `
-# RESUME INFORMATION
-File: ${file.name}
-Type: ${file.type}
-Size: ${Math.round(file.size / 1024)} KB
-NOTE: This file type (${file.type}) cannot be directly parsed. Please upload a text, PDF, or DOCX file for better results.
-
-# STRUCTURED RESUME CONTENT
-This document contains resume information typically including:
-
-CONTACT INFORMATION:
-Name: [Name would be at the top of resume]
-Email: [Email would be in contact section]
-Phone: [Phone would be in contact section]
-
-SUMMARY:
-[Summary/Objective statement is usually at the top]
-
-SKILLS:
-- Technical skills likely include programming languages, frameworks, tools
-- Soft skills likely include communication, leadership, teamwork
-- Domain knowledge in relevant industries
-
-EXPERIENCE:
-- Most recent position (Company, Title, Dates)
-  * Responsibilities and achievements
-  * Quantifiable results when available
-- Previous positions with similar details
-  * Responsibilities and achievements
-
-EDUCATION:
-- Degree(s), Institution(s), Graduation date(s)
-- Relevant coursework or certifications
-
-PROJECTS:
-- Relevant projects with brief descriptions
-- Technologies used and outcomes
-
-ADDITIONAL:
-- Any other relevant information that would appear on a resume
-
-Please extract and organize information from this resume into appropriate categories.
-`;
-        
-        resolve(resumeTemplate);
-      });
+      // For other file types, return a simple error message
+      return `Unsupported file type: ${file.type}. Please upload a PDF, DOCX, or TXT file.`;
+      
     } catch (error) {
-      console.error('Error extracting text from file:', error);
-      throw new Error(`Failed to extract text: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error converting file to plaintext:', error);
+      throw new Error(`Failed to convert file: ${error instanceof Error ? error.message : String(error)}`);
     }
   }, []);
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
       setError(null);
       
       try {
-        console.log(`File selected: ${e.target.files[0].name} (${e.target.files[0].type})`);
-        // Show loading message
-        setSuccessMessage('Extracting text from file...');
+        console.log(`File selected: ${selectedFile.name} (${selectedFile.type})`);
+        setSuccessMessage('Converting file to plaintext...');
         
-        // Extract text from the resume file
-        const text = await extractTextFromFile(e.target.files[0]);
-        console.log('Text extraction completed. Length:', text.length);
-        console.log('First 100 chars:', text.substring(0, 100) + '...');
+        // Convert file to plaintext
+        const plaintext = await convertToPlainText(selectedFile);
+        console.log('Conversion completed. Length:', plaintext.length);
         
-        setResumeText(text);
-        setSuccessMessage(null);
+        setPlainTextContent(plaintext);
+        setSuccessMessage('File converted to plaintext successfully');
       } catch (err) {
-        console.error('Error extracting text from file:', err);
-        setError('Error reading file: ' + (err instanceof Error ? err.message : String(err)));
+        console.error('Error converting file:', err);
+        setError('Error processing file: ' + (err instanceof Error ? err.message : String(err)));
       }
     }
   };
@@ -246,6 +197,11 @@ Please extract and organize information from this resume into appropriate catego
   const handleUpload = async () => {
     if (!file || !userProfile) {
       setError('Please select a file to upload');
+      return;
+    }
+    
+    if (!plainTextContent.trim()) {
+      setError('Could not extract text from the file. Please try a different file format.');
       return;
     }
     
@@ -258,30 +214,28 @@ Please extract and organize information from this resume into appropriate catego
       const originalFileName = file.name;
       
       // Create a unique path for the file that includes file extension
-      const fileExtension = file.name.split('.').pop() || '';
       const uniqueId = `${userProfile.uid}_${Date.now()}`;
-      const filePath = `resumes/${userProfile.uid}/${uniqueId}_resume.${fileExtension}`;
       
-      console.log(`Uploading file ${originalFileName} to path: ${filePath}`);
+      // Create a text file containing the plaintext content
+      const plainTextBlob = new Blob([plainTextContent], { type: 'text/plain' });
+      const plainTextFile = new File([plainTextBlob], `${uniqueId}_plaintext.txt`, { type: 'text/plain' });
       
-      // Upload file to storage
-      const resumeUrl = await uploadFile(file, filePath);
-      console.log('File uploaded successfully, URL:', resumeUrl);
+      // Upload the plaintext file
+      const filePath = `resumes/${userProfile.uid}/${uniqueId}_resume.txt`;
+      console.log(`Uploading plaintext version of ${originalFileName} to path: ${filePath}`);
+      
+      const resumeUrl = await uploadFile(plainTextFile, filePath);
+      console.log('Plaintext file uploaded successfully, URL:', resumeUrl);
       
       // Analyze resume
       setAnalyzing(true);
-      if (!resumeText.trim()) {
-        throw new Error('Unable to extract text from the file. Please try a different format.');
-      }
-      
-      console.log(`Starting resume analysis. Text length: ${resumeText.length}`);
-      console.log('First 100 chars of resumeText:', resumeText.substring(0, 100));
+      console.log(`Starting resume analysis. Text length: ${plainTextContent.length}`);
       
       try {
         console.log('Calling analyzeResume API...');
         const analysisStartTime = performance.now();
         
-        const resumeAnalysis = await analyzeResume(resumeText);
+        const resumeAnalysis = await analyzeResume(plainTextContent);
         
         const analysisTime = performance.now() - analysisStartTime;
         console.log(`Resume analysis completed in ${Math.round(analysisTime)}ms`);
@@ -301,7 +255,7 @@ Please extract and organize information from this resume into appropriate catego
           resumeUrl,
           resumeFileName: originalFileName, // Store original filename for display
           resumeAnalysis,
-          updatedAt: serverTimestamp(),  // Use Firebase server timestamp for consistent timing
+          updatedAt: serverTimestamp(),
         });
         
         console.log('Firestore update completed, updating UI state...');
@@ -466,7 +420,7 @@ Please extract and organize information from this resume into appropriate catego
             onChange={handleFileChange}
             className="hidden"
             id="resume-file"
-            accept=".pdf,.doc,.docx,.txt"
+            accept=".pdf,.docx,.txt"
           />
           <label
             htmlFor="resume-file"
@@ -479,13 +433,18 @@ Please extract and organize information from this resume into appropriate catego
               {file ? file.name : 'Click to select a resume file'}
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              PDF, DOC, DOCX, or TXT (max 5MB)
+              PDF, DOCX, or TXT (max 5MB)
             </p>
           </label>
         </div>
         
-        {file && (
+        {file && plainTextContent && (
           <div className="mt-4">
+            <p className="text-sm text-gray-600 mb-2">
+              {file.type === 'text/plain' ? 
+                'Text file ready to upload.' : 
+                `Your ${file.type === 'application/pdf' ? 'PDF' : 'DOCX'} has been converted to plaintext (${plainTextContent.length} characters).`}
+            </p>
             <button
               onClick={handleUpload}
               disabled={uploading || analyzing}
