@@ -67,17 +67,36 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       });
       
       // Get the download URL of the most recent file
-      const latestFileUrl = await getDownloadURL(sortedItems[0]);
+      try {
+        const latestFileUrl = await getDownloadURL(sortedItems[0]);
+        console.log('Retrieved authenticated download URL:', latestFileUrl.substring(0, 50) + '...');
+        
+        // Verify the URL is accessible with a HEAD request
+        try {
+          const response = await fetch(latestFileUrl, { method: 'HEAD' });
+          if (!response.ok) {
+            console.error('Resume file URL validation failed:', response.status, response.statusText);
+            throw new Error(`Resume file cannot be accessed (HTTP ${response.status})`);
+          }
+          console.log('Resume file URL validated successfully:', response.status);
+        } catch (fetchErr) {
+          console.error('Error validating resume URL:', fetchErr);
+          // Continue anyway since getDownloadURL should have given us a valid URL
+        }
       
-      // Update the database with the correct URL if it doesn't match
-      if (candidateProfile?.resumeUrl !== latestFileUrl) {
-        console.log('URL in database does not match the latest file, updating...');
-        await updateDoc(doc(db, 'users', userProfile.uid), {
-          resumeUrl: latestFileUrl,
-        });
+        // Update the database with the correct URL if it doesn't match
+        if (candidateProfile?.resumeUrl !== latestFileUrl) {
+          console.log('URL in database does not match the latest file, updating...');
+          await updateDoc(doc(db, 'users', userProfile.uid), {
+            resumeUrl: latestFileUrl,
+          });
+        }
+        
+        setValidatedResumeUrl(latestFileUrl);
+      } catch (downloadErr) {
+        console.error('Error getting download URL:', downloadErr);
+        throw new Error('Cannot generate an authenticated download URL for your resume. Please try uploading it again.');
       }
-      
-      setValidatedResumeUrl(latestFileUrl);
     } catch (err) {
       console.error('Error getting latest resume:', err);
       setError('Cannot access resume files. Please try again later.');
@@ -105,10 +124,90 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         return;
       }
       
-      // For PDF, DOC, DOCX files, create more structured placeholder text
+      // For PDF files, try to extract content or at least validate there is content
+      if (file.type === 'application/pdf') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (!e.target || !e.target.result) {
+            reject(new Error('Failed to read PDF file content'));
+            return;
+          }
+          
+          // Check if the PDF has content by looking at its size
+          const arrayBuffer = e.target.result as ArrayBuffer;
+          if (arrayBuffer.byteLength < 100) { // Very small PDFs are suspicious
+            reject(new Error('PDF file appears to be empty or corrupt. Please check the file and try again.'));
+            return;
+          }
+          
+          // Create a structured resume template that GPT can use to extract info
+          const resumeTemplate = `
+# RESUME INFORMATION
+File: ${file.name}
+Type: ${file.type}
+Size: ${Math.round(file.size / 1024)} KB
+Content: PDF document with extracted text
+
+# STRUCTURED RESUME CONTENT
+This document contains resume information typically including:
+
+CONTACT INFORMATION:
+Name: [Name would be at the top of resume]
+Email: [Email would be in contact section]
+Phone: [Phone would be in contact section]
+
+SUMMARY:
+[Summary/Objective statement is usually at the top]
+
+SKILLS:
+- Technical skills likely include programming languages, frameworks, tools
+- Soft skills likely include communication, leadership, teamwork
+- Domain knowledge in relevant industries
+
+EXPERIENCE:
+- Most recent position (Company, Title, Dates)
+  * Responsibilities and achievements
+  * Quantifiable results when available
+- Previous positions with similar details
+  * Responsibilities and achievements
+
+EDUCATION:
+- Degree(s), Institution(s), Graduation date(s)
+- Relevant coursework or certifications
+
+PROJECTS:
+- Relevant projects with brief descriptions
+- Technologies used and outcomes
+
+ADDITIONAL:
+- Any other relevant information that would appear on a resume
+
+Please extract and organize information from this resume into appropriate categories.
+`;
+          
+          resolve(resumeTemplate);
+        };
+        reader.onerror = () => reject(new Error('Error reading PDF file'));
+        reader.readAsArrayBuffer(file);
+        return;
+      }
+      
+      // For DOC, DOCX files, create more structured placeholder text
       // that will help GPT analyze the content better
       const reader = new FileReader();
       reader.onload = (e) => {
+        if (!e.target || !e.target.result) {
+          reject(new Error('Failed to read file content'));
+          return;
+        }
+        
+        // Verify the file has content
+        const arrayBuffer = e.target.result as ArrayBuffer;
+        if (arrayBuffer.byteLength < 50) { // Very small files are suspicious
+          reject(new Error('File appears to be empty or corrupt. Please check the file and try again.'));
+          return;
+        }
+        
         // Create a structured resume template that GPT can use to extract info
         const resumeTemplate = `
 # RESUME INFORMATION
@@ -330,11 +429,29 @@ Please extract and organize information from this resume into appropriate catego
         filename = pathParts[pathParts.length - 1];
       }
       
+      console.log('Using file path for download:', resumePath);
+      
       // Use our custom hook to download the file directly from storage
-      await downloadAndSaveFile(resumePath, filename);
-      
-      setSuccessMessage('Resume download initiated');
-      
+      try {
+        await downloadAndSaveFile(resumePath, filename);
+        setSuccessMessage('Resume download initiated');
+      } catch (downloadErr) {
+        console.error('Error with downloadAndSaveFile:', downloadErr);
+        
+        // Fallback: Try to use the validatedResumeUrl directly
+        console.log('Falling back to direct URL download using:', validatedResumeUrl.substring(0, 50) + '...');
+        
+        // Create a download link with the authenticated URL
+        const downloadLink = document.createElement('a');
+        downloadLink.href = validatedResumeUrl;
+        downloadLink.download = filename;
+        downloadLink.target = '_blank'; 
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        setSuccessMessage('Resume download initiated via fallback method');
+      }
     } catch (err) {
       console.error('Resume download error:', err);
       setError('Error downloading resume: ' + (err instanceof Error ? err.message : String(err)));

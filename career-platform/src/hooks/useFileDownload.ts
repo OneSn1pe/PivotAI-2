@@ -23,21 +23,44 @@ export function useFileDownload() {
         throw new Error('User must be authenticated to download files');
       }
 
+      console.log(`Starting download for file: ${path}`);
+      
       // Create reference to the file
       const fileRef = ref(storage, path);
 
       // First get a download URL from Firebase
       const downloadUrl = await getDownloadURL(fileRef);
+      console.log(`Got authenticated download URL for ${path}`);
       setUrl(downloadUrl);
       
-      // Fetch the file as a blob
+      // Fetch the file as a blob using the authenticated URL
       const response = await fetch(downloadUrl);
       if (!response.ok) {
-        throw new Error('Failed to download file');
+        console.error(`Failed to fetch file with authenticated URL. Status: ${response.status}`);
+        throw new Error(`Failed to download file (HTTP ${response.status})`);
+      }
+      
+      // Verify the content type and size
+      const contentType = response.headers.get('content-type');
+      const contentLength = response.headers.get('content-length');
+      console.log(`File metadata - Type: ${contentType}, Size: ${contentLength} bytes`);
+      
+      // Check for valid size
+      if (contentLength && parseInt(contentLength, 10) < 100) {
+        console.error(`Suspiciously small file: ${contentLength} bytes`);
+        throw new Error('File appears to be empty or corrupt');
       }
       
       // Get the file as a blob
       const blob = await response.blob();
+      
+      // Verify the blob has content
+      if (blob.size === 0) {
+        console.error('Downloaded blob has zero size');
+        throw new Error('Downloaded file is empty');
+      }
+      
+      console.log(`Successfully created blob of size ${blob.size} bytes`);
       
       // Create a local blob URL
       const blobUrl = URL.createObjectURL(blob);
@@ -86,6 +109,7 @@ export function useFileDownload() {
       // Clean up the blob URL to avoid memory leaks
       setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
       
+      console.log(`Download dialog triggered for ${filename}`);
       setDownloading(false);
     } catch (err) {
       console.error('Download and save error:', err);
