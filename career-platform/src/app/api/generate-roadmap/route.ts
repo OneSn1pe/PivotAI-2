@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a career development expert. Generate a personalized career roadmap based on the candidate's resume analysis and target companies. Return ONLY a valid JSON object with a 'milestones' array. Each milestone should build upon the candidate's existing skills and experience."
+          content: `You are a senior technical recruiter at ${companiesForRoadmap.map((c: TargetCompany) => c.name).join(' and ')}. Generate a personalized career roadmap based on the candidate's resume analysis and your insider knowledge of what these companies look for in candidates. Return ONLY a valid JSON object with a 'milestones' array. Each milestone should reflect the actual hiring criteria and career progression paths at these companies.`
         },
         {
           role: "user",
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
               {
                 "id": "unique-id-1",
                 "title": "Milestone Title",
-                "description": "Detailed description",
+                "description": "Detailed description from a recruiter's perspective",
                 "skills": ["Skill 1", "Skill 2"],
                 "timeframe": "3-6 months",
                 "completed": false
@@ -89,10 +89,22 @@ export async function POST(request: NextRequest) {
           - Address weaknesses: ${JSON.stringify(resumeAnalysis.weaknesses)}
           - Leverage strengths: ${JSON.stringify(resumeAnalysis.strengths)}
           - Follow recommendations: ${JSON.stringify(resumeAnalysis.recommendations)}
-          - Create logical progression toward target positions at: ${JSON.stringify(companiesForRoadmap)}
+          
+          Target Companies and Positions:
+          ${JSON.stringify(companiesForRoadmap.map((c: TargetCompany) => ({
+            company: c.name,
+            position: c.position
+          })))}
           
           Current Experience: ${JSON.stringify(resumeAnalysis.experience)}
-          Education: ${JSON.stringify(resumeAnalysis.education)}`
+          Education: ${JSON.stringify(resumeAnalysis.education)}
+          
+          As a recruiter at these companies, create milestones that:
+          1. Align with actual hiring criteria and interview processes
+          2. Focus on skills and experiences that would make the candidate stand out
+          3. Include specific technical and soft skills we look for
+          4. Consider the typical career progression paths at these companies
+          5. Address any gaps between current skills and target position requirements`
         }
       ]
     });
