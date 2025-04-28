@@ -194,8 +194,8 @@ Please extract and organize information from this resume into appropriate catego
       
       // Create a unique path for the file that includes file extension
       const fileExtension = file.name.split('.').pop() || '';
-      const timestamp = Date.now();
-      const filePath = `resumes/${userProfile.uid}/${timestamp}_resume.${fileExtension}`;
+      const uniqueId = `${userProfile.uid}_${Date.now()}`;
+      const filePath = `resumes/${userProfile.uid}/${uniqueId}_resume.${fileExtension}`;
       
       console.log(`Uploading file ${originalFileName} to path: ${filePath}`);
       
