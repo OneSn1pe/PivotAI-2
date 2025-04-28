@@ -61,11 +61,18 @@ export default function LoginForm() {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         
-        // Set session cookie
-        document.cookie = `session=${userCredential.user.uid}; path=/; max-age=86400`;
+        // Get return URL from query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('returnUrl');
         
-        // Redirect based on user role
-        if (userData.role === UserRole.CANDIDATE) {
+        // Set session cookie with longer expiration
+        const token = await userCredential.user.getIdToken(true);
+        document.cookie = `session=${token}; path=/; max-age=86400; secure; samesite=strict`;
+        
+        // Redirect based on return URL or user role
+        if (returnUrl && returnUrl.startsWith('/protected/')) {
+          router.push(returnUrl);
+        } else if (userData.role === UserRole.CANDIDATE) {
           router.push('/protected/candidate/dashboard');
         } else if (userData.role === UserRole.RECRUITER) {
           router.push('/protected/recruiter/dashboard');

@@ -67,10 +67,36 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/protected/dashboard', request.url));
   }
 
-  // Redirect unauthenticated users to login
+  // Redirect unauthenticated users to login with return URL
   if (!isPublicPath && !token) {
     debug.log(`Redirecting unauthenticated user from ${path} to login`);
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set('returnUrl', path);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // For protected routes, verify token validity
+  if (!isPublicPath && token) {
+    try {
+      // Add the token to the request headers for API routes
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set('Authorization', `Bearer ${token}`);
+
+      // Clone the request with the new headers
+      const response = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+
+      return response;
+    } catch (error) {
+      debug.log('Error verifying token:', error);
+      // If token verification fails, redirect to login
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('returnUrl', path);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   debug.log(`Passing through request: ${request.method} ${path}`);
