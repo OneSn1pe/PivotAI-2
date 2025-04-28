@@ -70,6 +70,13 @@ export enum UserRole {
     updatedAt: Date;
   }
   
+  export interface ResourceLink {
+    title: string;
+    url: string;
+    type: 'course' | 'article' | 'video' | 'book' | 'tool' | 'community' | 'other';
+    description?: string;
+  }
+  
   export interface Milestone {
     id: string;
     title: string;
@@ -77,4 +84,7 @@ export enum UserRole {
     skills: string[];
     timeframe: string;
     completed: boolean;
+    resources?: ResourceLink[];
+    actionItems?: string[];
+    companySpecificNotes?: string;
   }
