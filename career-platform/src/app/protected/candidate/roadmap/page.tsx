@@ -106,7 +106,7 @@ export default function RoadmapPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8">
           <button
-            onClick={() => router.push('/protected/candidate/dashboard')}
+            onClick={() => router.push('/protected/dashboard')}
             className="text-blue-600 hover:text-blue-800 flex items-center mr-4"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -153,7 +153,7 @@ export default function RoadmapPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8">
           <button
-            onClick={() => router.push('/protected/candidate/dashboard')}
+            onClick={() => router.push('/protected/dashboard')}
             className="text-blue-600 hover:text-blue-800 flex items-center mr-4"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -184,7 +184,7 @@ export default function RoadmapPage() {
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/protected/candidate/dashboard')}
+            onClick={() => router.push('/protected/dashboard')}
             className="text-blue-600 hover:text-blue-800 flex items-center"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
