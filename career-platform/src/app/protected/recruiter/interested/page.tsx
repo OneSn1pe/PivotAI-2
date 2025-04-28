@@ -133,9 +133,20 @@ export default function InterestedCandidatesPage() {
                 </div>
               )}
 
-              <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md">
-                View Full Profile
-              </button>
+              <div className="flex gap-2 mt-4">
+                <button 
+                  onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
+                >
+                  View Full Profile
+                </button>
+                <button 
+                  onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}/roadmap`)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md"
+                >
+                  View Roadmap
+                </button>
+              </div>
             </div>
           ))}
         </div>
