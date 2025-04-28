@@ -8,7 +8,7 @@ import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
-import { ref, getDownloadURL, listAll } from 'firebase/storage';
+import { ref, getDownloadURL, listAll, uploadBytes } from 'firebase/storage';
 // Import mammoth for DOCX processing
 import mammoth from 'mammoth';
 
@@ -20,7 +20,7 @@ interface ResumeManagerProps {
 }
 
 export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) {
-  const { userProfile } = useAuth();
+  const { userProfile, updateUserProfile } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const { uploadFile, uploading, progress } = useFileUpload();
   const { downloadAndSaveFile, downloading } = useFileDownload();
@@ -311,6 +311,9 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
           console.log('Notifying parent of update completion');
           onUpdateComplete();
         }
+        
+        // Refresh the user's profile in AuthContext
+        await updateUserProfile();
         
       } catch (analysisError) {
         console.error('Error during resume analysis:', analysisError);

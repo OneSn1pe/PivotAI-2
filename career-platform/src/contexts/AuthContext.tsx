@@ -26,6 +26,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (role?: UserRole) => Promise<void>;
   logout: () => Promise<void>;
+  updateUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -209,6 +210,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateUserProfile = async () => {
+    if (!currentUser) return;
+    
+    try {
+      // Fetch user profile from Firestore
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as User;
+        setUserProfile(userData);
+      }
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+    }
+  };
+
   const value = {
     currentUser,
     userProfile,
@@ -217,6 +233,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     loginWithGoogle,
     logout,
+    updateUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
