@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a career development expert. Generate a personalized career roadmap based on resume analysis and target companies. Return ONLY a valid JSON object with a 'milestones' array."
+          content: "You are a career development expert. Generate a personalized career roadmap based on the candidate's resume analysis and target companies. Return ONLY a valid JSON object with a 'milestones' array. Each milestone should build upon the candidate's existing skills and experience."
         },
         {
           role: "user",
@@ -85,11 +85,14 @@ export async function POST(request: NextRequest) {
           - Raw JSON only, no formatting
           - 5 milestones total
           - Each milestone needs unique ID
-          - Include realistic skills
-          - Logical progression toward target positions
+          - Build upon existing skills: ${JSON.stringify(resumeAnalysis.skills)}
+          - Address weaknesses: ${JSON.stringify(resumeAnalysis.weaknesses)}
+          - Leverage strengths: ${JSON.stringify(resumeAnalysis.strengths)}
+          - Follow recommendations: ${JSON.stringify(resumeAnalysis.recommendations)}
+          - Create logical progression toward target positions at: ${JSON.stringify(companiesForRoadmap)}
           
-          Resume Analysis: ${JSON.stringify(resumeAnalysis)}
-          Target Companies: ${JSON.stringify(companiesForRoadmap)}`
+          Current Experience: ${JSON.stringify(resumeAnalysis.experience)}
+          Education: ${JSON.stringify(resumeAnalysis.education)}`
         }
       ]
     });
