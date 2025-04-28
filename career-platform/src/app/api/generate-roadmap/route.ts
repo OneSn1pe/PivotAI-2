@@ -217,8 +217,8 @@ export async function POST(request: NextRequest) {
     // Log the roadmap data before storing to debug
     console.log('Storing roadmap with candidateId:', candidateId);
     
-    // Store in Firestore as a subcollection under the user's document
-    await addDoc(collection(db as Firestore, `users/${candidateId}/roadmaps`), roadmap);
+    // Store in Firestore
+    await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
     
     return NextResponse.json(roadmap);
   } catch (error) {
