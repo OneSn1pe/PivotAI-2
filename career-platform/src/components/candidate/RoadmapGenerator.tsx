@@ -3,7 +3,7 @@ import { ResumeAnalysis, TargetCompany, CareerRoadmap as RoadmapType, Milestone 
 import { generateCareerRoadmap } from '@/services/openai';
 import CareerRoadmap from './CareerRoadmap';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface RoadmapGeneratorProps {
@@ -23,8 +23,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
   const [generatedRoadmap, setGeneratedRoadmap] = useState<RoadmapType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [currentRoadmapId, setCurrentRoadmapId] = useState<string | null>(null);
 
   // Load existing target companies from user profile
   useEffect(() => {
@@ -39,8 +37,11 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
           const savedCompanies = userDoc.data().targetCompanies;
           
           if (savedCompanies.length > 0) {
+            console.log('Loaded target companies from profile:', savedCompanies);
             setTargetCompanies(savedCompanies);
           }
+        } else {
+          console.log('No target companies found in user profile');
         }
       } catch (error) {
         console.error('Error loading target companies:', error);
@@ -51,31 +52,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     
     loadTargetCompanies();
   }, [userProfile]);
-
-  // Listen for roadmap updates when generating
-  useEffect(() => {
-    if (!currentRoadmapId) return;
-
-    const unsubscribe = onSnapshot(doc(db, 'roadmaps', currentRoadmapId), (doc) => {
-      if (doc.exists()) {
-        const roadmapData = doc.data() as RoadmapType;
-        setGeneratedRoadmap(roadmapData);
-        
-        // Update progress based on number of milestones generated
-        const milestoneCount = roadmapData.milestones?.length || 0;
-        setProgress((milestoneCount / 5) * 100);
-        
-        // If all milestones are generated, stop listening
-        if (milestoneCount === 5) {
-          setGenerating(false);
-          setProgress(100);
-          onRoadmapGenerated(currentRoadmapId);
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, [currentRoadmapId, onRoadmapGenerated]);
 
   // Add a new empty target company field
   const addTargetCompany = () => {
@@ -99,11 +75,13 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
 
   // Validate input before generating roadmap
   const validateInput = (): boolean => {
+    // Check if we have resume analysis
     if (!resumeAnalysis) {
       setError('Please upload your resume first to generate a roadmap.');
       return false;
     }
 
+    // Check if at least one target company has both name and position
     const hasValidTargetCompany = targetCompanies.some(
       company => company.name.trim() !== '' && company.position.trim() !== ''
     );
@@ -121,6 +99,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
   const handleGenerateRoadmap = async () => {
     if (!validateInput() || !resumeAnalysis || !userProfile) return;
     
+    // Ensure resumeAnalysis has all required fields with fallbacks
     const validatedResumeAnalysis = {
       ...resumeAnalysis,
       skills: Array.isArray(resumeAnalysis.skills) ? resumeAnalysis.skills : [],
@@ -131,27 +110,32 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
       recommendations: Array.isArray(resumeAnalysis.recommendations) ? resumeAnalysis.recommendations : []
     };
     
+    // Filter out empty target companies
     const validTargetCompanies = targetCompanies.filter(
       company => company.name.trim() !== '' && company.position.trim() !== ''
     );
     
     setGenerating(true);
     setError(null);
-    setProgress(0);
     
     try {
+      // Ensure candidateId is passed to the generateCareerRoadmap function
       const roadmap = await generateCareerRoadmap(
         validatedResumeAnalysis, 
         validTargetCompanies,
         userProfile.uid
       );
       
+      setGeneratedRoadmap(roadmap);
+      
+      // Notify parent component
       if (roadmap && roadmap.id) {
-        setCurrentRoadmapId(roadmap.id);
+        onRoadmapGenerated(roadmap.id);
       }
     } catch (err) {
       console.error('Error generating roadmap:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate roadmap. Please try again.');
+    } finally {
       setGenerating(false);
     }
   };
@@ -175,58 +159,66 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
             
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-3">Target Companies</h3>
+              
               {targetCompanies.map((company, index) => (
-                <div key={index} className="flex gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder="Company Name"
-                    value={company.name}
-                    onChange={(e) => updateTargetCompany(index, 'name', e.target.value)}
-                    className="flex-1 p-2 border rounded"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Position"
-                    value={company.position}
-                    onChange={(e) => updateTargetCompany(index, 'position', e.target.value)}
-                    className="flex-1 p-2 border rounded"
-                  />
-                  {targetCompanies.length > 1 && (
+                <div key={index} className="flex flex-col sm:flex-row gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      value={company.name}
+                      onChange={(e) => updateTargetCompany(index, 'name', e.target.value)}
+                      placeholder="e.g. Google, Amazon"
+                      className="w-full p-2 border border-gray-300 rounded"
+                    />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Target Position
+                    </label>
+                    <input
+                      type="text"
+                      value={company.position}
+                      onChange={(e) => updateTargetCompany(index, 'position', e.target.value)}
+                      placeholder="e.g. Senior Developer, Product Manager"
+                      className="w-full p-2 border border-gray-300 rounded"
+                    />
+                  </div>
+                  
+                  <div className="flex items-end">
                     <button
+                      type="button"
                       onClick={() => removeTargetCompany(index)}
-                      className="p-2 text-red-500 hover:text-red-700"
+                      disabled={targetCompanies.length <= 1}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded disabled:opacity-30"
+                      aria-label="Remove target company"
                     >
-                      Remove
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
                     </button>
-                  )}
+                  </div>
                 </div>
               ))}
+              
               <button
+                type="button"
                 onClick={addTargetCompany}
-                className="text-blue-500 hover:text-blue-700"
+                className="text-blue-600 hover:text-blue-800 flex items-center"
               >
-                + Add Another Company
+                <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add another target company
               </button>
             </div>
-
+            
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-md mb-4">
                 <p className="text-red-700">{error}</p>
-              </div>
-            )}
-
-            {generating && (
-              <div className="mb-4">
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-blue-700">Generating Roadmap...</span>
-                  <span className="text-sm font-medium text-blue-700">{progress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
               </div>
             )}
             
@@ -249,12 +241,15 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
         )}
       </div>
       
+      {/* Display the generated roadmap */}
       {generatedRoadmap && (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <CareerRoadmap 
             roadmap={generatedRoadmap} 
             isEditable={true}
             onMilestoneToggle={async (milestoneId: string, completed: boolean) => {
+              // Here you would typically update the milestone in your database
+              // For now, we'll just update the local state
               setGeneratedRoadmap((prevRoadmap: RoadmapType | null) => {
                 if (!prevRoadmap) return null;
                 
@@ -268,6 +263,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                 };
               });
               
+              // Return a resolved promise since this prop expects a Promise
               return Promise.resolve();
             }}
           />
