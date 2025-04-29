@@ -75,21 +75,30 @@ export default function RoadmapPage() {
     }
   };
 
-  const handleRoadmapGenerated = async (newRoadmapId: string) => {
-    // Fetch the newly created roadmap
+  const handleRoadmapGenerated = async (roadmapId: string) => {
+    // After regeneration, fetch the updated roadmap
+    if (!userProfile) return;
+    
     try {
-      const roadmapSnapshot = await getDocs(query(
+      // Since roadmaps are now updated in place, we need to refetch from the candidateId
+      const roadmapQuery = query(
         collection(db, 'roadmaps'),
-        where('id', '==', newRoadmapId)
-      ));
+        where('candidateId', '==', userProfile.uid)
+      );
+      
+      const roadmapSnapshot = await getDocs(roadmapQuery);
       
       if (!roadmapSnapshot.empty) {
-        setRoadmap(roadmapSnapshot.docs[0].data() as CareerRoadmap);
+        const roadmapDoc = roadmapSnapshot.docs[0];
+        setRoadmap({
+          ...roadmapDoc.data() as CareerRoadmap,
+          id: roadmapDoc.id,
+        });
       }
       
       setShowGenerator(false);
     } catch (error) {
-      console.error('Error fetching new roadmap:', error);
+      console.error('Error fetching updated roadmap:', error);
     }
   };
 

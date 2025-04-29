@@ -119,7 +119,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
-      // Ensure candidateId is passed to the generateCareerRoadmap function
+      // Generate or update roadmap
       const roadmap = await generateCareerRoadmap(
         validatedResumeAnalysis, 
         validTargetCompanies,
@@ -128,10 +128,9 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
       
       setGeneratedRoadmap(roadmap);
       
-      // Notify parent component
-      if (roadmap && roadmap.id) {
-        onRoadmapGenerated(roadmap.id);
-      }
+      // Notify parent component - even for updates we need to let the parent know
+      // This will trigger a refresh to show the latest roadmap
+      onRoadmapGenerated(roadmap.id || userProfile.uid);
     } catch (err) {
       console.error('Error generating roadmap:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate roadmap. Please try again.');

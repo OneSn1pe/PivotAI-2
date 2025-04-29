@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
-import { collection, addDoc, Firestore, getDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
 
 // Check if OpenAI API key is available
@@ -123,39 +123,34 @@ export async function POST(request: NextRequest) {
 
     // Parse the milestones from the OpenAI response
     let milestones;
+    
     try {
-      // Get the raw response content
-      const responseContent = completion.choices[0].message.content || '{}';
+      const content = completion.choices[0].message.content;
       
-      // Clean up the response content by removing any markdown formatting
-      let cleanedContent = responseContent.trim();
-      
-      // Remove markdown code block formatting if present
-      if (cleanedContent.startsWith('```')) {
-        // Find the first and last occurrence of code block markers
-        const firstBlockEnd = cleanedContent.indexOf('\n');
-        let lastBlockStart = cleanedContent.lastIndexOf('```');
-        
-        // Extract only the content between the markers
-        if (firstBlockEnd !== -1 && lastBlockStart !== -1 && lastBlockStart > firstBlockEnd) {
-          cleanedContent = cleanedContent.substring(firstBlockEnd + 1, lastBlockStart).trim();
-        } else if (firstBlockEnd !== -1) {
-          cleanedContent = cleanedContent.substring(firstBlockEnd + 1).trim();
-        }
+      if (!content) {
+        throw new Error('No content in OpenAI response');
       }
       
-      console.log('Cleaned content for parsing:', cleanedContent.substring(0, 100) + '...');
+      // Extract the JSON part from the response
+      const jsonMatch = content.match(/({[\s\S]*})/);
       
-      // Try to parse the cleaned JSON response
-      const parsedResponse = JSON.parse(cleanedContent);
-      
-      // Check if the response has the expected milestones array
-      if (parsedResponse.milestones && Array.isArray(parsedResponse.milestones)) {
-        milestones = parsedResponse.milestones;
-      } else {
-        // If the structure is wrong, throw an error to trigger fallback
-        throw new Error('Invalid response structure - missing milestones array');
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
       }
+      
+      const parsedResponse = JSON.parse(jsonMatch[0]);
+      
+      if (!parsedResponse.milestones || !Array.isArray(parsedResponse.milestones)) {
+        throw new Error('Invalid milestones structure in response');
+      }
+      
+      // Ensure each milestone has a unique ID
+      milestones = parsedResponse.milestones.map((milestone: any) => ({
+        ...milestone,
+        id: milestone.id || uuidv4(),
+        completed: false // Always start with uncompleted milestones for new roadmap
+      }));
+      
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       console.log('Raw response content:', completion.choices[0].message.content?.substring(0, 200) + '...');
@@ -204,21 +199,51 @@ export async function POST(request: NextRequest) {
         }
       ];
     }
+
+    // Check if a roadmap already exists for this candidate
+    const roadmapQuery = query(
+      collection(db as Firestore, 'roadmaps'),
+      where('candidateId', '==', candidateId)
+    );
     
-    // Create roadmap document with validated candidateId
-    const roadmap: CareerRoadmap = {
-      id: uuidv4(),
-      candidateId: candidateId.toString(), // Ensure candidateId is a string
-      milestones,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const roadmapSnapshot = await getDocs(roadmapQuery);
+    let roadmap: CareerRoadmap;
     
-    // Log the roadmap data before storing to debug
-    console.log('Storing roadmap with candidateId:', candidateId);
-    
-    // Store in Firestore
-    await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
+    if (!roadmapSnapshot.empty) {
+      // Update existing roadmap document
+      const existingRoadmapDoc = roadmapSnapshot.docs[0];
+      const existingRoadmap = existingRoadmapDoc.data() as CareerRoadmap;
+      const existingRoadmapId = existingRoadmapDoc.id;
+      
+      roadmap = {
+        ...existingRoadmap,
+        milestones,
+        updatedAt: new Date(),
+      };
+      
+      // Update in Firestore
+      await updateDoc(doc(db as Firestore, 'roadmaps', existingRoadmapId), {
+        milestones,
+        updatedAt: new Date(),
+      });
+      
+      console.log('Updated existing roadmap for candidateId:', candidateId);
+    } else {
+      // Create a new roadmap document
+      roadmap = {
+        id: uuidv4(),
+        candidateId: candidateId.toString(),
+        milestones,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Store in Firestore
+      const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
+      roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
+      
+      console.log('Created new roadmap for candidateId:', candidateId);
+    }
     
     return NextResponse.json(roadmap);
   } catch (error) {

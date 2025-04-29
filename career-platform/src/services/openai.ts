@@ -342,13 +342,18 @@ export async function generateCareerRoadmap(
         throw new Error('Failed to parse roadmap results. Please try again.');
       }
       
-      if (!data || !data.id || !Array.isArray(data.milestones)) {
+      if (!data || !Array.isArray(data.milestones)) {
         debug.error('Invalid roadmap data structure:', data);
         throw new Error('Invalid roadmap data returned from server');
       }
       
-      return data as CareerRoadmap;
+      // With the updated API, the response may not include the document ID if it's an update
+      // Make sure we handle this case properly
+      if (!data.id) {
+        debug.log('Warning: Roadmap ID not found in response, using provided ID if any');
+      }
       
+      return data as CareerRoadmap;
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
       
@@ -360,7 +365,6 @@ export async function generateCareerRoadmap(
       debug.error('Fetch error:', fetchError);
       throw fetchError;
     }
-    
   } catch (error) {
     debug.error('Error generating roadmap:', error);
     throw error;
