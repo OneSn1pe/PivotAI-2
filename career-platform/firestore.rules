@@ -15,5 +15,13 @@ service cloud.firestore {
     // match /debug-tests/{testId} {
     //   allow read, write: if true;
     // }
+    
+    // Contact form submissions - anyone can create, only admins can read
+    // match /contact_submissions/{submissionId} {
+    //   allow create: if true;
+    //   allow read, update, delete: if request.auth != null && 
+    //     exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN";
+    // }
   }
 }
