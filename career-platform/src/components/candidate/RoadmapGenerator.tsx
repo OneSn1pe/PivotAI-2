@@ -3,7 +3,7 @@ import { ResumeAnalysis, TargetCompany, CareerRoadmap as RoadmapType, Milestone 
 import { generateCareerRoadmap, deleteAllRoadmaps } from '@/services/openai';
 import CareerRoadmap from './CareerRoadmap';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface RoadmapGeneratorProps {
@@ -119,6 +119,18 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
+      // Save the valid target companies to the user's profile
+      try {
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          targetCompanies: validTargetCompanies,
+          updatedAt: new Date()
+        });
+        console.log('Successfully saved target companies to user profile');
+      } catch (saveErr) {
+        console.error('Error saving target companies to profile:', saveErr);
+        // Continue with roadmap generation even if saving fails
+      }
+      
       // First delete any existing roadmaps for this candidate
       try {
         await deleteAllRoadmaps(userProfile.uid);
