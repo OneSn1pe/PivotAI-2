@@ -142,7 +142,12 @@ export default function RecruiterDashboard() {
           <div className="space-y-4">
             {bookmarkedCandidates.map((candidate, index) => (
               <div key={index} className="border-b border-gray-200 pb-4 last:border-0">
-                <h3 className="font-semibold">{candidate.displayName}</h3>
+                <h3 
+                  className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                  onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
+                >
+                  {candidate.displayName}
+                </h3>
                 
                 {candidate.resumeAnalysis?.skills && (
                   <div className="mt-2 flex flex-wrap gap-1">

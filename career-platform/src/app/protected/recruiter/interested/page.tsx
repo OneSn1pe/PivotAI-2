@@ -133,7 +133,10 @@ export default function InterestedCandidatesPage() {
                 </div>
               )}
 
-              <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md">
+              <button 
+                onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
+              >
                 View Full Profile
               </button>
             </div>

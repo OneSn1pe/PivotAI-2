@@ -5,9 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { CandidateProfile } from '@/types/user';
+import { useRouter } from 'next/navigation';
 
 export default function RecruiterSearchPage() {
   const { userProfile } = useAuth();
+  const router = useRouter();
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +136,12 @@ export default function RecruiterSearchPage() {
               </div>
             )}
             
-            <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">
+            <button 
+              onClick={() => {
+                router.push(`/protected/recruiter/candidate/${candidate.uid}`);
+              }} 
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+            >
               View Profile
             </button>
           </div>

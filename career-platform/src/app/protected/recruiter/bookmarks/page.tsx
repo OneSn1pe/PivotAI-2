@@ -5,9 +5,11 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, RecruiterProfile } from '@/types/user';
+import { useRouter } from 'next/navigation';
 
 export default function BookmarkedCandidatesPage() {
   const { userProfile } = useAuth();
+  const router = useRouter();
   const recruiterProfile = userProfile as RecruiterProfile | null;
   const [bookmarkedCandidates, setBookmarkedCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +120,10 @@ export default function BookmarkedCandidatesPage() {
               )}
               
               <div className="mt-6">
-                <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full">
+                <button
+                  onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
+                >
                   View Full Profile
                 </button>
               </div>
@@ -129,7 +134,7 @@ export default function BookmarkedCandidatesPage() {
         <div className="bg-white p-8 rounded-lg shadow-lg text-center">
           <p className="text-gray-600 mb-4">You haven't bookmarked any candidates yet.</p>
           <button
-            onClick={() => window.location.href = '/recruiter/search'}
+            onClick={() => router.push('/protected/recruiter/search')}
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
           >
             Search Candidates
