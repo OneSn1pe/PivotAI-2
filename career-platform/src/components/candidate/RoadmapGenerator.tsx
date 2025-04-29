@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap as RoadmapType, Milestone } from '@/types/user';
-import { generateCareerRoadmap } from '@/services/openai';
+import { generateCareerRoadmap, deleteAllRoadmaps } from '@/services/openai';
 import CareerRoadmap from './CareerRoadmap';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
@@ -119,7 +119,15 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
-      // Generate or update roadmap
+      // First delete any existing roadmaps for this candidate
+      try {
+        await deleteAllRoadmaps(userProfile.uid);
+        console.log('Successfully deleted existing roadmaps');
+      } catch (deleteErr) {
+        console.warn('Error deleting existing roadmaps, continuing with generation:', deleteErr);
+      }
+      
+      // Generate new roadmap
       const roadmap = await generateCareerRoadmap(
         validatedResumeAnalysis, 
         validTargetCompanies,
@@ -128,8 +136,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
       
       setGeneratedRoadmap(roadmap);
       
-      // Notify parent component - even for updates we need to let the parent know
-      // This will trigger a refresh to show the latest roadmap
+      // Notify parent component
       onRoadmapGenerated(roadmap.id || userProfile.uid);
     } catch (err) {
       console.error('Error generating roadmap:', err);

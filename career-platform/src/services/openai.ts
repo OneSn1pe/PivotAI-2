@@ -370,3 +370,64 @@ export async function generateCareerRoadmap(
     throw error;
   }
 }
+
+/**
+ * Deletes all roadmaps for a specific candidate
+ * @param candidateId The ID of the candidate
+ * @returns Information about the deletion operation
+ */
+export async function deleteAllRoadmaps(candidateId: string): Promise<{ success: boolean, count: number }> {
+  debug.log('deleteAllRoadmaps called for candidateId:', candidateId);
+  
+  try {
+    if (!candidateId) {
+      throw new Error('candidateId is required');
+    }
+    
+    const baseUrl = getApiBaseUrl();
+    const apiUrl = `${baseUrl}/api/delete-roadmaps`;
+    debug.log(`API URL: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ candidateId })
+    });
+    
+    if (!response.ok) {
+      let errorMessage = `Failed to delete roadmaps (HTTP ${response.status})`;
+      
+      try {
+        const responseText = await response.text();
+        debug.log('Error response:', responseText);
+        
+        const { data, error } = safeJsonParse(responseText);
+        if (data) {
+          errorMessage = data.message || data.error || errorMessage;
+        }
+      } catch (err) {
+        debug.error('Error parsing error response:', err);
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    const { data, error } = safeJsonParse(await response.text());
+    
+    if (error) {
+      debug.error('Failed to parse response:', error);
+      throw new Error('Failed to parse delete response');
+    }
+    
+    debug.log('Roadmaps deleted successfully:', data);
+    return { 
+      success: true, 
+      count: data.count || 0 
+    };
+  } catch (error) {
+    debug.error('Error deleting roadmaps:', error);
+    throw error;
+  }
+}

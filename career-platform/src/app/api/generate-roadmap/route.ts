@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
-import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
 
 // Check if OpenAI API key is available
@@ -207,43 +207,32 @@ export async function POST(request: NextRequest) {
     );
     
     const roadmapSnapshot = await getDocs(roadmapQuery);
-    let roadmap: CareerRoadmap;
     
+    // Delete all existing roadmaps for this candidate
     if (!roadmapSnapshot.empty) {
-      // Update existing roadmap document
-      const existingRoadmapDoc = roadmapSnapshot.docs[0];
-      const existingRoadmap = existingRoadmapDoc.data() as CareerRoadmap;
-      const existingRoadmapId = existingRoadmapDoc.id;
+      console.log(`Deleting ${roadmapSnapshot.size} existing roadmaps for candidateId:`, candidateId);
       
-      roadmap = {
-        ...existingRoadmap,
-        milestones,
-        updatedAt: new Date(),
-      };
+      const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
+        deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
+      );
       
-      // Update in Firestore
-      await updateDoc(doc(db as Firestore, 'roadmaps', existingRoadmapId), {
-        milestones,
-        updatedAt: new Date(),
-      });
-      
-      console.log('Updated existing roadmap for candidateId:', candidateId);
-    } else {
-      // Create a new roadmap document
-      roadmap = {
-        id: uuidv4(),
-        candidateId: candidateId.toString(),
-        milestones,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      // Store in Firestore
-      const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
-      roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
-      
-      console.log('Created new roadmap for candidateId:', candidateId);
+      await Promise.all(deletePromises);
     }
+    
+    // Create a new roadmap document
+    const roadmap: CareerRoadmap = {
+      id: uuidv4(),
+      candidateId: candidateId.toString(),
+      milestones,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    // Store in Firestore
+    const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
+    roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
+    
+    console.log('Created new roadmap for candidateId:', candidateId);
     
     return NextResponse.json(roadmap);
   } catch (error) {
