@@ -5,7 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
-import Link from 'next/link';
+import CandidateCard from './CandidateCard';
 
 export default function CandidateSearch() {
   const { userProfile } = useAuth();
@@ -196,67 +196,15 @@ export default function CandidateSearch() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {candidates.map((candidate, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
-            <div className="flex justify-between items-start">
-              <h3 className="font-bold text-lg">{candidate.displayName}</h3>
-              <button
-                onClick={() => toggleBookmark(candidate.uid)}
-                className={`text-xl ${
-                  bookmarkedCandidates.includes(candidate.uid)
-                    ? 'text-yellow-500'
-                    : 'text-gray-400'
-                }`}
-              >
-                ★
-              </button>
-            </div>
-            
-            {candidate.resumeAnalysis?.skills && (
-              <div className="mt-4">
-                <h4 className="font-semibold text-sm text-gray-700">Skills</h4>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {candidate.resumeAnalysis.skills.map((skill, skillIndex) => (
-                    <span 
-                      key={skillIndex} 
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        selectedSkills.includes(skill)
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {candidate.jobPreferences?.roles && (
-              <div className="mt-3">
-                <h4 className="font-semibold text-sm text-gray-700">Looking for</h4>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {candidate.jobPreferences.roles.map((role, roleIndex) => (
-                    <span 
-                      key={roleIndex} 
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        selectedRoles.includes(role)
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {role}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            <Link href={`/protected/recruiter/candidate/${candidate.uid}`} className="mt-4 block w-full">
-              <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
-                View Full Profile
-              </button>
-            </Link>
-          </div>
+          <CandidateCard
+            key={index}
+            candidate={candidate}
+            isBookmarked={bookmarkedCandidates.includes(candidate.uid)}
+            onBookmarkToggle={toggleBookmark}
+            selectedSkills={selectedSkills}
+            selectedRoles={selectedRoles}
+            recruiterUid={recruiterProfile?.uid}
+          />
         ))}
       </div>
       

@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, RecruiterProfile } from '@/types/user';
+import CandidateCard from './CandidateCard';
 
 interface BookmarkedListProps {
   limit?: number;
@@ -89,39 +90,14 @@ export default function BookmarkedList({ limit, onViewAll }: BookmarkedListProps
     <div>
       <div className="space-y-4">
         {bookmarkedCandidates.map((candidate, index) => (
-          <div key={index} className="bg-white p-4 rounded-lg shadow border border-gray-200">
-            <div className="flex justify-between items-start">
-              <h3 className="font-semibold">{candidate.displayName}</h3>
-              <button
-                onClick={() => handleRemoveBookmark(candidate.uid)}
-                className="text-red-600 hover:text-red-800 text-sm"
-              >
-                Remove
-              </button>
-            </div>
-            
-            {candidate.resumeAnalysis?.skills && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {candidate.resumeAnalysis.skills.slice(0, 3).map((skill, skillIndex) => (
-                  <span 
-                    key={skillIndex}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {candidate.resumeAnalysis.skills.length > 3 && (
-                  <span className="text-gray-500 text-xs">
-                    +{candidate.resumeAnalysis.skills.length - 3} more
-                  </span>
-                )}
-              </div>
-            )}
-            
-            <button className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm">
-              View Profile
-            </button>
-          </div>
+          <CandidateCard
+            key={index}
+            candidate={candidate}
+            isBookmarked={true}
+            onBookmarkToggle={handleRemoveBookmark}
+            recruiterUid={recruiterProfile?.uid}
+            compact={true}
+          />
         ))}
       </div>
       
