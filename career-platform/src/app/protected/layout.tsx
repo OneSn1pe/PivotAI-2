@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
 import { UserRole } from '@/types/user';
 
@@ -73,14 +72,13 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <Navbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-4">
+    <div className="min-h-screen bg-gray-100 flex">
+      <Sidebar />
+      <main className="flex-1 p-6 overflow-auto">
+        <div className="max-w-6xl mx-auto">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
