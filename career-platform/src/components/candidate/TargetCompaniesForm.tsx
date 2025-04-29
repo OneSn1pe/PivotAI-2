@@ -18,48 +18,57 @@ export default function TargetCompaniesForm() {
   const [redirecting, setRedirecting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
-  useEffect(() => {
-    // Load existing target companies if available
-    async function loadCompanies() {
-      if (!userProfile) return;
-      
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const userDoc = await getDoc(doc(db, 'users', userProfile.uid));
-        if (userDoc.exists()) {
-          // Handle both old and new format of target companies
-          if (userDoc.data().targetCompanies) {
-            const targetCompanies = userDoc.data().targetCompanies;
-            
-            // Check if targetCompanies is an array of strings (old format) or objects (new format)
-            if (targetCompanies.length > 0 && typeof targetCompanies[0] === 'string') {
-              // Convert old format to new format
-              const convertedCompanies = targetCompanies.map((name: string) => ({
-                name,
-                position: '',
-              }));
-              setCompanies(convertedCompanies);
-            } else {
-              // New format
-              setCompanies(targetCompanies);
-            }
+  const loadCompanies = async () => {
+    if (!userProfile) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userProfile.uid));
+      if (userDoc.exists()) {
+        // Handle both old and new format of target companies
+        if (userDoc.data().targetCompanies) {
+          const targetCompanies = userDoc.data().targetCompanies;
+          
+          // Check if targetCompanies is an array of strings (old format) or objects (new format)
+          if (targetCompanies.length > 0 && typeof targetCompanies[0] === 'string') {
+            // Convert old format to new format
+            const convertedCompanies = targetCompanies.map((name: string) => ({
+              name,
+              position: '',
+            }));
+            setCompanies(convertedCompanies);
+          } else {
+            // New format
+            setCompanies(targetCompanies);
           }
         }
-      } catch (error) {
-        console.error('Error loading target companies:', error);
-        setError('Failed to load your target companies. Please try refreshing the page.');
-      } finally {
-        setLoading(false);
       }
+    } catch (error) {
+      console.error('Error loading target companies:', error);
+      setError('Failed to load your target companies. Please try refreshing the page.');
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
     }
-    
+  };
+  
+  // Load companies on initial mount and when userProfile changes
+  useEffect(() => {
     loadCompanies();
   }, [userProfile]);
   
-  const handleAddCompany = () => {
+  // Refresh list when companies state changes
+  useEffect(() => {
+    if (isRefreshing) {
+      loadCompanies();
+    }
+  }, [isRefreshing]);
+  
+  const handleAddCompany = async () => {
     if (!newCompany.trim()) {
       return;
     }
@@ -79,10 +88,45 @@ export default function TargetCompaniesForm() {
     setNewCompany('');
     setNewPosition('');
     setError(null);
+    
+    // Save to Firebase immediately so it's persistent
+    if (userProfile) {
+      try {
+        const updatedCompanies = [...companies, newTargetCompany];
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          targetCompanies: updatedCompanies,
+          updatedAt: new Date()
+        });
+        
+        // Show brief success message for adding
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 1500);
+        
+        // No need to refresh as we're already updating the local state
+      } catch (error) {
+        console.error('Error adding target company:', error);
+        setError('Failed to add company. Please try again.');
+      }
+    }
   };
   
-  const handleRemoveCompany = (index: number) => {
-    setCompanies(companies.filter((_, i) => i !== index));
+  const handleRemoveCompany = async (index: number) => {
+    const updatedCompanies = companies.filter((_, i) => i !== index);
+    setCompanies(updatedCompanies);
+    
+    // Update Firebase when removing companies
+    if (userProfile) {
+      try {
+        await updateDoc(doc(db, 'users', userProfile.uid), {
+          targetCompanies: updatedCompanies,
+          updatedAt: new Date()
+        });
+      } catch (error) {
+        console.error('Error removing target company:', error);
+        setError('Failed to remove company. Please try again.');
+        setIsRefreshing(true); // Refresh to get the latest state
+      }
+    }
   };
   
   const handleUpdatePosition = (index: number, position: string) => {
@@ -126,6 +170,10 @@ export default function TargetCompaniesForm() {
     }
   };
   
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+  };
+  
   if (loading) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -139,7 +187,19 @@ export default function TargetCompaniesForm() {
   
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">Target Companies</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Target Companies</h2>
+        <button 
+          onClick={handleRefresh}
+          className="text-blue-500 hover:text-blue-700 flex items-center text-sm"
+          disabled={isRefreshing}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
+        </button>
+      </div>
       <p className="text-gray-600 mb-6">
         Add companies you're interested in working for and your desired positions. We'll help you prepare specifically for these opportunities.
       </p>
@@ -228,7 +288,7 @@ export default function TargetCompaniesForm() {
           <ul className="space-y-3">
             {companies.map((company, index) => (
               <li 
-                key={index}
+                key={`${company.name}-${index}`}
                 className="bg-gray-50 p-4 rounded border border-gray-200 hover:shadow-md transition duration-200"
               >
                 <div className="flex justify-between items-center mb-2">
