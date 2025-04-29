@@ -200,13 +200,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await signOut(auth);
-      // Clear the session cookie
+      // Set loading state to avoid race conditions
+      setLoading(true);
+      
+      // Clear user data first
+      setUserProfile(null);
+      setCurrentUser(null);
+      
+      // Clear session cookies
       document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      router.push('/auth/login');
+      document.cookie = 'session=; path=/; max-age=0; domain=' + window.location.hostname;
+      
+      // Perform Firebase signout
+      await signOut(auth);
+      
+      // Add a fallback for navigation
+      try {
+        router.push('/auth/login');
+      } catch (error) {
+        console.error('Navigation error during logout:', error);
+        // Use direct location redirect as fallback
+        window.location.href = '/auth/login';
+      }
+      
+      // Add a safety timeout in case we get stuck
+      setTimeout(() => {
+        if (window.location.pathname.includes('/protected')) {
+          console.warn('Logout redirect failed, forcing redirect');
+          window.location.href = '/auth/login';
+        }
+      }, 2000);
     } catch (error) {
       console.error('Logout error:', error);
-      throw error;
+      // Even if there's an error, try to navigate away
+      window.location.href = '/auth/login';
+    } finally {
+      // Always make sure loading state is reset
+      setLoading(false);
     }
   };
 
@@ -236,5 +266,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     updateUserProfile,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {loading ? (
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
+    </AuthContext.Provider>
+  );
 };

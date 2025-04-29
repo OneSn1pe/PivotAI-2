@@ -151,11 +151,31 @@ export default function TargetCompaniesForm() {
       setSuccess(true);
       
       // Set a timeout to navigate back to dashboard after showing success message
-      setTimeout(() => {
+      // But make sure we have proper error handling and can't get stuck
+      const navigationTimeout = setTimeout(() => {
         setRedirecting(true);
-        router.refresh(); // Refresh current route data
-        router.push('/protected/candidate/dashboard');
+        // Try to navigate, with a failsafe
+        try {
+          router.refresh(); // Refresh current route data
+          router.push('/protected/candidate/dashboard');
+        } catch (error) {
+          console.error('Navigation error:', error);
+          // Force navigation if router fails
+          window.location.href = '/protected/candidate/dashboard';
+        }
       }, 1500);
+      
+      // Add a safety timeout in case navigation gets stuck
+      const safetyTimeout = setTimeout(() => {
+        // Force redirect if stuck for more than 5 seconds
+        window.location.href = '/protected/candidate/dashboard';
+      }, 5000);
+      
+      // Clean up timeouts if component unmounts
+      return () => {
+        clearTimeout(navigationTimeout);
+        clearTimeout(safetyTimeout);
+      };
     } catch (error) {
       console.error('Error saving target companies:', error);
       setError('Failed to save your target companies. Please try again.');
@@ -172,6 +192,17 @@ export default function TargetCompaniesForm() {
   
   const handleRefresh = () => {
     setIsRefreshing(true);
+  };
+  
+  // Add a safety mechanism for the back button
+  const handleBackToDashboard = () => {
+    try {
+      router.push('/protected/candidate/dashboard');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback direct navigation if router fails
+      window.location.href = '/protected/candidate/dashboard';
+    }
   };
   
   if (loading) {
@@ -356,6 +387,16 @@ export default function TargetCompaniesForm() {
           </>
         )}
       </button>
+      
+      {/* Add back button as a safety mechanism */}
+      <div className="mt-4 text-center">
+        <button
+          onClick={handleBackToDashboard}
+          className="text-blue-500 hover:text-blue-700 font-medium"
+        >
+          Back to Dashboard
+        </button>
+      </div>
     </div>
   );
 }

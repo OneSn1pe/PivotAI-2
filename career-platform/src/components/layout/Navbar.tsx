@@ -1,20 +1,37 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const { userProfile, logout } = useAuth();
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    await logout();
+    if (isLoggingOut) return; // Prevent multiple clicks
     
-    // Clear session cookie
-    document.cookie = 'session=; path=/; max-age=0';
+    setIsLoggingOut(true);
     
-    router.push('/auth/login');
+    try {
+      await logout();
+      
+      // Clear session cookie (belt and suspenders approach)
+      document.cookie = 'session=; path=/; max-age=0';
+      
+      // Navigation is handled in logout(), but add a backup just in case
+      setTimeout(() => {
+        if (document.location.pathname.includes('/protected')) {
+          console.warn('Logout navigation appears stuck, forcing redirect');
+          window.location.href = '/auth/login';
+        }
+      }, 3000);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force navigation even if logout fails
+      window.location.href = '/auth/login';
+    }
   };
 
   return (
@@ -38,9 +55,12 @@ export default function Navbar() {
                 
                 <button
                   onClick={handleLogout}
-                  className="ml-4 text-sm text-gray-600 hover:text-gray-900"
+                  disabled={isLoggingOut}
+                  className={`ml-4 text-sm ${isLoggingOut 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-gray-600 hover:text-gray-900'}`}
                 >
-                  Logout
+                  {isLoggingOut ? 'Logging out...' : 'Logout'}
                 </button>
               </div>
             </div>
