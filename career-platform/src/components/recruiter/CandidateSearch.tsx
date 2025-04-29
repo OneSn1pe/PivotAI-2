@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
+import Link from 'next/link';
 
 export default function CandidateSearch() {
   const { userProfile } = useAuth();
@@ -250,9 +251,11 @@ export default function CandidateSearch() {
               </div>
             )}
             
-            <button className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
-              View Full Profile
-            </button>
+            <Link href={`/protected/recruiter/candidate/${candidate.uid}`} className="mt-4 block w-full">
+              <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                View Full Profile
+              </button>
+            </Link>
           </div>
         ))}
       </div>
