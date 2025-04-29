@@ -246,8 +246,8 @@ export default function TargetCompaniesForm() {
             <div className="ml-3">
               <p className="text-green-700 font-medium">
                 {redirecting 
-                  ? 'Your target companies have been saved! Redirecting to dashboard...' 
-                  : 'Your target companies have been saved successfully!'}
+                  ? `Your ${companies.length} target ${companies.length === 1 ? 'company has' : 'companies have'} been saved! Redirecting to dashboard...` 
+                  : `Your ${companies.length} target ${companies.length === 1 ? 'company has' : 'companies have'} been saved successfully!`}
               </p>
             </div>
           </div>
@@ -310,57 +310,63 @@ export default function TargetCompaniesForm() {
         </div>
       </div>
       
-      {companies.length > 0 ? (
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2 flex items-center">
-            <span>Your Target Companies</span>
-            <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">{companies.length}</span>
-          </h3>
-          <ul className="space-y-3">
-            {companies.map((company, index) => (
-              <li 
-                key={`${company.name}-${index}`}
-                className="bg-gray-50 p-4 rounded border border-gray-200 hover:shadow-md transition duration-200"
+      {/* List of added companies */}
+      <div className="space-y-4 my-6">
+        <h3 className="text-lg font-medium text-gray-800">Your Target Companies</h3>
+        
+        {companies.length === 0 ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No companies added</h3>
+            <p className="mt-1 text-sm text-gray-500">Use the form above to add companies you're targeting in your job search.</p>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => document.getElementById('companyName')?.focus()}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-semibold text-lg">{company.name}</h4>
-                  <button
-                    onClick={() => handleRemoveCompany(index)}
-                    className="text-red-600 hover:text-red-800 transition duration-200 p-1 rounded-full hover:bg-red-50"
-                    aria-label="Remove company"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                Add your first company
+              </button>
+            </div>
+          </div>
+        ) : (
+          companies.map((company, index) => (
+            <div key={index} className="bg-white shadow overflow-hidden sm:rounded-md p-4 border border-gray-200">
+              <div className="flex justify-between">
+                <div>
+                  <h4 className="text-md font-medium text-gray-800">{company.name}</h4>
+                  <div className="mt-2">
+                    <label htmlFor={`position-${index}`} className="block text-sm font-medium text-gray-700">
+                      Desired Position
+                    </label>
+                    <input
+                      type="text"
+                      id={`position-${index}`}
+                      value={company.position}
+                      onChange={(e) => handleUpdatePosition(index, e.target.value)}
+                      className="mt-1 p-2 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Specify your desired role"
+                    />
+                  </div>
                 </div>
-                <div className="mt-2">
-                  <label className="block text-sm text-gray-600 mb-1">
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    value={company.position}
-                    onChange={(e) => handleUpdatePosition(index, e.target.value)}
-                    placeholder="Desired position"
-                    className="border border-gray-300 rounded py-2 px-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center bg-gray-50 p-8 rounded-lg border border-gray-200 mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          <p className="text-gray-500 text-center">You haven't added any target companies yet.</p>
-          <p className="text-gray-500 text-center text-sm mt-1">Add companies you're interested in to get personalized recommendations.</p>
-        </div>
-      )}
+                <button
+                  onClick={() => handleRemoveCompany(index)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
       
       <button
+        type="button"
         onClick={handleSave}
         disabled={saving || companies.length === 0}
         className={`font-bold py-3 px-4 rounded w-full flex justify-center items-center transition duration-200 
@@ -378,12 +384,15 @@ export default function TargetCompaniesForm() {
           </>
         ) : (
           <>
-            Save Target Companies
-            {companies.length > 0 && (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-              </svg>
-            )}
+            Save {companies.length > 0 ? (
+              <span className="flex items-center">
+                <span className="mx-1">{companies.length}</span>
+                <span>{companies.length === 1 ? 'Company' : 'Companies'}</span>
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {companies.length}
+                </span>
+              </span>
+            ) : 'Target Companies'}
           </>
         )}
       </button>
