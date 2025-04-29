@@ -42,7 +42,7 @@ export default function Sidebar() {
     <aside className="bg-blue-700 text-white w-64 flex-shrink-0 hidden md:block">
       <div className="p-6">
         <Link href={isCandidate ? '/protected/candidate/dashboard' : '/protected/recruiter/dashboard'} className="text-xl font-bold">
-          Career Platform
+          PivotAI
         </Link>
       </div>
       

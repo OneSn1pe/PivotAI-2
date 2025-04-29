@@ -37,7 +37,7 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow">
       <div className="flex justify-between items-center px-6 py-4">
-        <h1 className="text-xl font-bold text-gray-800">Career Platform</h1>
+        <h1 className="text-xl font-bold text-gray-800">PivotAI</h1>
         
         <div className="flex items-center">
           {userProfile && (
