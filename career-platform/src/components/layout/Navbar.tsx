@@ -3,11 +3,21 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { UserRole } from '@/types/user';
 
 export default function Navbar() {
   const { userProfile, logout } = useAuth();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const getDashboardLink = () => {
+    if (!userProfile) return '/auth/login';
+    
+    return userProfile.role === UserRole.CANDIDATE
+      ? '/protected/candidate/dashboard'
+      : '/protected/recruiter/dashboard';
+  };
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
@@ -37,7 +47,12 @@ export default function Navbar() {
   return (
     <header className="bg-white shadow">
       <div className="flex justify-between items-center px-6 py-4">
-        <h1 className="text-xl font-bold text-gray-800">PivotAI</h1>
+        <Link 
+          href={getDashboardLink()} 
+          className="text-xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
+        >
+          PivotAI
+        </Link>
         
         <div className="flex items-center">
           {userProfile && (
