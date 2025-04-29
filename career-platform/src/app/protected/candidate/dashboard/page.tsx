@@ -6,14 +6,12 @@ import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CareerRoadmap, CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/config/firebase';
-import ResumeManager from '@/components/candidate/ResumeManager';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
+import ResumeManager from '@/components/candidate/ResumeManager';
 
 export default function CandidateDashboard() {
-  const { userProfile, logout } = useAuth();
+  const { userProfile } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const router = useRouter();
   const { downloadAndSaveFile, downloading } = useFileDownload();
@@ -63,15 +61,6 @@ export default function CandidateDashboard() {
       setDisplayFileName(candidateProfile.resumeFileName);
     }
   }, [candidateProfile?.resumeFileName]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
 
   const handleResumeUpdate = () => {
     // Refresh dashboard data after resume update
@@ -284,12 +273,6 @@ export default function CandidateDashboard() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Candidate Dashboard</h1>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-        >
-          Logout
-        </button>
       </div>
       
       {!candidateProfile?.resumeUrl && (
