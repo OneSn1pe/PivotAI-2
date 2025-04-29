@@ -294,7 +294,7 @@ export async function generateCareerRoadmap(
     debug.log(`API URL: ${apiUrl}`);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // Reduced timeout for initial request
     
     try {
       const response = await fetch(apiUrl, {
@@ -342,23 +342,34 @@ export async function generateCareerRoadmap(
         throw new Error('Failed to parse roadmap results. Please try again.');
       }
       
-      if (!data || !data.id || !Array.isArray(data.milestones)) {
+      if (!data || !data.id) {
         debug.error('Invalid roadmap data structure:', data);
         throw new Error('Invalid roadmap data returned from server');
       }
       
-      return data as CareerRoadmap;
+      // Return early with just the ID and empty milestones
+      // The milestones will be populated progressively via Firestore updates
+      return {
+        id: data.id,
+        candidateId: candidateId || '',
+        milestones: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
       
-      if (fetchError.name === 'AbortError') {
-        debug.error('Request timeout');
-        throw new Error('Roadmap generation timed out. Please try again.');
+      if (fetchError instanceof Error) {
+        if (fetchError.name === 'AbortError') {
+          debug.error('Request timeout');
+          throw new Error('Roadmap generation timed out. Please try again.');
+        }
+        throw fetchError;
       }
       
       debug.error('Fetch error:', fetchError);
-      throw fetchError;
+      throw new Error('An unknown error occurred during roadmap generation');
     }
     
   } catch (error) {
