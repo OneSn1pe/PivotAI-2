@@ -220,87 +220,89 @@ export default function CandidateDetailPage() {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left column - Candidate Info */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-bold mb-4">Candidate Information</h2>
+        {/* Left column - Candidate Info - Adding sticky scroll */}
+        <div className="lg:col-span-1 h-fit">
+          <div className="sticky top-6 space-y-6">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-bold mb-4">Candidate Information</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm text-gray-500">Name</h3>
+                  <p className="font-medium">{candidate.displayName}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm text-gray-500">Email</h3>
+                  <p className="font-medium">{candidate.email}</p>
+                </div>
+                
+                {isInterestedInCompany && (
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-blue-700">Interested in Your Company</h3>
+                    {targetPosition && typeof targetPosition === 'object' && (
+                      <p className="text-blue-800 font-medium mt-1">
+                        Position: {targetPosition.position}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
             
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm text-gray-500">Name</h3>
-                <p className="font-medium">{candidate.displayName}</p>
+            {/* Skills Section */}
+            {candidate.resumeAnalysis?.skills && candidate.resumeAnalysis.skills.length > 0 && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-bold mb-4">Skills</h2>
+                <div className="flex flex-wrap gap-2">
+                  {candidate.resumeAnalysis.skills.map((skill, index) => (
+                    <span 
+                      key={index}
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
-              
-              <div>
-                <h3 className="text-sm text-gray-500">Email</h3>
-                <p className="font-medium">{candidate.email}</p>
+            )}
+            
+            {/* Experience Section */}
+            {candidate.resumeAnalysis?.experience && candidate.resumeAnalysis.experience.length > 0 && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-xl font-bold mb-4">Experience</h2>
+                <ul className="space-y-3 list-disc pl-5 max-h-60 overflow-y-auto">
+                  {candidate.resumeAnalysis.experience.map((experience, index) => (
+                    <li key={index} className="text-gray-700">{experience}</li>
+                  ))}
+                </ul>
               </div>
+            )}
+            
+            {/* Strengths & Weaknesses Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {candidate.resumeAnalysis?.strengths && candidate.resumeAnalysis.strengths.length > 0 && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-xl font-bold mb-4">Strengths</h2>
+                  <ul className="space-y-2 list-disc pl-5 max-h-40 overflow-y-auto">
+                    {candidate.resumeAnalysis.strengths.map((strength, index) => (
+                      <li key={index} className="text-gray-700">{strength}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               
-              {isInterestedInCompany && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-700">Interested in Your Company</h3>
-                  {targetPosition && typeof targetPosition === 'object' && (
-                    <p className="text-blue-800 font-medium mt-1">
-                      Position: {targetPosition.position}
-                    </p>
-                  )}
+              {candidate.resumeAnalysis?.weaknesses && candidate.resumeAnalysis.weaknesses.length > 0 && (
+                <div className="bg-white rounded-lg shadow-lg p-6">
+                  <h2 className="text-xl font-bold mb-4">Areas to Improve</h2>
+                  <ul className="space-y-2 list-disc pl-5 max-h-40 overflow-y-auto">
+                    {candidate.resumeAnalysis.weaknesses.map((weakness, index) => (
+                      <li key={index} className="text-gray-700">{weakness}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
-          </div>
-          
-          {/* Skills Section */}
-          {candidate.resumeAnalysis?.skills && candidate.resumeAnalysis.skills.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Skills</h2>
-              <div className="flex flex-wrap gap-2">
-                {candidate.resumeAnalysis.skills.map((skill, index) => (
-                  <span 
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Experience Section */}
-          {candidate.resumeAnalysis?.experience && candidate.resumeAnalysis.experience.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h2 className="text-xl font-bold mb-4">Experience</h2>
-              <ul className="space-y-3 list-disc pl-5">
-                {candidate.resumeAnalysis.experience.map((experience, index) => (
-                  <li key={index} className="text-gray-700">{experience}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {/* Strengths & Weaknesses Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {candidate.resumeAnalysis?.strengths && candidate.resumeAnalysis.strengths.length > 0 && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-xl font-bold mb-4">Strengths</h2>
-                <ul className="space-y-2 list-disc pl-5">
-                  {candidate.resumeAnalysis.strengths.map((strength, index) => (
-                    <li key={index} className="text-gray-700">{strength}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {candidate.resumeAnalysis?.weaknesses && candidate.resumeAnalysis.weaknesses.length > 0 && (
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-xl font-bold mb-4">Areas to Improve</h2>
-                <ul className="space-y-2 list-disc pl-5">
-                  {candidate.resumeAnalysis.weaknesses.map((weakness, index) => (
-                    <li key={index} className="text-gray-700">{weakness}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
         
