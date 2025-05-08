@@ -32,9 +32,10 @@ export default function PositionPreferencesUpload({
   
   // Form states
   const [positionTitle, setPositionTitle] = useState('');
-  const [customPosition, setCustomPosition] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [pdfText, setPdfText] = useState('');
+  
+  // Extracted content states (hidden from user but still needed)
   const [description, setDescription] = useState('');
   const [requiredSkills, setRequiredSkills] = useState('');
   const [preferredSkills, setPreferredSkills] = useState('');
@@ -74,7 +75,7 @@ export default function PositionPreferencesUpload({
       const positionData = recruiterProfile.positionPreferences[positionTitle];
       setExistingPositionData(positionData);
       
-      // Pre-fill form fields with existing data
+      // Pre-fill form fields with existing data for hidden fields
       setDescription(positionData.description || '');
       setRequiredSkills(positionData.requiredSkills?.join(', ') || '');
       setPreferredSkills(positionData.preferredSkills?.join(', ') || '');
@@ -221,11 +222,8 @@ export default function PositionPreferencesUpload({
       return;
     }
     
-    // Determine the final position title
-    const finalPositionTitle = positionTitle === 'custom' ? customPosition : positionTitle;
-    
-    if (!finalPositionTitle) {
-      setError('Please select or enter a position title');
+    if (!positionTitle) {
+      setError('Please enter a position title');
       return;
     }
     
@@ -235,7 +233,7 @@ export default function PositionPreferencesUpload({
       
       // Create position preferences object
       const positionPrefs: PositionPreferences = {
-        title: finalPositionTitle,
+        title: positionTitle,
         description: description.trim(),
         requiredSkills: requiredSkills.split(',').map(s => s.trim()).filter(Boolean),
         preferredSkills: preferredSkills.split(',').map(s => s.trim()).filter(Boolean),
@@ -248,7 +246,7 @@ export default function PositionPreferencesUpload({
       // If file was uploaded, store it in Firebase
       if (file) {
         const uniqueId = `${recruiterProfile.uid}_${Date.now()}`;
-        const filePath = `position_preferences/${recruiterProfile.uid}/${uniqueId}_${finalPositionTitle.replace(/\s+/g, '_')}.pdf`;
+        const filePath = `position_preferences/${recruiterProfile.uid}/${uniqueId}_${positionTitle.replace(/\s+/g, '_')}.pdf`;
         
         debug.log(`Uploading position preferences PDF to path: ${filePath}`);
         const pdfUrl = await uploadFile(file, filePath);
@@ -268,20 +266,17 @@ export default function PositionPreferencesUpload({
       await updateDoc(userDocRef, {
         positionPreferences: {
           ...currentPrefs,
-          [finalPositionTitle]: positionPrefs
+          [positionTitle]: positionPrefs
         }
       });
       
       debug.log('Position preferences saved successfully');
       setSuccessMessage('Position preferences saved successfully!');
       
-      // Reset form if it's a new position
-      if (positionTitle === 'custom') {
-        setPositionTitle('');
-        setCustomPosition('');
-        setFile(null);
-        setPdfText('');
-      }
+      // Reset form
+      setPositionTitle('');
+      setFile(null);
+      setPdfText('');
       
       // Refresh user profile data
       if (updateUserProfile) {
@@ -297,13 +292,6 @@ export default function PositionPreferencesUpload({
       setError('Failed to save position preferences. Please try again.');
     }
   };
-  
-  // Available positions (current position + existing position preferences + custom option)
-  const availablePositions = Array.from(new Set([
-    recruiterProfile?.position || '',
-    ...currentPositions,
-    ...Object.keys(recruiterProfile?.positionPreferences || {})
-  ])).filter(Boolean);
   
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -329,34 +317,14 @@ export default function PositionPreferencesUpload({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Position Title
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <select
-                value={positionTitle}
-                onChange={(e) => setPositionTitle(e.target.value)}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="">-- Select Position --</option>
-                {availablePositions.map((pos) => (
-                  <option key={pos} value={pos}>{pos}</option>
-                ))}
-                <option value="custom">Add Custom Position</option>
-              </select>
-            </div>
-            
-            {positionTitle === 'custom' && (
-              <div>
-                <input
-                  type="text"
-                  value={customPosition}
-                  onChange={(e) => setCustomPosition(e.target.value)}
-                  placeholder="Enter position title"
-                  className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  required={positionTitle === 'custom'}
-                />
-              </div>
-            )}
-          </div>
+          <input
+            type="text"
+            value={positionTitle}
+            onChange={(e) => setPositionTitle(e.target.value)}
+            placeholder="Enter position title"
+            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            required
+          />
         </div>
         
         <div>
@@ -398,73 +366,6 @@ export default function PositionPreferencesUpload({
               )}
             </div>
           </div>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Position Description
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="Provide a brief description of the position"
-            required
-          ></textarea>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Required Skills (comma separated)
-          </label>
-          <textarea
-            value={requiredSkills}
-            onChange={(e) => setRequiredSkills(e.target.value)}
-            rows={3}
-            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="e.g., JavaScript, React, Node.js"
-            required
-          ></textarea>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Preferred Skills (comma separated)
-          </label>
-          <textarea
-            value={preferredSkills}
-            onChange={(e) => setPreferredSkills(e.target.value)}
-            rows={3}
-            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="e.g., TypeScript, GraphQL, AWS"
-          ></textarea>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Career Path (comma separated)
-          </label>
-          <textarea
-            value={careerPath}
-            onChange={(e) => setCareerPath(e.target.value)}
-            rows={2}
-            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="e.g., Junior Developer, Developer, Senior Developer, Lead Developer"
-          ></textarea>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Learning Resources (one per line)
-          </label>
-          <textarea
-            value={learningResources}
-            onChange={(e) => setLearningResources(e.target.value)}
-            rows={3}
-            className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            placeholder="e.g., https://example.com/course"
-          ></textarea>
         </div>
         
         <div>
