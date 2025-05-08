@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { CandidateProfile } from '@/types/user';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface CandidateCardProps {
   candidate: CandidateProfile;
@@ -26,21 +25,9 @@ export default function CandidateCard({
   recruiterUid,
   compact = false
 }: CandidateCardProps) {
-  const { refreshToken } = useAuth();
-  
   const toggleBookmark = async () => {
     // Call the parent component's handler
     onBookmarkToggle(candidate.uid);
-  };
-  
-  const handleViewProfile = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    try {
-      await refreshToken();
-      window.location.href = `/protected/recruiter/candidate/${candidate.uid}`;
-    } catch (error) {
-      console.error('Navigation error:', error);
-    }
   };
 
   return (
@@ -102,9 +89,7 @@ export default function CandidateCard({
         </div>
       )}
       
-      <Link href={`/protected/recruiter/candidate/${candidate.uid}`} 
-            className={`${compact ? 'mt-3' : 'mt-4'} block w-full`}
-            onClick={handleViewProfile}>
+      <Link href={`/protected/recruiter/candidate/${candidate.uid}`} className={`${compact ? 'mt-3' : 'mt-4'} block w-full`}>
         <button className={`w-full bg-blue-500 hover:bg-blue-600 text-white rounded text-sm ${compact ? 'py-1 px-3' : 'py-2 px-3'}`}>
           {compact ? 'View Profile' : 'View Full Profile'}
         </button>

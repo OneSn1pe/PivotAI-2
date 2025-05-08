@@ -27,7 +27,6 @@ interface AuthContextType {
   loginWithGoogle: (role?: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: () => Promise<void>;
-  refreshToken: (force?: boolean) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -40,60 +39,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Helper function to set session cookie with consistent settings
-  const setSessionCookie = (token: string, maxAge: number = 28800) => { // 8 hours by default
-    const secure = window.location.protocol === 'https:';
-    const domain = window.location.hostname;
-    document.cookie = `session=${token}; path=/; max-age=${maxAge}; ${secure ? 'secure; ' : ''}samesite=strict; domain=${domain}`;
-  };
-
-  // Token refresh function that can be called when needed
-  const refreshToken = async (force: boolean = false) => {
-    if (!currentUser) return null;
-    
-    try {
-      const token = await currentUser.getIdToken(force);
-      setSessionCookie(token);
-      return token;
-    } catch (error) {
-      console.error('Token refresh error:', error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     // Set persistence to LOCAL
-    setPersistence(auth, browserLocalPersistence)
-      .then(() => console.log('Auth persistence set to LOCAL'))
-      .catch(error => console.error('Error setting persistence:', error));
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
 
     let mounted = true;
-    
-    // Set up token refresh interval (every hour)
-    const tokenRefreshInterval = setInterval(() => {
-      if (currentUser) {
-        console.log('Refreshing token...');
-        refreshToken(true)
-          .then(token => {
-            if (token) console.log('Token refreshed successfully');
-          })
-          .catch(error => console.error('Error refreshing token:', error));
-      }
-    }, 60 * 60 * 1000); // 1 hour
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!mounted) return;
 
       try {
-        console.log('Auth state changed:', user ? 'User logged in' : 'No user');
         setCurrentUser(user);
         
         if (user) {
-          // Get the ID token with force refresh to ensure it's new
-          const token = await user.getIdToken(true);
+          // Get the ID token
+          const token = await user.getIdToken();
           
-          // Set the token in a cookie with extended expiration (8 hours)
-          setSessionCookie(token, 28800);
+          // Set the token in a cookie
+          document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
           
           // Fetch user profile from Firestore
           const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -106,14 +69,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               { lastLogin: new Date() }, 
               { merge: true }
             );
-          } else {
-            console.warn(`User document not found for uid: ${user.uid}`);
           }
         } else {
           setUserProfile(null);
           // Clear the session cookie
           document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-          document.cookie = 'session=; path=/; max-age=0; domain=' + window.location.hostname;
         }
       } catch (error) {
         console.error('Error in auth state change:', error);
@@ -127,7 +87,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       mounted = false;
       unsubscribe();
-      clearInterval(tokenRefreshInterval);
     };
   }, []);
 
@@ -305,7 +264,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loginWithGoogle,
     logout,
     updateUserProfile,
-    refreshToken,
   };
 
   return (
