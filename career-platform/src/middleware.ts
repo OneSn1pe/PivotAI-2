@@ -27,12 +27,6 @@ export function middleware(request: NextRequest) {
   const isProtectedPath = path.startsWith('/protected');
   const isFromProtectedPath = referrer.includes('/protected');
   
-  // Check if this is a request to Firebase/Firestore
-  const isFirestoreRequest = 
-    path.includes('firestore.googleapis.com') || 
-    referrer.includes('firestore.googleapis.com') ||
-    request.headers.get('origin')?.includes('firestore.googleapis.com');
-  
   // Get the token from the session
   const token = request.cookies.get('session')?.value;
   
@@ -43,47 +37,42 @@ export function middleware(request: NextRequest) {
     isApiPath,
     isProtectedPath,
     isFromProtectedPath,
-    isFirestoreRequest,
     hasToken: !!token,
     tokenLength: token?.length
   });
 
-  // Add CORS headers for all responses
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-    'Access-Control-Max-Age': '86400',
-  };
-
-  // Special handling for Firestore requests and OPTIONS requests
-  if (isFirestoreRequest || request.method === 'OPTIONS') {
-    debug.log('Processing Firestore or OPTIONS request');
-    
-    const response = new NextResponse(
-      request.method === 'OPTIONS' ? null : undefined,
-      {
-        status: request.method === 'OPTIONS' ? 204 : undefined,
-        headers: corsHeaders,
-      }
-    );
-    
-    // Add debug markers
-    response.headers.set('x-middleware-processed', 'true');
-    response.headers.set('x-firestore-request', String(isFirestoreRequest));
-    
-    return response;
-  }
-
-  // Handle API routes with CORS headers
+  // Handle API routes separately - don't redirect them
   if (isApiPath) {
     debug.log(`Processing API route: ${request.method} ${path}`);
+    
+    // Handle OPTIONS request for CORS
+    if (request.method === 'OPTIONS') {
+      debug.log('Handling OPTIONS request for CORS preflight');
+      
+      const response = new NextResponse(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+      
+      // Add marker for debugging
+      response.headers.set('x-middleware-processed', 'true');
+      
+      return response;
+    }
+
+    // Modify response for all API requests
+    debug.log(`Modifying response for ${request.method} API request to ${path}`);
     const response = NextResponse.next();
     
-    // Add CORS headers to all API responses
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
+    // Add CORS headers to response
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     // Add marker for debugging
     response.headers.set('x-middleware-processed', 'true');
@@ -116,11 +105,6 @@ export function middleware(request: NextRequest) {
       response.headers.set('x-debug-from', referrer);
       response.headers.set('x-debug-to', path);
       
-      // Ensure we pass through CORS headers
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      
       return response;
     }
     
@@ -133,20 +117,11 @@ export function middleware(request: NextRequest) {
       
       const response = NextResponse.next();
       response.headers.set('x-debug-auth-warning', 'missing-token-internal-nav');
-      // Also add CORS headers
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
       return response;
     }
     
     // Otherwise just proceed normally for internal protected navigation
-    const response = NextResponse.next();
-    // Add CORS headers to all responses
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-    return response;
+    return NextResponse.next();
   }
 
   // Redirect unauthenticated users to login for protected paths
@@ -161,12 +136,7 @@ export function middleware(request: NextRequest) {
   }
 
   debug.log(`Passing through request: ${request.method} ${path}`);
-  // Add CORS headers to the default response too
-  const response = NextResponse.next();
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-  return response;
+  return NextResponse.next();
 }
 
 // Configure which routes should trigger this middleware
