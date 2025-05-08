@@ -12,6 +12,7 @@
         "debug-firebase": "node scripts/debug-firebase.js",
         "setup-service-account": "node scripts/setup-service-account.js",
         "fix-cors": "node scripts/fix-cors.js",
+        "fix-firestore-cors": "node scripts/fix-firestore-cors.js",
         "debug": "npm run debug-firebase && npm run setup-service-account && npm run fix-cors",
         "standardize-profiles": "node scripts/standardize-profiles.js"
     },

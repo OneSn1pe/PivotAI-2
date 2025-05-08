@@ -179,83 +179,121 @@ export default function CandidateDetailPage() {
     
     async function fetchCandidateData() {
       try {
+        // Add connection status check
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+          debug.error('Network connection unavailable');
+          setError('Network connection unavailable. Please check your internet connection.');
+          setLoading(false);
+          return;
+        }
+        
         setLoading(true);
         debug.log('Fetching candidate profile...');
         
         // Fetch candidate profile
         const candidateDocRef = doc(db, 'users', candidateId);
-        const candidateDocSnap = await getDoc(candidateDocRef);
         
-        if (!candidateDocSnap.exists()) {
-          debug.error('Candidate not found in Firestore');
-          setError('Candidate not found');
-          setLoading(false);
-          return;
-        }
-        
-        const candidateData = candidateDocSnap.data() as CandidateProfile;
-        debug.info('Candidate data fetched successfully', { 
-          candidateName: candidateData.displayName,
-          hasSkills: !!candidateData.skills,
-          hasResumeAnalysis: !!candidateData.resumeAnalysis,
-          hasTargetCompanies: !!candidateData.targetCompanies,
-        });
-        
-        logComponent('CandidateDetailPage', 'Candidate data loaded', {
-          name: candidateData.displayName,
-          uid: candidateData.uid
-        });
-        
-        setCandidate(candidateData);
-        
-        // Set loading to false after getting basic profile
-        setLoading(false);
-        
-        // Set roadmap loading separately
-        setRoadmapLoading(true);
-        debug.log('Fetching roadmap data...');
-        
-        // Fetch candidate's roadmap
-        const roadmapQuery = query(
-          collection(db, 'roadmaps'),
-          where('candidateId', '==', candidateId)
-        );
-        
-        const roadmapSnapshot = await getDocs(roadmapQuery);
-        
-        if (!roadmapSnapshot.empty) {
-          const roadmapDoc = roadmapSnapshot.docs[0];
-          const roadmapData = roadmapDoc.data();
-          debug.log('Roadmap data found');
+        try {
+          const candidateDocSnap = await getDoc(candidateDocRef);
           
-          // Ensure the milestones are properly converted for display
-          const formattedMilestones = roadmapData.milestones.map((milestone: any) => ({
-            ...milestone,
-            id: milestone.id || `milestone-${Math.random().toString(36).substr(2, 9)}`,
-            // Ensure created timestamps are converted to dates if needed
-            createdAt: milestone.createdAt instanceof Date ? 
-                      milestone.createdAt : 
-                      (milestone.createdAt?.toDate ? milestone.createdAt.toDate() : new Date())
-          }));
+          if (!candidateDocSnap.exists()) {
+            debug.error('Candidate not found in Firestore');
+            setError('Candidate not found');
+            setLoading(false);
+            return;
+          }
           
-          setRoadmap({
-            ...roadmapData,
-            id: roadmapDoc.id,
-            candidateId: candidateId,
-            milestones: formattedMilestones,
-            // Convert any Firebase timestamps to JS Dates
-            createdAt: roadmapData.createdAt?.toDate?.() || new Date(),
-            updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
+          const candidateData = candidateDocSnap.data() as CandidateProfile;
+          debug.info('Candidate data fetched successfully', { 
+            candidateName: candidateData.displayName,
+            hasSkills: !!candidateData.skills,
+            hasResumeAnalysis: !!candidateData.resumeAnalysis,
+            hasTargetCompanies: !!candidateData.targetCompanies,
           });
-        } else {
-          debug.log('No roadmap found for candidate');
+          
+          logComponent('CandidateDetailPage', 'Candidate data loaded', {
+            name: candidateData.displayName,
+            uid: candidateData.uid
+          });
+          
+          setCandidate(candidateData);
+          
+          // Set loading to false after getting basic profile
+          setLoading(false);
+          
+          // Set roadmap loading separately
+          setRoadmapLoading(true);
+          debug.log('Fetching roadmap data...');
+          
+          // Fetch candidate's roadmap
+          try {
+            const roadmapQuery = query(
+              collection(db, 'roadmaps'),
+              where('candidateId', '==', candidateId)
+            );
+            
+            const roadmapSnapshot = await getDocs(roadmapQuery);
+            
+            if (!roadmapSnapshot.empty) {
+              const roadmapDoc = roadmapSnapshot.docs[0];
+              const roadmapData = roadmapDoc.data();
+              debug.log('Roadmap data found');
+              
+              // Ensure the milestones are properly converted for display
+              const formattedMilestones = roadmapData.milestones.map((milestone: any) => ({
+                ...milestone,
+                id: milestone.id || `milestone-${Math.random().toString(36).substr(2, 9)}`,
+                // Ensure created timestamps are converted to dates if needed
+                createdAt: milestone.createdAt instanceof Date ? 
+                          milestone.createdAt : 
+                          (milestone.createdAt?.toDate ? milestone.createdAt.toDate() : new Date())
+              }));
+              
+              setRoadmap({
+                ...roadmapData,
+                id: roadmapDoc.id,
+                candidateId: candidateId,
+                milestones: formattedMilestones,
+                // Convert any Firebase timestamps to JS Dates
+                createdAt: roadmapData.createdAt?.toDate?.() || new Date(),
+                updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
+              });
+            } else {
+              debug.log('No roadmap found for candidate');
+            }
+          } catch (roadmapError: any) {
+            // Handle roadmap errors gracefully - just log, don't break the whole page
+            debug.error('Error fetching roadmap:', roadmapError);
+            // We still have the candidate data, so don't set an error state
+          } finally {
+            setRoadmapLoading(false);
+          }
+        } catch (firestoreError: any) {
+          // Handle Firestore errors specific to candidate data fetching
+          debug.error('Firestore error fetching candidate data:', firestoreError);
+          
+          if (firestoreError.name === 'FirebaseError' && firestoreError.code === 'permission-denied') {
+            setError('Permission denied when accessing candidate data. Please try again later.');
+          } else if (firestoreError.message && firestoreError.message.includes('load failed')) {
+            setError('Connection to database failed. This may be a CORS issue. Please try refreshing the page.');
+          } else if (firestoreError.message && firestoreError.message.includes('network error')) {
+            setError('Network error when connecting to database. Please check your internet connection.');
+          } else if (firestoreError.message && firestoreError.message.includes('access control checks')) {
+            setError('Connection to database blocked. This is a CORS issue. Try clearing your browser cache and refreshing.');
+          } else {
+            setError('Failed to load candidate information. Please try again later.');
+          }
+          
+          setLoading(false);
+          setRoadmapLoading(false);
         }
-        
-        setRoadmapLoading(false);
       } catch (err) {
+        // Catch-all for any other errors
         console.error('Error fetching candidate data:', err);
         debug.error('Error during data fetching', err);
-        setError('Failed to load candidate information. Please try again later.');
+        
+        // Provide a generic error message
+        setError('An unexpected error occurred. Please try refreshing the page.');
         setLoading(false);
         setRoadmapLoading(false);
       }

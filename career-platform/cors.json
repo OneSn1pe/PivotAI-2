@@ -1,10 +1,13 @@
 [
   {
-    "origin": ["https://www.pivotai.me", "http://www.pivotai.me", "https://pivotai.me", "http://pivotai.me", "http://localhost:3000"],
-    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "origin": ["https://www.pivotai.me", "http://www.pivotai.me", "https://pivotai.me", "http://pivotai.me", "http://localhost:3000", "https://pivotai-7f6ef.firebaseapp.com", "https://firestore.googleapis.com"],
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     "responseHeader": [
       "Content-Type",
       "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Credentials",
+      "Access-Control-Allow-Headers",
+      "Access-Control-Allow-Methods",
       "Authorization",
       "X-Requested-With",
       "X-HTTP-Method-Override",
@@ -12,6 +15,6 @@
       "Content-Disposition",
       "Content-Length"
     ],
-    "maxAgeSeconds": 3600
+    "maxAgeSeconds": 86400
   }
 ] 
