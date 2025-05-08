@@ -8,7 +8,7 @@ import { CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
 
 export default function RecruiterSearchPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, refreshToken } = useAuth();
   const router = useRouter();
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,22 @@ export default function RecruiterSearchPage() {
       candidate.resumeAnalysis?.experience.some(exp => exp.toLowerCase().includes(searchLower))
     );
   });
+
+  // Handle navigation to candidate profile with token refresh
+  const handleViewProfile = async (candidateId: string) => {
+    try {
+      console.log('Navigating to candidate profile:', candidateId);
+      
+      // Refresh token before navigation to ensure it's valid
+      await refreshToken();
+      
+      // Use a more reliable navigation method
+      window.location.href = `/protected/recruiter/candidate/${candidateId}`;
+    } catch (error) {
+      console.error('Navigation error:', error);
+      alert('There was an error navigating to the candidate profile. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -137,9 +153,7 @@ export default function RecruiterSearchPage() {
             )}
             
             <button 
-              onClick={() => {
-                router.push(`/protected/recruiter/candidate/${candidate.uid}`);
-              }} 
+              onClick={() => handleViewProfile(candidate.uid)} 
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
             >
               View Profile

@@ -8,7 +8,7 @@ import { CandidateProfile, UserRole, RecruiterProfile, TargetCompany } from '@/t
 import { useRouter } from 'next/navigation';
 
 export default function InterestedCandidatesPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, refreshToken } = useAuth();
   const recruiterProfile = userProfile as RecruiterProfile | null;
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,22 @@ export default function InterestedCandidatesPage() {
     
     fetchInterestedCandidates();
   }, [recruiterProfile]);
+
+  // Handle navigation to candidate profile with token refresh
+  const handleViewProfile = async (candidateId: string) => {
+    try {
+      console.log('Navigating to candidate profile:', candidateId);
+      
+      // Refresh token before navigation to ensure it's valid
+      await refreshToken();
+      
+      // Use a more reliable navigation method
+      window.location.href = `/protected/recruiter/candidate/${candidateId}`;
+    } catch (error) {
+      console.error('Navigation error:', error);
+      alert('There was an error navigating to the candidate profile. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -134,7 +150,7 @@ export default function InterestedCandidatesPage() {
               )}
 
               <button 
-                onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
+                onClick={() => handleViewProfile(candidate.uid)}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
               >
                 View Full Profile

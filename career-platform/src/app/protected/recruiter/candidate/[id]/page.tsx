@@ -9,7 +9,7 @@ import { CandidateProfile, CareerRoadmap, RecruiterProfile } from '@/types/user'
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
 
 export default function CandidateDetailPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, loading: authLoading, currentUser } = useAuth();
   const recruiterProfile = userProfile as RecruiterProfile | null;
   const router = useRouter();
   const params = useParams();
@@ -20,13 +20,46 @@ export default function CandidateDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('CandidateDetailPage mount - Auth state:', {
+      authLoading,
+      userProfileExists: !!userProfile,
+      candidateId,
+      currentUserExists: !!currentUser
+    });
+    
+    // Refresh token on mount to ensure it doesn't expire during navigation
+    if (currentUser) {
+      currentUser.getIdToken(true)
+        .then(token => {
+          // Set a longer expiration time (8 hours)
+          document.cookie = `session=${token}; path=/; max-age=28800; secure; samesite=strict`;
+          console.log('Token refreshed');
+        })
+        .catch(err => console.error('Token refresh error:', err));
+    }
+  }, [currentUser, userProfile, authLoading, candidateId]);
   
   useEffect(() => {
+    // Wait for auth to initialize before checking conditions
+    if (authLoading) {
+      return;
+    }
+    
+    setInitializing(false);
+    
     // Ensure we have a candidateId and the recruiter is authenticated
-    if (!candidateId || !recruiterProfile) {
-      setError(!candidateId ? 'Candidate ID not provided' : 'Authentication required');
+    if (!candidateId) {
+      setError('Candidate ID not provided');
       setLoading(false);
       return;
+    }
+    
+    if (!recruiterProfile) {
+      console.warn('Missing recruiter profile, but continuing with fetch attempt');
     }
     
     async function fetchCandidateData() {
@@ -95,17 +128,24 @@ export default function CandidateDetailPage() {
     }
     
     fetchCandidateData();
-  }, [candidateId, recruiterProfile]);
+  }, [candidateId, recruiterProfile, authLoading]);
   
-  if (loading) {
+  // Show full-page loading spinner while auth is initializing or data is loading
+  if (authLoading || initializing || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-3"></div>
+          <p className="text-gray-600">
+            {authLoading ? 'Authenticating...' : 'Loading candidate profile...'}
+          </p>
+        </div>
       </div>
     );
   }
   
-  if (error) {
+  // Only show error if we're not still initializing
+  if (error && !initializing && !authLoading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 p-6 rounded-lg text-center">
@@ -122,7 +162,8 @@ export default function CandidateDetailPage() {
     );
   }
   
-  if (!candidate) {
+  // Only show candidate not found if we're not still initializing
+  if (!candidate && !initializing && !authLoading && !loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
@@ -137,6 +178,11 @@ export default function CandidateDetailPage() {
         </div>
       </div>
     );
+  }
+  
+  // Safety check - don't render main content if candidate is missing
+  if (!candidate) {
+    return null;
   }
   
   // Check if the candidate has the recruiter's company as a target
