@@ -1,49 +1,211 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, CareerRoadmap, RecruiterProfile } from '@/types/user';
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
+import { initDebug, logComponent, logAuth, logCookies } from '@/utils/debugUtils';
+
+// Debug logger for easier tracking
+const debug = {
+  log: (...args: any[]) => console.log('[CandidateDetailPage]', ...args),
+  error: (...args: any[]) => console.error('[CandidateDetailPage]', ...args),
+  warn: (...args: any[]) => console.warn('[CandidateDetailPage]', ...args),
+  info: (...args: any[]) => console.info('[CandidateDetailPage]', ...args),
+};
 
 export default function CandidateDetailPage() {
-  const { userProfile } = useAuth();
+  debug.log('Component rendering started');
+  
+  // Initialize debug utilities with a slight delay to ensure params are loaded
+  useEffect(() => {
+    setTimeout(() => {
+      initDebug('CandidateDetailPage');
+      
+      // Check for navigation info in sessionStorage
+      try {
+        const lastNav = sessionStorage.getItem('lastNavigation');
+        if (lastNav) {
+          logComponent('CandidateDetailPage', 'Found navigation data in sessionStorage', JSON.parse(lastNav));
+        }
+      } catch (e) {
+        debug.error('Error reading sessionStorage', e);
+      }
+    }, 50);
+  }, []);
+  
+  const { userProfile, loading: authLoading, currentUser } = useAuth();
   const recruiterProfile = userProfile as RecruiterProfile | null;
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const candidateId = params.id as string;
+  const navigationSource = searchParams.get('from');
+  
+  // Log the initial state
+  debug.info('Initial render', { 
+    candidateId, 
+    authLoading, 
+    hasUserProfile: !!userProfile, 
+    hasCurrentUser: !!currentUser,
+    navigationSource,
+    userRole: userProfile?.role
+  });
   
   const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [componentMounted, setComponentMounted] = useState(false);
+  const [authRetryCount, setAuthRetryCount] = useState(0);
+  
+  // Add an effect to check the authentication state on mount
+  useEffect(() => {
+    debug.log('Component mounted');
+    setComponentMounted(true);
+    
+    // Check authentication cookies for debugging
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    logCookies('Authentication cookies on component mount');
+    
+    debug.info('Authentication state on mount', { 
+      cookies: Object.keys(cookies),
+      hasSessionCookie: 'session' in cookies,
+      authLoading, 
+      hasUserProfile: !!userProfile
+    });
+    
+    // If we have navigation source but no auth yet, we might need to retry
+    if (navigationSource && authLoading && !userProfile && authRetryCount < 3) {
+      debug.warn('Auth not ready yet, but we have navigation source - will retry', {
+        navigationSource,
+        authRetryCount
+      });
+      
+      // Set a timeout to increment retry counter
+      const timeoutId = setTimeout(() => {
+        setAuthRetryCount(prev => prev + 1);
+        logAuth('Auth retry triggered', { attempt: authRetryCount + 1 });
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+    
+    // Cleanup function
+    return () => {
+      debug.log('Component will unmount');
+    };
+  }, [navigationSource, authLoading, userProfile, authRetryCount]);
+  
+  useEffect(() => {
+    // Log whenever auth state changes
+    logAuth('Auth state changed', {
+      authLoading,
+      hasUserProfile: !!userProfile,
+      hasCurrentUser: !!currentUser,
+      userRole: userProfile?.role,
+      retryCount: authRetryCount
+    });
+  }, [authLoading, userProfile, currentUser, authRetryCount]);
   
   useEffect(() => {
     // Ensure we have a candidateId and the recruiter is authenticated
-    if (!candidateId || !recruiterProfile) {
-      setError(!candidateId ? 'Candidate ID not provided' : 'Authentication required');
+    if (!candidateId) {
+      debug.error('No candidate ID provided');
+      setError('Candidate ID not provided');
       setLoading(false);
       return;
     }
     
+    // Special handling for navigation from interested page
+    if (navigationSource === 'interested' && !recruiterProfile && !authLoading) {
+      debug.warn('Navigation from interested page but no recruiter profile yet', {
+        hasSessionStorage: typeof sessionStorage !== 'undefined',
+        retryCount: authRetryCount
+      });
+      
+      // Check if we have navigation info in sessionStorage
+      try {
+        const lastNav = sessionStorage.getItem('lastNavigation');
+        if (lastNav) {
+          const navData = JSON.parse(lastNav);
+          logComponent('CandidateDetailPage', 'Using navigation data to diagnose issues', navData);
+          
+          if (navData.hasToken && authRetryCount < 2) {
+            // We had a token during navigation but auth hasn't loaded yet
+            // Let's wait for auth to load by returning early
+            debug.info('Token existed during navigation, waiting for auth to catch up');
+            return;
+          }
+        }
+      } catch (e) {
+        debug.error('Error processing sessionStorage data', e);
+      }
+    }
+    
+    if (authLoading && authRetryCount < 3) {
+      debug.log('Auth is still loading, waiting...', { retryCount: authRetryCount });
+      return; // Don't proceed until auth is done loading
+    }
+    
+    if (!recruiterProfile) {
+      debug.error('No recruiter profile available, auth state:', { 
+        authLoading, 
+        hasCurrentUser: !!currentUser,
+        retryCount: authRetryCount
+      });
+      
+      // If we've retried a few times and still no auth, show the error
+      if (authRetryCount >= 3) {
+        setError('Authentication required. You might need to log in again.');
+        setLoading(false);
+      }
+      return;
+    }
+    
+    logComponent('CandidateDetailPage', 'Starting candidate data fetch', { 
+      candidateId, 
+      recruiterCompany: recruiterProfile?.company 
+    });
+    
     async function fetchCandidateData() {
       try {
         setLoading(true);
+        debug.log('Fetching candidate profile...');
         
         // Fetch candidate profile
         const candidateDocRef = doc(db, 'users', candidateId);
         const candidateDocSnap = await getDoc(candidateDocRef);
         
         if (!candidateDocSnap.exists()) {
+          debug.error('Candidate not found in Firestore');
           setError('Candidate not found');
           setLoading(false);
           return;
         }
         
         const candidateData = candidateDocSnap.data() as CandidateProfile;
+        debug.info('Candidate data fetched successfully', { 
+          candidateName: candidateData.displayName,
+          hasSkills: !!candidateData.skills,
+          hasResumeAnalysis: !!candidateData.resumeAnalysis,
+          hasTargetCompanies: !!candidateData.targetCompanies,
+        });
+        
+        logComponent('CandidateDetailPage', 'Candidate data loaded', {
+          name: candidateData.displayName,
+          uid: candidateData.uid
+        });
+        
         setCandidate(candidateData);
         
         // Set loading to false after getting basic profile
@@ -51,6 +213,7 @@ export default function CandidateDetailPage() {
         
         // Set roadmap loading separately
         setRoadmapLoading(true);
+        debug.log('Fetching roadmap data...');
         
         // Fetch candidate's roadmap
         const roadmapQuery = query(
@@ -63,6 +226,7 @@ export default function CandidateDetailPage() {
         if (!roadmapSnapshot.empty) {
           const roadmapDoc = roadmapSnapshot.docs[0];
           const roadmapData = roadmapDoc.data();
+          debug.log('Roadmap data found');
           
           // Ensure the milestones are properly converted for display
           const formattedMilestones = roadmapData.milestones.map((milestone: any) => ({
@@ -83,11 +247,14 @@ export default function CandidateDetailPage() {
             createdAt: roadmapData.createdAt?.toDate?.() || new Date(),
             updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
           });
+        } else {
+          debug.log('No roadmap found for candidate');
         }
         
         setRoadmapLoading(false);
       } catch (err) {
         console.error('Error fetching candidate data:', err);
+        debug.error('Error during data fetching', err);
         setError('Failed to load candidate information. Please try again later.');
         setLoading(false);
         setRoadmapLoading(false);
@@ -95,12 +262,39 @@ export default function CandidateDetailPage() {
     }
     
     fetchCandidateData();
-  }, [candidateId, recruiterProfile]);
+  }, [candidateId, recruiterProfile, authLoading, currentUser, navigationSource, authRetryCount]);
+  
+  // Debug rendering state
+  debug.log('Rendering with state', { 
+    loading, 
+    hasError: !!error, 
+    hasCandidate: !!candidate,
+    authLoading,
+    componentMounted
+  });
+  
+  if (authLoading) {
+    debug.log('Rendering auth loading state');
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600">Authenticating...</p>
+          <p className="text-sm text-gray-400 mt-2">Debug: Loading auth from {navigationSource || 'unknown'}</p>
+        </div>
+      </div>
+    );
+  }
   
   if (loading) {
+    debug.log('Rendering data loading state');
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <p className="text-gray-600">Loading candidate profile...</p>
+          <p className="text-sm text-gray-400 mt-2">Debug: Loading from {navigationSource || 'unknown'}</p>
+        </div>
       </div>
     );
   }
