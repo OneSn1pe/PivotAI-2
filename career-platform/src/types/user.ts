@@ -28,7 +28,6 @@ export enum UserRole {
     company: string;
     position: string;
     bookmarkedCandidates?: string[];
-    positionPreferences?: Record<string, PositionPreferences>;
   }
   
   export interface ResumeAnalysis {
@@ -83,17 +82,4 @@ export enum UserRole {
       url: string;
       type: 'article' | 'video' | 'course' | 'book' | 'documentation';
     }[];
-  }
-
-  export interface PositionPreferences {
-    title: string;
-    description: string;
-    requiredSkills: string[];
-    preferredSkills: string[];
-    careerPath: string[];
-    learningResources?: string[];
-    uploadedDocUrl?: string;
-    uploadedFileName?: string;
-    createdAt: Date;
-    updatedAt: Date;
   }

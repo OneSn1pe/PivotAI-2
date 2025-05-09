@@ -6,60 +6,19 @@ import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, UserRole, RecruiterProfile, TargetCompany } from '@/types/user';
 import { useRouter } from 'next/navigation';
-import { initDebug, logComponent, logNavigation, logCookies, debugBeforeNavigation } from '@/utils/debugUtils';
-
-// Debug logger for easier tracking
-const debug = {
-  log: (...args: any[]) => console.log('[InterestedCandidatesPage]', ...args),
-  error: (...args: any[]) => console.error('[InterestedCandidatesPage]', ...args),
-  info: (...args: any[]) => console.info('[InterestedCandidatesPage]', ...args),
-  warn: (...args: any[]) => console.warn('[InterestedCandidatesPage]', ...args),
-};
 
 export default function InterestedCandidatesPage() {
-  debug.log('Component rendering started');
-  
-  // Initialize debug utilities
-  useEffect(() => {
-    initDebug('InterestedCandidatesPage');
-  }, []);
-  
-  const { userProfile, loading: authLoading, currentUser } = useAuth();
+  const { userProfile } = useAuth();
   const recruiterProfile = userProfile as RecruiterProfile | null;
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  
-  // Log the initial state
-  debug.info('Initial render', { 
-    authLoading, 
-    hasUserProfile: !!userProfile, 
-    hasCurrentUser: !!currentUser,
-    userRole: userProfile?.role
-  });
 
   useEffect(() => {
-    // Log auth state changes
-    debug.info('Auth state changed', {
-      authLoading,
-      hasUserProfile: !!userProfile,
-      hasCurrentUser: !!currentUser,
-      userRole: userProfile?.role,
-      recruiterCompany: recruiterProfile?.company
-    });
-  }, [authLoading, userProfile, currentUser, recruiterProfile]);
-
-  useEffect(() => {
-    debug.log('Fetching interested candidates started');
-    
     async function fetchInterestedCandidates() {
-      if (!recruiterProfile) {
-        debug.warn('No recruiter profile available, aborting fetch');
-        return;
-      }
+      if (!recruiterProfile) return;
       
       try {
-        debug.log('Getting candidates from Firestore');
         // Get all candidates
         const candidatesQuery = query(
           collection(db, 'users'),
@@ -67,7 +26,6 @@ export default function InterestedCandidatesPage() {
         );
         
         const snapshot = await getDocs(candidatesQuery);
-        debug.info('Candidates fetched', { count: snapshot.docs.length });
         
         // Filter candidates who have the recruiter's company in their target companies
         const interestedCandidates = snapshot.docs
@@ -86,15 +44,9 @@ export default function InterestedCandidatesPage() {
             });
           });
         
-        debug.info('Filtered interested candidates', { 
-          count: interestedCandidates.length,
-          company: recruiterProfile.company 
-        });
-        
         setCandidates(interestedCandidates);
         setLoading(false);
       } catch (error) {
-        debug.error('Error fetching interested candidates:', error);
         console.error('Error fetching interested candidates:', error);
         setLoading(false);
       }
@@ -102,49 +54,6 @@ export default function InterestedCandidatesPage() {
     
     fetchInterestedCandidates();
   }, [recruiterProfile]);
-
-  const handleViewProfile = (candidateId: string) => {
-    debug.log('View profile clicked for candidate', candidateId);
-    logComponent('InterestedCandidatesPage', 'View profile button clicked', { candidateId });
-    
-    // Check authentication state before navigation
-    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-    
-    debug.info('Authentication state before navigation', {
-      cookies: Object.keys(cookies),
-      hasSessionCookie: 'session' in cookies,
-      authLoading,
-      hasUserProfile: !!userProfile
-    });
-    
-    // Enhanced logging before navigation
-    logCookies('Cookies before navigation to candidate profile');
-    
-    // Navigate with source parameter
-    const targetUrl = `/protected/recruiter/candidate/${candidateId}?from=interested`;
-    debug.log('Navigating to', targetUrl);
-    
-    // Log navigation intent
-    debugBeforeNavigation(targetUrl, 'view_candidate_profile');
-    
-    // Use setTimeout to ensure the auth state is properly preserved during navigation
-    setTimeout(() => {
-      // Store a flag in sessionStorage to help with debugging
-      sessionStorage.setItem('lastNavigation', JSON.stringify({
-        from: 'interested',
-        to: 'candidate_profile',
-        candidateId,
-        timestamp: new Date().toISOString(),
-        hasToken: !!cookies.session
-      }));
-      
-      router.push(targetUrl);
-    }, 100);
-  };
 
   if (loading) {
     return (
@@ -225,7 +134,7 @@ export default function InterestedCandidatesPage() {
               )}
 
               <button 
-                onClick={() => handleViewProfile(candidate.uid)}
+                onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md"
               >
                 View Full Profile

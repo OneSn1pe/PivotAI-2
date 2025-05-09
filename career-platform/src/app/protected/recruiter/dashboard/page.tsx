@@ -94,7 +94,7 @@ export default function RecruiterDashboard() {
         <h1 className="text-3xl font-bold">Recruiter Dashboard</h1>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <h2 className="text-lg text-gray-500 mb-2">Bookmarked Candidates</h2>
           <p className="text-3xl font-bold">{stats.bookmarkedCandidates}</p>
@@ -108,118 +108,53 @@ export default function RecruiterDashboard() {
           <p className="text-3xl font-bold">{stats.interestedCandidates}</p>
           <p className="text-sm text-blue-600 mt-2">Click to view all →</p>
         </button>
-        
-        <button
-          onClick={() => router.push('/protected/recruiter/positions')}
-          className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
-        >
-          <h2 className="text-lg text-gray-500 mb-2">Position Preferences</h2>
-          <p className="text-3xl font-bold">
-            {recruiterProfile?.positionPreferences ? Object.keys(recruiterProfile.positionPreferences).length : 0}
-          </p>
-          <p className="text-sm text-blue-600 mt-2">Manage preferences →</p>
-        </button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Quick Actions</h2>
-          </div>
-          <div className="space-y-4">
-            <button
-              onClick={() => router.push('/protected/recruiter/search')}
-              className="w-full text-left flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <div className="bg-blue-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Search Candidates</h3>
-                <p className="text-sm text-gray-500">Find candidates by skills and experience</p>
-              </div>
-            </button>
-            
-            <button
-              onClick={() => router.push('/protected/recruiter/positions')}
-              className="w-full text-left flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <div className="bg-purple-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Manage Position Preferences</h3>
-                <p className="text-sm text-gray-500">Define skills and criteria for positions</p>
-              </div>
-            </button>
-            
-            <button
-              onClick={() => router.push('/protected/recruiter/test-position-preferences')}
-              className="w-full text-left flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <div className="bg-green-100 p-2 rounded-full mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Test Position Preferences</h3>
-                <p className="text-sm text-gray-500">Test how preferences affect roadmap generation</p>
-              </div>
-            </button>
-          </div>
+      <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Bookmarked Candidates</h2>
+          <button
+            onClick={() => router.push('/protected/recruiter/bookmarks')}
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
+            View All
+          </button>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Bookmarked Candidates</h2>
-            <button
-              onClick={() => router.push('/protected/recruiter/bookmarks')}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              View All
-            </button>
+        {bookmarkedCandidates.length > 0 ? (
+          <div className="space-y-4">
+            {bookmarkedCandidates.map((candidate, index) => (
+              <div key={index} className="border-b border-gray-200 pb-4 last:border-0">
+                <h3 
+                  className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                  onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
+                >
+                  {candidate.displayName}
+                </h3>
+                
+                {candidate.resumeAnalysis?.skills && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {candidate.resumeAnalysis.skills.slice(0, 3).map((skill, skillIndex) => (
+                      <span 
+                        key={skillIndex}
+                        className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                    {candidate.resumeAnalysis.skills.length > 3 && (
+                      <span className="text-gray-500 text-xs">
+                        +{candidate.resumeAnalysis.skills.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          
-          {bookmarkedCandidates.length > 0 ? (
-            <div className="space-y-4">
-              {bookmarkedCandidates.map((candidate, index) => (
-                <div key={index} className="border-b border-gray-200 pb-4 last:border-0">
-                  <h3 
-                    className="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
-                    onClick={() => router.push(`/protected/recruiter/candidate/${candidate.uid}`)}
-                  >
-                    {candidate.displayName}
-                  </h3>
-                  
-                  {candidate.resumeAnalysis?.skills && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {candidate.resumeAnalysis.skills.slice(0, 3).map((skill, skillIndex) => (
-                        <span 
-                          key={skillIndex}
-                          className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                      {candidate.resumeAnalysis.skills.length > 3 && (
-                        <span className="text-gray-500 text-xs">
-                          +{candidate.resumeAnalysis.skills.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 italic">No bookmarked candidates yet.</p>
-          )}
-        </div>
+        ) : (
+          <p className="text-gray-500 italic">No bookmarked candidates yet.</p>
+        )}
       </div>
     </div>
   );
