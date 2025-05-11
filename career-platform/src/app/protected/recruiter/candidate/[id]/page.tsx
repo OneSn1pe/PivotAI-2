@@ -22,6 +22,96 @@ const diagnostics = {
   }
 };
 
+// Simple fallback roadmap component
+const FallbackRoadmapComponent = ({ roadmap }: { roadmap: CareerRoadmap }) => {
+  if (!roadmap || !roadmap.milestones) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-red-700 font-medium">Error: Invalid roadmap data</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="p-4 bg-white border border-blue-200 rounded-lg">
+      <h3 className="text-xl font-bold mb-4 text-blue-800">Career Roadmap (Fallback View)</h3>
+      <p className="mb-4 text-sm bg-yellow-50 p-2 rounded">
+        This is a simplified view of the roadmap due to rendering issues with the main component.
+      </p>
+      
+      <div className="space-y-6">
+        {roadmap.milestones.map((milestone, index) => (
+          <div 
+            key={milestone.id || `milestone-${index}`} 
+            className="p-4 bg-white shadow-sm border border-gray-200 rounded-lg"
+          >
+            <div className="flex justify-between items-start">
+              <h4 className="text-lg font-bold text-gray-800">
+                {index + 1}. {milestone.title || 'Untitled Milestone'}
+              </h4>
+              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                {milestone.timeframe || 'No timeframe'}
+              </span>
+            </div>
+            
+            <p className="my-2 text-gray-600">{milestone.description || 'No description provided'}</p>
+            
+            {milestone.skills && milestone.skills.length > 0 && (
+              <div className="mt-3">
+                <h5 className="text-sm font-semibold text-gray-700 mb-1">Skills to develop:</h5>
+                <div className="flex flex-wrap gap-1">
+                  {milestone.skills.map((skill, i) => (
+                    <span key={i} className="bg-gray-100 text-gray-800 px-2 py-0.5 text-xs rounded">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {milestone.completed && (
+              <div className="mt-3 flex items-center text-green-600">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-medium">Completed</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Error boundary component
+class RoadmapErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('[ROADMAP-ERROR-BOUNDARY] Error rendering roadmap:', error);
+    console.error('[ROADMAP-ERROR-BOUNDARY] Error info:', errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function CandidateDetailPage() {
   const { userProfile, currentUser } = useAuth();
   const recruiterProfile = userProfile as RecruiterProfile | null;
@@ -43,6 +133,9 @@ export default function CandidateDetailPage() {
       position: recruiterProfile.position
     });
   }
+  
+  // Add state to toggle between regular and direct render
+  const [useDirectRender, setUseDirectRender] = useState(false);
   
   // Diagnostics: Log environment
   useEffect(() => {
@@ -350,14 +443,94 @@ export default function CandidateDetailPage() {
   
   // Debug information view for non-production environments
   const renderDebugInfo = () => {
-    const isDev = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true' || 
-                 (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+    // Always show debug info for now to help diagnose the issue
+    // const isDev = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true' || 
+    //              (typeof window !== 'undefined' && window.location.hostname === 'localhost');
     
-    if (!isDev || !diagnosticInfo) return null;
+    // Always show debug in production for now, to help diagnose the issue
+    // if (!isDev || !diagnosticInfo) return null;
+    
+    // Validate roadmap data structure if available
+    let dataStructureValidation = null;
+    if (roadmap) {
+      const issues = [];
+      
+      if (!roadmap.id) issues.push('Missing roadmap.id');
+      if (!roadmap.candidateId) issues.push('Missing roadmap.candidateId');
+      
+      if (!roadmap.milestones) {
+        issues.push('Missing roadmap.milestones');
+      } else if (!Array.isArray(roadmap.milestones)) {
+        issues.push(`roadmap.milestones is not an array (type: ${typeof roadmap.milestones})`);
+      } else {
+        if (roadmap.milestones.length === 0) {
+          issues.push('roadmap.milestones is an empty array');
+        } else {
+          // Check first milestone structure
+          const firstMilestone = roadmap.milestones[0];
+          const requiredFields = ['id', 'title', 'description', 'timeframe'];
+          const missingFields = requiredFields.filter(field => {
+            return firstMilestone[field as keyof typeof firstMilestone] === undefined;
+          });
+          
+          if (missingFields.length > 0) {
+            issues.push(`First milestone missing fields: ${missingFields.join(', ')}`);
+          }
+          
+          // Check for any non-serializable values that might cause rendering issues
+          try {
+            JSON.stringify(roadmap);
+          } catch (err) {
+            issues.push('Roadmap contains non-serializable values');
+          }
+        }
+      }
+      
+      dataStructureValidation = {
+        valid: issues.length === 0,
+        issues: issues,
+        structure: {
+          id: typeof roadmap.id,
+          candidateId: typeof roadmap.candidateId,
+          milestones: Array.isArray(roadmap.milestones) 
+            ? `Array(${roadmap.milestones.length})` 
+            : typeof roadmap.milestones,
+          createdAt: roadmap.createdAt instanceof Date ? 'Date' : typeof roadmap.createdAt
+        }
+      };
+    }
     
     return (
       <div className="mt-8 p-4 bg-gray-100 rounded-lg text-xs">
         <h3 className="font-bold mb-2">Debug Information</h3>
+        
+        {dataStructureValidation && (
+          <div className="mb-4 p-3 bg-white rounded border">
+            <h4 className="font-bold mb-2">Roadmap Structure Validation</h4>
+            <div className={`p-2 rounded ${dataStructureValidation.valid ? 'bg-green-50' : 'bg-red-50'}`}>
+              <p><strong>Valid:</strong> {dataStructureValidation.valid ? '✅' : '❌'}</p>
+              
+              {!dataStructureValidation.valid && (
+                <div className="mt-2">
+                  <p className="font-semibold">Issues:</p>
+                  <ul className="list-disc pl-5">
+                    {dataStructureValidation.issues.map((issue, i) => (
+                      <li key={i} className="text-red-700">{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="mt-2">
+                <p className="font-semibold">Structure:</p>
+                <pre className="bg-gray-50 p-2 rounded overflow-auto">
+                  {JSON.stringify(dataStructureValidation.structure, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <pre className="overflow-auto">{JSON.stringify(diagnosticInfo, null, 2)}</pre>
         
         <div className="mt-4">
@@ -370,6 +543,15 @@ export default function CandidateDetailPage() {
                 className="text-blue-500 underline"
               >
                 Open Recruiter Debug Tool
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/debug/direct-roadmap-test" 
+                target="_blank" 
+                className="text-blue-500 underline"
+              >
+                Direct Roadmap Test Tool
               </a>
             </li>
             <li>
@@ -464,6 +646,12 @@ export default function CandidateDetailPage() {
           <h2 className="text-2xl font-bold text-blue-800">Career Roadmap</h2>
           {roadmap && (
             <div className="flex items-center">
+              <button 
+                onClick={() => setUseDirectRender(!useDirectRender)}
+                className="mr-4 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded text-sm"
+              >
+                {useDirectRender ? 'Use Component Render' : 'Use Direct Render'}
+              </button>
               <span className="text-sm text-gray-600 mr-2">Progress:</span>
               <div className="w-32 bg-gray-200 rounded-full h-2.5">
                 <div
@@ -485,10 +673,67 @@ export default function CandidateDetailPage() {
             <span className="ml-3 text-gray-600">Loading roadmap...</span>
           </div>
         ) : roadmap ? (
-          <CareerRoadmapComponent 
-            roadmap={roadmap} 
-            isEditable={false} // Recruiters can view but not edit
-          />
+          <>
+            <div className="mb-4">
+              <details className="bg-blue-50 p-3 rounded-lg">
+                <summary className="font-medium text-blue-800 cursor-pointer">
+                  Debug: View Simple Roadmap Display
+                </summary>
+                <div className="mt-4 p-4 bg-white rounded-lg border border-blue-100">
+                  <h3 className="font-bold text-lg mb-3">Simple Roadmap Display</h3>
+                  <p className="mb-2"><strong>Roadmap ID:</strong> {roadmap.id}</p>
+                  <p className="mb-2"><strong>Candidate ID:</strong> {roadmap.candidateId}</p>
+                  <p className="mb-2"><strong>Milestones:</strong> {roadmap.milestones?.length || 0}</p>
+                  
+                  {roadmap.milestones && roadmap.milestones.length > 0 ? (
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-2">Milestones:</h4>
+                      <div className="space-y-3">
+                        {roadmap.milestones.map((milestone, index) => (
+                          <div key={milestone.id || `milestone-${index}`} className="p-3 bg-gray-50 rounded border">
+                            <div className="flex justify-between">
+                              <h5 className="font-bold">{milestone.title || 'Untitled'}</h5>
+                              <span className="text-sm text-gray-500">{milestone.timeframe || 'No timeframe'}</span>
+                            </div>
+                            <p className="text-sm mt-1">{milestone.description || 'No description'}</p>
+                            {milestone.skills && milestone.skills.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-semibold text-gray-700">Skills:</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {milestone.skills.map((skill, i) => (
+                                    <span key={i} className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">
+                                      {skill}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="italic text-gray-500">No milestones found in roadmap data</p>
+                  )}
+                </div>
+              </details>
+            </div>
+            
+            {useDirectRender ? (
+              <FallbackRoadmapComponent roadmap={roadmap} />
+            ) : (
+              <div className="roadmap-component-wrapper">
+                <RoadmapErrorBoundary
+                  fallback={<FallbackRoadmapComponent roadmap={roadmap} />}
+                >
+                  <CareerRoadmapComponent 
+                    roadmap={roadmap} 
+                    isEditable={false} // Recruiters can view but not edit
+                  />
+                </RoadmapErrorBoundary>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-10 bg-gray-50 rounded-lg border border-gray-200">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
