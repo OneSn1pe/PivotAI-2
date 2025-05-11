@@ -31,9 +31,9 @@ service cloud.firestore {
     }
     
     // For development mode, uncomment this rule to allow all access (for testing)
-    match /{document=**} {
-      allow read, write: if true;
-    }
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
     
     // Contact form submissions - anyone can create, only admins can read
     // match /contact_submissions/{submissionId} {
