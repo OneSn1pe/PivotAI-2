@@ -28,6 +28,25 @@ export default function CandidateDetailPage() {
     console.log('RecruiterProfile company:', recruiterProfile.company);
   }
   
+  // Add navigation debugging - prevent automatic redirection away from this page
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('CandidateDetailPage mounted, current URL:', window.location.href);
+      
+      // Capture any navigation attempts
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        console.log('Navigation attempt detected');
+        // Don't actually prevent navigation, just log it
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+  }, []);
+  
   const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
