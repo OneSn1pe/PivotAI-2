@@ -32,10 +32,18 @@ export default function CandidateDetailPage() {
     async function fetchCandidateData() {
       try {
         setLoading(true);
+        console.log(`Fetching candidate data for ID: ${candidateId}`);
         
         // Fetch candidate profile
         const candidateDocRef = doc(db, 'users', candidateId);
-        const candidateDocSnap = await getDoc(candidateDocRef);
+        const candidateDocSnap = await getDoc(candidateDocRef)
+          .catch(error => {
+            console.error('Firebase error fetching candidate:', error);
+            if (error.code === 'permission-denied') {
+              throw new Error('Permission denied: You do not have access to view this candidate profile.');
+            }
+            throw error;
+          });
         
         if (!candidateDocSnap.exists()) {
           setError('Candidate not found');
@@ -43,6 +51,7 @@ export default function CandidateDetailPage() {
           return;
         }
         
+        console.log('Successfully fetched candidate profile');
         const candidateData = candidateDocSnap.data() as CandidateProfile;
         setCandidate(candidateData);
         
@@ -53,14 +62,23 @@ export default function CandidateDetailPage() {
         setRoadmapLoading(true);
         
         // Fetch candidate's roadmap
+        console.log(`Fetching roadmap for candidate ID: ${candidateId}`);
         const roadmapQuery = query(
           collection(db, 'roadmaps'),
           where('candidateId', '==', candidateId)
         );
         
-        const roadmapSnapshot = await getDocs(roadmapQuery);
+        const roadmapSnapshot = await getDocs(roadmapQuery)
+          .catch(error => {
+            console.error('Firebase error fetching roadmap:', error);
+            if (error.code === 'permission-denied') {
+              throw new Error('Permission denied: You do not have access to view this roadmap.');
+            }
+            throw error;
+          });
         
         if (!roadmapSnapshot.empty) {
+          console.log('Successfully fetched roadmap data');
           const roadmapDoc = roadmapSnapshot.docs[0];
           const roadmapData = roadmapDoc.data();
           
@@ -83,12 +101,21 @@ export default function CandidateDetailPage() {
             createdAt: roadmapData.createdAt?.toDate?.() || new Date(),
             updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
           });
+        } else {
+          console.log('No roadmap found for this candidate');
         }
         
         setRoadmapLoading(false);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching candidate data:', err);
-        setError('Failed to load candidate information. Please try again later.');
+        // Provide more specific error message based on the error
+        if (err.message && err.message.includes('Permission denied')) {
+          setError(err.message);
+        } else if (err.code === 'unavailable') {
+          setError('Firebase service is currently unavailable. Please try again later.');
+        } else {
+          setError('Failed to load candidate information. Please try again later.');
+        }
         setLoading(false);
         setRoadmapLoading(false);
       }

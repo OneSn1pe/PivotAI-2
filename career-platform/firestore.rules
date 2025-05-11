@@ -1,18 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read/write access during development
-    match /{document=**} {
-      allow read, write: if true;
+    // Helper function to check if user is a recruiter
+    function isRecruiter() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter";
     }
     
-    // Use these stricter rules in production
-    // match /users/{userId} {
-    //   allow read: if request.auth != null && request.auth.uid == userId;
-    //   allow write: if request.auth != null && request.auth.uid == userId;
-    // }
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
     
-    // match /debug-tests/{testId} {
+    // Users collection rules
+    match /users/{userId} {
+      // Allow users to read/write their own data
+      // Allow recruiters to read candidate data, but not modify it
+      allow read: if isOwner(userId) || isRecruiter();
+      allow write: if isOwner(userId);
+    }
+    
+    // Roadmaps collection rules
+    match /roadmaps/{roadmapId} {
+      // Allow owners to read/write their own roadmaps
+      // Allow recruiters to read roadmaps, but not modify them
+      allow read: if isOwner(resource.data.candidateId) || isRecruiter();
+      allow write: if isOwner(resource.data.candidateId);
+    }
+    
+    // For development mode, you can uncomment this rule to allow all access
+    // match /{document=**} {
     //   allow read, write: if true;
     // }
     
