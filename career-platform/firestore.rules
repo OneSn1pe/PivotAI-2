@@ -4,9 +4,10 @@ service cloud.firestore {
     // Helper function to check if user is a recruiter
     function isRecruiter() {
       return request.auth != null && 
-        (request.auth.token.role == "recruiter" || 
-         request.auth.token.role == "RECRUITER" ||
-         request.auth.token.role == "Recruiter");
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter" || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER" ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "Recruiter");
     }
     
     // Helper function to check if user is accessing their own data
