@@ -43,6 +43,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   console.log(`[AuthContext] Provider initialized, isLocalDevelopment: ${isLocalDevelopment}`);
 
+  // Function to set custom claims
+  const setCustomClaims = async (uid: string) => {
+    try {
+      console.log(`[AuthContext] Setting custom claims for user: ${uid}`);
+      const response = await fetch('/api/set-custom-claims', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uid }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('[AuthContext] Failed to set custom claims:', data.error);
+        return false;
+      }
+      
+      console.log('[AuthContext] Custom claims set successfully:', data);
+      
+      // Force token refresh to include the new claims
+      if (currentUser) {
+        await currentUser.getIdToken(true);
+        console.log('[AuthContext] Token refreshed with new claims');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('[AuthContext] Error setting custom claims:', error);
+      return false;
+    }
+  };
+
   // When in local development, initialize with dummy data if needed
   useEffect(() => {
     if (isLocalDevelopment && process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true') {
@@ -79,25 +113,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setCurrentUser(user);
         
         if (user) {
-          // Get the ID token
-          const token = await user.getIdToken();
-          console.log(`[AuthContext] Got token, length: ${token.length}`);
-          
-          // Set the token in a cookie
-          if (isLocalDevelopment) {
-            // For localhost, we don't need secure or samesite strict
-            document.cookie = `session=${token}; path=/; max-age=3600`;
-          } else {
-            document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
-          }
-          console.log('[AuthContext] Set session cookie');
-          
           // Fetch user profile from Firestore
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
             console.log(`[AuthContext] User role: ${userData.role}`);
             setUserProfile(userData);
+            
+            // Set custom claims if needed
+            await setCustomClaims(user.uid);
+            
+            // Get the ID token with updated claims
+            const token = await user.getIdToken(true);
+            console.log(`[AuthContext] Got token, length: ${token.length}`);
+            
+            // Set the token in a cookie
+            if (isLocalDevelopment) {
+              // For localhost, we don't need secure or samesite strict
+              document.cookie = `session=${token}; path=/; max-age=3600`;
+            } else {
+              document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+            }
+            console.log('[AuthContext] Set session cookie');
             
             // Update last login time
             await setDoc(doc(db, 'users', user.uid), 
@@ -145,8 +182,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await setDoc(doc(db, 'users', user.uid), userData);
       setUserProfile(userData);
       
+      // Set custom claims
+      await setCustomClaims(user.uid);
+      
       // Get and set the token
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true); // Force refresh to get updated claims
       document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
       
       router.push('/protected/dashboard');
@@ -160,8 +200,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       
+      // Set custom claims
+      await setCustomClaims(user.uid);
+      
       // Get and set the token
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true); // Force refresh to get updated claims
       document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
       
       // Update last login time
@@ -210,8 +253,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUserProfile(userDoc.data() as User);
       }
       
+      // Set custom claims
+      await setCustomClaims(user.uid);
+      
       // Get and set the token
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true); // Force refresh to get updated claims
       document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
       
       // Redirect based on user role
