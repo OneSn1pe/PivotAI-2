@@ -25,43 +25,50 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
     
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // LENIENT RULES FOR PRODUCTION AND DEVELOPMENT
+    // Allow any authenticated user to read all data
+    match /{document=**} {
+      allow read: if isAuthenticated();
+    }
+    
     // Users collection rules
     match /users/{userId} {
       // Allow users to read/write their own data
-      // Allow recruiters to read candidate data, but not modify it
-      allow read: if isOwner(userId) || isRecruiter();
-      allow write: if isOwner(userId);
+      // Allow recruiters to read candidate data AND modify it (more lenient)
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) || isRecruiter();
     }
     
-    // Roadmaps collection rules
+    // Roadmaps collection rules - LENIENT VERSION
     match /roadmaps/{roadmapId} {
-      // Allow owners to read/write their own roadmaps
-      // Allow recruiters to read roadmaps, but not modify them
-      allow read: if isOwner(resource.data.candidateId) || isRecruiter();
-      allow write: if isOwner(resource.data.candidateId);
+      // Allow any authenticated user to read roadmaps
+      // Allow owners and recruiters to write roadmaps
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isOwner(resource.data.candidateId) || isRecruiter());
+      
+      // Allow creation of new roadmaps by any authenticated user
+      allow create: if isAuthenticated();
     }
     
     // Debug tests collection - allow authenticated users to read/write for testing
     match /debug_tests/{testId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAuthenticated();
     }
     
-    // Recruiter-only test collection - only recruiters can access
+    // Recruiter-only test collection - any authenticated user can access (more lenient)
     match /recruiter_only_test/{testId} {
-      allow read, write: if isRecruiter();
+      allow read, write: if isAuthenticated();
     }
     
-    // For development mode, uncomment this rule to allow all access (for testing)
-    // match /{document=**} {
-    //   allow read, write: if true;
-    // }
-    
-    // Contact form submissions - anyone can create, only admins can read
-    // match /contact_submissions/{submissionId} {
-    //   allow create: if true;
-    //   allow read, update, delete: if request.auth != null && 
-    //     exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "ADMIN";
-    // }
+    // Contact form submissions - anyone can create, any authenticated user can read
+    match /contact_submissions/{submissionId} {
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
+    }
   }
 }
