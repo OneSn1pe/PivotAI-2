@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, CareerRoadmap, RecruiterProfile } from '@/types/user';
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
 import { UserRole } from '@/types/user';
-import { safeTimestampToDate } from '@/utils/firebaseUtils';
 
 // Add diagnostic logging helper
 const diagnostics = {
@@ -358,19 +357,26 @@ export default function CandidateDetailPage() {
               // Generate ID if needed
               const milestoneId = milestone.id || `milestone-${Math.random().toString(36).substr(2, 9)}`;
               
-              // Process timestamp using our utility function
-              const createdAt = safeTimestampToDate(milestone.createdAt) || new Date();
+              // Process timestamp
+              let createdAt;
+              if (milestone.createdAt instanceof Date) {
+                createdAt = milestone.createdAt;
+              } else if (milestone.createdAt?.toDate) {
+                try {
+                  createdAt = milestone.createdAt.toDate();
+                  diagnostics.log(`[ENHANCED] Converted Firestore timestamp to Date for milestone ${index+1}`);
+                } catch (err) {
+                  diagnostics.warn(`[ENHANCED] Failed to convert timestamp for milestone ${index+1}`, err);
+                  createdAt = new Date();
+                }
+              } else {
+                createdAt = new Date();
+              }
               
               return {
                 ...milestone,
                 id: milestoneId,
-                createdAt: createdAt,
-                // Ensure all required fields have defaults
-                title: milestone.title || 'Untitled',
-                description: milestone.description || 'No description',
-                timeframe: milestone.timeframe || 'No timeframe',
-                completed: !!milestone.completed,
-                skills: Array.isArray(milestone.skills) ? milestone.skills : []
+                createdAt: createdAt
               };
             });
             
@@ -388,9 +394,9 @@ export default function CandidateDetailPage() {
             id: roadmapDoc.id,
             candidateId: candidateId,
             milestones: formattedMilestones || [],
-            // Convert any Firebase timestamps to JS Dates using our utility function
-            createdAt: safeTimestampToDate(roadmapData.createdAt) || new Date(),
-            updatedAt: safeTimestampToDate(roadmapData.updatedAt) || new Date()
+            // Convert any Firebase timestamps to JS Dates
+            createdAt: roadmapData.createdAt?.toDate?.() || new Date(),
+            updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
           };
           
           // Log final roadmap object
