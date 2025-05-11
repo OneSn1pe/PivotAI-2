@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { doc, getDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/user';
@@ -154,37 +154,6 @@ export default function FirestoreRulesTest() {
       // 4. Test the isRecruiter() function directly
       // This is a special test that tries to determine if the function is evaluating correctly
       try {
-        // First create a test document that should only be accessible to recruiters
-        try {
-          await setDoc(doc(db, 'recruiter_only_test', 'test_doc'), {
-            createdAt: new Date(),
-            testValue: 'This document should only be accessible to recruiters',
-            createdBy: userProfile.uid
-          });
-          console.log('Successfully created recruiter test document');
-          
-          testResults.push({
-            name: 'Create Recruiter Test Document',
-            passed: true,
-            details: {
-              document: 'recruiter_only_test/test_doc',
-              rule: 'Only writable if isRecruiter() evaluates to true'
-            }
-          });
-        } catch (err: any) {
-          console.error('Failed to create recruiter test document:', err);
-          testResults.push({
-            name: 'Create Recruiter Test Document',
-            passed: false,
-            error: err.message,
-            code: err.code,
-            details: {
-              document: 'recruiter_only_test/test_doc',
-              rule: 'Only writable if isRecruiter() evaluates to true'
-            }
-          });
-        }
-        
         // Try to access a document that should only be accessible if isRecruiter() is true
         const testDoc = await getDoc(doc(db, 'recruiter_only_test', 'test_doc'));
         

@@ -48,18 +48,6 @@ export default function RoadmapAccessDebugPage() {
       try {
         token = await currentUser.getIdToken(true); // Force refresh
         diagnosticLog.push(`Successfully retrieved fresh ID token (${token.length} chars)`);
-        
-        // Check token claims
-        const decodedToken = await currentUser.getIdTokenResult();
-        diagnosticLog.push(`Token issued at: ${new Date(decodedToken.issuedAtTime).toISOString()}`);
-        diagnosticLog.push(`Token expires at: ${new Date(decodedToken.expirationTime).toISOString()}`);
-        diagnosticLog.push(`Token claims: ${JSON.stringify(decodedToken.claims)}`);
-        
-        if (decodedToken.claims.role) {
-          diagnosticLog.push(`Role claim in token: "${decodedToken.claims.role}"`);
-        } else {
-          diagnosticLog.push(`❌ No role claim found in token!`);
-        }
       } catch (err) {
         diagnosticLog.push(`Error refreshing token: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
