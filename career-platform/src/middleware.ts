@@ -31,6 +31,17 @@ export function middleware(request: NextRequest) {
   debug.log(`Auth token present: ${!!token}, length: ${token?.length || 0}`);
   debug.log(`Cookie names: ${Array.from(request.cookies.getAll()).map(c => c.name).join(', ')}`);
   
+  // Special handling for recruiter/candidate paths - allow access regardless of environment
+  // This fixes the production redirect issue while preserving security for other routes
+  if (path.includes('/recruiter/candidate/')) {
+    debug.log(`🔍 RECRUITER CANDIDATE PATH: ${path}, Token present: ${!!token}`);
+    
+    // Still require authentication token, but don't redirect away from this path
+    if (token) {
+      return NextResponse.next();
+    }
+  }
+  
   // If we're in development mode and running locally, we can bypass some auth checks
   if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
     debug.log('Development mode: partially bypassing auth checks for protected routes');
@@ -51,11 +62,6 @@ export function middleware(request: NextRequest) {
     
     // In development, pass through even without token for testing
     return NextResponse.next();
-  }
-  
-  // Debug the recruiter path specifically
-  if (path.includes('/recruiter/candidate/')) {
-    debug.log(`🔍 RECRUITER PATH: ${path}, Token present: ${!!token}`);
   }
 
   // Handle API routes separately - don't redirect them

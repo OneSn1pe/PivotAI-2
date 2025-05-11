@@ -16,27 +16,42 @@ export default function CandidateDetailPage() {
   const params = useParams();
   const candidateId = params.id as string;
   
-  // Add detailed debug logging
-  console.log(`CandidateDetailPage: candidateId=${candidateId}, userProfile:`, userProfile ? {
-    uid: userProfile.uid,
-    role: userProfile.role,
-    displayName: userProfile.displayName,
-    isRecruiter: userProfile.role === UserRole.RECRUITER
+  // Enhanced debug logging for production troubleshooting
+  const debug = {
+    log: (...args: any[]) => console.log('[CandidateDetailPage]', ...args),
+    error: (...args: any[]) => console.error('[CandidateDetailPage]', ...args),
+    warn: (...args: any[]) => console.warn('[CandidateDetailPage]', ...args)
+  };
+  
+  debug.log(`Mounting with candidateId=${candidateId}, userProfile:`, userProfile ? {
+    uid: userProfile?.uid,
+    role: userProfile?.role,
+    displayName: userProfile?.displayName,
+    isRecruiter: userProfile?.role === UserRole.RECRUITER
   } : 'null');
   
   if (recruiterProfile) {
-    console.log('RecruiterProfile company:', recruiterProfile.company);
+    debug.log('RecruiterProfile company:', recruiterProfile.company);
   }
+  
+  // Debug environment
+  const [isProd, setIsProd] = useState(true);
+  useEffect(() => {
+    // Check if we're in development mode
+    setIsProd(process.env.NODE_ENV === 'production' && 
+             process.env.NEXT_PUBLIC_DEVELOPMENT_MODE !== 'true');
+    
+    debug.log(`Environment: ${process.env.NODE_ENV}, DevMode: ${process.env.NEXT_PUBLIC_DEVELOPMENT_MODE}`);
+  }, []);
   
   // Add navigation debugging - prevent automatic redirection away from this page
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      console.log('CandidateDetailPage mounted, current URL:', window.location.href);
+      debug.log('Page mounted, current URL:', window.location.href);
       
       // Capture any navigation attempts
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        console.log('Navigation attempt detected');
-        // Don't actually prevent navigation, just log it
+        debug.log('Navigation attempt detected');
       };
       
       window.addEventListener('beforeunload', handleBeforeUnload);
@@ -52,16 +67,45 @@ export default function CandidateDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [authInfo, setAuthInfo] = useState<any>(null);
+  
+  // Check auth status using the debug API
+  useEffect(() => {
+    async function checkAuthStatus() {
+      try {
+        const response = await fetch('/api/debug-auth');
+        if (response.ok) {
+          const data = await response.json();
+          setAuthInfo(data);
+          debug.log('Auth debug info:', data);
+        }
+      } catch (err) {
+        debug.error('Error checking auth status:', err);
+      }
+    }
+    
+    // Only run in production
+    if (isProd) {
+      checkAuthStatus();
+    }
+  }, [isProd]);
   
   useEffect(() => {
-    // Ensure we have a candidateId and the recruiter is authenticated
-    if (!candidateId || !recruiterProfile) {
-      console.error('Missing requirements:', { 
-        candidateId: !!candidateId, 
-        recruiterProfile: !!recruiterProfile,
+    // Ensure we have a candidateId 
+    // Special handling - in production, don't strictly require the recruiter profile to be loaded first
+    if (!candidateId) {
+      debug.error('Missing candidateId');
+      setError('Candidate ID not provided');
+      setLoading(false);
+      return;
+    }
+    
+    // If not a recruiter and not in development mode, show an appropriate error
+    if (!isProd && !recruiterProfile && userProfile) {
+      debug.error('User is not a recruiter:', { 
         userRole: userProfile?.role 
       });
-      setError(!candidateId ? 'Candidate ID not provided' : 'Authentication required - not a recruiter profile');
+      setError('Authentication required - you must be logged in as a recruiter to view this page');
       setLoading(false);
       return;
     }
@@ -69,13 +113,13 @@ export default function CandidateDetailPage() {
     async function fetchCandidateData() {
       try {
         setLoading(true);
-        console.log(`Fetching candidate data for ID: ${candidateId}`);
+        debug.log(`Fetching candidate data for ID: ${candidateId}`);
         
         // Fetch candidate profile
         const candidateDocRef = doc(db, 'users', candidateId);
         const candidateDocSnap = await getDoc(candidateDocRef)
           .catch(error => {
-            console.error('Firebase error fetching candidate:', error);
+            debug.error('Firebase error fetching candidate:', error);
             if (error.code === 'permission-denied') {
               throw new Error('Permission denied: You do not have access to view this candidate profile.');
             }
@@ -88,7 +132,7 @@ export default function CandidateDetailPage() {
           return;
         }
         
-        console.log('Successfully fetched candidate profile');
+        debug.log('Successfully fetched candidate profile');
         const candidateData = candidateDocSnap.data() as CandidateProfile;
         setCandidate(candidateData);
         
@@ -99,7 +143,7 @@ export default function CandidateDetailPage() {
         setRoadmapLoading(true);
         
         // Fetch candidate's roadmap
-        console.log(`Fetching roadmap for candidate ID: ${candidateId}`);
+        debug.log(`Fetching roadmap for candidate ID: ${candidateId}`);
         const roadmapQuery = query(
           collection(db, 'roadmaps'),
           where('candidateId', '==', candidateId)
@@ -107,7 +151,7 @@ export default function CandidateDetailPage() {
         
         const roadmapSnapshot = await getDocs(roadmapQuery)
           .catch(error => {
-            console.error('Firebase error fetching roadmap:', error);
+            debug.error('Firebase error fetching roadmap:', error);
             if (error.code === 'permission-denied') {
               throw new Error('Permission denied: You do not have access to view this roadmap.');
             }
@@ -115,7 +159,7 @@ export default function CandidateDetailPage() {
           });
         
         if (!roadmapSnapshot.empty) {
-          console.log('Successfully fetched roadmap data');
+          debug.log('Successfully fetched roadmap data');
           const roadmapDoc = roadmapSnapshot.docs[0];
           const roadmapData = roadmapDoc.data();
           
@@ -139,15 +183,15 @@ export default function CandidateDetailPage() {
             updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
           });
         } else {
-          console.log('No roadmap found for this candidate');
+          debug.log('No roadmap found for this candidate');
         }
         
         setRoadmapLoading(false);
       } catch (err: any) {
-        console.error('Error fetching candidate data:', err);
+        debug.error('Error fetching candidate data:', err);
         // Provide more specific error message based on the error
         if (err.message && err.message.includes('Permission denied')) {
-          setError(err.message);
+          setError(`${err.message} Please ensure you have the correct access rights.`);
         } else if (err.code === 'unavailable') {
           setError('Firebase service is currently unavailable. Please try again later.');
         } else {
@@ -159,22 +203,45 @@ export default function CandidateDetailPage() {
     }
     
     fetchCandidateData();
-  }, [candidateId, recruiterProfile]);
+  }, [candidateId, recruiterProfile, userProfile, isProd]);
   
+  // Display auth debug info in production for troubleshooting
+  const showDebugInfo = isProd && authInfo;
+  
+  // Loading state
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600">Loading candidate profile...</p>
+        
+        {/* Show debug info in production */}
+        {showDebugInfo && (
+          <div className="mt-8 p-4 bg-gray-100 rounded text-xs max-w-lg overflow-auto">
+            <h3 className="font-bold mb-2">Debug Info:</h3>
+            <pre>{JSON.stringify(authInfo, null, 2)}</pre>
+          </div>
+        )}
       </div>
     );
   }
   
+  // Error state
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 p-6 rounded-lg text-center">
           <h2 className="text-xl font-bold text-red-700 mb-2">Error</h2>
           <p className="text-red-600">{error}</p>
+          
+          {/* Show debug info in production */}
+          {showDebugInfo && (
+            <div className="mt-4 p-4 bg-gray-100 rounded text-xs text-left max-w-lg mx-auto overflow-auto">
+              <h3 className="font-bold mb-2">Auth Debug Info:</h3>
+              <pre>{JSON.stringify(authInfo, null, 2)}</pre>
+            </div>
+          )}
+          
           <button
             onClick={() => router.back()}
             className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -192,6 +259,15 @@ export default function CandidateDetailPage() {
         <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
           <h2 className="text-xl font-bold text-yellow-700 mb-2">Candidate Not Found</h2>
           <p className="text-yellow-600">The candidate you're looking for could not be found.</p>
+          
+          {/* Show debug info in production */}
+          {showDebugInfo && (
+            <div className="mt-4 p-4 bg-gray-100 rounded text-xs text-left max-w-lg mx-auto overflow-auto">
+              <h3 className="font-bold mb-2">Auth Debug Info:</h3>
+              <pre>{JSON.stringify(authInfo, null, 2)}</pre>
+            </div>
+          )}
+          
           <button
             onClick={() => router.back()}
             className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
@@ -215,8 +291,32 @@ export default function CandidateDetailPage() {
     return typeof company === 'object' && company.name === recruiterProfile?.company;
   });
   
+  // Show warning banner if in production
+  const showProductionWarning = isProd && !authInfo?.permissions?.isRecruiter && userProfile;
+  
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Show warning banner in production */}
+      {showProductionWarning && (
+        <div className="bg-yellow-50 border border-yellow-300 p-3 rounded-lg mb-4 text-sm">
+          <p className="font-medium text-yellow-800">
+            Warning: You may not have proper recruiter permissions in this environment. 
+            Some content may not display correctly.
+          </p>
+          
+          {/* Provide a link to the debug auth API */}
+          <p className="mt-1">
+            <a 
+              href="/api/debug-auth" 
+              target="_blank" 
+              className="text-blue-600 hover:underline"
+            >
+              Check Authorization Status
+            </a>
+          </p>
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-4">
           <button
@@ -249,11 +349,6 @@ export default function CandidateDetailPage() {
                   }}
                 ></div>
               </div>
-              <span className="ml-2 text-sm font-medium text-blue-700">
-                {Math.round(
-                  (roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100
-                )}%
-              </span>
             </div>
           )}
         </div>
