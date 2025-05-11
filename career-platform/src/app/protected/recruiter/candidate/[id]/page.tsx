@@ -7,6 +7,7 @@ import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, CareerRoadmap, RecruiterProfile } from '@/types/user';
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
+import { UserRole } from '@/types/user';
 
 export default function CandidateDetailPage() {
   const { userProfile } = useAuth();
@@ -14,6 +15,18 @@ export default function CandidateDetailPage() {
   const router = useRouter();
   const params = useParams();
   const candidateId = params.id as string;
+  
+  // Add detailed debug logging
+  console.log(`CandidateDetailPage: candidateId=${candidateId}, userProfile:`, userProfile ? {
+    uid: userProfile.uid,
+    role: userProfile.role,
+    displayName: userProfile.displayName,
+    isRecruiter: userProfile.role === UserRole.RECRUITER
+  } : 'null');
+  
+  if (recruiterProfile) {
+    console.log('RecruiterProfile company:', recruiterProfile.company);
+  }
   
   const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
@@ -24,7 +37,12 @@ export default function CandidateDetailPage() {
   useEffect(() => {
     // Ensure we have a candidateId and the recruiter is authenticated
     if (!candidateId || !recruiterProfile) {
-      setError(!candidateId ? 'Candidate ID not provided' : 'Authentication required');
+      console.error('Missing requirements:', { 
+        candidateId: !!candidateId, 
+        recruiterProfile: !!recruiterProfile,
+        userRole: userProfile?.role 
+      });
+      setError(!candidateId ? 'Candidate ID not provided' : 'Authentication required - not a recruiter profile');
       setLoading(false);
       return;
     }

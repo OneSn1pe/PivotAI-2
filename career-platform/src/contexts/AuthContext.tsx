@@ -49,19 +49,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!mounted) return;
 
       try {
+        console.log(`[AuthContext] Auth state changed: User ${user ? 'present' : 'absent'}`);
         setCurrentUser(user);
         
         if (user) {
           // Get the ID token
           const token = await user.getIdToken();
+          console.log(`[AuthContext] Got token, length: ${token.length}`);
           
           // Set the token in a cookie
           document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+          console.log('[AuthContext] Set session cookie');
           
           // Fetch user profile from Firestore
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
+            console.log(`[AuthContext] User role: ${userData.role}`);
             setUserProfile(userData);
             
             // Update last login time
@@ -69,14 +73,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               { lastLogin: new Date() }, 
               { merge: true }
             );
+          } else {
+            console.error(`[AuthContext] No user document found for uid: ${user.uid}`);
           }
         } else {
           setUserProfile(null);
           // Clear the session cookie
           document.cookie = 'session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          console.log('[AuthContext] Cleared session cookie');
         }
       } catch (error) {
-        console.error('Error in auth state change:', error);
+        console.error('[AuthContext] Error in auth state change:', error);
       } finally {
         if (mounted) {
           setLoading(false);

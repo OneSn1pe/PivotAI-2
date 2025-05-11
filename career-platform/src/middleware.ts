@@ -21,6 +21,13 @@ export function middleware(request: NextRequest) {
 
   // Get the token from the session
   const token = request.cookies.get('session')?.value;
+  debug.log(`Auth token present: ${!!token}, length: ${token?.length || 0}`);
+  debug.log(`Cookie names: ${Array.from(request.cookies.getAll()).map(c => c.name).join(', ')}`);
+  
+  // Debug the recruiter path specifically
+  if (path.includes('/recruiter/candidate/')) {
+    debug.log(`🔍 RECRUITER PATH: ${path}, Token present: ${!!token}`);
+  }
 
   // Handle API routes separately - don't redirect them
   if (isApiPath) {
@@ -73,8 +80,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  debug.log(`Passing through request: ${request.method} ${path}`);
-  return NextResponse.next();
+  debug.log(`Passing through request: ${request.method} ${path}, token exists: ${!!token}`);
+  const response = NextResponse.next();
+  response.headers.set('x-auth-status', token ? 'authenticated' : 'unauthenticated');
+  return response;
 }
 
 // Configure which routes should trigger this middleware

@@ -5,7 +5,8 @@ service cloud.firestore {
     function isRecruiter() {
       return request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter";
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter" || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER");
     }
     
     // Helper function to check if user is accessing their own data
@@ -29,10 +30,10 @@ service cloud.firestore {
       allow write: if isOwner(resource.data.candidateId);
     }
     
-    // For development mode, you can uncomment this rule to allow all access
-    // match /{document=**} {
-    //   allow read, write: if true;
-    // }
+    // For development mode, uncomment this rule to allow all access (for testing)
+    match /{document=**} {
+      allow read, write: if true;
+    }
     
     // Contact form submissions - anyone can create, only admins can read
     // match /contact_submissions/{submissionId} {
