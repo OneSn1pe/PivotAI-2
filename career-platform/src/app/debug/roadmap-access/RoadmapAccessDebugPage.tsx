@@ -270,37 +270,6 @@ export default function RoadmapAccessDebugPage() {
       diagnosticLog.push(`User role check: ${userProfile?.role} (isRecruiter: ${isRecruiterRole})`);
       diagnosticLog.push(`Firestore rule should check for: "recruiter" or "RECRUITER"`);
       
-      // Add detailed role debugging
-      diagnosticLog.push(`Role type: ${typeof userProfile?.role}`);
-      diagnosticLog.push(`UserRole.RECRUITER value: "${UserRole.RECRUITER}"`);
-      diagnosticLog.push(`Direct comparison: "${userProfile?.role}" === "${UserRole.RECRUITER}" = ${userProfile?.role === UserRole.RECRUITER}`);
-      
-      // Get the raw user document from Firestore to check the actual stored value
-      try {
-        const userDocRef = doc(db, 'users', userProfile?.uid || '');
-        const userDocSnap = await getDoc(userDocRef);
-        
-        if (userDocSnap.exists()) {
-          const rawRole = userDocSnap.data().role;
-          diagnosticLog.push(`Raw role from Firestore: "${rawRole}"`);
-          diagnosticLog.push(`Raw role type: ${typeof rawRole}`);
-          diagnosticLog.push(`Raw role matches enum: ${rawRole === UserRole.RECRUITER}`);
-          
-          testResults.push({
-            test: 'Role Value Verification',
-            passed: rawRole === UserRole.RECRUITER,
-            details: {
-              roleInUserProfile: userProfile?.role,
-              roleInFirestore: rawRole,
-              expectedRole: UserRole.RECRUITER,
-              isMatch: rawRole === UserRole.RECRUITER
-            }
-          });
-        }
-      } catch (err: any) {
-        diagnosticLog.push(`Error checking raw role: ${err.message}`);
-      }
-      
       // Set detailed results
       setDetailedResults({
         diagnosticLog,
