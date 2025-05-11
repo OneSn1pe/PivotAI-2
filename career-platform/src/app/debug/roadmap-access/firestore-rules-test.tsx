@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserRole } from '@/types/user';
 
 export default function FirestoreRulesTest() {
   const { userProfile, currentUser } = useAuth();
@@ -23,6 +24,33 @@ export default function FirestoreRulesTest() {
     const testResults: any[] = [];
     
     try {
+      // Log detailed user role information
+      console.log('User role debug information:');
+      console.log(`- Role from userProfile: "${userProfile.role}"`);
+      console.log(`- Role type: ${typeof userProfile.role}`);
+      console.log(`- Is equal to UserRole.RECRUITER: ${userProfile.role === UserRole.RECRUITER}`);
+      console.log(`- UserRole.RECRUITER value: "${UserRole.RECRUITER}"`);
+      
+      // Get the raw user document from Firestore to check the actual stored value
+      const userDocRef = doc(db, 'users', userProfile.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (userDocSnap.exists()) {
+        const rawRole = userDocSnap.data().role;
+        console.log(`- Raw role from Firestore: "${rawRole}"`);
+        console.log(`- Raw role type: ${typeof rawRole}`);
+        testResults.push({
+          name: 'User Role Check',
+          passed: rawRole === UserRole.RECRUITER,
+          details: {
+            roleInUserProfile: userProfile.role,
+            roleInFirestore: rawRole,
+            expectedRole: UserRole.RECRUITER,
+            isMatch: rawRole === UserRole.RECRUITER
+          }
+        });
+      }
+      
       // 1. First get a fresh token
       const token = await currentUser.getIdToken(true);
       console.log(`Got fresh token, length: ${token.length}`);

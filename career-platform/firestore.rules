@@ -6,7 +6,8 @@ service cloud.firestore {
       return request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter" || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER");
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER" ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "Recruiter");
     }
     
     // Helper function to check if user is accessing their own data
