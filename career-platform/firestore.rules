@@ -19,8 +19,7 @@ service cloud.firestore {
     match /users/{userId} {
       // Allow users to read/write their own data
       // Allow recruiters to read candidate data, but not modify it
-      // Temporarily allow all reads for testing
-      allow read: if true; // Temporary for testing
+      allow read: if isOwner(userId) || isRecruiter();
       allow write: if isOwner(userId);
     }
     
