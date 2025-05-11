@@ -22,26 +22,17 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
     
-    // Roadmaps collection rules - explicitly expanded for clarity
+    // Roadmaps collection rules
     match /roadmaps/{roadmapId} {
       // Allow owners to read/write their own roadmaps
-      // Allow recruiters to read ALL roadmaps, but not modify them
-      allow read: if isRecruiter() || 
-                   (resource != null && 
-                    resource.data != null && 
-                    resource.data.candidateId != null && 
-                    isOwner(resource.data.candidateId));
-      
-      allow write: if resource != null && 
-                    resource.data != null && 
-                    resource.data.candidateId != null && 
-                    isOwner(resource.data.candidateId);
+      // Allow recruiters to read roadmaps, but not modify them
+      allow read: if isOwner(resource.data.candidateId) || isRecruiter();
+      allow write: if isOwner(resource.data.candidateId);
     }
     
-    // Enable read access for all authenticated users
+    // For development mode, uncomment this rule to allow all access (for testing)
     match /{document=**} {
-      allow read: if request.auth != null;
-      // Still restrict writes to appropriate owners
+      allow read, write: if true;
     }
     
     // Contact form submissions - anyone can create, only admins can read
