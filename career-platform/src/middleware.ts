@@ -112,6 +112,29 @@ export function middleware(request: NextRequest) {
   debug.log(`Passing through request: ${request.method} ${path}, token exists: ${!!token}`);
   const response = NextResponse.next();
   response.headers.set('x-auth-status', token ? 'authenticated' : 'unauthenticated');
+
+  // Clone the request headers
+  const requestHeaders = new Headers(request.headers);
+  
+  // Get environment information 
+  const isProd = process.env.NODE_ENV === 'production';
+  const isDev = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true';
+  
+  // Add environment debug headers to help diagnose environment-specific issues
+  response.headers.set('X-Debug-Environment', isProd ? 'production' : 'development');
+  response.headers.set('X-Debug-Development-Mode', isDev ? 'true' : 'false');
+  response.headers.set('X-Debug-Hostname', hostname);
+  
+  // Set CSP headers that ensure inline styles work
+  const existingCsp = response.headers.get('Content-Security-Policy') || '';
+  if (!existingCsp.includes('style-src')) {
+    // Add style-src with 'unsafe-inline' to allow inline styles (important for debugging)
+    response.headers.set(
+      'Content-Security-Policy',
+      `${existingCsp} style-src 'self' 'unsafe-inline';`.trim()
+    );
+  }
+  
   return response;
 }
 
@@ -121,6 +144,7 @@ export const config = {
     '/',
     '/auth/:path*',
     '/protected/:path*',
-    '/api/:path*'
+    '/api/:path*',
+    '/debug/:path*'
   ]
 }; 

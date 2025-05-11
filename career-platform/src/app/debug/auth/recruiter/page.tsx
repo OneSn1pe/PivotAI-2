@@ -15,7 +15,12 @@ export default function RecruiterDebugPageContainer() {
           </li>
           <li>
             <Link href="/debug/direct-roadmap-test" className="text-blue-500 hover:underline">
-              Direct Roadmap Test (New)
+              Direct Roadmap Test
+            </Link>
+          </li>
+          <li>
+            <Link href="/debug/roadmap-rendering-debug" className="text-blue-500 hover:underline">
+              Roadmap Rendering Debug (New)
             </Link>
           </li>
         </ul>
