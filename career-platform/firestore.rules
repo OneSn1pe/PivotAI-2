@@ -1,13 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is a recruiter
+    // Helper function to check if user is a recruiter using token claims
     function isRecruiter() {
       return request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter" || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER" ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "Recruiter");
+        (
+          // Primary method: Check token claims (preferred and more efficient)
+          (request.auth.token.role == "recruiter" || 
+           request.auth.token.role == "RECRUITER" ||
+           request.auth.token.role == "Recruiter") ||
+          
+          // Fallback method: Check Firestore document (for backwards compatibility)
+          (
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter" || 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER" ||
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "Recruiter")
+          )
+        );
     }
     
     // Helper function to check if user is accessing their own data
