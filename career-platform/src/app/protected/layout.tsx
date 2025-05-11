@@ -35,11 +35,17 @@ export default function ProtectedLayout({
     // Detect correct route for user role
     if (!loading && userProfile) {
       const userRole = userProfile.role;
-      const isInCorrectSection = 
-        (userRole === UserRole.CANDIDATE && pathname?.includes('/candidate')) ||
-        (userRole === UserRole.RECRUITER && pathname?.includes('/recruiter'));
+      
+      // Improve path checking to handle nested routes properly
+      // For recruiters, they should be able to access /recruiter/* including candidate profiles
+      // For candidates, they should only access /candidate/*
+      const isInCorrectSection = userRole === UserRole.CANDIDATE 
+        ? pathname?.includes('/candidate')
+        : pathname?.includes('/recruiter');
       
       if (!isInCorrectSection && pathname !== '/protected/dashboard') {
+        console.log(`Redirecting from ${pathname} to correct dashboard for ${userRole} role`);
+        
         const correctPath = userRole === UserRole.CANDIDATE 
           ? '/protected/candidate/dashboard' 
           : '/protected/recruiter/dashboard';
