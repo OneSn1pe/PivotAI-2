@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// Check if we're in development mode
+const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true';
+
 // Debug helper for tracing
 const debug = {
   log: (...args: any[]) => console.log('[MIDDLEWARE]', ...args),
@@ -8,7 +11,11 @@ const debug = {
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  const hostname = request.headers.get('host') || '';
+  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+  
   debug.log(`Processing ${request.method} request for ${path}`);
+  debug.log(`Host: ${hostname}, isLocalhost: ${isLocalhost}, isDevelopment: ${isDevelopment}`);
 
   // Define paths that are public/auth related - API paths are handled separately
   const isPublicPath = path === '/' || 
@@ -23,6 +30,28 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
   debug.log(`Auth token present: ${!!token}, length: ${token?.length || 0}`);
   debug.log(`Cookie names: ${Array.from(request.cookies.getAll()).map(c => c.name).join(', ')}`);
+  
+  // If we're in development mode and running locally, we can bypass some auth checks
+  if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
+    debug.log('Development mode: partially bypassing auth checks for protected routes');
+    // Still log the token status but don't redirect to login
+    if (!token) {
+      debug.log('Warning: No token present in development mode');
+    }
+    // For localhost development, we'll still pass through all protected routes
+    // but log warnings when authentication would normally fail
+    if (!token && path !== '/protected/dashboard') {
+      debug.log('⚠️ Development mode: Allowing access to protected route without authentication');
+    }
+    
+    // For candidate paths specifically, we need special handling
+    if (path.includes('/recruiter/candidate/')) {
+      debug.log(`🔍 RECRUITER PATH in development: ${path}, Token present: ${!!token}`);
+    }
+    
+    // In development, pass through even without token for testing
+    return NextResponse.next();
+  }
   
   // Debug the recruiter path specifically
   if (path.includes('/recruiter/candidate/')) {

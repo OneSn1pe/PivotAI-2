@@ -38,7 +38,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const isLocalDevelopment = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  
+  console.log(`[AuthContext] Provider initialized, isLocalDevelopment: ${isLocalDevelopment}`);
 
+  // When in local development, initialize with dummy data if needed
+  useEffect(() => {
+    if (isLocalDevelopment && process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true') {
+      console.log('[AuthContext] Running in local development mode');
+      
+      // You can create mock data for development testing here
+      // This will make debugging easier without requiring real auth
+      const mockRecruiterProfile: User = {
+        uid: 'dev-recruiter-id',
+        email: 'dev-recruiter@example.com',
+        displayName: 'Dev Recruiter',
+        role: UserRole.RECRUITER,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+      };
+      
+      // Uncomment to use mock data when needed
+      // setUserProfile(mockRecruiterProfile);
+      // setLoading(false);
+    }
+  }, [isLocalDevelopment]);
+  
   useEffect(() => {
     // Set persistence to LOCAL
     setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -58,7 +84,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.log(`[AuthContext] Got token, length: ${token.length}`);
           
           // Set the token in a cookie
-          document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+          if (isLocalDevelopment) {
+            // For localhost, we don't need secure or samesite strict
+            document.cookie = `session=${token}; path=/; max-age=3600`;
+          } else {
+            document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+          }
           console.log('[AuthContext] Set session cookie');
           
           // Fetch user profile from Firestore

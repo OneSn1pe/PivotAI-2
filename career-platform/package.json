@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
+        "dev-local": "NODE_ENV=development NEXT_PUBLIC_DEVELOPMENT_MODE=true next dev",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
