@@ -349,15 +349,16 @@ export default function CandidateDetailPage() {
   }
   
   // Check if the candidate has the recruiter's company as a target
-  const isInterestedInCompany = candidate.targetCompanies?.some(company => {
+  const isInterestedInCompany = candidate.targetCompanies?.some((company: any) => {
     return typeof company === 'string' 
-      ? company === recruiterProfile?.company 
-      : company.name === recruiterProfile?.company;
+      ? company.toLowerCase() === recruiterProfile?.company.toLowerCase() 
+      : company.name && company.name.toLowerCase() === recruiterProfile?.company.toLowerCase();
   });
   
   // Get target position for the recruiter's company
-  const targetPosition = candidate.targetCompanies?.find(company => {
-    return typeof company === 'object' && company.name === recruiterProfile?.company;
+  const targetPosition = candidate.targetCompanies?.find((company: any) => {
+    return typeof company === 'object' && company.name && 
+      company.name.toLowerCase() === recruiterProfile?.company.toLowerCase();
   });
   
   return (

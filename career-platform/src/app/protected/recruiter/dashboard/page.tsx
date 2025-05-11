@@ -38,13 +38,14 @@ export default function RecruiterDashboard() {
             if (!candidate.targetCompanies) return false;
             
             // Check if any of the target companies match the recruiter's company
-            return candidate.targetCompanies.some(targetCompany => {
+            return candidate.targetCompanies.some((targetCompany: any) => {
               // Handle both old format (string) and new format (object)
               if (typeof targetCompany === 'string') {
-                return targetCompany === recruiterProfile.company;
-              } else {
-                return targetCompany.name === recruiterProfile.company;
+                return targetCompany.toLowerCase() === recruiterProfile.company.toLowerCase();
+              } else if (targetCompany && typeof targetCompany === 'object' && targetCompany.name) {
+                return targetCompany.name.toLowerCase() === recruiterProfile.company.toLowerCase();
               }
+              return false;
             });
           });
         
