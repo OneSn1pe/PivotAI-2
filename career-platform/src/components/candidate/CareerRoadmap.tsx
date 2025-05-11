@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CareerRoadmap as RoadmapType, Milestone } from '@/types/user';
 
 interface CareerRoadmapProps {
@@ -15,6 +15,34 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
   const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [localToggling, setLocalToggling] = useState<Record<string, boolean>>({});
+  const [errorInfo, setErrorInfo] = useState<string | null>(null);
+
+  // Debug logging - check roadmap props on mount
+  useEffect(() => {
+    console.log('[ROADMAP-COMPONENT] Component mounted with roadmap:', {
+      id: roadmap?.id,
+      candidateId: roadmap?.candidateId,
+      milestonesCount: roadmap?.milestones?.length || 0,
+      milestonesValid: Array.isArray(roadmap?.milestones)
+    });
+    
+    // Validate the roadmap structure
+    if (!roadmap) {
+      console.error('[ROADMAP-COMPONENT] Roadmap prop is null or undefined');
+      setErrorInfo('Roadmap data is missing');
+    } else if (!roadmap.milestones) {
+      console.error('[ROADMAP-COMPONENT] Milestones array is missing in roadmap');
+      setErrorInfo('Roadmap is missing milestones data');
+    } else if (!Array.isArray(roadmap.milestones)) {
+      console.error('[ROADMAP-COMPONENT] Milestones is not an array:', typeof roadmap.milestones);
+      setErrorInfo('Roadmap milestones data is in an invalid format');
+    } else if (roadmap.milestones.length === 0) {
+      console.warn('[ROADMAP-COMPONENT] Milestones array is empty');
+    } else {
+      // Log sample milestone
+      console.log('[ROADMAP-COMPONENT] Sample milestone:', roadmap.milestones[0]);
+    }
+  }, [roadmap]);
 
   // Toggle milestone expansion to show/hide details
   const toggleExpand = (milestoneId: string) => {
@@ -33,31 +61,61 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
     try {
       await onMilestoneToggle(milestone.id, !milestone.completed);
     } catch (error) {
-      console.error('Failed to update milestone:', error);
+      console.error('[ROADMAP-COMPONENT] Failed to update milestone:', error);
+      setErrorInfo(`Failed to update milestone: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(prev => ({ ...prev, [milestone.id]: false }));
     }
   };
 
   // Sort milestones by timeframe if possible
-  const sortedMilestones = [...roadmap.milestones].sort((a, b) => {
-    // If timeframes are numbers (e.g., "3 months"), try to sort numerically
-    const aMonths = parseInt(a.timeframe.match(/(\d+)/)?.[1] || '0');
-    const bMonths = parseInt(b.timeframe.match(/(\d+)/)?.[1] || '0');
-    
-    if (aMonths && bMonths) {
-      return aMonths - bMonths;
+  let sortedMilestones: Milestone[] = [];
+  try {
+    if (roadmap && Array.isArray(roadmap.milestones)) {
+      sortedMilestones = [...roadmap.milestones].sort((a, b) => {
+        // If timeframes are numbers (e.g., "3 months"), try to sort numerically
+        const aMonths = parseInt(a.timeframe?.match?.(/(\d+)/)?.[1] || '0');
+        const bMonths = parseInt(b.timeframe?.match?.(/(\d+)/)?.[1] || '0');
+        
+        if (aMonths && bMonths) {
+          return aMonths - bMonths;
+        }
+        
+        // Fallback to alphabetical sort
+        return (a.timeframe || '').localeCompare(b.timeframe || '');
+      });
     }
-    
-    // Fallback to alphabetical sort
-    return a.timeframe.localeCompare(b.timeframe);
-  });
+  } catch (error) {
+    console.error('[ROADMAP-COMPONENT] Error sorting milestones:', error);
+    setErrorInfo(`Error processing milestones: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Use the original milestones array if sorting fails
+    sortedMilestones = roadmap?.milestones || [];
+  }
+
+  // If we have an error, show it prominently
+  if (errorInfo) {
+    return (
+      <div className="w-full px-4 py-6 bg-red-50 rounded-lg border border-red-200">
+        <h2 className="text-2xl font-bold mb-6 text-red-800">Roadmap Error</h2>
+        <p className="text-red-700">{errorInfo}</p>
+        <div className="mt-4 p-3 bg-white rounded border border-red-100">
+          <p className="text-sm text-gray-700">
+            Debug information: This error occurred while trying to render the career roadmap component.
+            Please contact support with this error message if the problem persists.
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Roadmap ID: {roadmap?.id || 'unknown'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full px-4 py-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Your Career Roadmap</h2>
       
-      {sortedMilestones.length === 0 ? (
+      {!sortedMilestones || sortedMilestones.length === 0 ? (
         <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-gray-500">No milestones found in your roadmap.</p>
           <p className="text-sm text-gray-400 mt-2">Generate a roadmap based on your resume and target companies.</p>
@@ -70,7 +128,7 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
           {/* Milestones */}
           <div className="relative z-10">
             {sortedMilestones.map((milestone, index) => (
-              <div key={milestone.id} className={`flex flex-col md:flex-row mb-10 items-center`}>
+              <div key={milestone.id || `milestone-${index}`} className={`flex flex-col md:flex-row mb-10 items-center`}>
                 {/* Timeline dot */}
                 <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
                   <div className={`w-6 h-6 rounded-full shadow ${
@@ -88,11 +146,11 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
                   {/* Card content */}
                   <div className="w-full md:w-1/2 p-6 bg-white rounded-lg shadow border border-gray-200">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-xl font-bold text-gray-800">{milestone.title}</h3>
-                      <span className="text-sm text-gray-500">{milestone.timeframe}</span>
+                      <h3 className="text-xl font-bold text-gray-800">{milestone.title || 'Untitled Milestone'}</h3>
+                      <span className="text-sm text-gray-500">{milestone.timeframe || 'No timeframe'}</span>
                     </div>
                     
-                    <p className="text-gray-700 mb-4">{milestone.description}</p>
+                    <p className="text-gray-700 mb-4">{milestone.description || 'No description provided'}</p>
                     
                     {/* Skills needed for milestone */}
                     {milestone.skills && milestone.skills.length > 0 ? (

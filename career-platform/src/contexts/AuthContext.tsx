@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // setLoading(false);
     }
   }, [isLocalDevelopment]);
-  
+
   useEffect(() => {
     // Set persistence to LOCAL
     setPersistence(auth, browserLocalPersistence).catch(console.error);

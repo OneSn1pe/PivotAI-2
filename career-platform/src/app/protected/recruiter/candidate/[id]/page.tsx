@@ -188,6 +188,11 @@ export default function CandidateDetailPage() {
         // Set roadmap loading separately
         setRoadmapLoading(true);
         
+        // ENHANCED DIAGNOSTICS - Add verbose roadmap fetching logs
+        diagnostics.log(`[ENHANCED] Starting roadmap fetch for candidate ID: ${candidateId}`);
+        diagnostics.log(`[ENHANCED] Current environment: ${process.env.NODE_ENV}`);
+        diagnostics.log(`[ENHANCED] User role from profile: ${userProfile?.role}`);
+        
         // Fetch candidate's roadmap
         diagnostics.log(`Fetching roadmap for candidate ID: ${candidateId}`);
         const roadmapQuery = query(
@@ -195,46 +200,121 @@ export default function CandidateDetailPage() {
           where('candidateId', '==', candidateId)
         );
         
-        const roadmapSnapshot = await getDocs(roadmapQuery)
-          .catch(error => {
-            diagnostics.error('Firebase error fetching roadmap:', error);
-            diagInfo.roadmapError = error instanceof Error ? error.message : 'Unknown error';
-            diagInfo.roadmapErrorCode = error.code || 'No error code';
-            
-            if (error.code === 'permission-denied') {
-              throw new Error('Permission denied: You do not have access to view this roadmap.');
-            }
-            throw error;
-          });
+        diagnostics.log('[ENHANCED] Running roadmap query...');
         
-        diagInfo.roadmapFound = !roadmapSnapshot.empty;
-        diagInfo.roadmapCount = roadmapSnapshot.size;
+        let roadmapSnapshot;
+        try {
+          roadmapSnapshot = await getDocs(roadmapQuery);
+          diagnostics.log(`[ENHANCED] Roadmap query executed. Empty: ${roadmapSnapshot.empty}. Size: ${roadmapSnapshot.size}`);
+          diagInfo.roadmapFound = !roadmapSnapshot.empty;
+          diagInfo.roadmapCount = roadmapSnapshot.size;
+          
+          if (roadmapSnapshot.empty) {
+            diagnostics.log('[ENHANCED] No roadmap documents found for this candidate');
+          } else {
+            diagnostics.log(`[ENHANCED] Retrieved ${roadmapSnapshot.size} roadmap document(s)`);
+          }
+        } catch (error: any) {
+          diagnostics.error('[ENHANCED] Firebase error fetching roadmap:', error);
+          diagInfo.roadmapError = error instanceof Error ? error.message : 'Unknown error';
+          diagInfo.roadmapErrorCode = error.code || 'No error code';
+          
+          if (error.code === 'permission-denied') {
+            diagnostics.error('[ENHANCED] Permission denied error for roadmap query', error);
+            throw new Error('Permission denied: You do not have access to view this roadmap.');
+          }
+          throw error;
+        }
         
         if (!roadmapSnapshot.empty) {
           diagnostics.log('Successfully fetched roadmap data');
           const roadmapDoc = roadmapSnapshot.docs[0];
           const roadmapData = roadmapDoc.data();
+          
+          // Log the raw roadmap data structure
+          diagnostics.log('[ENHANCED] Raw roadmap data keys:', Object.keys(roadmapData));
+          diagnostics.log('[ENHANCED] Milestones array exists:', !!roadmapData.milestones);
+          diagnostics.log('[ENHANCED] Milestones count:', roadmapData.milestones?.length || 0);
+          
+          diagInfo.roadmapDataSnapshot = {
+            id: roadmapDoc.id,
+            keys: Object.keys(roadmapData),
+            hasMilestones: !!roadmapData.milestones,
+            milestonesCount: roadmapData.milestones?.length || 0,
+            milestonesType: roadmapData.milestones ? Array.isArray(roadmapData.milestones) ? 'array' : typeof roadmapData.milestones : 'undefined'
+          };
+          
+          // Sample the first milestone data if available
+          if (roadmapData.milestones && roadmapData.milestones.length > 0) {
+            const firstMilestone = roadmapData.milestones[0];
+            diagnostics.log('[ENHANCED] First milestone keys:', Object.keys(firstMilestone));
+            diagInfo.firstMilestoneKeys = Object.keys(firstMilestone);
+          }
+          
           diagInfo.milestoneCount = roadmapData.milestones?.length || 0;
           
           // Ensure the milestones are properly converted for display
-          const formattedMilestones = roadmapData.milestones.map((milestone: any) => ({
-            ...milestone,
-            id: milestone.id || `milestone-${Math.random().toString(36).substr(2, 9)}`,
-            // Ensure created timestamps are converted to dates if needed
-            createdAt: milestone.createdAt instanceof Date ? 
-                      milestone.createdAt : 
-                      (milestone.createdAt?.toDate ? milestone.createdAt.toDate() : new Date())
-          }));
+          diagnostics.log('[ENHANCED] Processing milestones for component rendering');
+          let formattedMilestones;
           
-          setRoadmap({
+          try {
+            formattedMilestones = roadmapData.milestones.map((milestone: any, index: number) => {
+              diagnostics.log(`[ENHANCED] Processing milestone ${index+1}/${roadmapData.milestones.length}`);
+              
+              // Generate ID if needed
+              const milestoneId = milestone.id || `milestone-${Math.random().toString(36).substr(2, 9)}`;
+              
+              // Process timestamp
+              let createdAt;
+              if (milestone.createdAt instanceof Date) {
+                createdAt = milestone.createdAt;
+              } else if (milestone.createdAt?.toDate) {
+                try {
+                  createdAt = milestone.createdAt.toDate();
+                  diagnostics.log(`[ENHANCED] Converted Firestore timestamp to Date for milestone ${index+1}`);
+                } catch (err) {
+                  diagnostics.warn(`[ENHANCED] Failed to convert timestamp for milestone ${index+1}`, err);
+                  createdAt = new Date();
+                }
+              } else {
+                createdAt = new Date();
+              }
+              
+              return {
+                ...milestone,
+                id: milestoneId,
+                createdAt: createdAt
+              };
+            });
+            
+            diagnostics.log(`[ENHANCED] Successfully processed ${formattedMilestones.length} milestones`);
+          } catch (milestoneErr) {
+            diagnostics.error('[ENHANCED] Error processing milestones:', milestoneErr);
+            diagInfo.milestoneProcessingError = milestoneErr instanceof Error ? milestoneErr.message : 'Unknown milestone processing error';
+            
+            // Fallback to empty array if milestone processing fails
+            formattedMilestones = [];
+          }
+          
+          const processedRoadmap = {
             ...roadmapData,
             id: roadmapDoc.id,
             candidateId: candidateId,
-            milestones: formattedMilestones,
+            milestones: formattedMilestones || [],
             // Convert any Firebase timestamps to JS Dates
             createdAt: roadmapData.createdAt?.toDate?.() || new Date(),
             updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
+          };
+          
+          // Log final roadmap object
+          diagnostics.log('[ENHANCED] Final processed roadmap object:', {
+            id: processedRoadmap.id,
+            candidateId: processedRoadmap.candidateId,
+            milestonesCount: processedRoadmap.milestones.length,
+            createdAt: processedRoadmap.createdAt,
           });
+          
+          setRoadmap(processedRoadmap);
         } else {
           diagnostics.log('No roadmap found for this candidate');
         }
@@ -251,7 +331,7 @@ export default function CandidateDetailPage() {
           setError('Firebase service is currently unavailable. Please try again later.');
           diagInfo.errorType = 'service-unavailable';
         } else {
-          setError('Failed to load candidate information. Please try again later.');
+        setError('Failed to load candidate information. Please try again later.');
           diagInfo.errorType = 'unknown';
         }
         

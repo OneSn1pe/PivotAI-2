@@ -67,20 +67,20 @@ function DebugPanel({ visible }: { visible: boolean }) {
       }
     };
 
-    // Initial checks
-    checkLatency();
-    checkApiStatus();
+      // Initial checks
+      checkLatency();
+      checkApiStatus();
 
-    // Set up intervals
-    const latencyInterval = setInterval(checkLatency, 30000);
-    const apiStatusInterval = setInterval(checkApiStatus, 60000);
+      // Set up intervals
+      const latencyInterval = setInterval(checkLatency, 30000);
+      const apiStatusInterval = setInterval(checkApiStatus, 60000);
 
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      clearInterval(latencyInterval);
-      clearInterval(apiStatusInterval);
-    };
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+        clearInterval(latencyInterval);
+        clearInterval(apiStatusInterval);
+      };
   }, [visible]);
 
   if (!visible || typeof window === 'undefined') return null;
@@ -150,30 +150,30 @@ export default function ClientLayout() {
   }
   
   try {
-    return (
-      <>
+  return (
+    <>
         {/* Render debug components with error boundaries */}
         <React.Suspense fallback={null}>
-          <ApiDebugger />
+      <ApiDebugger />
+        </React.Suspense>
+      
+        <React.Suspense fallback={null}>
+      <ErrorDebugger />
+        </React.Suspense>
+      
+        <React.Suspense fallback={null}>
+      <ApiTester />
+        </React.Suspense>
+      
+        <React.Suspense fallback={null}>
+      <DiagnosticTools />
         </React.Suspense>
         
         <React.Suspense fallback={null}>
-          <ErrorDebugger />
+      <DebugPanel visible={isDev} />
         </React.Suspense>
-        
-        <React.Suspense fallback={null}>
-          <ApiTester />
-        </React.Suspense>
-        
-        <React.Suspense fallback={null}>
-          <DiagnosticTools />
-        </React.Suspense>
-        
-        <React.Suspense fallback={null}>
-          <DebugPanel visible={isDev} />
-        </React.Suspense>
-      </>
-    );
+    </>
+  );
   } catch (err) {
     console.error("Error rendering ClientLayout:", err);
     setError(true);
