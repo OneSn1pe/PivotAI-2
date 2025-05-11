@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CareerRoadmap as RoadmapType, Milestone } from '@/types/user';
+import { safeTimestampToDate } from '@/utils/firebaseUtils';
 
 interface CareerRoadmapProps {
   roadmap: RoadmapType;
@@ -17,6 +18,64 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
   const [localToggling, setLocalToggling] = useState<Record<string, boolean>>({});
   const [errorInfo, setErrorInfo] = useState<string | null>(null);
   const [rendered, setRendered] = useState(false);
+  // Track if we have sanitized the roadmap data
+  const [sanitizedRoadmap, setSanitizedRoadmap] = useState<RoadmapType | null>(null);
+
+  // Sanitize roadmap data on mount - handle timestamps and ensure all required fields
+  useEffect(() => {
+    if (!roadmap) return;
+
+    try {
+      // Clone the roadmap to avoid mutating props
+      const sanitized: RoadmapType = {
+        ...roadmap,
+        id: roadmap.id || `roadmap-${Math.random().toString(36).substring(2, 9)}`,
+        candidateId: roadmap.candidateId || '',
+        // Convert timestamps
+        createdAt: safeTimestampToDate(roadmap.createdAt) || new Date(),
+        updatedAt: safeTimestampToDate(roadmap.updatedAt) || new Date(),
+        milestones: []
+      };
+
+      // Process milestones with safe timestamp conversion
+      if (Array.isArray(roadmap.milestones)) {
+        sanitized.milestones = roadmap.milestones.map((milestone, index) => {
+          // Ensure milestone has an ID
+          const id = milestone.id || `milestone-${Math.random().toString(36).substring(2, 9)}`;
+          
+          // Convert any timestamp fields
+          let createdAt = safeTimestampToDate(milestone.createdAt) || new Date();
+          
+          return {
+            ...milestone,
+            id,
+            createdAt,
+            // Ensure required fields have defaults
+            title: milestone.title || 'Untitled Milestone',
+            description: milestone.description || 'No description provided',
+            timeframe: milestone.timeframe || 'No timeframe specified',
+            completed: !!milestone.completed,
+            skills: Array.isArray(milestone.skills) ? milestone.skills : [],
+            resources: Array.isArray(milestone.resources) ? milestone.resources : []
+          };
+        });
+      }
+
+      console.log('[ROADMAP-COMPONENT] Sanitized roadmap data:', {
+        id: sanitized.id,
+        milestonesCount: sanitized.milestones.length,
+        timestamps: {
+          createdAt: sanitized.createdAt,
+          updatedAt: sanitized.updatedAt
+        }
+      });
+
+      setSanitizedRoadmap(sanitized);
+    } catch (error) {
+      console.error('[ROADMAP-COMPONENT] Error sanitizing roadmap data:', error);
+      setErrorInfo(`Failed to process roadmap data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }, [roadmap]);
 
   // Debug logging - check roadmap props on mount and report rendering success
   useEffect(() => {
@@ -115,11 +174,14 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
     }
   };
 
+  // Use sanitized roadmap data if available, otherwise use original
+  const roadmapData = sanitizedRoadmap || roadmap;
+
   // Sort milestones by timeframe if possible
   let sortedMilestones: Milestone[] = [];
   try {
-    if (roadmap && Array.isArray(roadmap.milestones)) {
-      sortedMilestones = [...roadmap.milestones].sort((a, b) => {
+    if (roadmapData && Array.isArray(roadmapData.milestones)) {
+      sortedMilestones = [...roadmapData.milestones].sort((a, b) => {
         // If timeframes are numbers (e.g., "3 months"), try to sort numerically
         const aMonths = parseInt(a.timeframe?.match?.(/(\d+)/)?.[1] || '0');
         const bMonths = parseInt(b.timeframe?.match?.(/(\d+)/)?.[1] || '0');
@@ -136,7 +198,7 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
     console.error('[ROADMAP-COMPONENT] Error sorting milestones:', error);
     setErrorInfo(`Error processing milestones: ${error instanceof Error ? error.message : 'Unknown error'}`);
     // Use the original milestones array if sorting fails
-    sortedMilestones = roadmap?.milestones || [];
+    sortedMilestones = roadmapData?.milestones || [];
   }
 
   // Add extra error reporting for milestone rendering issues
@@ -251,53 +313,36 @@ const CareerRoadmap: React.FC<CareerRoadmapProps> = ({
                           });
                       }
                     }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    disabled={localToggling[milestone.id]}
+                    className="mr-2"
                   />
-                  <label
-                    htmlFor={`milestone-${milestone.id}`}
-                    className={`ml-2 text-sm font-medium ${
-                      milestone.completed ? 'text-green-600' : 'text-gray-700'
-                    }`}
-                  >
-                    {milestone.completed ? 'Completed' : 'Mark as complete'}
-                    {localToggling[milestone.id] && (
-                      <span className="ml-2 inline-block animate-pulse">
-                        Updating...
-                      </span>
-                    )}
+                  <label htmlFor={`milestone-${milestone.id}`} className="text-sm">
+                    {milestone.completed ? 'Completed' : 'Mark as completed'}
                   </label>
+                  {localToggling[milestone.id] && (
+                    <span className="ml-2 text-xs text-gray-500">Updating...</span>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </div>
       );
-    } catch (err) {
-      console.error(`[ROADMAP-COMPONENT] Error rendering milestone ${index}:`, err);
+    } catch (error) {
+      console.error(`[ROADMAP-COMPONENT] Error rendering milestone ${index}:`, error);
       return (
-        <div key={`error-milestone-${index}`} className="p-4 bg-red-50 border border-red-200 rounded-lg my-4">
-          <p className="text-red-700">Error rendering milestone {index + 1}: {err instanceof Error ? err.message : String(err)}</p>
+        <div key={`error-milestone-${index}`} className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+          <p className="text-red-700">Error rendering milestone {index + 1}</p>
         </div>
       );
     }
   };
 
-  // If we have an error, show it prominently
+  // Show error message if there's an issue
   if (errorInfo) {
     return (
-      <div className="w-full px-4 py-6 bg-red-50 rounded-lg border border-red-200">
-        <h2 className="text-2xl font-bold mb-6 text-red-800">Roadmap Error</h2>
-        <p className="text-red-700">{errorInfo}</p>
-        <div className="mt-4 p-3 bg-white rounded border border-red-100">
-          <p className="text-sm text-gray-700">
-            Debug information: This error occurred while trying to render the career roadmap component.
-            Please contact support with this error message if the problem persists.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Roadmap ID: {roadmap?.id || 'unknown'}
-          </p>
-        </div>
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <h3 className="font-bold text-red-700 mb-2">Error</h3>
+        <p className="text-red-600">{errorInfo}</p>
       </div>
     );
   }
