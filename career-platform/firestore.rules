@@ -31,6 +31,16 @@ service cloud.firestore {
       allow write: if isOwner(resource.data.candidateId);
     }
     
+    // Debug tests collection - allow authenticated users to read/write for testing
+    match /debug_tests/{testId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Recruiter-only test collection - only recruiters can access
+    match /recruiter_only_test/{testId} {
+      allow read, write: if isRecruiter();
+    }
+    
     // For development mode, uncomment this rule to allow all access (for testing)
     // match /{document=**} {
     //   allow read, write: if true;
