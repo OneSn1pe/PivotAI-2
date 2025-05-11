@@ -1,9 +1,82 @@
 import { NextResponse } from 'next/server';
-import { setUserRoleClaim, adminDb } from '@/config/firebase-admin';
+import * as admin from 'firebase-admin';
+
+// Initialize Firebase Admin SDK if not already initialized
+let firebaseAdmin: admin.app.App | undefined;
+let adminAuth: admin.auth.Auth | null = null;
+let adminDb: admin.firestore.Firestore | null = null;
+
+try {
+  // Try to get an existing app
+  firebaseAdmin = admin.app();
+  adminAuth = firebaseAdmin.auth();
+  adminDb = firebaseAdmin.firestore();
+} catch {
+  // Initialize a new app if none exists
+  try {
+    // Use service account credentials if available
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      // If the service account is provided as a JSON string
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      
+      firebaseAdmin = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } else {
+      // Otherwise use the default application credentials
+      firebaseAdmin = admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          // Replace escaped newlines in the private key
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+        }),
+      });
+    }
+    
+    adminAuth = firebaseAdmin.auth();
+    adminDb = firebaseAdmin.firestore();
+    console.log('[Firebase Admin] SDK initialized successfully in update-all-role-claims API');
+  } catch (error) {
+    console.error('[Firebase Admin] SDK initialization error in update-all-role-claims API:', error);
+  }
+}
+
+// Helper function to set role claim
+async function setUserRoleClaim(uid: string, role: string): Promise<void> {
+  if (!adminAuth) throw new Error('Firebase Admin Auth not initialized');
+  
+  try {
+    // Get current custom claims
+    const user = await adminAuth.getUser(uid);
+    const currentClaims = user.customClaims || {};
+    
+    // Update with role claim
+    await adminAuth.setCustomUserClaims(uid, {
+      ...currentClaims,
+      role
+    });
+    
+    console.log(`[Firebase Admin] Set role claim "${role}" for user: ${uid}`);
+    return;
+  } catch (error) {
+    console.error('[Firebase Admin] Error setting custom claims:', error);
+    throw error;
+  }
+}
 
 // API to update all users' role claims from Firestore data
 export async function POST(request: Request) {
   try {
+    // Ensure Firebase services are initialized
+    if (!adminAuth || !adminDb) {
+      console.error('Firebase services not initialized');
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
+    
     // This API should be protected or only accessible to admins in production
     // For now, we'll use a simple check for development vs production
     if (process.env.NODE_ENV === 'production' && process.env.ADMIN_SECRET) {

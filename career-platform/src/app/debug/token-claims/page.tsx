@@ -53,22 +53,67 @@ export default function TokenClaimsDebugPage() {
     setSuccess(null);
     
     try {
-      // Call our API to set the role claim
-      const response = await fetch('/api/auth/set-role-claim', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Try multiple endpoints in sequence until one succeeds
+      const endpoints = [
+        {
+          url: '/api/auth/set-role-claim',
+          payload: { uid: currentUser.uid }
         },
-        body: JSON.stringify({ uid: currentUser.uid }),
-      });
+        {
+          url: '/api/set-custom-claims',
+          payload: { 
+            uid: currentUser.uid, 
+            customClaims: { role: userProfile.role }
+          }
+        },
+        {
+          url: '/api/auth/edge-set-role',
+          payload: { 
+            uid: currentUser.uid, 
+            role: userProfile.role
+          }
+        }
+      ];
       
-      const data = await response.json();
+      let success = false;
+      let finalData = null;
+      let finalError = null;
       
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update role claim');
+      // Try each endpoint
+      for (const endpoint of endpoints) {
+        if (success) break;
+        
+        try {
+          console.log(`Trying endpoint: ${endpoint.url}`);
+          const response = await fetch(endpoint.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(endpoint.payload),
+          });
+          
+          const data = await response.json();
+          finalData = data;
+          
+          if (response.ok) {
+            console.log(`Successfully set claims using ${endpoint.url}:`, data);
+            success = true;
+          } else {
+            console.warn(`Endpoint ${endpoint.url} failed:`, data.error);
+            finalError = data.error;
+          }
+        } catch (err: any) {
+          console.warn(`Error with endpoint ${endpoint.url}:`, err);
+          finalError = err.message || 'Unknown error';
+        }
       }
       
-      setSuccess(`Role claim updated: ${data.message}`);
+      if (!success) {
+        throw new Error(finalError || 'All endpoints failed');
+      }
+      
+      setSuccess(`Role claim updated: ${finalData?.message || 'Success'}`);
       
       // Refresh the token to get the updated claims
       await refreshToken();
@@ -194,7 +239,11 @@ export default function TokenClaimsDebugPage() {
           onClick={async () => {
             try {
               setUpdating(true);
-              const response = await fetch('/api/auth/update-all-role-claims', {
+              setError(null);
+              setSuccess(null);
+              
+              // Try the primary endpoint
+              let response = await fetch('/api/auth/update-all-role-claims', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -202,6 +251,7 @@ export default function TokenClaimsDebugPage() {
                 body: JSON.stringify({}),
               });
               
+              // If first endpoint fails, no fallback for this one as it's admin-only
               const data = await response.json();
               
               if (!response.ok) {

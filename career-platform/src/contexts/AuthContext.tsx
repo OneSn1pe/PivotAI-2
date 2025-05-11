@@ -47,22 +47,65 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const setCustomClaims = async (uid: string) => {
     try {
       console.log(`[AuthContext] Setting custom claims for user: ${uid}`);
-      const response = await fetch('/api/auth/set-role-claim', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      
+      // Try multiple endpoints in sequence until one succeeds
+      const endpoints = [
+        {
+          url: '/api/auth/set-role-claim',
+          payload: { uid }
         },
-        body: JSON.stringify({ uid }),
-      });
+        {
+          url: '/api/set-custom-claims',
+          payload: { 
+            uid, 
+            customClaims: { role: userProfile?.role }
+          }
+        },
+        {
+          url: '/api/auth/edge-set-role',
+          payload: { 
+            uid, 
+            role: userProfile?.role
+          }
+        }
+      ];
       
-      const data = await response.json();
+      let success = false;
+      let finalError = null;
       
-      if (!response.ok) {
-        console.error('[AuthContext] Failed to set custom claims:', data.error);
-        return false;
+      // Try each endpoint
+      for (const endpoint of endpoints) {
+        if (success) break;
+        
+        try {
+          console.log(`[AuthContext] Trying endpoint: ${endpoint.url}`);
+          const response = await fetch(endpoint.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(endpoint.payload),
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            console.log(`[AuthContext] Successfully set claims using ${endpoint.url}:`, data);
+            success = true;
+          } else {
+            console.warn(`[AuthContext] Endpoint ${endpoint.url} failed:`, data.error);
+            finalError = data.error;
+          }
+        } catch (err) {
+          console.warn(`[AuthContext] Error with endpoint ${endpoint.url}:`, err);
+          finalError = err;
+        }
       }
       
-      console.log('[AuthContext] Custom claims set successfully:', data);
+      if (!success) {
+        console.error('[AuthContext] All claim setting endpoints failed:', finalError);
+        return false;
+      }
       
       // Force token refresh to include the new claims
       if (currentUser) {
