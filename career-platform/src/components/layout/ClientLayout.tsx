@@ -3,40 +3,39 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
-// Import ApiDebugger with dynamic loading to avoid SSR issues
+// Import components with proper error handling
 const ApiDebugger = dynamic(
-  () => import('@/components/debugger/ApiDebugger'),
-  { ssr: false }
+  () => import('@/components/debugger/ApiDebugger').catch(() => () => null),
+  { ssr: false, loading: () => null }
 );
 
-// Import ErrorDebugger with dynamic loading
 const ErrorDebugger = dynamic(
-  () => import('@/components/debugger/ErrorDebugger'),
-  { ssr: false }
+  () => import('@/components/debugger/ErrorDebugger').catch(() => () => null),
+  { ssr: false, loading: () => null }
 );
 
-// Import ApiTester with dynamic loading
 const ApiTester = dynamic(
-  () => import('@/components/debugger/ApiTester'),
-  { ssr: false }
+  () => import('@/components/debugger/ApiTester').catch(() => () => null),
+  { ssr: false, loading: () => null }
 );
 
-// Import DiagnosticTools with dynamic loading
 const DiagnosticTools = dynamic(
-  () => import('@/components/debugger/DiagnosticTools'),
-  { ssr: false }
+  () => import('@/components/debugger/DiagnosticTools').catch(() => () => null),
+  { ssr: false, loading: () => null }
 );
 
 // Debug Panel Component
 function DebugPanel({ visible }: { visible: boolean }) {
   const [networkStatus, setNetworkStatus] = useState<{ online: boolean; latency: number | null }>({
-    online: navigator?.onLine ?? true,
+    online: typeof navigator !== 'undefined' ? navigator?.onLine ?? true : true,
     latency: null
   });
   const [apiStatus, setApiStatus] = useState<Record<string, any>>({});
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
+    if (!visible || typeof window === 'undefined') return;
+    
     // Monitor online status
     const handleOnline = () => setNetworkStatus(prev => ({ ...prev, online: true }));
     const handleOffline = () => setNetworkStatus(prev => ({ ...prev, online: false }));
@@ -68,25 +67,23 @@ function DebugPanel({ visible }: { visible: boolean }) {
       }
     };
 
-    if (visible) {
-      // Initial checks
-      checkLatency();
-      checkApiStatus();
+    // Initial checks
+    checkLatency();
+    checkApiStatus();
 
-      // Set up intervals
-      const latencyInterval = setInterval(checkLatency, 30000);
-      const apiStatusInterval = setInterval(checkApiStatus, 60000);
+    // Set up intervals
+    const latencyInterval = setInterval(checkLatency, 30000);
+    const apiStatusInterval = setInterval(checkApiStatus, 60000);
 
-      return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        clearInterval(latencyInterval);
-        clearInterval(apiStatusInterval);
-      };
-    }
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(latencyInterval);
+      clearInterval(apiStatusInterval);
+    };
   }, [visible]);
 
-  if (!visible) return null;
+  if (!visible || typeof window === 'undefined') return null;
 
   return (
     <div className="fixed bottom-0 right-0 bg-gray-800 text-white p-2 text-xs z-50 shadow-lg">
@@ -124,8 +121,8 @@ function DebugPanel({ visible }: { visible: boolean }) {
         <div className="mt-2 max-h-40 overflow-auto">
           <div className="font-bold mb-1">API Routes:</div>
           <div className="grid gap-1">
-            {apiStatus.data.routes.apiRoutes.map((route: string) => {
-              const fileCheck = apiStatus.data.routeFiles.find((f: any) => f.route === route);
+            {apiStatus.data.routes && apiStatus.data.routes.apiRoutes && apiStatus.data.routes.apiRoutes.map((route: string) => {
+              const fileCheck = apiStatus.data.routeFiles && apiStatus.data.routeFiles.find((f: any) => f.route === route);
               return (
                 <div key={route} className="flex items-center">
                   <span className={`w-2 h-2 rounded-full mr-1 ${fileCheck?.fileExists ? 'bg-green-500' : 'bg-red-500'}`}></span>
@@ -142,22 +139,44 @@ function DebugPanel({ visible }: { visible: boolean }) {
 
 export default function ClientLayout() {
   // Only show debug panel in development mode
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
   
-  return (
-    <>
-      {/* Include API Debugger (visible with Alt+D) */}
-      <ApiDebugger />
-      
-      {/* Include Error Debugger (visible with Alt+E) */}
-      <ErrorDebugger />
-      
-      {/* Include API Tester (visible with Alt+T) */}
-      <ApiTester />
-      
-      {/* Include Advanced Diagnostics (visible with Alt+G) */}
-      <DiagnosticTools />
-      <DebugPanel visible={isDev} />
-    </>
-  );
+  // Add error handling for the main component
+  const [error, setError] = useState(false);
+  
+  // Use try/catch to prevent rendering errors from breaking the whole app
+  if (error) {
+    return null;
+  }
+  
+  try {
+    return (
+      <>
+        {/* Render debug components with error boundaries */}
+        <React.Suspense fallback={null}>
+          <ApiDebugger />
+        </React.Suspense>
+        
+        <React.Suspense fallback={null}>
+          <ErrorDebugger />
+        </React.Suspense>
+        
+        <React.Suspense fallback={null}>
+          <ApiTester />
+        </React.Suspense>
+        
+        <React.Suspense fallback={null}>
+          <DiagnosticTools />
+        </React.Suspense>
+        
+        <React.Suspense fallback={null}>
+          <DebugPanel visible={isDev} />
+        </React.Suspense>
+      </>
+    );
+  } catch (err) {
+    console.error("Error rendering ClientLayout:", err);
+    setError(true);
+    return null;
+  }
 } 
