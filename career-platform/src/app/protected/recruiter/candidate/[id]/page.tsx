@@ -9,28 +9,15 @@ import { CandidateProfile, CareerRoadmap, RecruiterProfile } from '@/types/user'
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
 import { UserRole } from '@/types/user';
 
-// Add diagnostic logging helper
-const diagnostics = {
-  log: (message: string, data?: any) => {
-    console.log(`[RECRUITER:CANDIDATE:DIAGNOSTICS] ${message}`, data || '');
-  },
-  error: (message: string, error: any) => {
-    console.error(`[RECRUITER:CANDIDATE:ERROR] ${message}`, error);
-  },
-  warn: (message: string, data?: any) => {
-    console.warn(`[RECRUITER:CANDIDATE:WARNING] ${message}`, data || '');
-  }
-};
-
 export default function CandidateDetailPage() {
-  const { userProfile, currentUser } = useAuth();
+  const { userProfile } = useAuth();
   const recruiterProfile = userProfile as RecruiterProfile | null;
   const router = useRouter();
   const params = useParams();
   const candidateId = params.id as string;
   
   // Add detailed debug logging
-  diagnostics.log(`Initializing page with candidateId=${candidateId}`, userProfile ? {
+  console.log(`CandidateDetailPage: candidateId=${candidateId}, userProfile:`, userProfile ? {
     uid: userProfile.uid,
     role: userProfile.role,
     displayName: userProfile.displayName,
@@ -38,56 +25,18 @@ export default function CandidateDetailPage() {
   } : 'null');
   
   if (recruiterProfile) {
-    diagnostics.log('RecruiterProfile info', {
-      company: recruiterProfile.company,
-      position: recruiterProfile.position
-    });
+    console.log('RecruiterProfile company:', recruiterProfile.company);
   }
-  
-  // Diagnostics: Log environment
-  useEffect(() => {
-    diagnostics.log('Environment check', {
-      isProd: process.env.NODE_ENV === 'production',
-      isDev: process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true',
-      hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
-    });
-    
-    // Check session cookie
-    if (typeof document !== 'undefined') {
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
-      
-      diagnostics.log('Auth tokens check', {
-        sessionExists: !!cookies['session'],
-        sessionLength: cookies['session']?.length || 0
-      });
-    }
-    
-    // Check for ID token
-    if (currentUser) {
-      currentUser.getIdToken()
-        .then(token => {
-          diagnostics.log('Firebase ID token retrieved', { length: token.length });
-        })
-        .catch(err => {
-          diagnostics.error('Failed to get Firebase ID token', err);
-        });
-    } else {
-      diagnostics.warn('No Firebase user found');
-    }
-  }, [currentUser]);
   
   // Add navigation debugging - prevent automatic redirection away from this page
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      diagnostics.log('Page mounted, URL:', window.location.href);
+      console.log('CandidateDetailPage mounted, current URL:', window.location.href);
       
       // Capture any navigation attempts
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        diagnostics.log('Navigation attempt detected');
+        console.log('Navigation attempt detected');
+        // Don't actually prevent navigation, just log it
       };
       
       window.addEventListener('beforeunload', handleBeforeUnload);
@@ -103,83 +52,44 @@ export default function CandidateDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
-  const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
   
   useEffect(() => {
     // Ensure we have a candidateId and the recruiter is authenticated
     if (!candidateId || !recruiterProfile) {
-      const diagInfo = { 
+      console.error('Missing requirements:', { 
         candidateId: !!candidateId, 
         recruiterProfile: !!recruiterProfile,
-        userRole: userProfile?.role,
-        isCurrentUserNull: !currentUser
-      };
-      
-      diagnostics.error('Missing requirements:', diagInfo);
-      setDiagnosticInfo(diagInfo);
+        userRole: userProfile?.role 
+      });
       setError(!candidateId ? 'Candidate ID not provided' : 'Authentication required - not a recruiter profile');
       setLoading(false);
       return;
     }
     
     async function fetchCandidateData() {
-      const diagInfo: Record<string, any> = {};
-      
       try {
         setLoading(true);
-        diagnostics.log(`Fetching candidate data for ID: ${candidateId}`);
-        
-        // First verify the token
-        if (currentUser) {
-          try {
-            const token = await currentUser.getIdToken(true); // Force refresh
-            diagInfo.tokenLength = token.length;
-            diagnostics.log('Retrieved fresh ID token', { length: token.length });
-            
-            // Update session cookie with fresh token
-            if (typeof document !== 'undefined') {
-              const isLocalDevelopment = typeof window !== 'undefined' && 
-                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-              
-              if (isLocalDevelopment) {
-                document.cookie = `session=${token}; path=/; max-age=3600`;
-              } else {
-                document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
-              }
-              diagnostics.log('Updated session cookie with fresh token');
-            }
-          } catch (tokenErr) {
-            diagnostics.error('Error refreshing ID token', tokenErr);
-            diagInfo.tokenError = tokenErr instanceof Error ? tokenErr.message : 'Unknown token error';
-          }
-        }
+        console.log(`Fetching candidate data for ID: ${candidateId}`);
         
         // Fetch candidate profile
         const candidateDocRef = doc(db, 'users', candidateId);
         const candidateDocSnap = await getDoc(candidateDocRef)
           .catch(error => {
-            diagnostics.error('Firebase error fetching candidate:', error);
-            diagInfo.candidateProfileError = error instanceof Error ? error.message : 'Unknown error';
-            diagInfo.candidateProfileErrorCode = error.code || 'No error code';
-            
+            console.error('Firebase error fetching candidate:', error);
             if (error.code === 'permission-denied') {
               throw new Error('Permission denied: You do not have access to view this candidate profile.');
             }
             throw error;
           });
         
-        diagInfo.candidateExists = candidateDocSnap.exists();
-        
         if (!candidateDocSnap.exists()) {
-          diagnostics.warn('Candidate not found');
           setError('Candidate not found');
           setLoading(false);
           return;
         }
         
-        diagnostics.log('Successfully fetched candidate profile');
+        console.log('Successfully fetched candidate profile');
         const candidateData = candidateDocSnap.data() as CandidateProfile;
-        diagInfo.candidateRole = candidateData.role;
         setCandidate(candidateData);
         
         // Set loading to false after getting basic profile
@@ -189,7 +99,7 @@ export default function CandidateDetailPage() {
         setRoadmapLoading(true);
         
         // Fetch candidate's roadmap
-        diagnostics.log(`Fetching roadmap for candidate ID: ${candidateId}`);
+        console.log(`Fetching roadmap for candidate ID: ${candidateId}`);
         const roadmapQuery = query(
           collection(db, 'roadmaps'),
           where('candidateId', '==', candidateId)
@@ -197,24 +107,17 @@ export default function CandidateDetailPage() {
         
         const roadmapSnapshot = await getDocs(roadmapQuery)
           .catch(error => {
-            diagnostics.error('Firebase error fetching roadmap:', error);
-            diagInfo.roadmapError = error instanceof Error ? error.message : 'Unknown error';
-            diagInfo.roadmapErrorCode = error.code || 'No error code';
-            
+            console.error('Firebase error fetching roadmap:', error);
             if (error.code === 'permission-denied') {
               throw new Error('Permission denied: You do not have access to view this roadmap.');
             }
             throw error;
           });
         
-        diagInfo.roadmapFound = !roadmapSnapshot.empty;
-        diagInfo.roadmapCount = roadmapSnapshot.size;
-        
         if (!roadmapSnapshot.empty) {
-          diagnostics.log('Successfully fetched roadmap data');
+          console.log('Successfully fetched roadmap data');
           const roadmapDoc = roadmapSnapshot.docs[0];
           const roadmapData = roadmapDoc.data();
-          diagInfo.milestoneCount = roadmapData.milestones?.length || 0;
           
           // Ensure the milestones are properly converted for display
           const formattedMilestones = roadmapData.milestones.map((milestone: any) => ({
@@ -236,73 +139,27 @@ export default function CandidateDetailPage() {
             updatedAt: roadmapData.updatedAt?.toDate?.() || new Date()
           });
         } else {
-          diagnostics.log('No roadmap found for this candidate');
+          console.log('No roadmap found for this candidate');
         }
         
         setRoadmapLoading(false);
       } catch (err: any) {
-        diagnostics.error('Error in data fetching process:', err);
-        
+        console.error('Error fetching candidate data:', err);
         // Provide more specific error message based on the error
         if (err.message && err.message.includes('Permission denied')) {
           setError(err.message);
-          diagInfo.errorType = 'permission-denied';
         } else if (err.code === 'unavailable') {
           setError('Firebase service is currently unavailable. Please try again later.');
-          diagInfo.errorType = 'service-unavailable';
         } else {
           setError('Failed to load candidate information. Please try again later.');
-          diagInfo.errorType = 'unknown';
         }
-        
-        diagInfo.errorMessage = err.message || 'No error message';
-        diagInfo.errorCode = err.code || 'No error code';
-        
         setLoading(false);
         setRoadmapLoading(false);
-      } finally {
-        setDiagnosticInfo(diagInfo);
       }
     }
     
     fetchCandidateData();
-  }, [candidateId, recruiterProfile, currentUser, userProfile]);
-  
-  // Debug information view for non-production environments
-  const renderDebugInfo = () => {
-    const isDev = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true' || 
-                 (typeof window !== 'undefined' && window.location.hostname === 'localhost');
-    
-    if (!isDev || !diagnosticInfo) return null;
-    
-    return (
-      <div className="mt-8 p-4 bg-gray-100 rounded-lg text-xs">
-        <h3 className="font-bold mb-2">Debug Information</h3>
-        <pre className="overflow-auto">{JSON.stringify(diagnosticInfo, null, 2)}</pre>
-        
-        <div className="mt-4">
-          <h4 className="font-bold">Troubleshooting</h4>
-          <ul className="list-disc pl-5">
-            <li>
-              <a 
-                href="/debug/auth/recruiter" 
-                target="_blank" 
-                className="text-blue-500 underline"
-              >
-                Open Recruiter Debug Tool
-              </a>
-            </li>
-            <li>
-              View console logs for detailed diagnostic information
-            </li>
-            <li>
-              Check the Firebase security rules
-            </li>
-          </ul>
-        </div>
-      </div>
-    );
-  };
+  }, [candidateId, recruiterProfile]);
   
   if (loading) {
     return (
@@ -324,7 +181,6 @@ export default function CandidateDetailPage() {
           >
             Go Back
           </button>
-          {renderDebugInfo()}
         </div>
       </div>
     );
@@ -342,7 +198,6 @@ export default function CandidateDetailPage() {
           >
             Go Back
           </button>
-          {renderDebugInfo()}
         </div>
       </div>
     );
@@ -377,7 +232,7 @@ export default function CandidateDetailPage() {
         </div>
       </div>
       
-      {/* Career Roadmap Section */}
+      {/* Career Roadmap Section - Now placed at the top */}
       <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-blue-800">Career Roadmap</h2>
@@ -394,6 +249,11 @@ export default function CandidateDetailPage() {
                   }}
                 ></div>
               </div>
+              <span className="ml-2 text-sm font-medium text-blue-700">
+                {Math.round(
+                  (roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100
+                )}%
+              </span>
             </div>
           )}
         </div>
@@ -421,8 +281,6 @@ export default function CandidateDetailPage() {
             </p>
           </div>
         )}
-        
-        {renderDebugInfo()}
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
