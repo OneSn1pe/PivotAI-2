@@ -37,26 +37,40 @@ export default function RecruiterDashboard() {
         // Parallel promises for better performance
         const fetchPromises = [];
         
-        // Fetch interested candidates count - use a more efficient query
-        // Just get the count, not all the data
-        const interestedCountPromise = async () => {
+        // Fetch interested candidates - this needs to be fixed
+        const fetchInterestedCandidatesPromise = async () => {
           if (!recruiterProfile.company) return 0;
           
-          // Create a query to match candidates with the company name
-          const companyLower = recruiterProfile.company.toLowerCase();
-          
-          // Query for candidates with this company in their targetCompanies
+          // Query for all candidates
           const candidatesQuery = query(
             collection(db, 'users'),
-            where('role', '==', UserRole.CANDIDATE),
-            where('targetCompaniesLower', 'array-contains', companyLower)
+            where('role', '==', UserRole.CANDIDATE)
           );
           
           const snapshot = await getDocs(candidatesQuery);
-          return snapshot.size;
+          
+          // Filter candidates who have the recruiter's company in their target companies
+          const interestedCandidates = snapshot.docs
+            .map(doc => doc.data() as CandidateProfile)
+            .filter(candidate => {
+              if (!candidate.targetCompanies) return false;
+              
+              // Check if any of the target companies match the recruiter's company
+              return candidate.targetCompanies.some((targetCompany: any) => {
+                // Handle both old format (string) and new format (object)
+                if (typeof targetCompany === 'string') {
+                  return targetCompany.toLowerCase() === recruiterProfile.company.toLowerCase();
+                } else if (targetCompany && typeof targetCompany === 'object' && targetCompany.name) {
+                  return targetCompany.name.toLowerCase() === recruiterProfile.company.toLowerCase();
+                }
+                return false;
+              });
+            });
+          
+          return interestedCandidates.length;
         };
         
-        fetchPromises.push(interestedCountPromise());
+        fetchPromises.push(fetchInterestedCandidatesPromise());
         
         // Fetch bookmarked candidates - but only up to 5 for the dashboard
         const fetchBookmarkedPromise = async () => {
