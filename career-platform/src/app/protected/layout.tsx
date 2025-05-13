@@ -54,10 +54,7 @@ export default function ProtectedLayout({
     // Log the current path and user info for debugging
     console.log(`[ProtectedLayout] Path: ${pathname}, Role: ${userProfile?.role}, PathInfo:`, pathInfo);
     
-    // TEMPORARY DEBUG MODE: Skip most redirects
-    console.log('[ProtectedLayout] TEMPORARY DEBUG MODE: Bypassing most redirects for debugging');
-    
-    // If no user, still redirect to login
+    // If no user, redirect to login once
     if (!userProfile) {
       console.log('[ProtectedLayout] No user profile, redirecting to login');
       router.push('/auth/login');
@@ -67,29 +64,47 @@ export default function ProtectedLayout({
     // Get user role
     const userRole = userProfile.role;
     
-    // Special case: Allow all users to view candidate profiles for debugging
+    // Special case: Allow recruiters to view candidate profiles
+    // Also allow candidates to view their own profile
     if (pathInfo.isRecruiterViewingCandidate) {
+      // Extract the candidate ID from the URL
       const candidateId = pathInfo.candidateId || '';
       
-      console.log(`[ProtectedLayout] DEBUG MODE: Candidate detail access check: userRole=${userRole}, candidateId=${candidateId}, userID=${userProfile.uid}`);
-      console.log('[ProtectedLayout] DEBUG MODE: Allowing all users to view candidate profiles');
-      return; // Exit early, don't redirect
+      console.log(`[ProtectedLayout] Candidate detail access check: userRole=${userRole}, candidateId=${candidateId}, userID=${userProfile.uid}`);
+      
+      // Allow if recruiter or if candidate viewing their own profile
+      if (userRole === UserRole.RECRUITER || 
+          (userRole === UserRole.CANDIDATE && candidateId === userProfile.uid)) {
+        console.log(`[ProtectedLayout] ${userRole} viewing candidate profile - allowing access`);
+        return; // Exit early, don't redirect
+      } else {
+        console.log(`[ProtectedLayout] Access denied to candidate profile. User role: ${userRole}, Candidate ID: ${candidateId}`);
+      }
     }
     
-    // TEMPORARY: Skip role-specific redirects for debugging
-    // Only keep the dashboard redirect as it's essential
+    // For dashboard path, redirect to role-specific dashboard
     if (pathInfo.isDashboard) {
       const roleDashboard = userRole === UserRole.CANDIDATE 
         ? '/protected/candidate/dashboard' 
         : '/protected/recruiter/dashboard';
       
-      console.log(`[ProtectedLayout] DEBUG MODE: Redirecting dashboard to ${roleDashboard}`);
       setRedirectPath(roleDashboard);
       return;
     }
     
-    // TEMPORARY: Skip section access checks
-    console.log('[ProtectedLayout] DEBUG MODE: Bypassing section access checks');
+    // Check if user is in the correct section
+    const isInCorrectSection = userRole === UserRole.CANDIDATE 
+      ? pathInfo.isInCandidateSection
+      : pathInfo.isInRecruiterSection;
+    
+    // Only redirect if user is in the wrong section
+    if (!isInCorrectSection) {
+      const correctPath = userRole === UserRole.CANDIDATE 
+        ? '/protected/candidate/dashboard' 
+        : '/protected/recruiter/dashboard';
+      
+      setRedirectPath(correctPath);
+    }
   }, [userProfile, loading, pathInfo]);
   
   // Handle redirect in a separate effect to avoid render loops
