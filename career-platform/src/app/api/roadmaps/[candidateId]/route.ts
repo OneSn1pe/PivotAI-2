@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/config/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { UserRole } from '@/types/user';
 import { cookies } from 'next/headers';
 import { validateSession } from '@/utils/server-auth';
@@ -29,6 +29,8 @@ export async function GET(
   addLog(`Request for candidate ID: ${params.candidateId}`);
   addLog(`Session cookie present: ${!!sessionCookie}`);
   addLog(`Session cookie length: ${sessionCookie?.length || 0}`);
+  addLog(`Request headers: ${JSON.stringify(Object.fromEntries(request.headers))}`);
+  addLog(`Environment: ${process.env.NODE_ENV}, Dev Mode: ${process.env.NEXT_PUBLIC_DEVELOPMENT_MODE}`);
   
   if (!sessionCookie) {
     addLog('No session cookie found, returning 401');
@@ -79,29 +81,61 @@ export async function GET(
     
     // Determine access permission
     let hasAccess = false;
+    let accessReason = '';
+    
+    // Function to normalize role strings for comparison
+    const normalizeRole = (role: string | undefined): string => {
+      if (!role) return '';
+      return role.toLowerCase();
+    };
     
     // Candidate can access their own roadmap
-    if (userRole === UserRole.CANDIDATE && userId === candidateId) {
-      addLog('Access granted: Candidate accessing own roadmap');
+    if (normalizeRole(userRole as string) === normalizeRole(UserRole.CANDIDATE) && userId === candidateId) {
+      accessReason = 'Candidate accessing own roadmap';
       hasAccess = true;
     }
     // Recruiters can access any candidate's roadmap - handle different role formats
-    else if (userRole === UserRole.RECRUITER || userRole === 'recruiter' || userRole === 'RECRUITER') {
-      addLog('Access granted: User is a recruiter');
+    else if (
+      normalizeRole(userRole as string) === normalizeRole(UserRole.RECRUITER) ||
+      normalizeRole(userRole as string) === 'recruiter'
+    ) {
+      accessReason = 'User is a recruiter';
       hasAccess = true;
     }
     // Special development mode bypass
     else if (process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true') {
-      addLog('⚠️ Access granted: Development mode bypass');
+      accessReason = 'Development mode bypass';
       hasAccess = true;
     }
     // Production temporary bypass for testing
     else if (process.env.NODE_ENV === 'production' && request.headers.get('X-Allow-Recruiter-Test') === 'true') {
-      addLog('⚠️ Access granted: Production test bypass');
+      accessReason = 'Production test bypass';
       hasAccess = true;
     }
+    // Last resort: check Firestore directly
+    else {
+      addLog('Role check failed, checking Firestore directly');
+      try {
+        const userDocRef = doc(db, 'users', userId);
+        const userDocSnap = await getDoc(userDocRef);
+        
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          addLog(`User data from Firestore: ${JSON.stringify(userData)}`);
+          
+          if (normalizeRole(userData.role) === normalizeRole(UserRole.RECRUITER)) {
+            accessReason = 'User is a recruiter (verified via Firestore)';
+            hasAccess = true;
+          }
+        }
+      } catch (firestoreError) {
+        addLog(`Error checking Firestore: ${firestoreError instanceof Error ? firestoreError.message : String(firestoreError)}`);
+      }
+    }
     
-    if (!hasAccess) {
+    if (hasAccess) {
+      addLog(`Access granted: ${accessReason}`);
+    } else {
       addLog(`Access denied: User ${userId} with role ${userRole} cannot access roadmap for ${candidateId}`);
       return NextResponse.json({ 
         error: "Forbidden", 
@@ -159,7 +193,12 @@ export async function GET(
           },
           user: {
             id: userId,
-            role: userRole
+            role: userRole,
+            accessReason
+          },
+          environment: {
+            nodeEnv: process.env.NODE_ENV,
+            devMode: process.env.NEXT_PUBLIC_DEVELOPMENT_MODE
           }
         } : undefined
       });

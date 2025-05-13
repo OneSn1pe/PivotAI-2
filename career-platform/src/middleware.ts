@@ -4,6 +4,7 @@ import { simpleTokenCheck } from '@/utils/client-auth';
 
 // Check if we're in development mode
 const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true';
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Debug helper for tracing with enhanced token debugging
 const debug = {
@@ -55,12 +56,12 @@ const debug = {
             exp: payload.exp,
             iat: payload.iat,
             expValid: payload.exp ? payload.exp > Math.floor(Date.now() / 1000) : false,
-            hasUid: !!payload.user_id,
-            uid: payload.user_id?.substring(0, 5) + '...',
+            hasUid: !!payload.user_id || !!payload.uid,
+            uid: (payload.user_id || payload.uid)?.substring(0, 5) + '...',
             hasRole: !!payload.role,
             role: payload.role,
             iss: payload.iss?.substring(0, 20) + '...',
-            issValid: payload.iss?.includes('securetoken.google.com')
+            issValid: payload.iss?.includes('securetoken.google.com') || payload.iss?.includes('firebase')
           };
           
           // Calculate expiration time
@@ -88,13 +89,14 @@ export async function middleware(request: NextRequest) {
   const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
   
   debug.log(`Processing ${request.method} request for ${path}`);
-  debug.log(`Host: ${hostname}, isLocalhost: ${isLocalhost}, isDevelopment: ${isDevelopment}`);
+  debug.log(`Host: ${hostname}, isLocalhost: ${isLocalhost}, isDevelopment: ${isDevelopment}, isProduction: ${isProduction}`);
 
   // Define paths that are public/auth related - API paths are handled separately
   const isPublicPath = path === '/' || 
     path === '/auth/login' || 
     path === '/auth/register' ||
-    path.startsWith('/_next');
+    path.startsWith('/_next') ||
+    path.includes('/debug/'); // Make debug paths public for easier testing
     
   // Define API paths (handled differently)
   const isApiPath = path.startsWith('/api');
@@ -112,12 +114,17 @@ export async function middleware(request: NextRequest) {
       path,
       timestamp: new Date().toISOString(),
       token: tokenAnalysis,
+      environment: {
+        isDevelopment,
+        isProduction,
+        isLocalhost
+      },
       headers: Object.fromEntries(request.headers),
       cookies: request.cookies.getAll().map(c => ({ name: c.name, value: c.value ? `${c.value.substring(0, 5)}...` : null }))
     });
   }
 
-  // If we're in development mode and running locally, we can bypass some auth checks
+  // If we're in development mode or running locally, we can bypass some auth checks
   if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
     debug.log('Development mode: partially bypassing auth checks for protected routes');
     if (!token) {
@@ -156,7 +163,7 @@ export async function middleware(request: NextRequest) {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Debug-Mode, X-Allow-Recruiter-Test, X-Environment-Info',
           'Access-Control-Max-Age': '86400',
         },
       });
@@ -174,7 +181,7 @@ export async function middleware(request: NextRequest) {
     // Add CORS headers to response
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Debug-Mode, X-Allow-Recruiter-Test, X-Environment-Info');
     
     // Add marker for debugging
     response.headers.set('x-middleware-processed', 'true');
@@ -219,7 +226,7 @@ export async function middleware(request: NextRequest) {
         } else {
           // Special bypass for production to help with short token issues
           // This is a temporary fix until the proper session cookie handling is implemented
-          if (process.env.NODE_ENV === 'production' && token.length > 20) {
+          if (isProduction && token.length > 20) {
             debug.log(`PRODUCTION BYPASS: Allowing access despite invalid token (length=${token.length})`);
             return NextResponse.next();
           }

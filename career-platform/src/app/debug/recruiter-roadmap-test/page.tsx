@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/user';
+import { setSessionCookie } from '@/config/firebase';
 
 export default function RecruiterRoadmapTestPage() {
   const { userProfile, currentUser } = useAuth();
@@ -10,6 +11,11 @@ export default function RecruiterRoadmapTestPage() {
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [environment, setEnvironment] = useState<any>({
+    isProduction: process.env.NODE_ENV === 'production',
+    isDevelopment: process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true',
+    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
+  });
   
   const runTest = async () => {
     if (!candidateId) {
@@ -28,14 +34,16 @@ export default function RecruiterRoadmapTestPage() {
         token = await currentUser.getIdToken(true);
         console.log('Got fresh token:', token.substring(0, 10) + '...');
         
-        // Set the token in cookie for server-side auth
-        document.cookie = `session=${token}; path=/; max-age=3600; SameSite=Lax`;
+        // Set the token in cookie for server-side auth using the improved function
+        const cookieSet = setSessionCookie(token);
+        console.log('Session cookie set:', cookieSet);
       }
       
       // Call our debug API endpoint
       const response = await fetch(`/api/debug/recruiter-roadmap-test?candidateId=${candidateId}`, {
         headers: {
-          'X-Debug-Mode': 'true'
+          'X-Debug-Mode': 'true',
+          'X-Environment-Info': JSON.stringify(environment)
         }
       });
       
@@ -47,7 +55,8 @@ export default function RecruiterRoadmapTestPage() {
         const roadmapResponse = await fetch(`/api/roadmaps/${candidateId}`, {
           headers: {
             'X-Debug-Mode': 'true',
-            'X-Allow-Recruiter-Test': 'true'
+            'X-Allow-Recruiter-Test': 'true',
+            'X-Environment-Info': JSON.stringify(environment)
           }
         });
         
@@ -80,6 +89,16 @@ export default function RecruiterRoadmapTestPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Recruiter Roadmap Access Test</h1>
+      
+      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+        <h2 className="text-lg font-semibold mb-2">Environment Info</h2>
+        <div className="space-y-1">
+          <p><strong>Production:</strong> {environment.isProduction ? 'Yes' : 'No'}</p>
+          <p><strong>Development Mode:</strong> {environment.isDevelopment ? 'Yes' : 'No'}</p>
+          <p><strong>Hostname:</strong> {environment.hostname}</p>
+          <p><strong>NODE_ENV:</strong> {process.env.NODE_ENV}</p>
+        </div>
+      </div>
       
       <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
         <h2 className="text-lg font-semibold mb-2">Current User Info</h2>

@@ -1,15 +1,17 @@
-import { adminAuth } from '@/config/firebase-admin';
+import { adminAuth, getFirebaseAdminApp } from '@/config/firebase-admin';
 
 // Mark this file as server-only
 export const runtime = 'nodejs';
 
 export async function verifyToken(token: string) {
   try {
-    if (!adminAuth) {
+    // Get admin auth on demand to ensure it's initialized in serverless environment
+    const services = getFirebaseAdminApp();
+    if (!services || !services.auth) {
       throw new Error('Firebase Admin Auth not initialized');
     }
     
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await services.auth.verifyIdToken(token);
     return decodedToken;
   } catch (error) {
     console.error('Error verifying token:', error);
@@ -19,7 +21,9 @@ export async function verifyToken(token: string) {
 
 export async function validateSession(sessionCookie: string) {
   try {
-    if (!adminAuth) {
+    // Get admin auth on demand to ensure it's initialized in serverless environment
+    const services = getFirebaseAdminApp();
+    if (!services || !services.auth) {
       console.error('[validateSession] Firebase Admin Auth not initialized');
       throw new Error('Firebase Admin Auth not initialized');
     }
@@ -33,7 +37,7 @@ export async function validateSession(sessionCookie: string) {
     // Verify the session cookie
     try {
       console.log('[validateSession] Attempting to verify session cookie');
-      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+      const decodedClaims = await services.auth.verifySessionCookie(sessionCookie, true);
       
       // Log the claims for debugging
       console.log('[validateSession] Session cookie verified successfully');
@@ -44,12 +48,25 @@ export async function validateSession(sessionCookie: string) {
       if (!decodedClaims.role) {
         console.log('[validateSession] No role claim found in token, fetching from user record');
         try {
-          const userRecord = await adminAuth.getUser(decodedClaims.uid);
+          const userRecord = await services.auth.getUser(decodedClaims.uid);
           if (userRecord.customClaims?.role) {
             console.log('[validateSession] Found role in user record:', userRecord.customClaims.role);
             decodedClaims.role = userRecord.customClaims.role;
           } else {
             console.log('[validateSession] No role found in user record custom claims');
+            
+            // Try to get role from Firestore as a last resort
+            try {
+              const userDoc = await services.db.collection('users').doc(decodedClaims.uid).get();
+              if (userDoc.exists && userDoc.data()?.role) {
+                console.log('[validateSession] Found role in Firestore:', userDoc.data()?.role);
+                decodedClaims.role = userDoc.data()?.role;
+              } else {
+                console.log('[validateSession] No role found in Firestore');
+              }
+            } catch (firestoreError) {
+              console.error('[validateSession] Error fetching role from Firestore:', firestoreError);
+            }
           }
         } catch (userError) {
           console.error('[validateSession] Error fetching user record:', userError);
@@ -63,7 +80,7 @@ export async function validateSession(sessionCookie: string) {
       // Try verifying as ID token instead as a fallback
       try {
         console.log('[validateSession] Attempting to verify as ID token instead');
-        const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
+        const decodedToken = await services.auth.verifyIdToken(sessionCookie);
         
         // Log the claims for debugging
         console.log('[validateSession] ID token verified successfully');
@@ -74,12 +91,25 @@ export async function validateSession(sessionCookie: string) {
         if (!decodedToken.role) {
           console.log('[validateSession] No role claim found in token, fetching from user record');
           try {
-            const userRecord = await adminAuth.getUser(decodedToken.uid);
+            const userRecord = await services.auth.getUser(decodedToken.uid);
             if (userRecord.customClaims?.role) {
               console.log('[validateSession] Found role in user record:', userRecord.customClaims.role);
               decodedToken.role = userRecord.customClaims.role;
             } else {
               console.log('[validateSession] No role found in user record custom claims');
+              
+              // Try to get role from Firestore as a last resort
+              try {
+                const userDoc = await services.db.collection('users').doc(decodedToken.uid).get();
+                if (userDoc.exists && userDoc.data()?.role) {
+                  console.log('[validateSession] Found role in Firestore:', userDoc.data()?.role);
+                  decodedToken.role = userDoc.data()?.role;
+                } else {
+                  console.log('[validateSession] No role found in Firestore');
+                }
+              } catch (firestoreError) {
+                console.error('[validateSession] Error fetching role from Firestore:', firestoreError);
+              }
             }
           } catch (userError) {
             console.error('[validateSession] Error fetching user record:', userError);
