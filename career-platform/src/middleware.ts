@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { simpleTokenCheck } from '@/utils/client-auth';
 
 // Check if we're in development mode
 const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true';
@@ -9,7 +10,7 @@ const debug = {
   log: (...args: any[]) => console.log('[MIDDLEWARE]', ...args),
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const hostname = request.headers.get('host') || '';
   const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
@@ -29,35 +30,33 @@ export function middleware(request: NextRequest) {
   // Get the token from the session
   const token = request.cookies.get('session')?.value;
   debug.log(`Auth token present: ${!!token}, length: ${token?.length || 0}`);
-  debug.log(`Cookie names: ${Array.from(request.cookies.getAll()).map(c => c.name).join(', ')}`);
   
   // If we're in development mode and running locally, we can bypass some auth checks
   if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
     debug.log('Development mode: partially bypassing auth checks for protected routes');
-    // Still log the token status but don't redirect to login
     if (!token) {
       debug.log('Warning: No token present in development mode');
     }
+    
     // For localhost development, we'll still pass through all protected routes
     // but log warnings when authentication would normally fail
     if (!token && path !== '/protected/dashboard') {
       debug.log('⚠️ Development mode: Allowing access to protected route without authentication');
     }
     
-    // For candidate paths specifically, we need special handling
-    if (path.includes('/recruiter/candidate/')) {
-      debug.log(`🔍 RECRUITER PATH in development: ${path}, Token present: ${!!token}`);
+    // Handle candidate detail paths specifically
+    if (path.match(/\/protected\/(recruiter|candidate)\/candidate\/[^\/]+$/)) {
+      const pathSegments = path.split('/');
+      const roleInPath = pathSegments[2];
+      const candidateId = pathSegments[4];
+      
+      debug.log(`🔍 Candidate detail path: ${path}, Role: ${roleInPath}, ID: ${candidateId}`);
     }
     
     // In development, pass through even without token for testing
     return NextResponse.next();
   }
   
-  // Debug the recruiter path specifically
-  if (path.includes('/recruiter/candidate/')) {
-    debug.log(`🔍 RECRUITER PATH: ${path}, Token present: ${!!token}`);
-  }
-
   // Handle API routes separately - don't redirect them
   if (isApiPath) {
     debug.log(`Processing API route: ${request.method} ${path}`);
@@ -107,6 +106,31 @@ export function middleware(request: NextRequest) {
   if (!isPublicPath && !token) {
     debug.log(`Redirecting unauthenticated user from ${path} to login`);
     return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
+  // Handle candidate detail paths
+  if (path.match(/\/protected\/(recruiter|candidate)\/candidate\/[^\/]+$/)) {
+    debug.log(`Processing candidate detail path: ${path}`);
+    
+    if (token) {
+      try {
+        // Use simple token check instead of full verification
+        const checkResult = await simpleTokenCheck(token);
+        
+        if (checkResult.valid) {
+          // Allow access - detailed verification happens in API
+          debug.log(`Access granted to candidate detail path`);
+          return NextResponse.next();
+        } else {
+          // If token check fails, redirect to login
+          return NextResponse.redirect(new URL('/auth/login', request.url));
+        }
+      } catch (error) {
+        debug.log(`Error checking token: ${error}`);
+        // If token verification fails, redirect to login
+        return NextResponse.redirect(new URL('/auth/login', request.url));
+      }
+    }
   }
 
   debug.log(`Passing through request: ${request.method} ${path}, token exists: ${!!token}`);
