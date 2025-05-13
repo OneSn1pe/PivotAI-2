@@ -11,6 +11,7 @@ export default function FixSessionPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiTestResult, setApiTestResult] = useState<any>(null);
 
   useEffect(() => {
     // Check current session cookie
@@ -85,6 +86,36 @@ export default function FixSessionPage() {
     }
   };
 
+  const testApiAccess = async () => {
+    if (!currentUser) {
+      setError('You must be logged in to test API access');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Test the roadmap access API with a test candidate ID
+      const response = await fetch('/api/auth/verify-token');
+      const data = await response.json();
+      
+      setApiTestResult(data);
+      
+      if (data.validationSuccess) {
+        setSuccess(true);
+      } else {
+        setError(`API validation failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error testing API access:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      setApiTestResult({ error: String(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-3xl">
       <h1 className="text-2xl font-bold mb-6">Fix Session Cookie</h1>
@@ -121,13 +152,23 @@ export default function FixSessionPage() {
       )}
       
       <div className="mb-6">
-        <button
-          onClick={fixSession}
-          disabled={loading || !currentUser}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? 'Fixing...' : 'Fix My Session Cookie'}
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={fixSession}
+            disabled={loading || !currentUser}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? 'Fixing...' : 'Fix My Session Cookie'}
+          </button>
+          
+          <button
+            onClick={testApiAccess}
+            disabled={loading || !currentUser}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? 'Testing...' : 'Test API Access'}
+          </button>
+        </div>
       </div>
       
       {error && (
@@ -142,14 +183,56 @@ export default function FixSessionPage() {
         </div>
       )}
       
+      {apiTestResult && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <h2 className="font-bold mb-2">API Test Results</h2>
+          <div className={apiTestResult.validationSuccess ? 'text-green-600' : 'text-red-600'}>
+            <p><strong>Status:</strong> {apiTestResult.validationSuccess ? 'Success ✅' : 'Failed ❌'}</p>
+            {apiTestResult.error && <p><strong>Error:</strong> {apiTestResult.error}</p>}
+            {apiTestResult.validationMethod && <p><strong>Validation Method:</strong> {apiTestResult.validationMethod}</p>}
+          </div>
+          
+          {apiTestResult.decodedToken && (
+            <div className="mt-4">
+              <h3 className="font-semibold">Token Details:</h3>
+              <ul className="list-disc pl-5 mt-2">
+                <li><strong>User ID:</strong> {apiTestResult.decodedToken.uid}</li>
+                <li><strong>Role:</strong> {apiTestResult.decodedToken.role || 'Not set'}</li>
+                <li><strong>Email:</strong> {apiTestResult.decodedToken.email}</li>
+                <li><strong>Expires:</strong> {apiTestResult.decodedToken.expiration}</li>
+              </ul>
+            </div>
+          )}
+          
+          <div className="mt-4 p-2 bg-gray-100 rounded overflow-auto max-h-60">
+            <pre className="text-xs">{JSON.stringify(apiTestResult, null, 2)}</pre>
+          </div>
+        </div>
+      )}
+      
       <div className="bg-yellow-50 p-4 rounded-lg">
         <h2 className="font-bold mb-2">Instructions</h2>
         <ol className="list-decimal pl-5 space-y-2">
-          <li>Click the "Fix My Session Cookie" button above to refresh your token and set it properly</li>
-          <li>After fixing, go back to the <a href="/protected/recruiter/dashboard" className="text-blue-500 underline">dashboard</a> and try viewing candidate roadmaps again</li>
+          <li>Click the <strong>"Fix My Session Cookie"</strong> button above to refresh your token and set it properly</li>
+          <li>After fixing, click <strong>"Test API Access"</strong> to verify the token is working correctly</li>
+          <li>If the API test succeeds, try viewing a candidate roadmap:
+            <ul className="list-disc pl-5 mt-1">
+              <li><a href="/protected/recruiter/candidate/0AZJyS2HH1OXTHdE6QvvzuPYmMA3" className="text-blue-500 underline">View Test Candidate Roadmap</a></li>
+              <li>Or go back to the <a href="/protected/recruiter/dashboard" className="text-blue-500 underline">dashboard</a></li>
+            </ul>
+          </li>
           <li>If you still have issues, try logging out and logging back in</li>
           <li>For persistent issues, check if your role claim is set properly at <a href="/debug/token-claims" className="text-blue-500 underline">Token Claims Debug</a></li>
         </ol>
+        
+        <div className="mt-4 bg-blue-50 p-3 rounded-lg">
+          <h3 className="font-bold">Common Issues:</h3>
+          <ul className="list-disc pl-5 mt-1">
+            <li><strong>Short token (28 chars):</strong> Your browser may be truncating cookies. Try a different browser.</li>
+            <li><strong>Missing role claim:</strong> Visit the Token Claims Debug page to set your role.</li>
+            <li><strong>Third-party cookie blocking:</strong> Check your browser's privacy settings.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
