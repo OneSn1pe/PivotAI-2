@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface LogEntry {
   timestamp: string;
@@ -13,6 +13,21 @@ export default function ApiDebugger() {
   const [isVisible, setIsVisible] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [filter, setFilter] = useState('all');
+  
+  // Use a ref to store logs temporarily to avoid state updates during render
+  const pendingLogsRef = useRef<LogEntry[]>([]);
+  
+  // Process pending logs on next tick to avoid render-time state updates
+  useEffect(() => {
+    if (pendingLogsRef.current.length > 0) {
+      const nextTickHandler = setTimeout(() => {
+        setLogs(prevLogs => [...prevLogs, ...pendingLogsRef.current]);
+        pendingLogsRef.current = [];
+      }, 0);
+      
+      return () => clearTimeout(nextTickHandler);
+    }
+  }, [pendingLogsRef.current.length]);
 
   useEffect(() => {
     // Override console methods to capture logs
@@ -33,12 +48,13 @@ export default function ApiDebugger() {
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
       
-      setLogs(prev => [...prev, {
+      // Add to pending logs instead of updating state directly
+      pendingLogsRef.current.push({
         timestamp: getTimestamp(),
         level: 'info',
         message,
         details: args.length > 1 ? args : args[0]
-      }]);
+      });
     };
 
     console.error = (...args) => {
@@ -47,12 +63,13 @@ export default function ApiDebugger() {
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
       
-      setLogs(prev => [...prev, {
+      // Add to pending logs instead of updating state directly
+      pendingLogsRef.current.push({
         timestamp: getTimestamp(),
         level: 'error',
         message,
         details: args.length > 1 ? args : args[0]
-      }]);
+      });
     };
 
     console.warn = (...args) => {
@@ -61,12 +78,13 @@ export default function ApiDebugger() {
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
       
-      setLogs(prev => [...prev, {
+      // Add to pending logs instead of updating state directly
+      pendingLogsRef.current.push({
         timestamp: getTimestamp(),
         level: 'warn',
         message,
         details: args.length > 1 ? args : args[0]
-      }]);
+      });
     };
 
     // Track API calls using fetch

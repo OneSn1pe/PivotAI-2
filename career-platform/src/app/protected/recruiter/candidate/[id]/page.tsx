@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -120,27 +120,42 @@ export default function CandidateDetailPage() {
   const params = useParams();
   const candidateId = params.id as string;
   
-  // Add detailed debug logging
-  diagnostics.log(`Initializing page with candidateId=${candidateId}`, userProfile ? {
-    uid: userProfile.uid,
-    role: userProfile.role,
-    displayName: userProfile.displayName,
-    isRecruiter: userProfile.role === UserRole.RECRUITER
-  } : 'null');
-  
-  if (recruiterProfile) {
-    diagnostics.log('RecruiterProfile info', {
-      company: recruiterProfile.company,
-      position: recruiterProfile.position
-    });
-  }
-  
   // Add state to toggle between regular and direct render
   const [useDirectRender, setUseDirectRender] = useState(false);
+  const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
+  const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
+
+  // Use React.useCallback to prevent state updates during render
+  const log = useCallback((message: string, data?: any) => {
+    // Only log to console, don't update any state during render
+    diagnostics.log(message, data);
+  }, []);
+  
+  // Initial logging - moved to useEffect to avoid render-time state updates
+  useEffect(() => {
+    // Add detailed debug logging
+    log(`Initializing page with candidateId=${candidateId}`, userProfile ? {
+      uid: userProfile.uid,
+      role: userProfile.role,
+      displayName: userProfile.displayName,
+      isRecruiter: userProfile.role === UserRole.RECRUITER
+    } : 'null');
+    
+    if (recruiterProfile) {
+      log('RecruiterProfile info', {
+        company: recruiterProfile.company,
+        position: recruiterProfile.position
+      });
+    }
+  }, [candidateId, userProfile, recruiterProfile, log]);
   
   // Diagnostics: Log environment
   useEffect(() => {
-    diagnostics.log('Environment check', {
+    log('Environment check', {
       isProd: process.env.NODE_ENV === 'production',
       isDev: process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true',
       hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
@@ -154,7 +169,7 @@ export default function CandidateDetailPage() {
         return acc;
       }, {} as Record<string, string>);
       
-      diagnostics.log('Auth tokens check', {
+      log('Auth tokens check', {
         sessionExists: !!cookies['session'],
         sessionLength: cookies['session']?.length || 0
       });
@@ -164,7 +179,7 @@ export default function CandidateDetailPage() {
     if (currentUser) {
       currentUser.getIdToken()
         .then(token => {
-          diagnostics.log('Firebase ID token retrieved', { length: token.length });
+          log('Firebase ID token retrieved', { length: token.length });
         })
         .catch(err => {
           diagnostics.error('Failed to get Firebase ID token', err);
@@ -172,16 +187,16 @@ export default function CandidateDetailPage() {
     } else {
       diagnostics.warn('No Firebase user found');
     }
-  }, [currentUser]);
+  }, [currentUser, log]);
   
   // Add navigation debugging - prevent automatic redirection away from this page
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      diagnostics.log('Page mounted, URL:', window.location.href);
+      log('Page mounted, URL:', window.location.href);
       
       // Capture any navigation attempts
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        diagnostics.log('Navigation attempt detected');
+        log('Navigation attempt detected');
       };
       
       window.addEventListener('beforeunload', handleBeforeUnload);
@@ -190,14 +205,7 @@ export default function CandidateDetailPage() {
         window.removeEventListener('beforeunload', handleBeforeUnload);
       };
     }
-  }, []);
-  
-  const [candidate, setCandidate] = useState<CandidateProfile | null>(null);
-  const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [roadmapLoading, setRoadmapLoading] = useState(false);
-  const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
+  }, [log]);
   
   useEffect(() => {
     // Ensure we have a candidateId and the recruiter is authenticated
@@ -221,14 +229,14 @@ export default function CandidateDetailPage() {
       
       try {
         setLoading(true);
-        diagnostics.log(`Fetching candidate data for ID: ${candidateId}`);
+        log(`Fetching candidate data for ID: ${candidateId}`);
         
         // First verify the token
         if (currentUser) {
           try {
             const token = await currentUser.getIdToken(true); // Force refresh
             diagInfo.tokenLength = token.length;
-            diagnostics.log('Retrieved fresh ID token', { length: token.length });
+            log('Retrieved fresh ID token', { length: token.length });
             
             // Update session cookie with fresh token
             if (typeof document !== 'undefined') {
@@ -240,7 +248,7 @@ export default function CandidateDetailPage() {
               } else {
                 document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
               }
-              diagnostics.log('Updated session cookie with fresh token');
+              log('Updated session cookie with fresh token');
             }
           } catch (tokenErr) {
             diagnostics.error('Error refreshing ID token', tokenErr);
@@ -271,7 +279,7 @@ export default function CandidateDetailPage() {
           return;
         }
         
-        diagnostics.log('Successfully fetched candidate profile');
+        log('Successfully fetched candidate profile');
         const candidateData = candidateDocSnap.data() as CandidateProfile;
         diagInfo.candidateRole = candidateData.role;
         setCandidate(candidateData);
@@ -283,30 +291,30 @@ export default function CandidateDetailPage() {
         setRoadmapLoading(true);
         
         // ENHANCED DIAGNOSTICS - Add verbose roadmap fetching logs
-        diagnostics.log(`[ENHANCED] Starting roadmap fetch for candidate ID: ${candidateId}`);
-        diagnostics.log(`[ENHANCED] Current environment: ${process.env.NODE_ENV}`);
-        diagnostics.log(`[ENHANCED] User role from profile: ${userProfile?.role}`);
+        log(`[ENHANCED] Starting roadmap fetch for candidate ID: ${candidateId}`);
+        log(`[ENHANCED] Current environment: ${process.env.NODE_ENV}`);
+        log(`[ENHANCED] User role from profile: ${userProfile?.role}`);
         
         // Fetch candidate's roadmap
-        diagnostics.log(`Fetching roadmap for candidate ID: ${candidateId}`);
+        log(`Fetching roadmap for candidate ID: ${candidateId}`);
         const roadmapQuery = query(
           collection(db, 'roadmaps'),
           where('candidateId', '==', candidateId)
         );
         
-        diagnostics.log('[ENHANCED] Running roadmap query...');
+        log('[ENHANCED] Running roadmap query...');
         
         let roadmapSnapshot;
         try {
           roadmapSnapshot = await getDocs(roadmapQuery);
-          diagnostics.log(`[ENHANCED] Roadmap query executed. Empty: ${roadmapSnapshot.empty}. Size: ${roadmapSnapshot.size}`);
+          log(`[ENHANCED] Roadmap query executed. Empty: ${roadmapSnapshot.empty}. Size: ${roadmapSnapshot.size}`);
           diagInfo.roadmapFound = !roadmapSnapshot.empty;
           diagInfo.roadmapCount = roadmapSnapshot.size;
           
           if (roadmapSnapshot.empty) {
-            diagnostics.log('[ENHANCED] No roadmap documents found for this candidate');
+            log('[ENHANCED] No roadmap documents found for this candidate');
           } else {
-            diagnostics.log(`[ENHANCED] Retrieved ${roadmapSnapshot.size} roadmap document(s)`);
+            log(`[ENHANCED] Retrieved ${roadmapSnapshot.size} roadmap document(s)`);
           }
         } catch (error: any) {
           diagnostics.error('[ENHANCED] Firebase error fetching roadmap:', error);
@@ -321,14 +329,14 @@ export default function CandidateDetailPage() {
         }
         
         if (!roadmapSnapshot.empty) {
-          diagnostics.log('Successfully fetched roadmap data');
+          log('Successfully fetched roadmap data');
           const roadmapDoc = roadmapSnapshot.docs[0];
           const roadmapData = roadmapDoc.data();
           
           // Log the raw roadmap data structure
-          diagnostics.log('[ENHANCED] Raw roadmap data keys:', Object.keys(roadmapData));
-          diagnostics.log('[ENHANCED] Milestones array exists:', !!roadmapData.milestones);
-          diagnostics.log('[ENHANCED] Milestones count:', roadmapData.milestones?.length || 0);
+          log('[ENHANCED] Raw roadmap data keys:', Object.keys(roadmapData));
+          log('[ENHANCED] Milestones array exists:', !!roadmapData.milestones);
+          log('[ENHANCED] Milestones count:', roadmapData.milestones?.length || 0);
           
           diagInfo.roadmapDataSnapshot = {
             id: roadmapDoc.id,
@@ -341,19 +349,19 @@ export default function CandidateDetailPage() {
           // Sample the first milestone data if available
           if (roadmapData.milestones && roadmapData.milestones.length > 0) {
             const firstMilestone = roadmapData.milestones[0];
-            diagnostics.log('[ENHANCED] First milestone keys:', Object.keys(firstMilestone));
+            log('[ENHANCED] First milestone keys:', Object.keys(firstMilestone));
             diagInfo.firstMilestoneKeys = Object.keys(firstMilestone);
           }
           
           diagInfo.milestoneCount = roadmapData.milestones?.length || 0;
           
           // Ensure the milestones are properly converted for display
-          diagnostics.log('[ENHANCED] Processing milestones for component rendering');
+          log('[ENHANCED] Processing milestones for component rendering');
           let formattedMilestones;
           
           try {
             formattedMilestones = roadmapData.milestones.map((milestone: any, index: number) => {
-              diagnostics.log(`[ENHANCED] Processing milestone ${index+1}/${roadmapData.milestones.length}`);
+              log(`[ENHANCED] Processing milestone ${index+1}/${roadmapData.milestones.length}`);
               
               // Generate ID if needed
               const milestoneId = milestone.id || `milestone-${Math.random().toString(36).substr(2, 9)}`;
@@ -362,7 +370,7 @@ export default function CandidateDetailPage() {
               const createdAt = safeTimestampToDate(milestone.createdAt) || new Date();
               
               return {
-            ...milestone,
+                ...milestone,
                 id: milestoneId,
                 createdAt: createdAt,
                 // Ensure all required fields have defaults
@@ -374,7 +382,7 @@ export default function CandidateDetailPage() {
               };
             });
             
-            diagnostics.log(`[ENHANCED] Successfully processed ${formattedMilestones.length} milestones`);
+            log(`[ENHANCED] Successfully processed ${formattedMilestones.length} milestones`);
           } catch (milestoneErr) {
             diagnostics.error('[ENHANCED] Error processing milestones:', milestoneErr);
             diagInfo.milestoneProcessingError = milestoneErr instanceof Error ? milestoneErr.message : 'Unknown milestone processing error';
@@ -394,7 +402,7 @@ export default function CandidateDetailPage() {
           };
           
           // Log final roadmap object
-          diagnostics.log('[ENHANCED] Final processed roadmap object:', {
+          log('[ENHANCED] Final processed roadmap object:', {
             id: processedRoadmap.id,
             candidateId: processedRoadmap.candidateId,
             milestonesCount: processedRoadmap.milestones.length,
@@ -403,7 +411,7 @@ export default function CandidateDetailPage() {
           
           setRoadmap(processedRoadmap);
         } else {
-          diagnostics.log('No roadmap found for this candidate');
+          log('No roadmap found for this candidate');
         }
         
         setRoadmapLoading(false);
@@ -418,7 +426,7 @@ export default function CandidateDetailPage() {
           setError('Firebase service is currently unavailable. Please try again later.');
           diagInfo.errorType = 'service-unavailable';
         } else {
-        setError('Failed to load candidate information. Please try again later.');
+          setError('Failed to load candidate information. Please try again later.');
           diagInfo.errorType = 'unknown';
         }
         
@@ -433,7 +441,7 @@ export default function CandidateDetailPage() {
     }
     
     fetchCandidateData();
-  }, [candidateId, recruiterProfile, currentUser, userProfile]);
+  }, [candidateId, recruiterProfile, currentUser, userProfile, log]);
   
   // Debug information view for non-production environments
   const renderDebugInfo = () => {
