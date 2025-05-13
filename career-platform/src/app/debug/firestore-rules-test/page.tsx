@@ -175,6 +175,113 @@ export default function FirestoreRulesTestPage() {
     addLog('\n✅ All tests completed');
   };
 
+  // Test specifically for recruiter access to roadmaps
+  const testRecruiterAccess = async () => {
+    clearLogs();
+    setLoading(true);
+    
+    addLog('🔍 Testing recruiter-specific access to roadmaps...');
+    
+    // Log user information
+    if (currentUser) {
+      addLog(`User: ${currentUser.email} (${currentUser.uid})`);
+      addLog(`Role: ${userProfile?.role || 'unknown'}`);
+      
+      if (userProfile?.role !== 'recruiter') {
+        addLog('⚠️ Warning: You are not logged in as a recruiter. These tests may fail.');
+      }
+    } else {
+      addLog('❌ No user logged in');
+      setLoading(false);
+      return;
+    }
+    
+    const results: Record<string, any> = {};
+    
+    // Test 1: Try to list all roadmaps (should work for recruiters after rule update)
+    addLog('\n1️⃣ Testing list query for all roadmaps (recruiter permission)');
+    try {
+      const allRoadmapsQuery = collection(db, 'roadmaps');
+      const querySnapshot = await getDocs(allRoadmapsQuery);
+      
+      addLog(`✅ Query succeeded, found ${querySnapshot.size} roadmaps`);
+      addLog('This confirms the updated rules are working for recruiters to list all roadmaps');
+      
+      results.listAllRoadmaps = {
+        success: true,
+        count: querySnapshot.size,
+        documentIds: querySnapshot.docs.slice(0, 3).map(doc => doc.id) // First 3 for brevity
+      };
+      
+      // If we found roadmaps, test accessing a random one
+      if (querySnapshot.size > 0) {
+        const randomIndex = Math.floor(Math.random() * querySnapshot.size);
+        const randomDoc = querySnapshot.docs[randomIndex];
+        const randomRoadmapId = randomDoc.id;
+        const randomCandidateId = randomDoc.data().candidateId;
+        
+        addLog(`\n2️⃣ Testing access to random roadmap: ${randomRoadmapId} (candidateId: ${randomCandidateId})`);
+        addLog('This tests if recruiters can access roadmaps they don\'t own');
+        
+        if (randomCandidateId === currentUser.uid) {
+          addLog('⚠️ Selected roadmap belongs to current user, skipping ownership test');
+        } else {
+          addLog('✅ Selected roadmap belongs to a different user, good test case');
+          
+          // Try to get the document directly
+          try {
+            const roadmapDocRef = doc(db, 'roadmaps', randomRoadmapId);
+            const roadmapDoc = await getDoc(roadmapDocRef);
+            
+            if (roadmapDoc.exists()) {
+              addLog('✅ Document access succeeded! Recruiter can access other users\' roadmaps');
+              const data = roadmapDoc.data();
+              
+              results.randomRoadmapAccess = {
+                success: true,
+                roadmapId: randomRoadmapId,
+                candidateId: randomCandidateId,
+                milestonesCount: data.milestones?.length || 0
+              };
+            } else {
+              addLog('⚠️ Document does not exist');
+              results.randomRoadmapAccess = {
+                success: false,
+                reason: 'Document does not exist'
+              };
+            }
+          } catch (error) {
+            addLog(`❌ Document access failed: ${error instanceof Error ? error.message : String(error)}`);
+            results.randomRoadmapAccess = {
+              success: false,
+              error: error instanceof Error ? error.message : String(error)
+            };
+          }
+        }
+      }
+    } catch (error) {
+      addLog(`❌ Query failed: ${error instanceof Error ? error.message : String(error)}`);
+      results.listAllRoadmaps = {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      };
+    }
+    
+    // Set final results
+    setTestResults({
+      timestamp: new Date().toISOString(),
+      user: {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        role: userProfile?.role
+      },
+      tests: results
+    });
+    
+    setLoading(false);
+    addLog('\n✅ Recruiter access tests completed');
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Firestore Rules Test</h1>
@@ -190,13 +297,23 @@ export default function FirestoreRulesTestPage() {
             className="border rounded px-2 py-1 flex-grow"
           />
         </div>
-        <button
-          onClick={testRoadmapsAccess}
-          disabled={loading || !currentUser}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? 'Testing...' : 'Test Roadmaps Access'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={testRoadmapsAccess}
+            disabled={loading || !currentUser}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? 'Testing...' : 'Test Roadmaps Access'}
+          </button>
+          
+          <button
+            onClick={testRecruiterAccess}
+            disabled={loading || !currentUser}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? 'Testing...' : 'Test Recruiter Access'}
+          </button>
+        </div>
         
         {!currentUser && (
           <p className="mt-2 text-red-500">You must be logged in to run these tests.</p>
@@ -246,6 +363,16 @@ export default function FirestoreRulesTestPage() {
           <li>Direct access to a roadmap document (should succeed for recruiters and the candidate owner)</li>
           <li>Access to a non-existent document (should succeed but return not found)</li>
         </ol>
+        
+        <h3 className="font-bold mt-4 mb-2">Updated Rules</h3>
+        <p className="mb-2">The Firestore rules have been updated to explicitly allow recruiters to:</p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>List all roadmaps in the collection</li>
+          <li>Access any roadmap document directly</li>
+          <li>Query roadmaps by candidateId</li>
+        </ul>
+        <p className="mb-2">Use the "Test Recruiter Access" button to specifically test these updated permissions.</p>
+        
         <p className="mt-2 text-sm text-gray-600">
           Note: In development mode, security rules might be bypassed. These tests reflect the actual Firestore
           rules enforcement in your current environment.

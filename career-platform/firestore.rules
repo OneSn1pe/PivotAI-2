@@ -25,6 +25,12 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
     
+    // Development mode check - for more permissive rules in dev
+    function isDevelopmentMode() {
+      // This is a simplified check - in production this will be false
+      return false; // Set to true for local development
+    }
+    
     // Users collection rules
     match /users/{userId} {
       // Allow users to read/write their own data
@@ -33,12 +39,27 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
     
-    // Roadmaps collection rules
+    // Roadmaps collection rules - UPDATED for better recruiter access
     match /roadmaps/{roadmapId} {
       // Allow owners to read/write their own roadmaps
-      // Allow recruiters to read roadmaps, but not modify them
-      allow read: if isOwner(resource.data.candidateId) || isRecruiter();
+      // Allow recruiters to read ANY roadmaps, but not modify them
+      // Added more permissive rule to ensure recruiters can query the collection
+      allow read: if request.auth != null && (
+        isOwner(resource.data.candidateId) || 
+        isRecruiter() || 
+        isDevelopmentMode()
+      );
+      
+      // More permissive list query for recruiters
+      allow list: if request.auth != null && isRecruiter();
+      
+      // Only owners can write to their roadmaps
       allow write: if isOwner(resource.data.candidateId);
+    }
+    
+    // Allow recruiters to query all roadmaps collection
+    match /roadmaps {
+      allow list: if request.auth != null && isRecruiter();
     }
     
     // Debug tests collection - allow authenticated users to read/write for testing
