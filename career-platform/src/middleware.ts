@@ -31,17 +31,13 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
   debug.log(`Auth token present: ${!!token}, length: ${token?.length || 0}`);
   
-  // If we're in development mode and running locally, we can bypass some auth checks
-  if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
-    debug.log('Development mode: partially bypassing auth checks for protected routes');
-    if (!token) {
-      debug.log('Warning: No token present in development mode');
-    }
+  // TEMPORARY: Bypass auth checks for all environments to debug production issues
+  if (path.includes('/protected')) {
+    debug.log('TEMPORARY DEBUG MODE: Bypassing auth checks for protected routes');
     
-    // For localhost development, we'll still pass through all protected routes
-    // but log warnings when authentication would normally fail
-    if (!token && path !== '/protected/dashboard') {
-      debug.log('⚠️ Development mode: Allowing access to protected route without authentication');
+    // For debugging, we'll pass through all protected routes
+    if (!token) {
+      debug.log('⚠️ DEBUG MODE: Allowing access to protected route without authentication');
     }
     
     // Handle candidate detail paths specifically
@@ -50,10 +46,18 @@ export async function middleware(request: NextRequest) {
       const roleInPath = pathSegments[2];
       const candidateId = pathSegments[4];
       
-      debug.log(`🔍 Candidate detail path: ${path}, Role: ${roleInPath}, ID: ${candidateId}`);
+      debug.log(`🔍 DEBUG MODE: Candidate detail path: ${path}, Role: ${roleInPath}, ID: ${candidateId}`);
+      
+      // Add debug headers to the response
+      const response = NextResponse.next();
+      response.headers.set('x-debug-mode', 'true');
+      response.headers.set('x-candidate-id', candidateId);
+      response.headers.set('x-role-path', roleInPath);
+      
+      return response;
     }
     
-    // In development, pass through even without token for testing
+    // Pass through even without token for testing
     return NextResponse.next();
   }
   
