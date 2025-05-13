@@ -81,10 +81,15 @@ export default function InterestedCandidatesDebugPage() {
             const isInterested = data.targetCompanies.some((tc: any) => {
               let match = false;
               
+              if (!recruiterProfile?.company) {
+                addLog(`  - No company set for recruiter`);
+                return false;
+              }
+              
               if (typeof tc === 'string') {
                 match = tc.toLowerCase() === recruiterProfile.company.toLowerCase();
                 addLog(`  - String match "${tc}" with "${recruiterProfile.company}": ${match}`);
-              } else if (tc && typeof tc === 'object' && tc.name) {
+              } else if (tc && typeof tc === 'object' && tc?.name) {
                 match = tc.name.toLowerCase() === recruiterProfile.company.toLowerCase();
                 addLog(`  - Object match "${tc.name}" with "${recruiterProfile.company}": ${match}`);
               }
@@ -182,14 +187,14 @@ export default function InterestedCandidatesDebugPage() {
                         <ul className="list-disc pl-5 text-sm">
                           {candidate.targetCompanies && candidate.targetCompanies.map((tc: any, i: number) => (
                             <li key={i} className={`${
-                              (typeof tc === 'string' && tc.toLowerCase() === (userProfile as RecruiterProfile).company.toLowerCase()) ||
-                              (typeof tc === 'object' && tc.name && tc.name.toLowerCase() === (userProfile as RecruiterProfile).company.toLowerCase())
+                              (typeof tc === 'string' && userProfile && 'company' in userProfile && tc.toLowerCase() === (userProfile as RecruiterProfile).company?.toLowerCase()) ||
+                              (typeof tc === 'object' && tc?.name && userProfile && 'company' in userProfile && tc.name.toLowerCase() === (userProfile as RecruiterProfile).company?.toLowerCase())
                                 ? 'text-green-600 font-bold'
                                 : ''
                             }`}>
                               {typeof tc === 'string' 
                                 ? tc 
-                                : `${tc.name}${tc.position ? ` (${tc.position})` : ''}`}
+                                : `${tc?.name || 'Unknown'}${tc?.position ? ` (${tc.position})` : ''}`}
                             </li>
                           ))}
                         </ul>
@@ -217,14 +222,14 @@ export default function InterestedCandidatesDebugPage() {
                         <ul className="list-disc pl-5 text-sm">
                           {candidate.targetCompanies.map((tc: any, i: number) => (
                             <li key={i} className={`${
-                              (typeof tc === 'string' && tc.toLowerCase() === (userProfile as RecruiterProfile).company.toLowerCase()) ||
-                              (typeof tc === 'object' && tc.name && tc.name.toLowerCase() === (userProfile as RecruiterProfile).company.toLowerCase())
+                              (typeof tc === 'string' && userProfile && 'company' in userProfile && tc.toLowerCase() === (userProfile as RecruiterProfile).company?.toLowerCase()) ||
+                              (typeof tc === 'object' && tc?.name && userProfile && 'company' in userProfile && tc.name.toLowerCase() === (userProfile as RecruiterProfile).company?.toLowerCase())
                                 ? 'text-green-600 font-bold'
                                 : ''
                             }`}>
                               {typeof tc === 'string' 
                                 ? tc 
-                                : `${tc.name || 'Unknown'}${tc.position ? ` (${tc.position})` : ''}`}
+                                : `${tc?.name || 'Unknown'}${tc?.position ? ` (${tc.position})` : ''}`}
                             </li>
                           ))}
                         </ul>

@@ -45,18 +45,16 @@ export default function InterestedCandidatesPage() {
               return false;
             }
             
-            // Check if any of the target companies match the recruiter's company
-            return candidate.targetCompanies.some((targetCompany: any) => {
-              // Handle both old format (string) and new format (object)
-              if (typeof targetCompany === 'string') {
-                // Case-insensitive comparison
-                return targetCompany.toLowerCase() === recruiterProfile.company.toLowerCase();
-              } else if (targetCompany && typeof targetCompany === 'object' && targetCompany.name) {
-                // Case-insensitive comparison
-                return targetCompany.name.toLowerCase() === recruiterProfile.company.toLowerCase();
-              }
-              return false;
+            // Check if the candidate has the recruiter's company as a target
+            const isInterestedInCompany = candidate.targetCompanies?.some((company: any) => {
+              if (!recruiterProfile?.company) return false;
+              
+              return typeof company === 'string' 
+                ? company.toLowerCase() === recruiterProfile.company.toLowerCase() 
+                : company?.name && company.name.toLowerCase() === recruiterProfile.company.toLowerCase();
             });
+            
+            return isInterestedInCompany;
           });
         
         console.log(`Found ${interestedCandidates.length} interested candidates`);
@@ -98,21 +96,26 @@ export default function InterestedCandidatesPage() {
               <h3 className="font-semibold text-xl mb-4">{candidate.displayName}</h3>
               
               {/* Show position if available */}
-              {candidate.targetCompanies?.find((tc: any) => 
-                (typeof tc === 'string' && tc.toLowerCase() === recruiterProfile?.company.toLowerCase()) || 
-                (typeof tc === 'object' && tc.name && tc.name.toLowerCase() === recruiterProfile?.company.toLowerCase())
-              ) && (
+              {candidate.targetCompanies?.find((company: any) => {
+                if (!recruiterProfile?.company) return false;
+                
+                return typeof company === 'object' && company?.name && 
+                  company.name.toLowerCase() === recruiterProfile.company.toLowerCase();
+              }) && (
                 <div className="mb-4 bg-blue-50 p-3 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-700 mb-1">Interested in Position</h4>
                   <p className="font-semibold">
-                    {typeof candidate.targetCompanies.find((tc: any) => 
-                      typeof tc === 'object' && tc.name && tc.name.toLowerCase() === recruiterProfile?.company.toLowerCase()
-                    ) === 'object' 
-                      ? (candidate.targetCompanies.find((tc: any) => 
-                          typeof tc === 'object' && tc.name && tc.name.toLowerCase() === recruiterProfile?.company.toLowerCase()
-                        ) as any).position || 'Not specified'
-                      : 'Not specified'
-                    }
+                    {(() => {
+                      const matchedCompany = candidate.targetCompanies?.find((company: any) => {
+                        if (!recruiterProfile?.company) return false;
+                        return typeof company === 'object' && company?.name && 
+                          company.name.toLowerCase() === recruiterProfile.company.toLowerCase();
+                      });
+                      
+                      return matchedCompany && typeof matchedCompany === 'object' && matchedCompany.position 
+                        ? matchedCompany.position 
+                        : 'Not specified';
+                    })()}
                   </p>
                 </div>
               )}
