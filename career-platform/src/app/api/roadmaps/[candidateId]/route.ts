@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { UserRole } from '@/types/user';
 import { cookies } from 'next/headers';
 import { validateSession } from '@/utils/server-auth';
+import { normalizeRole } from '@/utils/environment';
 
 // Mark this file as server-only
 export const runtime = 'nodejs';
@@ -64,6 +65,7 @@ export async function GET(
     addLog(`User role: ${userRole || 'not set'}`);
     addLog(`User role type: ${typeof userRole}`);
     addLog(`Role comparison: userRole === UserRole.RECRUITER = ${userRole === UserRole.RECRUITER}`);
+    addLog(`Normalized comparison: ${normalizeRole(userRole as string) === normalizeRole(UserRole.RECRUITER)}`);
     addLog(`Raw role value: "${userRole}"`);
     addLog(`Expected recruiter value: "${UserRole.RECRUITER}"`);
     
@@ -83,22 +85,13 @@ export async function GET(
     let hasAccess = false;
     let accessReason = '';
     
-    // Function to normalize role strings for comparison
-    const normalizeRole = (role: string | undefined): string => {
-      if (!role) return '';
-      return role.toLowerCase();
-    };
-    
     // Candidate can access their own roadmap
     if (normalizeRole(userRole as string) === normalizeRole(UserRole.CANDIDATE) && userId === candidateId) {
       accessReason = 'Candidate accessing own roadmap';
       hasAccess = true;
     }
-    // Recruiters can access any candidate's roadmap - handle different role formats
-    else if (
-      normalizeRole(userRole as string) === normalizeRole(UserRole.RECRUITER) ||
-      normalizeRole(userRole as string) === 'recruiter'
-    ) {
+    // Recruiters can access any candidate's roadmap - using normalized comparison
+    else if (normalizeRole(userRole as string) === normalizeRole(UserRole.RECRUITER)) {
       accessReason = 'User is a recruiter';
       hasAccess = true;
     }

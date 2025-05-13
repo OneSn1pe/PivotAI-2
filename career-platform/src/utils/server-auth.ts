@@ -1,4 +1,6 @@
 import { adminAuth, getFirebaseAdminApp } from '@/config/firebase-admin';
+import { normalizeRole } from '@/utils/environment';
+import { UserRole } from '@/types/user';
 
 // Mark this file as server-only
 export const runtime = 'nodejs';
@@ -73,6 +75,20 @@ export async function validateSession(sessionCookie: string) {
         }
       }
       
+      // Normalize role for consistent comparison
+      if (decodedClaims.role) {
+        const normalizedRole = normalizeRole(decodedClaims.role as string);
+        
+        // Map normalized role back to enum value if it matches
+        if (normalizedRole === normalizeRole(UserRole.RECRUITER)) {
+          decodedClaims.role = UserRole.RECRUITER;
+          console.log('[validateSession] Normalized recruiter role to:', decodedClaims.role);
+        } else if (normalizedRole === normalizeRole(UserRole.CANDIDATE)) {
+          decodedClaims.role = UserRole.CANDIDATE;
+          console.log('[validateSession] Normalized candidate role to:', decodedClaims.role);
+        }
+      }
+      
       return decodedClaims;
     } catch (sessionError) {
       console.error('[validateSession] Session cookie verification failed:', sessionError);
@@ -113,6 +129,20 @@ export async function validateSession(sessionCookie: string) {
             }
           } catch (userError) {
             console.error('[validateSession] Error fetching user record:', userError);
+          }
+        }
+        
+        // Normalize role for consistent comparison
+        if (decodedToken.role) {
+          const normalizedRole = normalizeRole(decodedToken.role as string);
+          
+          // Map normalized role back to enum value if it matches
+          if (normalizedRole === normalizeRole(UserRole.RECRUITER)) {
+            decodedToken.role = UserRole.RECRUITER;
+            console.log('[validateSession] Normalized recruiter role to:', decodedToken.role);
+          } else if (normalizedRole === normalizeRole(UserRole.CANDIDATE)) {
+            decodedToken.role = UserRole.CANDIDATE;
+            console.log('[validateSession] Normalized candidate role to:', decodedToken.role);
           }
         }
         
