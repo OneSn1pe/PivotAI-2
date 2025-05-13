@@ -74,6 +74,13 @@ export default function RoadmapAccessTestPage() {
         <div className="mt-6">
           <h2 className="text-xl font-bold mb-2">Test Results</h2>
           
+          {results.auth?.validation?.error && (
+            <div className="mb-6 bg-yellow-100 border-l-4 border-yellow-500 p-4">
+              <p className="font-bold">Authentication Error Detected</p>
+              <p className="mb-2">Your session cookie appears to be invalid. Visit the <a href="/debug/fix-session" className="text-blue-600 underline">Session Fix Tool</a> to resolve this issue.</p>
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
               <h3 className="font-bold mb-2">Authentication</h3>

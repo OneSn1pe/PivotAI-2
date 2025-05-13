@@ -23,9 +23,29 @@ export async function validateSession(sessionCookie: string) {
       throw new Error('Firebase Admin Auth not initialized');
     }
     
+    // Check for obviously invalid tokens (too short)
+    if (!sessionCookie || sessionCookie.length < 100) {
+      console.error('[validateSession] Token is too short to be valid:', sessionCookie?.length);
+      throw new Error('Invalid token format: token too short');
+    }
+    
     // Verify the session cookie
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
-    return decodedClaims;
+    try {
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+      return decodedClaims;
+    } catch (sessionError) {
+      console.error('[validateSession] Session cookie verification failed:', sessionError);
+      
+      // Try verifying as ID token instead as a fallback
+      try {
+        console.log('[validateSession] Attempting to verify as ID token instead');
+        const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
+        return decodedToken;
+      } catch (idTokenError) {
+        console.error('[validateSession] ID token verification also failed:', idTokenError);
+        throw new Error('Invalid session: Failed both session cookie and ID token verification');
+      }
+    }
   } catch (error) {
     console.error('Error validating session:', error);
     throw new Error('Invalid session');
