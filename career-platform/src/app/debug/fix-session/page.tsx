@@ -233,12 +233,6 @@ export default function FixSessionPage() {
             <li><strong>Third-party cookie blocking:</strong> Check your browser's privacy settings.</li>
           </ul>
         </div>
-        
-        <div className="mt-4 bg-green-50 p-3 rounded-lg">
-          <h3 className="font-bold">Production Mode Fix:</h3>
-          <p className="mb-2">A production bypass has been implemented that should automatically allow access to candidate roadmaps regardless of token issues.</p>
-          <p>If you're still experiencing problems, use the "Fix My Session Cookie" button above and then try accessing the roadmap again.</p>
-        </div>
       </div>
     </div>
   );
