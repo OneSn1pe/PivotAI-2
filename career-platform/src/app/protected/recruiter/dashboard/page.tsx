@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile, UserRole, RecruiterProfile } from '@/types/user';
@@ -19,64 +19,85 @@ export default function RecruiterDashboard() {
   const router = useRouter();
   
   useEffect(() => {
-    async function fetchDashboardData() {
-      if (!recruiterProfile) return;
-      
+    // Skip fetching if we don't have a user profile yet
+    if (!recruiterProfile) return;
+    
+    // Create an async function to fetch data
+    const fetchDashboardData = async () => {
       try {
-        // Get all candidates
-        const candidatesQuery = query(
-          collection(db, 'users'),
-          where('role', '==', UserRole.CANDIDATE)
-        );
+        // Get bookmarked candidates count immediately from the profile
+        const bookmarkedCount = recruiterProfile.bookmarkedCandidates?.length || 0;
         
-        const candidatesSnapshot = await getDocs(candidatesQuery);
+        // Start with partial stats to show something quickly
+        setStats(prev => ({
+          ...prev,
+          bookmarkedCandidates: bookmarkedCount
+        }));
         
-        // Filter candidates who have the recruiter's company in their target companies
-        const interestedCandidates = candidatesSnapshot.docs
-          .map(doc => doc.data() as CandidateProfile)
-          .filter(candidate => {
-            if (!candidate.targetCompanies) return false;
-            
-            // Check if any of the target companies match the recruiter's company
-            return candidate.targetCompanies.some((targetCompany: any) => {
-              // Handle both old format (string) and new format (object)
-              if (typeof targetCompany === 'string') {
-                return targetCompany.toLowerCase() === recruiterProfile.company.toLowerCase();
-              } else if (targetCompany && typeof targetCompany === 'object' && targetCompany.name) {
-                return targetCompany.name.toLowerCase() === recruiterProfile.company.toLowerCase();
-              }
-              return false;
-            });
-          });
+        // Parallel promises for better performance
+        const fetchPromises = [];
         
-        // Fetch bookmarked candidates
-        if (recruiterProfile.bookmarkedCandidates && recruiterProfile.bookmarkedCandidates.length > 0) {
-          const bookmarkedProfiles = [];
+        // Fetch interested candidates count - use a more efficient query
+        // Just get the count, not all the data
+        const interestedCountPromise = async () => {
+          if (!recruiterProfile.company) return 0;
           
-          for (const candidateId of recruiterProfile.bookmarkedCandidates.slice(0, 5)) {
-            const candidateDoc = await getDocs(
-              query(collection(db, 'users'), where('uid', '==', candidateId))
-            );
-            
-            if (!candidateDoc.empty) {
-              bookmarkedProfiles.push(candidateDoc.docs[0].data() as CandidateProfile);
-            }
+          // Create a query to match candidates with the company name
+          const companyLower = recruiterProfile.company.toLowerCase();
+          
+          // Query for candidates with this company in their targetCompanies
+          const candidatesQuery = query(
+            collection(db, 'users'),
+            where('role', '==', UserRole.CANDIDATE),
+            where('targetCompaniesLower', 'array-contains', companyLower)
+          );
+          
+          const snapshot = await getDocs(candidatesQuery);
+          return snapshot.size;
+        };
+        
+        fetchPromises.push(interestedCountPromise());
+        
+        // Fetch bookmarked candidates - but only up to 5 for the dashboard
+        const fetchBookmarkedPromise = async () => {
+          if (!recruiterProfile.bookmarkedCandidates || 
+              recruiterProfile.bookmarkedCandidates.length === 0) {
+            return [];
           }
           
-          setBookmarkedCandidates(bookmarkedProfiles);
-        }
+          // Only get the first 5 bookmarked candidates
+          const candidateIds = recruiterProfile.bookmarkedCandidates.slice(0, 5);
+          
+          // Use a single query with 'in' operator instead of multiple queries
+          const bookmarkedQuery = query(
+            collection(db, 'users'),
+            where('uid', 'in', candidateIds)
+          );
+          
+          const bookmarkedSnapshot = await getDocs(bookmarkedQuery);
+          return bookmarkedSnapshot.docs.map(doc => doc.data() as CandidateProfile);
+        };
         
+        fetchPromises.push(fetchBookmarkedPromise());
+        
+        // Wait for all promises to resolve
+        const results = await Promise.all(fetchPromises);
+        const interestedCount = results[0] as number;
+        const bookmarkedProfiles = results[1] as CandidateProfile[];
+        
+        // Update state with all the data
+        setBookmarkedCandidates(bookmarkedProfiles);
         setStats({
-          bookmarkedCandidates: recruiterProfile.bookmarkedCandidates?.length || 0,
-          interestedCandidates: interestedCandidates.length,
+          bookmarkedCandidates: bookmarkedCount,
+          interestedCandidates: interestedCount,
         });
         
-        setLoading(false);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+      } finally {
         setLoading(false);
       }
-    }
+    };
     
     fetchDashboardData();
   }, [recruiterProfile]);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Sidebar from '@/components/layout/Sidebar';
@@ -14,66 +14,77 @@ export default function ProtectedLayout({
   const { userProfile, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
-
-  // Clear any existing timeouts when component unmounts
-  useEffect(() => {
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+  
+  // Memoize path checking to avoid recalculations
+  const pathInfo = useMemo(() => {
+    if (!pathname) return { isDashboard: false, isRecruiterViewingCandidate: false };
+    
+    return {
+      isDashboard: pathname === '/protected/dashboard',
+      isRecruiterViewingCandidate: pathname?.includes('/recruiter/candidate/'),
+      isInCandidateSection: pathname?.includes('/candidate'),
+      isInRecruiterSection: pathname?.includes('/recruiter'),
     };
-  }, [timeoutId]);
+  }, [pathname]);
 
+  // Handle redirects in a single effect to avoid race conditions
   useEffect(() => {
-    // If we're not loading and there's no user, redirect to login
-    if (!loading && !userProfile) {
+    // Skip all checks if still loading
+    if (loading) return;
+    
+    // If no user, redirect to login once
+    if (!userProfile) {
       router.push('/auth/login');
+      return;
     }
     
-    // Detect correct route for user role
-    if (!loading && userProfile) {
-      const userRole = userProfile.role;
-      
-      console.log(`[ProtectedLayout] Checking path: ${pathname} for user role: ${userRole}`);
-      
-      // Special case: Allow recruiters to view candidate profiles
-      const isRecruiterViewingCandidate = userRole === UserRole.RECRUITER && 
-        pathname?.includes('/recruiter/candidate/');
-        
-      if (isRecruiterViewingCandidate) {
-        console.log('[ProtectedLayout] Recruiter viewing candidate profile - allowing access');
-        return; // Exit early, don't redirect
-      }
-      
-      // Standard path checking
-      const isInCorrectSection = userRole === UserRole.CANDIDATE 
-        ? pathname?.includes('/candidate')
-        : pathname?.includes('/recruiter');
-      
-      if (!isInCorrectSection && pathname !== '/protected/dashboard') {
-        console.log(`[ProtectedLayout] Redirecting from ${pathname} to correct dashboard for ${userRole} role`);
-        
-        const correctPath = userRole === UserRole.CANDIDATE 
-          ? '/protected/candidate/dashboard' 
-          : '/protected/recruiter/dashboard';
-        
-        // Set a timeout to avoid immediate redirects which can cause race conditions
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        const id = setTimeout(() => {
-          console.log(`[ProtectedLayout] Executing redirect to ${correctPath}`);
-          router.push(correctPath);
-        }, 300);
-        
-        setTimeoutId(id);
-      }
+    // Get user role
+    const userRole = userProfile.role;
+    
+    // Special case: Allow recruiters to view candidate profiles
+    if (userRole === UserRole.RECRUITER && pathInfo.isRecruiterViewingCandidate) {
+      console.log('[ProtectedLayout] Recruiter viewing candidate profile - allowing access');
+      return; // Exit early, don't redirect
     }
-  }, [userProfile, loading, router, pathname, timeoutId]);
+    
+    // For dashboard path, redirect to role-specific dashboard
+    if (pathInfo.isDashboard) {
+      const roleDashboard = userRole === UserRole.CANDIDATE 
+        ? '/protected/candidate/dashboard' 
+        : '/protected/recruiter/dashboard';
+      
+      setRedirectPath(roleDashboard);
+      return;
+    }
+    
+    // Check if user is in the correct section
+    const isInCorrectSection = userRole === UserRole.CANDIDATE 
+      ? pathInfo.isInCandidateSection
+      : pathInfo.isInRecruiterSection;
+    
+    // Only redirect if user is in the wrong section
+    if (!isInCorrectSection) {
+      const correctPath = userRole === UserRole.CANDIDATE 
+        ? '/protected/candidate/dashboard' 
+        : '/protected/recruiter/dashboard';
+      
+      setRedirectPath(correctPath);
+    }
+  }, [userProfile, loading, pathInfo]);
+  
+  // Handle redirect in a separate effect to avoid render loops
+  useEffect(() => {
+    if (redirectPath) {
+      console.log(`[ProtectedLayout] Redirecting to ${redirectPath}`);
+      router.push(redirectPath);
+      // Clear the redirect path to prevent multiple redirects
+      setRedirectPath(null);
+    }
+  }, [redirectPath, router]);
 
-  // Show loading state if we're loading auth or transitioning between pages
-  if (loading || isTransitioning) {
+  // Show loading state if we're loading auth
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="flex flex-col items-center">

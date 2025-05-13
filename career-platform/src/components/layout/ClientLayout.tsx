@@ -3,29 +3,35 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 
-// Import components with proper error handling
-const ApiDebugger = dynamic(
+// Determine if we're in development mode
+const isDev = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+
+// Only import debug components in development mode
+const ApiDebugger = isDev ? dynamic(
   () => import('@/components/debugger/ApiDebugger').catch(() => () => null),
   { ssr: false, loading: () => null }
-);
+) : () => null;
 
-const ErrorDebugger = dynamic(
+const ErrorDebugger = isDev ? dynamic(
   () => import('@/components/debugger/ErrorDebugger').catch(() => () => null),
   { ssr: false, loading: () => null }
-);
+) : () => null;
 
-const ApiTester = dynamic(
+const ApiTester = isDev ? dynamic(
   () => import('@/components/debugger/ApiTester').catch(() => () => null),
   { ssr: false, loading: () => null }
-);
+) : () => null;
 
-const DiagnosticTools = dynamic(
+const DiagnosticTools = isDev ? dynamic(
   () => import('@/components/debugger/DiagnosticTools').catch(() => () => null),
   { ssr: false, loading: () => null }
-);
+) : () => null;
 
-// Debug Panel Component
+// Debug Panel Component - only rendered in development
 function DebugPanel({ visible }: { visible: boolean }) {
+  // Skip all processing if not visible or not in development
+  if (!visible || !isDev || typeof window === 'undefined') return null;
+
   const [networkStatus, setNetworkStatus] = useState<{ online: boolean; latency: number | null }>({
     online: typeof navigator !== 'undefined' ? navigator?.onLine ?? true : true,
     latency: null
@@ -34,7 +40,7 @@ function DebugPanel({ visible }: { visible: boolean }) {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!visible || typeof window === 'undefined') return;
+    if (!visible) return;
     
     // Monitor online status
     const handleOnline = () => setNetworkStatus(prev => ({ ...prev, online: true }));
@@ -43,8 +49,10 @@ function DebugPanel({ visible }: { visible: boolean }) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Ping server for latency test every 30 seconds
+    // Ping server for latency test every 30 seconds - but only when expanded
     const checkLatency = async () => {
+      if (!expanded) return;
+      
       try {
         const start = performance.now();
         await fetch('/api/debug-test');
@@ -56,8 +64,10 @@ function DebugPanel({ visible }: { visible: boolean }) {
       }
     };
 
-    // Check API statuses
+    // Check API statuses - but only when expanded
     const checkApiStatus = async () => {
+      if (!expanded) return;
+      
       try {
         const response = await fetch('/api/debug-info');
         const data = await response.json();
@@ -67,23 +77,23 @@ function DebugPanel({ visible }: { visible: boolean }) {
       }
     };
 
-      // Initial checks
+    // Initial checks - only if expanded
+    if (expanded) {
       checkLatency();
       checkApiStatus();
+    }
 
-      // Set up intervals
-      const latencyInterval = setInterval(checkLatency, 30000);
-      const apiStatusInterval = setInterval(checkApiStatus, 60000);
+    // Set up intervals
+    const latencyInterval = setInterval(checkLatency, 30000);
+    const apiStatusInterval = setInterval(checkApiStatus, 60000);
 
-      return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        clearInterval(latencyInterval);
-        clearInterval(apiStatusInterval);
-      };
-  }, [visible]);
-
-  if (!visible || typeof window === 'undefined') return null;
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      clearInterval(latencyInterval);
+      clearInterval(apiStatusInterval);
+    };
+  }, [visible, expanded]);
 
   return (
     <div className="fixed bottom-0 right-0 bg-gray-800 text-white p-2 text-xs z-50 shadow-lg">
@@ -138,8 +148,10 @@ function DebugPanel({ visible }: { visible: boolean }) {
 }
 
 export default function ClientLayout() {
-  // Only show debug panel in development mode
-  const isDev = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
+  // Skip rendering all debug components in production
+  if (!isDev) {
+    return null;
+  }
   
   // Add error handling for the main component
   const [error, setError] = useState(false);
@@ -150,30 +162,30 @@ export default function ClientLayout() {
   }
   
   try {
-  return (
-    <>
-        {/* Render debug components with error boundaries */}
+    return (
+      <>
+        {/* Only render debug components in development mode */}
         <React.Suspense fallback={null}>
-      <ApiDebugger />
-        </React.Suspense>
-      
-        <React.Suspense fallback={null}>
-      <ErrorDebugger />
-        </React.Suspense>
-      
-        <React.Suspense fallback={null}>
-      <ApiTester />
-        </React.Suspense>
-      
-        <React.Suspense fallback={null}>
-      <DiagnosticTools />
+          <ApiDebugger />
         </React.Suspense>
         
         <React.Suspense fallback={null}>
-      <DebugPanel visible={isDev} />
+          <ErrorDebugger />
         </React.Suspense>
-    </>
-  );
+        
+        <React.Suspense fallback={null}>
+          <ApiTester />
+        </React.Suspense>
+        
+        <React.Suspense fallback={null}>
+          <DiagnosticTools />
+        </React.Suspense>
+          
+        <React.Suspense fallback={null}>
+          <DebugPanel visible={isDev} />
+        </React.Suspense>
+      </>
+    );
   } catch (err) {
     console.error("Error rendering ClientLayout:", err);
     setError(true);

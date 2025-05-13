@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/user';
@@ -9,32 +9,35 @@ export default function DashboardRedirect() {
   const { userProfile, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [redirected, setRedirected] = useState(false);
 
   useEffect(() => {
-    if (!loading && userProfile) {
-      // Get the referrer to see where we came from
-      const referrer = typeof window !== 'undefined' ? document.referrer : '';
-      console.log(`[DashboardRedirect] Current path: ${pathname}, Referrer: ${referrer}`);
-      
-      // Check if we're coming from a candidate profile view
-      const isFromCandidateProfile = referrer.includes('/recruiter/candidate/');
-      
-      if (isFromCandidateProfile) {
-        console.log('[DashboardRedirect] Coming from candidate profile, not redirecting');
-        // If we're coming from a candidate profile, don't redirect
-        return;
-      }
-      
-      // Standard redirection logic
-      if (userProfile.role === UserRole.CANDIDATE) {
-        console.log('[DashboardRedirect] Redirecting to candidate dashboard');
-        router.push('/protected/candidate/dashboard');
-      } else if (userProfile.role === UserRole.RECRUITER) {
-        console.log('[DashboardRedirect] Redirecting to recruiter dashboard');
-        router.push('/protected/recruiter/dashboard');
-      }
+    // Skip if already redirected or still loading
+    if (redirected || loading || !userProfile) return;
+    
+    // Get the referrer to see where we came from - only check once
+    const referrer = typeof window !== 'undefined' ? document.referrer : '';
+    
+    // Check if we're coming from a candidate profile view
+    const isFromCandidateProfile = referrer.includes('/recruiter/candidate/');
+    
+    if (isFromCandidateProfile) {
+      console.log('[DashboardRedirect] Coming from candidate profile, not redirecting');
+      // If we're coming from a candidate profile, don't redirect
+      return;
     }
-  }, [userProfile, loading, router, pathname]);
+    
+    // Standard redirection logic - only execute once
+    if (userProfile.role === UserRole.CANDIDATE) {
+      console.log('[DashboardRedirect] Redirecting to candidate dashboard');
+      router.push('/protected/candidate/dashboard');
+      setRedirected(true);
+    } else if (userProfile.role === UserRole.RECRUITER) {
+      console.log('[DashboardRedirect] Redirecting to recruiter dashboard');
+      router.push('/protected/recruiter/dashboard');
+      setRedirected(true);
+    }
+  }, [userProfile, loading, router, pathname, redirected]);
 
   return (
     <div className="flex justify-center items-center h-full">

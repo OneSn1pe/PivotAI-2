@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { 
   User as FirebaseUser, 
   createUserWithEmailAndPassword, 
@@ -41,10 +41,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isLocalDevelopment = typeof window !== 'undefined' && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   
+  // Only set custom claims if needed - track if we've already done it
+  const [claimsSet, setClaimsSet] = useState(false);
+
   console.log(`[AuthContext] Provider initialized, isLocalDevelopment: ${isLocalDevelopment}`);
 
-  // Function to set custom claims
+  // Function to set custom claims - optimized to only run when necessary
   const setCustomClaims = async (uid: string) => {
+    // Skip if we've already set claims in this session
+    if (claimsSet) return true;
+    
     try {
       console.log(`[AuthContext] Setting custom claims for user: ${uid}`);
       
@@ -92,6 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           if (response.ok) {
             console.log(`[AuthContext] Successfully set claims using ${endpoint.url}:`, data);
             success = true;
+            setClaimsSet(true);
           } else {
             console.warn(`[AuthContext] Endpoint ${endpoint.url} failed:`, data.error);
             finalError = data.error;
@@ -107,8 +114,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
       
-      // Force token refresh to include the new claims
-      if (currentUser) {
+      // Force token refresh to include the new claims - only when needed
+      if (currentUser && !claimsSet) {
         await currentUser.getIdToken(true);
         console.log('[AuthContext] Token refreshed with new claims');
       }
@@ -163,27 +170,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             console.log(`[AuthContext] User role: ${userData.role}`);
             setUserProfile(userData);
             
-            // Set custom claims if needed
-            await setCustomClaims(user.uid);
-            
-            // Get the ID token with updated claims
-            const token = await user.getIdToken(true);
-            console.log(`[AuthContext] Got token, length: ${token.length}`);
-            
-            // Set the token in a cookie
-            if (isLocalDevelopment) {
-              // For localhost, we don't need secure or samesite strict
-              document.cookie = `session=${token}; path=/; max-age=3600`;
-            } else {
-              document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+            // Set custom claims if needed - but don't do it repeatedly
+            if (!claimsSet) {
+              await setCustomClaims(user.uid);
             }
-            console.log('[AuthContext] Set session cookie');
             
-            // Update last login time
-            await setDoc(doc(db, 'users', user.uid), 
-              { lastLogin: new Date() }, 
-              { merge: true }
-            );
+            // Get the ID token with updated claims - only if claims were just set
+            if (!claimsSet) {
+              const token = await user.getIdToken(false); // Don't force refresh every time
+              console.log(`[AuthContext] Got token, length: ${token.length}`);
+              
+              // Set the token in a cookie - only if we don't already have one
+              const hasSessionCookie = document.cookie.includes('session=');
+              if (!hasSessionCookie) {
+                if (isLocalDevelopment) {
+                  document.cookie = `session=${token}; path=/; max-age=3600`;
+                } else {
+                  document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+                }
+                console.log('[AuthContext] Set session cookie');
+              }
+            }
+            
+            // Update last login time - but only once per session
+            if (!claimsSet) {
+              await setDoc(doc(db, 'users', user.uid), 
+                { lastLogin: new Date() }, 
+                { merge: true }
+              );
+            }
           } else {
             console.error(`[AuthContext] No user document found for uid: ${user.uid}`);
           }
@@ -382,7 +397,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
     currentUser,
     userProfile,
     loading,
@@ -391,10 +407,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loginWithGoogle,
     logout,
     updateUserProfile,
-  };
+  }), [currentUser, userProfile, loading]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
           <div className="flex flex-col items-center">
