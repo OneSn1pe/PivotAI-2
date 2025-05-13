@@ -20,9 +20,12 @@ export default function ProtectedLayout({
   const pathInfo = useMemo(() => {
     if (!pathname) return { isDashboard: false, isRecruiterViewingCandidate: false };
     
+    // Check both old pattern (/recruiter/candidate/) and new pattern (/[role]/candidate/)
+    const isViewingCandidate = pathname.match(/\/protected\/(recruiter|candidate)\/candidate\/[^\/]+$/);
+    
     return {
       isDashboard: pathname === '/protected/dashboard',
-      isRecruiterViewingCandidate: pathname?.includes('/recruiter/candidate/'),
+      isRecruiterViewingCandidate: isViewingCandidate !== null,
       isInCandidateSection: pathname?.includes('/candidate'),
       isInRecruiterSection: pathname?.includes('/recruiter'),
     };
@@ -32,6 +35,9 @@ export default function ProtectedLayout({
   useEffect(() => {
     // Skip all checks if still loading
     if (loading) return;
+    
+    // Log the current path and user info for debugging
+    console.log(`[ProtectedLayout] Path: ${pathname}, Role: ${userProfile?.role}, PathInfo:`, pathInfo);
     
     // If no user, redirect to login once
     if (!userProfile) {
@@ -43,9 +49,17 @@ export default function ProtectedLayout({
     const userRole = userProfile.role;
     
     // Special case: Allow recruiters to view candidate profiles
-    if (userRole === UserRole.RECRUITER && pathInfo.isRecruiterViewingCandidate) {
-      console.log('[ProtectedLayout] Recruiter viewing candidate profile - allowing access');
-      return; // Exit early, don't redirect
+    // Also allow candidates to view their own profile
+    if (pathInfo.isRecruiterViewingCandidate) {
+      // Extract the candidate ID from the URL
+      const candidateId = pathname?.split('/').pop() || '';
+      
+      // Allow if recruiter or if candidate viewing their own profile
+      if (userRole === UserRole.RECRUITER || 
+          (userRole === UserRole.CANDIDATE && candidateId === userProfile.uid)) {
+        console.log(`[ProtectedLayout] ${userRole} viewing candidate profile - allowing access`);
+        return; // Exit early, don't redirect
+      }
     }
     
     // For dashboard path, redirect to role-specific dashboard
