@@ -1,17 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { analyzeResume } from '@/services/openai';
+import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { isDevelopmentMode } from '@/utils/environment';
-
-// Extend Window interface to include our debug logs
-declare global {
-  interface Window {
-    _debugLogs?: Array<any>;
-  }
-}
 
 export default function DebugIndexPage() {
   const { userProfile } = useAuth();
