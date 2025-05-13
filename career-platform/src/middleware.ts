@@ -5,9 +5,81 @@ import { simpleTokenCheck } from '@/utils/client-auth';
 // Check if we're in development mode
 const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true';
 
-// Debug helper for tracing
+// Debug helper for tracing with enhanced token debugging
 const debug = {
   log: (...args: any[]) => console.log('[MIDDLEWARE]', ...args),
+  tokenDebug: (token: string | undefined, path: string) => {
+    if (!token) {
+      console.log('[MIDDLEWARE-TOKEN-DEBUG] No token present for path:', path);
+      return { present: false };
+    }
+    
+    try {
+      // Basic token structure check
+      const parts = token.split('.');
+      const debugInfo: {
+        present: boolean;
+        length: number;
+        parts: number;
+        structureValid: boolean;
+        path: string;
+        timestamp: string;
+        payload?: {
+          exp?: number;
+          iat?: number;
+          expValid?: boolean;
+          hasUid?: boolean;
+          uid?: string;
+          hasRole?: boolean;
+          role?: string;
+          iss?: string;
+          issValid?: boolean;
+          expiresIn?: string;
+        };
+        decodeError?: string;
+        error?: string;
+      } = {
+        present: true,
+        length: token.length,
+        parts: parts.length,
+        structureValid: parts.length === 3,
+        path: path,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Only try to decode if structure is valid
+      if (debugInfo.structureValid) {
+        try {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+          debugInfo.payload = {
+            exp: payload.exp,
+            iat: payload.iat,
+            expValid: payload.exp ? payload.exp > Math.floor(Date.now() / 1000) : false,
+            hasUid: !!payload.user_id,
+            uid: payload.user_id?.substring(0, 5) + '...',
+            hasRole: !!payload.role,
+            role: payload.role,
+            iss: payload.iss?.substring(0, 20) + '...',
+            issValid: payload.iss?.includes('securetoken.google.com')
+          };
+          
+          // Calculate expiration time
+          if (payload.exp) {
+            const expiresIn = payload.exp - Math.floor(Date.now() / 1000);
+            debugInfo.payload.expiresIn = `${expiresIn} seconds (${Math.floor(expiresIn / 60)} minutes)`;
+          }
+        } catch (decodeError) {
+          debugInfo.decodeError = String(decodeError);
+        }
+      }
+      
+      console.log('[MIDDLEWARE-TOKEN-DEBUG]', JSON.stringify(debugInfo, null, 2));
+      return debugInfo;
+    } catch (error) {
+      console.error('[MIDDLEWARE-TOKEN-DEBUG] Error analyzing token:', error);
+      return { present: true, error: String(error) };
+    }
+  }
 }
 
 export async function middleware(request: NextRequest) {
@@ -31,6 +103,20 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('session')?.value;
   debug.log(`Auth token present: ${!!token}, length: ${token?.length || 0}`);
   
+  // Run token debug analysis
+  const tokenAnalysis = debug.tokenDebug(token, path);
+  
+  // Special debug endpoint to see token validation results
+  if (path === '/debug/middleware-token') {
+    return NextResponse.json({
+      path,
+      timestamp: new Date().toISOString(),
+      token: tokenAnalysis,
+      headers: Object.fromEntries(request.headers),
+      cookies: request.cookies.getAll().map(c => ({ name: c.name, value: c.value ? `${c.value.substring(0, 5)}...` : null }))
+    });
+  }
+
   // If we're in development mode and running locally, we can bypass some auth checks
   if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
     debug.log('Development mode: partially bypassing auth checks for protected routes');
@@ -115,7 +201,12 @@ export async function middleware(request: NextRequest) {
     if (token) {
       try {
         // Use simple token check instead of full verification
+        debug.log(`Running simpleTokenCheck for candidate detail path`);
+        const checkStart = Date.now();
         const checkResult = await simpleTokenCheck(token);
+        const checkDuration = Date.now() - checkStart;
+        
+        debug.log(`Token check result: valid=${checkResult.valid}, took ${checkDuration}ms`);
         
         if (checkResult.valid) {
           // Extract information from the path
@@ -123,7 +214,7 @@ export async function middleware(request: NextRequest) {
           const roleInPath = pathSegments[2]; // recruiter or candidate
           const candidateId = pathSegments[4]; // candidate ID
           
-          debug.log(`Candidate detail access: role=${roleInPath}, candidateId=${candidateId}, tokenUid=${checkResult.uid || 'unknown'}`);
+          debug.log(`Candidate detail access: role=${roleInPath}, candidateId=${candidateId}, tokenUid=${checkResult.uid || 'unknown'}, tokenRole=${checkResult.role || 'unknown'}`);
           
           // Add debug headers to the response
           const response = NextResponse.next();
@@ -131,17 +222,40 @@ export async function middleware(request: NextRequest) {
           response.headers.set('x-role-path', roleInPath);
           response.headers.set('x-token-uid', checkResult.uid || 'unknown');
           response.headers.set('x-token-role', checkResult.role || 'unknown');
+          response.headers.set('x-token-check-time', String(checkDuration));
+          response.headers.set('x-token-check-result', 'valid');
           
           // Allow access - detailed verification happens in API
           debug.log(`Access granted to candidate detail path`);
           return response;
-        } else {
-          debug.log(`Token validation failed for candidate detail path`);
-          // If token check fails, redirect to login
-          return NextResponse.redirect(new URL('/auth/login', request.url));
         }
+        debug.log(`Token validation failed for candidate detail path: ${checkResult.reason || 'Unknown reason'}`);
+        
+        // Add debug response with token validation failure details
+        if (path.includes('/debug/')) {
+          return NextResponse.json({
+            error: 'Token validation failed',
+            path: path,
+            tokenAnalysis: tokenAnalysis,
+            checkResult: checkResult
+          }, { status: 401 });
+        }
+        
+        // If token check fails, redirect to login
+        return NextResponse.redirect(new URL('/auth/login', request.url));
       } catch (error) {
         debug.log(`Error checking token: ${error}`);
+        
+        // Add debug response with error details
+        if (path.includes('/debug/')) {
+          return NextResponse.json({
+            error: 'Token check error',
+            message: String(error),
+            path: path,
+            tokenAnalysis: tokenAnalysis
+          }, { status: 500 });
+        }
+        
         // If token verification fails, redirect to login
         return NextResponse.redirect(new URL('/auth/login', request.url));
       }
@@ -163,6 +277,10 @@ export async function middleware(request: NextRequest) {
   response.headers.set('X-Debug-Environment', isProd ? 'production' : 'development');
   response.headers.set('X-Debug-Development-Mode', isDev ? 'true' : 'false');
   response.headers.set('X-Debug-Hostname', hostname);
+  response.headers.set('X-Debug-Token-Present', token ? 'true' : 'false');
+  if (token) {
+    response.headers.set('X-Debug-Token-Length', String(token.length));
+  }
   
   // Set CSP headers that ensure inline styles work
   const existingCsp = response.headers.get('Content-Security-Policy') || '';

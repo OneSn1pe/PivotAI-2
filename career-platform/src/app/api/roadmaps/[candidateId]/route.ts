@@ -16,6 +16,7 @@ export async function GET(
   const sessionCookie = cookies().get('session')?.value;
   
   if (!sessionCookie) {
+    console.error('[roadmaps-api] No session cookie found');
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   
@@ -25,12 +26,23 @@ export async function GET(
     const { uid: userId, role } = decodedClaims;
     const { candidateId } = params;
 
+    console.log(`[roadmaps-api] User ${userId} with role ${role || 'undefined'} accessing roadmap for candidate ${candidateId}`);
+
     // Authorization check
     const isOwner = userId === candidateId;
     const isRecruiter = role === UserRole.RECRUITER;
 
     if (!isOwner && !isRecruiter) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      console.error(`[roadmaps-api] Access denied: User ${userId} (role: ${role || 'undefined'}) is not owner or recruiter`);
+      return NextResponse.json({ 
+        error: "Forbidden", 
+        details: {
+          isOwner,
+          isRecruiter,
+          userRole: role || 'undefined',
+          userId
+        }
+      }, { status: 403 });
     }
 
     // Fetch roadmap data
@@ -42,6 +54,7 @@ export async function GET(
     const roadmapSnapshot = await getDocs(roadmapQuery);
     
     if (roadmapSnapshot.empty) {
+      console.log(`[roadmaps-api] No roadmap found for candidate ${candidateId}`);
       return NextResponse.json({ error: "Roadmap not found" }, { status: 404 });
     }
     
@@ -52,11 +65,19 @@ export async function GET(
     };
     
     // Log access for auditing
-    console.log(`User ${userId} (${role}) accessed roadmap for candidate ${candidateId}`);
+    console.log(`[roadmaps-api] User ${userId} (${role || 'undefined'}) successfully accessed roadmap for candidate ${candidateId}`);
     
-    return NextResponse.json({ roadmap: roadmapData });
+    // Create response with additional headers for debugging
+    const response = NextResponse.json({ roadmap: roadmapData });
+    response.headers.set('x-access-type', isOwner ? 'owner' : 'recruiter');
+    response.headers.set('x-user-role', role || 'undefined');
+    
+    return response;
   } catch (error) {
-    console.error("Error fetching roadmap:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[roadmaps-api] Error fetching roadmap:", error);
+    return NextResponse.json({ 
+      error: "Internal server error", 
+      message: error instanceof Error ? error.message : String(error) 
+    }, { status: 500 });
   }
 } 

@@ -39,8 +39,28 @@ export function useRoadmapAccess(candidateId: string) {
         const response = await fetch(`/api/roadmaps/${candidateId}`);
         
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorText = await response.text();
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            errorData = { error: errorText };
+          }
+          
           console.error(`[useRoadmapAccess] API error: ${response.status}`, errorData);
+          
+          // Enhanced error reporting
+          const errorDetails = {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData.error || 'Unknown error',
+            headers: {
+              contentType: response.headers.get('content-type'),
+              authStatus: response.headers.get('x-auth-status'),
+            }
+          };
+          
+          console.error('[useRoadmapAccess] Error details:', errorDetails);
           throw new Error(errorData.error || `Failed to fetch roadmap: ${response.statusText}`);
         }
         
