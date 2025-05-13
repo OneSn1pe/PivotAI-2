@@ -51,6 +51,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Skip if we've already set claims in this session
     if (claimsSet) return true;
     
+    // Skip in development mode to avoid errors
+    if (isLocalDevelopment) {
+      console.log('[AuthContext] Skipping custom claims in development mode');
+      setClaimsSet(true);
+      return true;
+    }
+    
     try {
       console.log(`[AuthContext] Setting custom claims for user: ${uid}`);
       
