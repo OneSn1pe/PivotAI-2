@@ -9,6 +9,7 @@ import { CandidateProfile, CareerRoadmap, RecruiterProfile } from '@/types/user'
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
 import { UserRole } from '@/types/user';
 import { safeTimestampToDate } from '@/utils/firebaseUtils';
+import { isDevelopmentMode, setCookie, getCookie, logEnvironmentInfo } from '@/utils/environment';
 
 // Add diagnostic logging helper
 const diagnostics = {
@@ -155,23 +156,23 @@ export default function CandidateDetailPage() {
   
   // Diagnostics: Log environment
   useEffect(() => {
+    // Log environment info on component mount
+    logEnvironmentInfo('CandidateDetailPage');
+    
     log('Environment check', {
       isProd: process.env.NODE_ENV === 'production',
       isDev: process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true',
       hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
+      isDevelopmentMode: isDevelopmentMode()
     });
     
     // Check session cookie
     if (typeof document !== 'undefined') {
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
+      const sessionCookie = getCookie('session');
       
       log('Auth tokens check', {
-        sessionExists: !!cookies['session'],
-        sessionLength: cookies['session']?.length || 0
+        sessionExists: !!sessionCookie,
+        sessionLength: sessionCookie?.length || 0
       });
     }
     
@@ -234,21 +235,28 @@ export default function CandidateDetailPage() {
         // First verify the token
         if (currentUser) {
           try {
-            const token = await currentUser.getIdToken(true); // Force refresh
-            diagInfo.tokenLength = token.length;
-            log('Retrieved fresh ID token', { length: token.length });
+            // Check if we already have a valid session cookie
+            const sessionCookie = getCookie('session');
             
-            // Update session cookie with fresh token
-            if (typeof document !== 'undefined') {
-              const isLocalDevelopment = typeof window !== 'undefined' && 
-                (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            diagInfo.hasSessionCookie = !!sessionCookie;
+            
+            // Only force token refresh if we don't have a session cookie
+            // or if we're in a development environment
+            const isDevMode = isDevelopmentMode();
+            
+            if (!sessionCookie || isDevMode) {
+              log('No session cookie found or in development mode - refreshing token');
+              const token = await currentUser.getIdToken(true); // Force refresh
+              diagInfo.tokenLength = token.length;
+              log('Retrieved fresh ID token', { length: token.length });
               
-              if (isLocalDevelopment) {
-                document.cookie = `session=${token}; path=/; max-age=3600`;
-              } else {
-                document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+              // Update session cookie with fresh token
+              if (typeof document !== 'undefined') {
+                setCookie('session', token, 3600);
+                log('Updated session cookie with fresh token');
               }
-              log('Updated session cookie with fresh token');
+            } else {
+              log('Using existing session cookie - skipping token refresh');
             }
           } catch (tokenErr) {
             diagnostics.error('Error refreshing ID token', tokenErr);

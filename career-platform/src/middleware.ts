@@ -118,10 +118,25 @@ export async function middleware(request: NextRequest) {
         const checkResult = await simpleTokenCheck(token);
         
         if (checkResult.valid) {
+          // Extract information from the path
+          const pathSegments = path.split('/');
+          const roleInPath = pathSegments[2]; // recruiter or candidate
+          const candidateId = pathSegments[4]; // candidate ID
+          
+          debug.log(`Candidate detail access: role=${roleInPath}, candidateId=${candidateId}, tokenUid=${checkResult.uid || 'unknown'}`);
+          
+          // Add debug headers to the response
+          const response = NextResponse.next();
+          response.headers.set('x-candidate-id', candidateId);
+          response.headers.set('x-role-path', roleInPath);
+          response.headers.set('x-token-uid', checkResult.uid || 'unknown');
+          response.headers.set('x-token-role', checkResult.role || 'unknown');
+          
           // Allow access - detailed verification happens in API
           debug.log(`Access granted to candidate detail path`);
-          return NextResponse.next();
+          return response;
         } else {
+          debug.log(`Token validation failed for candidate detail path`);
           // If token check fails, redirect to login
           return NextResponse.redirect(new URL('/auth/login', request.url));
         }

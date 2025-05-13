@@ -20,14 +20,29 @@ export default function ProtectedLayout({
   const pathInfo = useMemo(() => {
     if (!pathname) return { isDashboard: false, isRecruiterViewingCandidate: false };
     
-    // Check both old pattern (/recruiter/candidate/) and new pattern (/[role]/candidate/)
-    const isViewingCandidate = pathname.match(/\/protected\/(recruiter|candidate)\/candidate\/[^\/]+$/);
+    console.log(`[ProtectedLayout] Analyzing path: ${pathname}`);
+    
+    // Improved regex to handle trailing slashes and different URL patterns
+    // This matches both /protected/recruiter/candidate/123 and /protected/[role]/candidate/123
+    // It also handles trailing slashes and query parameters
+    const candidateDetailRegex = /\/protected\/(?:recruiter|candidate)\/candidate\/([^\/\?]+)\/?(?:\?.*)?$/;
+    const candidateMatch = pathname.match(candidateDetailRegex);
+    
+    const isViewingCandidate = candidateMatch !== null;
+    const candidateId = candidateMatch ? candidateMatch[1] : null;
+    
+    // Log the path analysis for debugging
+    if (isViewingCandidate) {
+      console.log(`[ProtectedLayout] Detected candidate detail view, ID: ${candidateId}`);
+    }
     
     return {
       isDashboard: pathname === '/protected/dashboard',
-      isRecruiterViewingCandidate: isViewingCandidate !== null,
+      isRecruiterViewingCandidate: isViewingCandidate,
+      candidateId: candidateId,
       isInCandidateSection: pathname?.includes('/candidate'),
       isInRecruiterSection: pathname?.includes('/recruiter'),
+      rawPath: pathname
     };
   }, [pathname]);
 
@@ -41,6 +56,7 @@ export default function ProtectedLayout({
     
     // If no user, redirect to login once
     if (!userProfile) {
+      console.log('[ProtectedLayout] No user profile, redirecting to login');
       router.push('/auth/login');
       return;
     }
@@ -52,13 +68,17 @@ export default function ProtectedLayout({
     // Also allow candidates to view their own profile
     if (pathInfo.isRecruiterViewingCandidate) {
       // Extract the candidate ID from the URL
-      const candidateId = pathname?.split('/').pop() || '';
+      const candidateId = pathInfo.candidateId || '';
+      
+      console.log(`[ProtectedLayout] Candidate detail access check: userRole=${userRole}, candidateId=${candidateId}, userID=${userProfile.uid}`);
       
       // Allow if recruiter or if candidate viewing their own profile
       if (userRole === UserRole.RECRUITER || 
           (userRole === UserRole.CANDIDATE && candidateId === userProfile.uid)) {
         console.log(`[ProtectedLayout] ${userRole} viewing candidate profile - allowing access`);
         return; // Exit early, don't redirect
+      } else {
+        console.log(`[ProtectedLayout] Access denied to candidate profile. User role: ${userRole}, Candidate ID: ${candidateId}`);
       }
     }
     

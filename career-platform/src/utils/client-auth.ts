@@ -17,11 +17,37 @@ export async function simpleTokenCheck(token: string) {
       return { valid: true };
     }
     
-    // For middleware, we'll just do a basic check
-    // The actual verification happens in the API routes
-    return {
-      valid: true
-    };
+    // For production, perform basic JWT validation without requiring Firebase Admin
+    try {
+      // Basic structure validation for JWT
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.log('[simpleTokenCheck] Invalid token structure (not a JWT)');
+        return { valid: false };
+      }
+      
+      // Decode the payload (middle part)
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+      
+      // Check for expiration
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp && payload.exp < now) {
+        console.log('[simpleTokenCheck] Token expired');
+        return { valid: false };
+      }
+      
+      // Check for Firebase auth issuer
+      if (!payload.iss || !payload.iss.includes('securetoken.google.com')) {
+        console.log('[simpleTokenCheck] Invalid token issuer');
+        return { valid: false };
+      }
+      
+      console.log('[simpleTokenCheck] Basic token validation passed');
+      return { valid: true, uid: payload.user_id, role: payload.role };
+    } catch (parseError) {
+      console.error('[simpleTokenCheck] Error parsing token:', parseError);
+      return { valid: false };
+    }
   } catch (error) {
     console.error('[simpleTokenCheck] Token check error:', error);
     
