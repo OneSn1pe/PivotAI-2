@@ -325,21 +325,31 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no formatting. Include these keys as arrays of strings: skills, experience, education, strengths, weaknesses, recommendations.\n\nCRITICAL: For skills, ONLY include verbatim skills from the text (e.g., 'Python', 'React', 'Docker'). NO categories or inferred skills."
+              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text or formatting."
             },
             {
               role: "user",
-              content: `Analyze this resume and return a JSON object with these arrays:
-              - skills (verbatim skills only, no categories)
-              - experience (roles and responsibilities)
-              - education
-              - strengths
-              - weaknesses
-              - recommendations
-              
-              Format: Raw JSON only, no markdown or extra text.
-              
-              Resume: ${truncatedResume}`
+              content: `Analyze this resume and extract the following information in a structured JSON object:
+
+{
+  "skills": ["skill1", "skill2", ...],
+  "skillLevels": [{"skill": "skill1", "level": 7, "evidence": "brief reason"}, ...],
+  "experience": ["role1 with key responsibilities", ...],
+  "education": ["degree with institution and year", ...],
+  "certifications": ["certification name with issuing organization", ...],
+  "strengths": ["strength1", ...],
+  "weaknesses": ["weakness1", ...],
+  "recommendations": ["recommendation1", ...]
+}
+
+Guidelines:
+- For skills: Extract ONLY explicitly mentioned technical and professional skills
+- For skillLevels: Assess only 3-5 key skills with evidence-based rating (1-10)
+- For experience: Include company, position, timeframe, and key achievements
+- If a section is missing from the resume, return an empty array
+- Return ONLY valid JSON with no additional text or formatting
+
+Resume: ${truncatedResume}`
             }
           ]
         });
@@ -402,18 +412,30 @@ export async function POST(request: NextRequest) {
         debug.log('Using extracted skills or empty array:', analysis.skills);
       }
       
+      if (!analysis.skillLevels || !Array.isArray(analysis.skillLevels)) {
+        analysis.skillLevels = [];
+      }
+      
       if (!analysis.experience || !Array.isArray(analysis.experience)) {
         analysis.experience = ["Professional experience extracted from resume"];
       }
+      
       if (!analysis.education || !Array.isArray(analysis.education)) {
         analysis.education = ["Education details extracted from resume"];
       }
+      
+      if (!analysis.certifications || !Array.isArray(analysis.certifications)) {
+        analysis.certifications = [];
+      }
+      
       if (!analysis.strengths || !Array.isArray(analysis.strengths)) {
         analysis.strengths = ["Identified strengths from resume"];
       }
+      
       if (!analysis.weaknesses || !Array.isArray(analysis.weaknesses)) {
         analysis.weaknesses = ["Areas for improvement based on resume"];
       }
+      
       if (!analysis.recommendations || !Array.isArray(analysis.recommendations)) {
         analysis.recommendations = ["Suggestions for career development"];
       }

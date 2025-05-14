@@ -48,6 +48,11 @@ export enum UserRole {
     industries: string[];
   }
   
+  export interface TargetCompany {
+    name: string;
+    position: string;
+  }
+  
   export interface CareerRoadmap {
     id: string;
     candidateId: string;

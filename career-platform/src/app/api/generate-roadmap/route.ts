@@ -63,66 +63,66 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are a senior technical recruiter at ${companiesForRoadmap.map((c: TargetCompany) => c.name).join(' and ')}. Generate a personalized career roadmap based on the candidate's resume analysis and your insider knowledge of what these companies look for in candidates. Return ONLY a valid JSON object with a 'milestones' array. Each milestone should reflect the actual hiring criteria and career progression paths at these companies.`
+          content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
         },
         {
           role: "user",
-          content: `Create a 5-milestone career roadmap with this structure:
-          {
-            "milestones": [
-              {
-                "id": "unique-id-1",
-                "title": "Milestone Title",
-                "description": "Detailed description from a recruiter's perspective",
-                "skills": ["Skill 1", "Skill 2"],
-                "timeframe": "3-6 months",
-                "completed": false,
-                "resources": [
-                  {
-                    "title": "Resource Title",
-                    "url": "https://example.com/resource",
-                    "type": "article"
-                  }
-                ]
-              }
-            ]
-          }
-          
-          Requirements:
-          - Raw JSON only, no formatting
-          - 5 milestones total
-          - Each milestone needs unique ID
-          - Build upon existing skills: ${JSON.stringify(resumeAnalysis.skills)}
-          - Address weaknesses: ${JSON.stringify(resumeAnalysis.weaknesses)}
-          - Leverage strengths: ${JSON.stringify(resumeAnalysis.strengths)}
-          - Follow recommendations: ${JSON.stringify(resumeAnalysis.recommendations)}
-          - Include 2-3 specific resources per milestone
-          - Resources should be high-quality, free or low-cost, and directly relevant to the milestone
-          - Resource types can be: article, video, course, book, or documentation
-          - Prefer official documentation and well-known learning platforms
-          
-          Target Companies and Positions:
-          ${JSON.stringify(companiesForRoadmap.map((c: TargetCompany) => ({
-            company: c.name,
-            position: c.position
-          })))}
-          
-          Current Experience: ${JSON.stringify(resumeAnalysis.experience)}
-          Education: ${JSON.stringify(resumeAnalysis.education)}
-          
-          As a recruiter at these companies, create milestones that:
-          1. Align with actual hiring criteria and interview processes
-          2. Focus on skills and experiences that would make the candidate stand out
-          3. Include specific technical and soft skills we look for
-          4. Consider the typical career progression paths at these companies
-          5. Address any gaps between current skills and target position requirements
-          6. Include specific learning resources that would help achieve each milestone`
+          content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
+
+Return a structured JSON roadmap with these components:
+{
+  "milestones": [
+    {
+      "id": "${uuidv4()}",
+      "title": "Milestone name",
+      "description": "Detailed description with actionable steps",
+      "skills": ["skill1", "skill2"],
+      "timeframe": "1-3 months",
+      "completed": false,
+      "resources": [
+        {
+          "title": "Resource name",
+          "url": "resource_url",
+          "type": "course/book/project/article/documentation"
+        }
+      ]
+    },
+    ...
+  ],
+  "candidateGapAnalysis": {
+    "currentStrengths": ["strength1", ...],
+    "criticalGaps": ["gap1", ...]
+  },
+  "targetRoleRequirements": ["requirement1", ...],
+  "successMetrics": ["metric1", ...]
+}
+
+Prioritize high-impact skills and experiences that specifically align with the target companies' known requirements for the positions. Focus on achievable milestones within the 1-2 year timeframe.
+
+Candidate's current profile:
+- Skills: ${JSON.stringify(resumeAnalysis.skills)}
+- Experience: ${JSON.stringify(resumeAnalysis.experience)}
+- Education: ${JSON.stringify(resumeAnalysis.education)}
+- Strengths: ${JSON.stringify(resumeAnalysis.strengths)}
+- Weaknesses: ${JSON.stringify(resumeAnalysis.weaknesses)}
+
+Guidelines:
+- Create exactly 5 milestones
+- Each milestone needs a unique ID
+- Include 2-3 specific resources per milestone
+- Resources should be high-quality, free or low-cost, and directly relevant
+- Resource types can be: article, video, course, book, or documentation
+- Prefer official documentation and well-known learning platforms
+- Return ONLY valid JSON with no additional text or formatting`
         }
       ]
     });
 
     // Parse the milestones from the OpenAI response
     let milestones;
+    let candidateGapAnalysis;
+    let targetRoleRequirements;
+    let successMetrics;
     
     try {
       const content = completion.choices[0].message.content;
@@ -150,6 +150,11 @@ export async function POST(request: NextRequest) {
         id: milestone.id || uuidv4(),
         completed: false // Always start with uncompleted milestones for new roadmap
       }));
+      
+      // Extract additional analysis components if available
+      candidateGapAnalysis = parsedResponse.candidateGapAnalysis;
+      targetRoleRequirements = parsedResponse.targetRoleRequirements;
+      successMetrics = parsedResponse.successMetrics;
       
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
