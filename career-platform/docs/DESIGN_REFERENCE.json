@@ -1,0 +1,268 @@
+{
+  "name": "PivotAI Career Platform",
+  "description": "A career platform that helps candidates with resume analysis and career roadmap generation",
+  "designSystem": {
+    "colors": {
+      "primary": {
+        "blue": {
+          "primary": {
+            "class": "bg-blue-700",
+            "hex": "#1d4ed8"
+          },
+          "light": {
+            "class": "bg-blue-500",
+            "hex": "#3b82f6"
+          },
+          "hover": {
+            "class": "bg-blue-600",
+            "hex": "#2563eb"
+          },
+          "lightest": {
+            "class": "bg-blue-100",
+            "hex": "#dbeafe"
+          }
+        }
+      },
+      "secondary": {
+        "red": {
+          "primary": {
+            "class": "bg-red-600",
+            "hex": "#dc2626"
+          },
+          "hover": {
+            "class": "bg-red-700",
+            "hex": "#b91c1c"
+          },
+          "light": {
+            "class": "bg-red-100",
+            "hex": "#fee2e2"
+          }
+        }
+      },
+      "neutral": {
+        "gray": {
+          "background": {
+            "class": "bg-gray-100",
+            "hex": "#f3f4f6"
+          },
+          "cardBackground": {
+            "class": "bg-white",
+            "hex": "#ffffff"
+          },
+          "textPrimary": {
+            "class": "text-gray-800",
+            "hex": "#1f2937"
+          },
+          "textSecondary": {
+            "class": "text-gray-600",
+            "hex": "#4b5563"
+          },
+          "textTertiary": {
+            "class": "text-gray-400",
+            "hex": "#9ca3af"
+          },
+          "border": {
+            "class": "border-gray-200",
+            "hex": "#e5e7eb"
+          }
+        }
+      },
+      "accent": {
+        "green": {
+          "primary": {
+            "class": "bg-green-500",
+            "hex": "#22c55e"
+          },
+          "text": {
+            "class": "text-green-600",
+            "hex": "#16a34a"
+          }
+        }
+      }
+    },
+    "typography": {
+      "fontFamily": "System UI font stack",
+      "fontSize": {
+        "3xl": {
+          "size": "1.875rem",
+          "usage": "page titles"
+        },
+        "2xl": {
+          "size": "1.5rem",
+          "usage": "section headers"
+        },
+        "xl": {
+          "size": "1.25rem",
+          "usage": "subsection headers"
+        },
+        "base": {
+          "size": "1rem",
+          "usage": "body text"
+        },
+        "sm": {
+          "size": "0.875rem",
+          "usage": "secondary text"
+        },
+        "xs": {
+          "size": "0.75rem",
+          "usage": "labels, captions"
+        }
+      },
+      "fontWeight": {
+        "bold": 700,
+        "semibold": 600,
+        "medium": 500,
+        "normal": 400
+      }
+    },
+    "layout": {
+      "navbar": {
+        "position": "fixed top",
+        "backgroundColor": "bg-blue-700",
+        "height": "h-16",
+        "features": [
+          "Logo",
+          "Navigation links",
+          "User information",
+          "Mobile hamburger menu"
+        ]
+      },
+      "mainContent": {
+        "maxWidth": "max-w-6xl",
+        "padding": "p-6",
+        "backgroundColor": "bg-gray-100",
+        "minHeight": "min-h-screen"
+      },
+      "cards": {
+        "backgroundColor": "bg-white",
+        "borderRadius": "rounded-lg",
+        "shadow": "shadow-lg",
+        "padding": "p-6",
+        "marginBottom": "mb-6"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": {
+          "backgroundColor": "bg-blue-600",
+          "hoverColor": "bg-blue-700",
+          "textColor": "text-white",
+          "padding": "px-4 py-2",
+          "borderRadius": "rounded-md",
+          "fontWeight": "font-medium"
+        },
+        "destructive": {
+          "backgroundColor": "bg-red-600",
+          "hoverColor": "bg-red-700",
+          "textColor": "text-white",
+          "padding": "px-4 py-2",
+          "borderRadius": "rounded-md",
+          "fontWeight": "font-medium"
+        },
+        "secondary": {
+          "backgroundColor": "bg-white",
+          "border": "border border-gray-300",
+          "hoverColor": "bg-gray-50",
+          "textColor": "text-gray-700",
+          "padding": "px-4 py-2",
+          "borderRadius": "rounded-md",
+          "fontWeight": "font-medium"
+        }
+      },
+      "formElements": {
+        "inputFields": {
+          "border": "border border-gray-300",
+          "focus": "focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+          "borderRadius": "rounded",
+          "padding": "p-2",
+          "width": "w-full"
+        },
+        "labels": {
+          "fontWeight": "font-medium",
+          "textColor": "text-gray-700",
+          "marginBottom": "mb-1",
+          "fontSize": "text-sm"
+        },
+        "errorMessages": {
+          "textColor": "text-red-600",
+          "fontSize": "text-sm",
+          "marginTop": "mt-1"
+        }
+      },
+      "loadingStates": {
+        "spinner": {
+          "animation": "animate-spin",
+          "border": "border-t-2 border-b-2 border-blue-500",
+          "size": "h-12 w-12",
+          "borderRadius": "rounded-full"
+        }
+      },
+      "progressIndicators": {
+        "progressBar": {
+          "background": "bg-gray-200",
+          "fill": "bg-blue-600",
+          "height": "h-3",
+          "borderRadius": "rounded-full"
+        }
+      }
+    },
+    "pages": {
+      "dashboard": {
+        "elements": [
+          "Welcome section with user name",
+          "Cards for different features",
+          "Quick access buttons to key functionality"
+        ]
+      },
+      "careerRoadmap": {
+        "elements": [
+          "Timeline visualization of milestones",
+          "Progress indicator showing completion percentage",
+          "Interactive milestone cards with completion toggle",
+          "Resource links with appropriate icons"
+        ]
+      },
+      "profilePage": {
+        "elements": [
+          "Resume upload and management",
+          "Resume analysis visualization",
+          "Profile information display"
+        ]
+      },
+      "jobPreferences": {
+        "elements": [
+          "Form-based interface for setting preferences",
+          "Multi-select dropdowns for industries and roles",
+          "Radio buttons for remote work preferences"
+        ]
+      }
+    },
+    "responsiveBreakpoints": {
+      "mobile": "Default styles",
+      "tablet": "md: (768px and above)",
+      "desktop": "lg: (1024px and above)",
+      "largeDesktop": "xl: (1280px and above)"
+    },
+    "icons": {
+      "type": "SVG inline elements",
+      "commonSizes": ["h-5 w-5", "h-6 w-6"]
+    },
+    "animation": {
+      "buttonHover": "transition-colors",
+      "loadingSpinner": "animate-spin",
+      "mobileMenu": "not explicitly defined"
+    },
+    "accessibility": [
+      "Appropriate color contrast ratios",
+      "Focus states for interactive elements",
+      "Screen reader compatible markup",
+      "Semantic HTML structure"
+    ],
+    "designPatterns": [
+      "Card-based UI for content organization",
+      "Consistent spacing and alignment",
+      "Clear visual hierarchy",
+      "Mobile-first responsive design"
+    ]
+  }
+} 
