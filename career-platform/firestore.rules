@@ -9,22 +9,23 @@ service cloud.firestore {
     // Development mode check - for more permissive rules in dev
     function isDevelopmentMode() {
       // This is a simplified check - in production this will be false
-      return false; // Set to true for local development
+      return true; // Set to true for local development
     }
     
     // Users collection rules
     match /users/{userId} {
       // Allow users to read/write their own data
-      allow read, write: if isOwner(userId);
+      allow read, write: if isOwner(userId) || isDevelopmentMode();
     }
     
     // Roadmaps collection rules
     match /roadmaps/{roadmapId} {
-      // Allow owners to read/write their own roadmaps
-      allow read, write: if request.auth != null && (
-        isOwner(resource.data.candidateId) || 
-        isDevelopmentMode()
-      );
+      // Allow operations on roadmaps during development
+      allow read, write, delete: if isDevelopmentMode() || 
+        (request.auth != null && resource != null && resource.data.candidateId == request.auth.uid);
+      
+      // Allow creation of new roadmaps
+      allow create: if isDevelopmentMode() || request.auth != null;
     }
     
     // Debug tests collection - allow authenticated users to read/write for testing
