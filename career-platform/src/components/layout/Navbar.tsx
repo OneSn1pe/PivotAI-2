@@ -50,32 +50,39 @@ export default function Navbar() {
   return (
     <nav className="bg-blue-700 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo and Navigation Links */}
           <div className="flex items-center">
-            <Link href="/protected/candidate/dashboard" className="flex-shrink-0 flex items-center">
-              <span className="text-white text-xl font-bold">PivotAI</span>
-            </Link>
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link href="/protected/candidate/dashboard" className="text-white text-xl font-bold">
+                PivotAI
+              </Link>
+            </div>
             
-            {/* Desktop navigation */}
-            <div className="hidden md:ml-10 md:flex md:space-x-8">
-              {links.map((link) => (
-                <Link 
-                  key={link.href}
-                  href={link.href}
-                  className={`${
-                    pathname === link.href 
-                      ? 'text-white border-b-2 border-white' 
-                      : 'text-blue-100 hover:text-white hover:border-b-2 hover:border-blue-300'
-                  } px-3 py-2 text-sm font-medium`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            {/* Desktop Navigation */}
+            <div className="hidden md:block ml-10">
+              <div className="flex items-center space-x-4">
+                {links.map((link) => (
+                  <Link 
+                    key={link.href}
+                    href={link.href}
+                    className={`${
+                      pathname === link.href 
+                        ? 'text-white border-b-2 border-white' 
+                        : 'text-blue-100 hover:text-white hover:border-b-2 hover:border-blue-300'
+                    } px-3 py-2 text-sm font-medium`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
           
-          <div className="flex items-center">
-            <div className="hidden md:flex items-center">
+          {/* User Info and Logout */}
+          <div className="hidden md:block">
+            <div className="flex items-center">
               <div className="text-blue-100 mr-4">
                 {userProfile.displayName}
               </div>
@@ -87,18 +94,18 @@ export default function Navbar() {
                 {isLoggingOut ? 'Logging out...' : 'Logout'}
               </button>
             </div>
-            
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center">
-              <button 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-blue-100 hover:text-white focus:outline-none"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
+          </div>
+          
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-blue-100 hover:text-white focus:outline-none"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
