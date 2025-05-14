@@ -19,6 +19,8 @@ export enum UserRole {
     jobPreferences?: JobPreferences;
     skills?: string[];
     updatedAt?: Date;
+    targetCompanies?: TargetCompany[];
+    targetRoles?: TargetRole[];
   }
   
   export interface ResumeAnalysis {
@@ -51,6 +53,11 @@ export enum UserRole {
   export interface TargetCompany {
     name: string;
     position: string;
+  }
+  
+  export interface TargetRole {
+    title: string;
+    industry: string;
   }
   
   export interface CareerRoadmap {
