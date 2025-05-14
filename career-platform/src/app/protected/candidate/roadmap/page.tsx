@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/config/firebase';
 import { CareerRoadmap, Milestone, CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
-import RoadmapGenerator from '@/components/candidate/RoadmapGenerator';
 import CareerRoadmapComponent from '@/components/candidate/CareerRoadmap';
 
 export default function RoadmapPage() {
@@ -15,7 +14,6 @@ export default function RoadmapPage() {
   const router = useRouter();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showGenerator, setShowGenerator] = useState(false);
 
   useEffect(() => {
     async function fetchRoadmap() {
@@ -75,33 +73,6 @@ export default function RoadmapPage() {
     }
   };
 
-  const handleRoadmapGenerated = async (roadmapId: string) => {
-    // After regeneration, fetch the updated roadmap
-    if (!userProfile) return;
-    
-    try {
-      // Since roadmaps are now updated in place, we need to refetch from the candidateId
-      const roadmapQuery = query(
-        collection(db, 'roadmaps'),
-        where('candidateId', '==', userProfile.uid)
-      );
-      
-      const roadmapSnapshot = await getDocs(roadmapQuery);
-      
-      if (!roadmapSnapshot.empty) {
-        const roadmapDoc = roadmapSnapshot.docs[0];
-        setRoadmap({
-          ...roadmapDoc.data() as CareerRoadmap,
-          id: roadmapDoc.id,
-        });
-      }
-      
-      setShowGenerator(false);
-    } catch (error) {
-      console.error('Error fetching updated roadmap:', error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -114,7 +85,7 @@ export default function RoadmapPage() {
     );
   }
 
-  if (!roadmap && !showGenerator) {
+  if (!roadmap) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-6 text-slate-800">Career Roadmap</h1>
@@ -127,7 +98,7 @@ export default function RoadmapPage() {
           {candidateProfile?.resumeAnalysis ? (
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => setShowGenerator(true)}
+                onClick={() => router.push('/protected/candidate/roadmap/generator')}
                 className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
               >
                 Generate Your Roadmap
@@ -151,34 +122,12 @@ export default function RoadmapPage() {
     );
   }
 
-  if (showGenerator) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-6 text-slate-800">Create Your Career Roadmap</h1>
-        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 border border-slate-100 mb-6">
-          <RoadmapGenerator 
-            resumeAnalysis={candidateProfile?.resumeAnalysis || null} 
-            onRoadmapGenerated={handleRoadmapGenerated}
-          />
-        </div>
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => setShowGenerator(false)}
-            className="text-slate-600 hover:text-slate-800 underline transition-colors duration-300"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-4xl font-bold text-slate-800">Your Career Roadmap</h1>
         <button
-          onClick={() => setShowGenerator(true)}
+          onClick={() => router.push('/protected/candidate/roadmap/generator')}
           className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
         >
           Generate New Roadmap

@@ -14,6 +14,9 @@ export default function ProtectedLayout({
   const router = useRouter();
   const pathname = usePathname();
   
+  // Check if we're on the roadmap generator page
+  const isRoadmapGeneratorPage = pathname.includes('/roadmap/generator');
+  
   // Handle redirects 
   useEffect(() => {
     // Skip all checks if still loading
@@ -49,6 +52,16 @@ export default function ProtectedLayout({
     return null;
   }
 
+  // For the roadmap generator page, just render the children without the navbar
+  if (isRoadmapGeneratorPage) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100">
+        {children}
+      </div>
+    );
+  }
+
+  // For all other protected pages, include the navbar
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100">
       <Navbar />
