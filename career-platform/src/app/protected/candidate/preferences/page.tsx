@@ -12,18 +12,12 @@ interface TargetCompany {
   position: string;
 }
 
-interface TargetRole {
-  title: string;
-  industry: string;
-}
-
 export default function PreferencesPage() {
   const router = useRouter();
   const { userProfile } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   
   const [targetCompanies, setTargetCompanies] = useState<TargetCompany[]>([{ name: '', position: '' }]);
-  const [targetRoles, setTargetRoles] = useState<TargetRole[]>([{ title: '', industry: '' }]);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -40,10 +34,6 @@ export default function PreferencesPage() {
           if (userData.targetCompanies && userData.targetCompanies.length > 0) {
             setTargetCompanies(userData.targetCompanies);
           }
-          
-          if (userData.targetRoles && userData.targetRoles.length > 0) {
-            setTargetRoles(userData.targetRoles);
-          }
         }
       } catch (error) {
         console.error('Error loading preferences:', error);
@@ -59,12 +49,6 @@ export default function PreferencesPage() {
     setTargetCompanies(updatedCompanies);
   };
 
-  const handleRoleChange = (index: number, field: keyof TargetRole, value: string) => {
-    const updatedRoles = [...targetRoles];
-    updatedRoles[index][field] = value;
-    setTargetRoles(updatedRoles);
-  };
-
   const addCompany = () => {
     setTargetCompanies([...targetCompanies, { name: '', position: '' }]);
   };
@@ -74,18 +58,6 @@ export default function PreferencesPage() {
       const updatedCompanies = [...targetCompanies];
       updatedCompanies.splice(index, 1);
       setTargetCompanies(updatedCompanies);
-    }
-  };
-
-  const addRole = () => {
-    setTargetRoles([...targetRoles, { title: '', industry: '' }]);
-  };
-
-  const removeRole = (index: number) => {
-    if (targetRoles.length > 1) {
-      const updatedRoles = [...targetRoles];
-      updatedRoles.splice(index, 1);
-      setTargetRoles(updatedRoles);
     }
   };
 
@@ -99,11 +71,9 @@ export default function PreferencesPage() {
     try {
       // Filter out empty entries
       const filteredCompanies = targetCompanies.filter(company => company.name.trim() !== '' || company.position.trim() !== '');
-      const filteredRoles = targetRoles.filter(role => role.title.trim() !== '' || role.industry.trim() !== '');
       
       await updateDoc(doc(db, 'users', candidateProfile.uid), {
         targetCompanies: filteredCompanies,
-        targetRoles: filteredRoles,
         updatedAt: new Date()
       });
       
@@ -134,7 +104,7 @@ export default function PreferencesPage() {
       </div>
       
       <div className="bg-white/80 backdrop-filter backdrop-blur-md p-8 rounded-xl shadow-xl shadow-sky-200/50 border border-slate-100 float-card">
-        <h2 className="text-xl font-semibold mb-6 text-sky-700">Set Your Career Targets</h2>
+        <h2 className="text-xl font-semibold mb-6 text-sky-700">Set Your Target Companies</h2>
         
         {saveSuccess && (
           <div className="mb-6 p-4 rounded-lg status-partly-cloudy">
@@ -148,7 +118,6 @@ export default function PreferencesPage() {
             <div className="absolute -top-4 -right-4">
               <div className="cloud-sm opacity-30"></div>
             </div>
-            <h3 className="text-lg font-medium text-sky-800 mb-4">Target Companies</h3>
             
             <div className="space-y-4">
               {targetCompanies.map((company, index) => (
@@ -204,71 +173,6 @@ export default function PreferencesPage() {
                 className="w-full py-2 px-4 border border-sky-300 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors"
               >
                 + Add Another Company
-              </button>
-            </div>
-          </div>
-          
-          {/* Target Roles */}
-          <div className="relative">
-            <div className="absolute -top-4 -left-4">
-              <div className="cloud-sm opacity-30"></div>
-            </div>
-            <h3 className="text-lg font-medium text-sky-800 mb-4">Target Roles</h3>
-            
-            <div className="space-y-4">
-              {targetRoles.map((role, index) => (
-                <div key={index} className="p-4 bg-white/90 rounded-lg border border-sky-100 shadow-sm">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium text-sky-700">Role #{index + 1}</span>
-                    {targetRoles.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => removeRole(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor={`role-title-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
-                        Role Title
-                      </label>
-                      <input 
-                        type="text" 
-                        id={`role-title-${index}`}
-                        value={role.title}
-                        onChange={(e) => handleRoleChange(index, 'title', e.target.value)}
-                        className="w-full p-2 border border-sky-200 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-sky-500 focus:border-sky-500"
-                        placeholder="e.g., Full Stack Developer, UX Designer"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor={`role-industry-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
-                        Industry
-                      </label>
-                      <input 
-                        type="text" 
-                        id={`role-industry-${index}`}
-                        value={role.industry}
-                        onChange={(e) => handleRoleChange(index, 'industry', e.target.value)}
-                        className="w-full p-2 border border-sky-200 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-sky-500 focus:border-sky-500"
-                        placeholder="e.g., Tech, Healthcare, Finance"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              <button
-                type="button"
-                onClick={addRole}
-                className="w-full py-2 px-4 border border-sky-300 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors"
-              >
-                + Add Another Role
               </button>
             </div>
           </div>
