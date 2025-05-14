@@ -446,52 +446,6 @@ export default function CandidateDashboard() {
           </div>
         </div>
 
-        {/* Target Companies */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-bold mb-4">Your Target Companies</h2>
-          
-          {candidateProfile?.targetCompanies && candidateProfile.targetCompanies.length > 0 ? (
-            <div className="space-y-4">
-              <ul className="divide-y divide-gray-200">
-                {candidateProfile.targetCompanies.map((company, index) => (
-                  <li key={index} className="py-3">
-                    <div className="flex flex-col">
-                      <h3 className="font-semibold text-gray-800">{company.name}</h3>
-                      {company.position && (
-                        <p className="text-gray-600 text-sm mt-1">Position: {company.position}</p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => router.push('/protected/candidate/target-companies')}
-                  className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                >
-                  <span>Edit Target Companies</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                    <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-gray-500 mb-4">
-                No target companies set yet.
-              </p>
-              <button
-                onClick={() => router.push('/protected/candidate/target-companies')}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-              >
-                Add Target Companies
-              </button>
-            </div>
-          )}
-        </div>
-        
         {/* Career Roadmap */}
         <div className="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
           <h2 className="text-xl font-bold mb-4">Your Career Roadmap</h2>
@@ -556,7 +510,7 @@ export default function CandidateDashboard() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">
-                No career roadmap available yet. Complete your profile and add target companies to generate one.
+                No career roadmap available yet. Complete your profile to generate one.
               </p>
               <button
                 onClick={() => router.push('/protected/candidate/roadmap')}

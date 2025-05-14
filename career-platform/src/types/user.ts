@@ -1,6 +1,5 @@
 export enum UserRole {
     CANDIDATE = 'candidate',
-    RECRUITER = 'recruiter',
   }
   
   export interface User {
@@ -18,16 +17,8 @@ export enum UserRole {
     resumeFileName?: string;
     resumeAnalysis?: ResumeAnalysis;
     jobPreferences?: JobPreferences;
-    targetCompanies?: TargetCompany[];
     skills?: string[];
     updatedAt?: Date;
-  }
-  
-  export interface RecruiterProfile extends User {
-    role: UserRole.RECRUITER;
-    company: string;
-    position: string;
-    bookmarkedCandidates?: string[];
   }
   
   export interface ResumeAnalysis {
@@ -55,11 +46,6 @@ export enum UserRole {
     remotePreference: 'remote' | 'hybrid' | 'onsite';
     salaryExpectation: number;
     industries: string[];
-  }
-
-  export interface TargetCompany {
-    name: string;
-    position: string;
   }
   
   export interface CareerRoadmap {

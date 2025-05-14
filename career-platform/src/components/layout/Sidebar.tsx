@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole } from '@/types/user';
 
 export default function Sidebar() {
   const { userProfile, logout } = useAuth();
@@ -14,23 +13,12 @@ export default function Sidebar() {
 
   if (!userProfile) return null;
 
-  const isCandidate = userProfile.role === UserRole.CANDIDATE;
-  const isRecruiter = userProfile.role === UserRole.RECRUITER;
-
-  const candidateLinks = [
+  const links = [
     { href: '/protected/candidate/dashboard', label: 'Dashboard', icon: 'home' },
     { href: '/protected/candidate/profile', label: 'Profile', icon: 'user' },
     { href: '/protected/candidate/roadmap', label: 'Career Roadmap', icon: 'map' },
     { href: '/protected/candidate/preferences', label: 'Job Preferences', icon: 'settings' },
   ];
-
-  const recruiterLinks = [
-    { href: '/protected/recruiter/dashboard', label: 'Dashboard', icon: 'home' },
-    { href: '/protected/recruiter/search', label: 'Search Candidates', icon: 'search' },
-    { href: '/protected/recruiter/bookmarks', label: 'Bookmarked Candidates', icon: 'bookmark' },
-  ];
-
-  const links = isCandidate ? candidateLinks : isRecruiter ? recruiterLinks : [];
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
@@ -60,7 +48,7 @@ export default function Sidebar() {
   return (
     <aside className="bg-blue-700 text-white w-72 flex-shrink-0 min-h-screen shadow-lg">
       <div className="p-8 border-b border-blue-600">
-        <Link href={isCandidate ? '/protected/candidate/dashboard' : '/protected/recruiter/dashboard'} className="text-2xl font-bold flex items-center justify-center">
+        <Link href="/protected/candidate/dashboard" className="text-2xl font-bold flex items-center justify-center">
           <span className="text-white hover:text-blue-200 transition-colors">PivotAI</span>
         </Link>
       </div>
