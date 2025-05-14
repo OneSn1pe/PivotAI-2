@@ -175,7 +175,7 @@ export default function RoadmapPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-4xl font-bold text-slate-800">Your Career Roadmap</h1>
         <button
           onClick={() => setShowGenerator(true)}

@@ -48,7 +48,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-sky-500 to-sky-700 backdrop-filter backdrop-blur-lg shadow-lg shadow-sky-500/20">
+    <nav className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-sky-500 to-sky-700 backdrop-filter backdrop-blur-lg shadow-lg shadow-sky-500/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Decorative cloud elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -85,7 +85,7 @@ export default function Navbar() {
                       pathname === link.href 
                         ? 'text-white border-b-2 border-white font-semibold' 
                         : 'text-sky-100 hover:text-white hover:border-b-2 hover:border-sky-300'
-                    } px-3 py-2 text-sm transition-all duration-300 group`}
+                    } px-3 py-2 text-sm transition-all duration-300 group whitespace-nowrap`}
                   >
                     <span className="relative">
                       {link.label}

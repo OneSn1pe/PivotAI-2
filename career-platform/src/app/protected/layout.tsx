@@ -52,7 +52,7 @@ export default function ProtectedLayout({
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100">
       <Navbar />
-      <main className="flex-1 p-8 overflow-auto page-content">
+      <main className="flex-1 p-8 pt-20 overflow-auto page-content">
         <div className="max-w-6xl mx-auto">
           {children}
         </div>

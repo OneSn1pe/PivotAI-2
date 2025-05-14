@@ -255,6 +255,9 @@
 /* Add top margin for page content to account for fixed navbar */
 .page-content {
   margin-top: 5rem; /* Matches the navbar height */
+  padding-top: 1rem; /* Additional padding for better spacing */
+  position: relative;
+  z-index: 1; /* Ensure content is above background elements but below navbar */
 }
 
 /* Altimeter progress bar (for career "altitude") */
