@@ -1,268 +1,324 @@
 {
-  "name": "PivotAI Career Platform",
-  "description": "A career platform that helps candidates with resume analysis and career roadmap generation",
-  "designSystem": {
-    "colors": {
-      "primary": {
-        "blue": {
-          "primary": {
-            "class": "bg-blue-700",
-            "hex": "#1d4ed8"
-          },
-          "light": {
-            "class": "bg-blue-500",
-            "hex": "#3b82f6"
-          },
-          "hover": {
-            "class": "bg-blue-600",
-            "hex": "#2563eb"
-          },
-          "lightest": {
-            "class": "bg-blue-100",
-            "hex": "#dbeafe"
-          }
-        }
-      },
-      "secondary": {
-        "red": {
-          "primary": {
-            "class": "bg-red-600",
-            "hex": "#dc2626"
-          },
-          "hover": {
-            "class": "bg-red-700",
-            "hex": "#b91c1c"
-          },
-          "light": {
-            "class": "bg-red-100",
-            "hex": "#fee2e2"
-          }
-        }
-      },
-      "neutral": {
-        "gray": {
-          "background": {
-            "class": "bg-gray-100",
-            "hex": "#f3f4f6"
-          },
-          "cardBackground": {
-            "class": "bg-white",
-            "hex": "#ffffff"
-          },
-          "textPrimary": {
-            "class": "text-gray-800",
-            "hex": "#1f2937"
-          },
-          "textSecondary": {
-            "class": "text-gray-600",
-            "hex": "#4b5563"
-          },
-          "textTertiary": {
-            "class": "text-gray-400",
-            "hex": "#9ca3af"
-          },
-          "border": {
-            "class": "border-gray-200",
-            "hex": "#e5e7eb"
-          }
-        }
-      },
-      "accent": {
-        "green": {
-          "primary": {
-            "class": "bg-green-500",
-            "hex": "#22c55e"
-          },
-          "text": {
-            "class": "text-green-600",
-            "hex": "#16a34a"
-          }
-        }
-      }
-    },
-    "typography": {
-      "fontFamily": "System UI font stack",
-      "fontSize": {
-        "3xl": {
-          "size": "1.875rem",
-          "usage": "page titles"
-        },
-        "2xl": {
-          "size": "1.5rem",
-          "usage": "section headers"
-        },
-        "xl": {
-          "size": "1.25rem",
-          "usage": "subsection headers"
-        },
-        "base": {
-          "size": "1rem",
-          "usage": "body text"
-        },
-        "sm": {
-          "size": "0.875rem",
-          "usage": "secondary text"
-        },
-        "xs": {
-          "size": "0.75rem",
-          "usage": "labels, captions"
-        }
-      },
-      "fontWeight": {
-        "bold": 700,
-        "semibold": 600,
-        "medium": 500,
-        "normal": 400
-      }
-    },
-    "layout": {
-      "navbar": {
-        "position": "fixed top",
-        "backgroundColor": "bg-blue-700",
-        "height": "h-16",
-        "features": [
-          "Logo",
-          "Navigation links",
-          "User information",
-          "Mobile hamburger menu"
-        ]
-      },
-      "mainContent": {
-        "maxWidth": "max-w-6xl",
-        "padding": "p-6",
-        "backgroundColor": "bg-gray-100",
-        "minHeight": "min-h-screen"
-      },
-      "cards": {
-        "backgroundColor": "bg-white",
-        "borderRadius": "rounded-lg",
-        "shadow": "shadow-lg",
-        "padding": "p-6",
-        "marginBottom": "mb-6"
-      }
-    },
-    "components": {
-      "buttons": {
+    "name": "PivotAI Career Platform - CloudScape Edition",
+    "description": "A career platform that helps candidates with resume analysis and career roadmap generation, themed with a dynamic scrolling cloudy sky aesthetic",
+    "designSystem": {
+      "colors": {
         "primary": {
-          "backgroundColor": "bg-blue-600",
-          "hoverColor": "bg-blue-700",
-          "textColor": "text-white",
-          "padding": "px-4 py-2",
-          "borderRadius": "rounded-md",
-          "fontWeight": "font-medium"
-        },
-        "destructive": {
-          "backgroundColor": "bg-red-600",
-          "hoverColor": "bg-red-700",
-          "textColor": "text-white",
-          "padding": "px-4 py-2",
-          "borderRadius": "rounded-md",
-          "fontWeight": "font-medium"
+          "skyBlue": {
+            "deep": {
+              "class": "bg-sky-700",
+              "hex": "#0369a1"
+            },
+            "medium": {
+              "class": "bg-sky-500",
+              "hex": "#0ea5e9"
+            },
+            "hover": {
+              "class": "bg-sky-600",
+              "hex": "#0284c7"
+            },
+            "light": {
+              "class": "bg-sky-200",
+              "hex": "#bae6fd"
+            },
+            "lightest": {
+              "class": "bg-sky-100",
+              "hex": "#e0f2fe"
+            }
+          }
         },
         "secondary": {
-          "backgroundColor": "bg-white",
-          "border": "border border-gray-300",
-          "hoverColor": "bg-gray-50",
-          "textColor": "text-gray-700",
-          "padding": "px-4 py-2",
-          "borderRadius": "rounded-md",
-          "fontWeight": "font-medium"
-        }
-      },
-      "formElements": {
-        "inputFields": {
-          "border": "border border-gray-300",
-          "focus": "focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-          "borderRadius": "rounded",
-          "padding": "p-2",
-          "width": "w-full"
+          "sunset": {
+            "primary": {
+              "class": "bg-amber-500",
+              "hex": "#f59e0b"
+            },
+            "hover": {
+              "class": "bg-amber-600",
+              "hex": "#d97706"
+            },
+            "light": {
+              "class": "bg-amber-100",
+              "hex": "#fef3c7"
+            }
+          }
         },
-        "labels": {
-          "fontWeight": "font-medium",
-          "textColor": "text-gray-700",
-          "marginBottom": "mb-1",
-          "fontSize": "text-sm"
+        "neutral": {
+          "cloud": {
+            "background": {
+              "class": "bg-slate-100",
+              "hex": "#f1f5f9",
+              "gradientOverlay": "bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100"
+            },
+            "cardBackground": {
+              "class": "bg-white/80",
+              "hex": "#ffffff",
+              "opacity": "80%",
+              "effect": "backdrop-filter blur-md"
+            },
+            "textPrimary": {
+              "class": "text-slate-800",
+              "hex": "#1e293b"
+            },
+            "textSecondary": {
+              "class": "text-slate-600",
+              "hex": "#475569"
+            },
+            "textTertiary": {
+              "class": "text-slate-400",
+              "hex": "#94a3b8"
+            },
+            "border": {
+              "class": "border-slate-200",
+              "hex": "#e2e8f0"
+            }
+          }
         },
-        "errorMessages": {
-          "textColor": "text-red-600",
-          "fontSize": "text-sm",
-          "marginTop": "mt-1"
+        "accent": {
+          "rain": {
+            "primary": {
+              "class": "bg-blue-500",
+              "hex": "#3b82f6"
+            },
+            "text": {
+              "class": "text-blue-600",
+              "hex": "#2563eb"
+            }
+          },
+          "sun": {
+            "primary": {
+              "class": "bg-yellow-400",
+              "hex": "#facc15"
+            },
+            "text": {
+              "class": "text-yellow-500",
+              "hex": "#eab308"
+            }
+          }
         }
       },
-      "loadingStates": {
-        "spinner": {
-          "animation": "animate-spin",
-          "border": "border-t-2 border-b-2 border-blue-500",
-          "size": "h-12 w-12",
-          "borderRadius": "rounded-full"
+      "typography": {
+        "fontFamily": {
+          "primary": "'Cumulus', sans-serif",
+          "secondary": "'Cirrus', serif"
+        },
+        "fontSize": {
+          "4xl": {
+            "size": "2.25rem",
+            "usage": "page titles"
+          },
+          "2xl": {
+            "size": "1.5rem",
+            "usage": "section headers"
+          },
+          "xl": {
+            "size": "1.25rem",
+            "usage": "subsection headers"
+          },
+          "base": {
+            "size": "1rem",
+            "usage": "body text"
+          },
+          "sm": {
+            "size": "0.875rem",
+            "usage": "secondary text"
+          },
+          "xs": {
+            "size": "0.75rem",
+            "usage": "labels, captions"
+          }
+        },
+        "fontWeight": {
+          "bold": 700,
+          "semibold": 600,
+          "medium": 500,
+          "normal": 400,
+          "light": 300
         }
       },
-      "progressIndicators": {
-        "progressBar": {
-          "background": "bg-gray-200",
-          "fill": "bg-blue-600",
-          "height": "h-3",
-          "borderRadius": "rounded-full"
+      "layout": {
+        "navbar": {
+          "position": "fixed top",
+          "backgroundColor": "bg-gradient-to-r from-sky-500 to-sky-700",
+          "backdropFilter": "backdrop-filter blur-lg",
+          "height": "h-20",
+          "shadow": "shadow-lg shadow-sky-500/20",
+          "features": [
+            "Cloud-shaped logo",
+            "Navigation links",
+            "User information",
+            "Floating cloud hamburger menu"
+          ]
+        },
+        "mainContent": {
+          "maxWidth": "max-w-6xl",
+          "padding": "p-8",
+          "backgroundColor": "bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100",
+          "minHeight": "min-h-screen",
+          "scrollEffect": "parallax with multi-layered clouds"
+        },
+        "cards": {
+          "backgroundColor": "bg-white/80",
+          "backdropFilter": "backdrop-filter blur-md",
+          "borderRadius": "rounded-2xl",
+          "shadow": "shadow-xl shadow-sky-200/50",
+          "padding": "p-6",
+          "marginBottom": "mb-8",
+          "border": "border border-slate-100",
+          "hoverEffect": "hover:translate-y-[-5px] transition-transform"
         }
-      }
-    },
-    "pages": {
-      "dashboard": {
-        "elements": [
-          "Welcome section with user name",
-          "Cards for different features",
-          "Quick access buttons to key functionality"
-        ]
       },
-      "careerRoadmap": {
-        "elements": [
-          "Timeline visualization of milestones",
-          "Progress indicator showing completion percentage",
-          "Interactive milestone cards with completion toggle",
-          "Resource links with appropriate icons"
-        ]
+      "components": {
+        "buttons": {
+          "primary": {
+            "backgroundColor": "bg-gradient-to-r from-sky-500 to-sky-600",
+            "hoverColor": "bg-gradient-to-r from-sky-600 to-sky-700",
+            "textColor": "text-white",
+            "padding": "px-6 py-3",
+            "borderRadius": "rounded-full",
+            "fontWeight": "font-medium",
+            "shadow": "shadow-md shadow-sky-500/30",
+            "transition": "transition-all duration-300"
+          },
+          "destructive": {
+            "backgroundColor": "bg-gradient-to-r from-amber-500 to-amber-600",
+            "hoverColor": "bg-gradient-to-r from-amber-600 to-amber-700",
+            "textColor": "text-white",
+            "padding": "px-6 py-3",
+            "borderRadius": "rounded-full",
+            "fontWeight": "font-medium",
+            "shadow": "shadow-md shadow-amber-500/30"
+          },
+          "secondary": {
+            "backgroundColor": "bg-white/90",
+            "border": "border border-sky-200",
+            "hoverColor": "bg-sky-50/90",
+            "textColor": "text-sky-700",
+            "padding": "px-6 py-3",
+            "borderRadius": "rounded-full",
+            "fontWeight": "font-medium",
+            "shadow": "shadow-sm shadow-sky-200/30"
+          }
+        },
+        "formElements": {
+          "inputFields": {
+            "background": "bg-white/70",
+            "border": "border border-slate-200",
+            "focus": "focus:ring-2 focus:ring-sky-400 focus:border-sky-400",
+            "borderRadius": "rounded-xl",
+            "padding": "p-3",
+            "width": "w-full",
+            "shadowInner": "shadow-inner shadow-slate-100"
+          },
+          "labels": {
+            "fontWeight": "font-medium",
+            "textColor": "text-slate-700",
+            "marginBottom": "mb-2",
+            "fontSize": "text-sm",
+            "textTransform": "tracking-wide"
+          },
+          "errorMessages": {
+            "textColor": "text-amber-600",
+            "fontSize": "text-sm",
+            "marginTop": "mt-2",
+            "icon": "cloud with lightning"
+          }
+        },
+        "loadingStates": {
+          "spinner": {
+            "animation": "animate-spin",
+            "border": "border-t-2 border-b-2 border-sky-500",
+            "size": "h-12 w-12",
+            "borderRadius": "rounded-full",
+            "additional": "cloud wisp animation"
+          }
+        },
+        "progressIndicators": {
+          "progressBar": {
+            "background": "bg-slate-200/60",
+            "fill": "bg-gradient-to-r from-sky-400 to-sky-600",
+            "height": "h-4",
+            "borderRadius": "rounded-full",
+            "animation": "subtle flowing gradient"
+          }
+        }
       },
-      "profilePage": {
-        "elements": [
-          "Resume upload and management",
-          "Resume analysis visualization",
-          "Profile information display"
-        ]
+      "pages": {
+        "dashboard": {
+          "elements": [
+            "Welcome section with user name and floating cloud illustrations",
+            "Cards with soft shadows that appear to float above the background",
+            "Quick access buttons with cloud hover effects",
+            "Weather-themed status indicators for different features"
+          ]
+        },
+        "careerRoadmap": {
+          "elements": [
+            "Sky-to-horizon timeline visualization resembling altitude/flight path",
+            "Cloud-shaped milestone markers at different heights",
+            "Progress indicator showing career 'altitude' percentage",
+            "Interactive milestone clouds with completion toggle",
+            "Resource links with cloud-themed icons"
+          ]
+        },
+        "profilePage": {
+          "elements": [
+            "Resume upload with cloud storage visualization",
+            "Resume analysis with animated rain/sunshine metrics",
+            "Profile information display with layered cloud backgrounds"
+          ]
+        },
+        "jobPreferences": {
+          "elements": [
+            "Form-based interface with floating label animations",
+            "Multi-select dropdowns appearing like expanding clouds",
+            "Radio buttons designed as sun/moon toggles for preferences"
+          ]
+        }
       },
-      "jobPreferences": {
-        "elements": [
-          "Form-based interface for setting preferences",
-          "Multi-select dropdowns for industries and roles",
-          "Radio buttons for remote work preferences"
-        ]
-      }
-    },
-    "responsiveBreakpoints": {
-      "mobile": "Default styles",
-      "tablet": "md: (768px and above)",
-      "desktop": "lg: (1024px and above)",
-      "largeDesktop": "xl: (1280px and above)"
-    },
-    "icons": {
-      "type": "SVG inline elements",
-      "commonSizes": ["h-5 w-5", "h-6 w-6"]
-    },
-    "animation": {
-      "buttonHover": "transition-colors",
-      "loadingSpinner": "animate-spin",
-      "mobileMenu": "not explicitly defined"
-    },
-    "accessibility": [
-      "Appropriate color contrast ratios",
-      "Focus states for interactive elements",
-      "Screen reader compatible markup",
-      "Semantic HTML structure"
-    ],
-    "designPatterns": [
-      "Card-based UI for content organization",
-      "Consistent spacing and alignment",
-      "Clear visual hierarchy",
-      "Mobile-first responsive design"
-    ]
+      "animations": {
+        "cloudAnimations": {
+          "background": "Large, slow-moving clouds (parallax effect)",
+          "foreground": "Smaller, faster-moving clouds",
+          "interactive": "Cloud elements that react to hover/click",
+          "weatherEffects": "Occasional subtle rain or sunshine animations based on user achievements"
+        },
+        "scrollEffects": {
+          "parallax": "Multi-layered clouds at different speeds",
+          "contentReveal": "Cards that float up as they enter viewport",
+          "transitions": "Section transitions with altitude/cloud-density changes"
+        }
+      },
+      "responsiveBreakpoints": {
+        "mobile": "Default styles with vertical stacking and simplified cloud effects",
+        "tablet": "md: (768px and above) with richer animations",
+        "desktop": "lg: (1024px and above) with full parallax effects",
+        "largeDesktop": "xl: (1280px and above) with maximum cloud density"
+      },
+      "icons": {
+        "type": "Cloud-themed custom SVG icon set",
+        "commonSizes": ["h-6 w-6", "h-8 w-8"],
+        "animation": "Subtle floating or pulse effects on hover"
+      },
+      "animation": {
+        "elementTransitions": "transition-all duration-300",
+        "loadingSpinner": "animate-spin with cloud wisps",
+        "cloudMovements": "CSS animations with varying durations (20s-120s)",
+        "buttonHover": "Scale and glow effects"
+      },
+      "accessibility": [
+        "Appropriate color contrast ratios despite cloud theme",
+        "Focus states with sky-blue outlines for interactive elements",
+        "Screen reader compatible markup and aria labels",
+        "Reduced motion option that disables parallax and complex animations",
+        "Semantic HTML structure"
+      ],
+      "designPatterns": [
+        "Layered UI with cloud-based depth perception",
+        "Consistent floating card pattern for content",
+        "Clear visual hierarchy using altitude metaphor",
+        "Weather-inspired status indicators",
+        "Mobile-first responsive design with progressive enhancement"
+      ]
+    }
   }
-} 

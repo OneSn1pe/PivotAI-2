@@ -1,45 +1,49 @@
-# PivotAI Career Platform - Design Reference
+# PivotAI Career Platform - Cloud Sky Design System
 
 ## Overview
-PivotAI is a career platform that helps candidates with resume analysis and career roadmap generation. The application follows a modern, clean design approach using Tailwind CSS for styling and Next.js for the frontend framework.
+PivotAI is a career platform that helps candidates with resume analysis and career roadmap generation. The application follows a dynamic scrolling cloudy sky theme using Tailwind CSS for styling and Next.js for the frontend framework. The design evokes a sense of possibility, elevation, and career growth through cloud imagery and sky-inspired color transitions.
 
 ## Color Palette
 
 ### Primary Colors
-- **Blue**: Used for primary actions, navigation, and branding
-  - Primary blue: `bg-blue-700` (#1d4ed8)
-  - Light blue: `bg-blue-500` (#3b82f6)
-  - Hover blue: `bg-blue-600` (#2563eb)
-  - Lightest blue: `bg-blue-100` (#dbeafe)
+- **Sky Blue**: Used for primary actions, navigation, and branding
+  - Deep sky: `bg-sky-700` (#0369a1)
+  - Medium sky: `bg-sky-500` (#0ea5e9)
+  - Hover sky: `bg-sky-600` (#0284c7)
+  - Light sky: `bg-sky-200` (#bae6fd)
+  - Lightest sky: `bg-sky-100` (#e0f2fe)
 
 ### Secondary Colors
-- **Red**: Used for destructive actions and errors
-  - Primary red: `bg-red-600` (#dc2626)
-  - Hover red: `bg-red-700` (#b91c1c)
-  - Light red: `bg-red-100` (#fee2e2)
+- **Sunset**: Used for destructive actions, warnings and highlights
+  - Sunset orange: `bg-amber-500` (#f59e0b)
+  - Hover sunset: `bg-amber-600` (#d97706)
+  - Light sunset: `bg-amber-100` (#fef3c7)
 
 ### Neutral Colors
-- **Gray**: Used for text, backgrounds, and borders
-  - Background: `bg-gray-100` (#f3f4f6)
-  - Card background: `bg-white` (#ffffff)
-  - Text primary: `text-gray-800` (#1f2937)
-  - Text secondary: `text-gray-600` (#4b5563)
-  - Text tertiary: `text-gray-400` (#9ca3af)
-  - Border: `border-gray-200` (#e5e7eb)
+- **Cloud**: Used for text, backgrounds, and borders
+  - Background: `bg-slate-100` (#f1f5f9) with dynamic gradient overlays
+  - Card background: `bg-white/80` (#ffffff with 80% opacity) with frosted glass effect
+  - Text primary: `text-slate-800` (#1e293b)
+  - Text secondary: `text-slate-600` (#475569)
+  - Text tertiary: `text-slate-400` (#94a3b8)
+  - Border: `border-slate-200` (#e2e8f0)
 
 ### Accent Colors
-- **Green**: Used for success states and completed items
-  - Primary green: `bg-green-500` (#22c55e)
-  - Text green: `text-green-600` (#16a34a)
+- **Rain**: Used for success states and completed items
+  - Rain blue: `bg-blue-500` (#3b82f6)
+  - Text blue: `text-blue-600` (#2563eb)
+- **Sun**: Used for highlights and important elements
+  - Sun yellow: `bg-yellow-400` (#facc15)
+  - Text yellow: `text-yellow-500` (#eab308)
 
 ## Typography
 
 ### Font Family
-- Default font: System UI font stack
-- No custom fonts are currently used
+- Primary font: 'Cumulus', sans-serif (system UI font stack with custom name)
+- Secondary font: 'Cirrus', serif (for accent text)
 
 ### Font Sizes
-- Extra large (page titles): `text-3xl` (1.875rem)
+- Extra large (page titles): `text-4xl` (2.25rem)
 - Large (section headers): `text-2xl` (1.5rem)
 - Medium (subsection headers): `text-xl` (1.25rem)
 - Default (body text): `text-base` (1rem)
@@ -51,138 +55,172 @@ PivotAI is a career platform that helps candidates with resume analysis and care
 - Semi-bold: `font-semibold` (600)
 - Medium: `font-medium` (500)
 - Normal: `font-normal` (400)
+- Light: `font-light` (300) - for airy, cloud-like text effects
 
 ## Layout Components
 
 ### Navbar
-- Fixed at the top of the page
-- Contains logo, navigation links, and user information
-- Responsive design with mobile hamburger menu
-- Background color: `bg-blue-700`
-- Height: `h-16` (4rem)
+- Fixed at the top of the page with subtle cloud animation
+- Contains logo (cloud-shaped), navigation links, and user information
+- Responsive design with floating cloud hamburger menu
+- Background: `bg-gradient-to-r from-sky-500 to-sky-700` with `backdrop-filter blur-lg`
+- Height: `h-20` (5rem)
+- Shadow: `shadow-lg shadow-sky-500/20`
 
 ### Main Content Area
+- Parallax scrolling effect with clouds that move at different speeds
 - Centered with maximum width: `max-w-6xl`
-- Padding: `p-6`
-- Background color: `bg-gray-100`
+- Padding: `p-8`
+- Background: Dynamic gradient transitioning from `bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100`
 - Min height: `min-h-screen`
 
 ### Cards
-- Background: `bg-white`
-- Border radius: `rounded-lg`
-- Shadow: `shadow-lg`
+- Background: `bg-white/80` with `backdrop-filter blur-md`
+- Border radius: `rounded-2xl`
+- Shadow: `shadow-xl shadow-sky-200/50`
 - Padding: `p-6`
-- Margin bottom: `mb-6`
+- Margin bottom: `mb-8`
+- Border: `border border-slate-100`
+- Hover effect: Subtle floating animation `hover:translate-y-[-5px] transition-transform`
 
 ## UI Components
 
 ### Buttons
 - **Primary Button**:
-  - Background: `bg-blue-600`
-  - Hover: `bg-blue-700`
+  - Background: `bg-gradient-to-r from-sky-500 to-sky-600`
+  - Hover: `bg-gradient-to-r from-sky-600 to-sky-700`
   - Text color: `text-white`
-  - Padding: `px-4 py-2`
-  - Border radius: `rounded-md` or `rounded-lg`
+  - Padding: `px-6 py-3`
+  - Border radius: `rounded-full`
   - Font weight: `font-medium`
+  - Shadow: `shadow-md shadow-sky-500/30`
+  - Transition: `transition-all duration-300`
 
 - **Destructive Button**:
-  - Background: `bg-red-600`
-  - Hover: `bg-red-700`
+  - Background: `bg-gradient-to-r from-amber-500 to-amber-600`
+  - Hover: `bg-gradient-to-r from-amber-600 to-amber-700`
   - Text color: `text-white`
-  - Padding: `px-4 py-2`
-  - Border radius: `rounded-md`
+  - Padding: `px-6 py-3`
+  - Border radius: `rounded-full`
   - Font weight: `font-medium`
+  - Shadow: `shadow-md shadow-amber-500/30`
 
 - **Secondary Button**:
-  - Background: `bg-white`
-  - Border: `border border-gray-300`
-  - Hover: `bg-gray-50`
-  - Text color: `text-gray-700`
-  - Padding: `px-4 py-2`
-  - Border radius: `rounded-md`
+  - Background: `bg-white/90`
+  - Border: `border border-sky-200`
+  - Hover: `bg-sky-50/90`
+  - Text color: `text-sky-700`
+  - Padding: `px-6 py-3`
+  - Border radius: `rounded-full`
   - Font weight: `font-medium`
+  - Shadow: `shadow-sm shadow-sky-200/30`
 
 ### Form Elements
 - **Input Fields**:
-  - Border: `border border-gray-300`
-  - Focus: `focus:ring-2 focus:ring-blue-500 focus:border-blue-500`
-  - Border radius: `rounded`
-  - Padding: `p-2`
+  - Background: `bg-white/70`
+  - Border: `border border-slate-200`
+  - Focus: `focus:ring-2 focus:ring-sky-400 focus:border-sky-400`
+  - Border radius: `rounded-xl`
+  - Padding: `p-3`
   - Width: `w-full`
+  - Shadow inner: `shadow-inner shadow-slate-100`
 
 - **Labels**:
   - Font weight: `font-medium`
-  - Text color: `text-gray-700`
-  - Margin bottom: `mb-1`
+  - Text color: `text-slate-700`
+  - Margin bottom: `mb-2`
   - Font size: `text-sm`
+  - Text transform: `tracking-wide`
 
 - **Error Messages**:
-  - Text color: `text-red-600`
+  - Text color: `text-amber-600`
   - Font size: `text-sm`
-  - Margin top: `mt-1`
+  - Margin top: `mt-2`
+  - Icon: Small cloud with lightning
 
 ### Loading States
 - **Spinner**:
   - Animation: `animate-spin`
-  - Border: `border-t-2 border-b-2 border-blue-500`
+  - Border: `border-t-2 border-b-2 border-sky-500`
   - Size: `h-12 w-12`
   - Border radius: `rounded-full`
+  - Additional: Cloud wisp animation around spinner
 
 ### Progress Indicators
 - **Progress Bar**:
-  - Background: `bg-gray-200`
-  - Fill: `bg-blue-600`
-  - Height: `h-3`
+  - Background: `bg-slate-200/60`
+  - Fill: `bg-gradient-to-r from-sky-400 to-sky-600`
+  - Height: `h-4`
   - Border radius: `rounded-full`
+  - Animation: Subtle flowing gradient animation
 
 ## Page-Specific Design Elements
 
 ### Dashboard
-- Welcome section with user name
-- Cards for different features
-- Quick access buttons to key functionality
+- Welcome section with user name and floating cloud illustrations
+- Cards with soft shadows that appear to float above the background
+- Quick access buttons with cloud hover effects
+- Weather-themed status indicators for different features
 
 ### Career Roadmap
-- Timeline visualization of milestones
-- Progress indicator showing completion percentage
-- Interactive milestone cards with completion toggle
-- Resource links with appropriate icons
+- Sky-to-horizon timeline visualization resembling altitude/flight path
+- Cloud-shaped milestone markers at different heights
+- Progress indicator showing career "altitude" as a percentage
+- Interactive milestone clouds with completion toggle
+- Resource links with cloud-themed icons
 
 ### Profile Page
-- Resume upload and management
-- Resume analysis visualization
-- Profile information display
+- Resume upload with cloud storage visualization
+- Resume analysis with animated rain/sunshine metrics
+- Profile information display with layered cloud backgrounds
 
 ### Job Preferences
-- Form-based interface for setting preferences
-- Multi-select dropdowns for industries and roles
-- Radio buttons for remote work preferences
+- Form-based interface with floating label animations
+- Multi-select dropdowns appearing like expanding clouds
+- Radio buttons designed as sun/moon toggles for preferences
+
+## Animations & Effects
+
+### Cloud Animations
+- **Background Clouds**: Large, slow-moving clouds in the background (parallax effect)
+- **Foreground Clouds**: Smaller, faster-moving clouds in the foreground
+- **Interactive Clouds**: Cloud elements that react to hover/click
+- **Weather Effects**: Occasional subtle rain or sunshine animations based on user achievements
+
+### Scroll Effects
+- Parallax scrolling with multi-layered clouds
+- Content cards that float up as they enter the viewport
+- Section transitions with altitude/cloud-density changes
 
 ## Responsive Design Breakpoints
 
-- **Mobile**: Default styles
-- **Tablet**: `md:` prefix (768px and above)
-- **Desktop**: `lg:` prefix (1024px and above)
-- **Large Desktop**: `xl:` prefix (1280px and above)
+- **Mobile**: Default styles with vertical stacking and simplified cloud effects
+- **Tablet**: `md:` prefix (768px and above) with richer animations
+- **Desktop**: `lg:` prefix (1024px and above) with full parallax effects
+- **Large Desktop**: `xl:` prefix (1280px and above) with maximum cloud density
 
 ## Icons
-- SVG icons are used throughout the application
-- Icons are inline SVG elements with appropriate sizing
-- Common icon sizes: `h-5 w-5` or `h-6 w-6`
+- Cloud-themed custom SVG icon set
+- Weather and sky elements incorporated into functional icons
+- Common icon sizes: `h-6 w-6` or `h-8 w-8`
+- Animation: Subtle floating or pulse effects on hover
 
 ## Animation
-- Button hover transitions: `transition-colors`
-- Loading spinner: `animate-spin`
-- Mobile menu transitions (not explicitly defined)
+- Element transitions: `transition-all duration-300`
+- Loading spinner: `animate-spin` with cloud wisps
+- Cloud movements: CSS animations with varying durations (20s-120s)
+- Button hover: Scale and glow effects
 
 ## Accessibility
-- Appropriate color contrast ratios
-- Focus states for interactive elements
-- Screen reader compatible markup
+- Appropriate color contrast ratios despite cloud theme
+- Focus states with sky-blue outlines for interactive elements
+- Screen reader compatible markup and aria labels
+- Reduced motion option that disables parallax and complex animations
 - Semantic HTML structure
 
 ## Design Patterns
-- Card-based UI for content organization
-- Consistent spacing and alignment
-- Clear visual hierarchy
-- Mobile-first responsive design 
+- Layered UI with cloud-based depth perception
+- Consistent floating card pattern for content
+- Clear visual hierarchy using altitude metaphor
+- Weather-inspired status indicators
+- Mobile-first responsive design with progressive enhancement

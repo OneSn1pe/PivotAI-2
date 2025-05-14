@@ -272,7 +272,9 @@ export default function CandidateDashboard() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Candidate Dashboard</h1>
+        <h1 className="text-4xl font-bold mb-6 text-slate-800">
+          Welcome, {candidateProfile?.displayName || 'Candidate'}
+        </h1>
       </div>
       
       {!candidateProfile?.resumeUrl && (
@@ -282,7 +284,7 @@ export default function CandidateDashboard() {
           </p>
           <button
             onClick={() => router.push('/protected/candidate/profile')}
-            className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-4 rounded"
+            className="mt-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white py-1 px-4 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
           >
             Upload Resume
           </button>
@@ -291,7 +293,7 @@ export default function CandidateDashboard() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Progress Summary */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
           <h2 className="text-xl font-bold mb-4">Your Progress</h2>
           
           <div className="space-y-4">
@@ -330,7 +332,7 @@ export default function CandidateDashboard() {
         </div>
         
         {/* Skills */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
           <h2 className="text-xl font-bold mb-4">Your Skills</h2>
           
           {candidateProfile?.resumeAnalysis?.skills ? (
@@ -358,7 +360,7 @@ export default function CandidateDashboard() {
                 </div>
                 <button
                   onClick={() => setShowResumeManager(true)}
-                  className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  className="mt-4 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
                 >
                   Update Resume
                 </button>
@@ -370,7 +372,7 @@ export default function CandidateDashboard() {
         </div>
 
         {/* Resume Management */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Your Resume</h2>
             <button
@@ -426,7 +428,7 @@ export default function CandidateDashboard() {
                   </p>
                   <button
                     onClick={() => setShowResumeManager(true)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
                   >
                     Upload Resume
                   </button>
@@ -447,7 +449,7 @@ export default function CandidateDashboard() {
         </div>
 
         {/* Career Roadmap */}
-        <div className="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card md:col-span-2">
           <h2 className="text-xl font-bold mb-4">Your Career Roadmap</h2>
           
           {roadmap ? (
@@ -501,7 +503,7 @@ export default function CandidateDashboard() {
               <div className="mt-4 text-center">
                 <button
                   onClick={() => router.push('/protected/candidate/roadmap')}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                  className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold py-2 px-4 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
                 >
                   View Full Roadmap
                 </button>
@@ -514,7 +516,7 @@ export default function CandidateDashboard() {
               </p>
               <button
                 onClick={() => router.push('/protected/candidate/roadmap')}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white font-bold py-2 px-4 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
               >
                 Generate Career Roadmap
               </button>

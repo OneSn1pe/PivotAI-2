@@ -1,37 +1,15 @@
-import './globals.css';
-import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
+import "@/styles/globals.css";
+import "@/styles/cloud-theme.css";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { Providers } from "../components/providers";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'PivotAI - Career Development Platform',
-  description: 'AI-powered career development and job matching platform',
-  icons: {
-    icon: [
-      { url: '/favicon/favicon.ico' },
-      { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    other: [
-      {
-        rel: 'manifest',
-        url: '/favicon/site.webmanifest',
-      },
-    ],
-  },
+  title: "PivotAI - Career Roadmap Platform",
+  description: "AI-powered career roadmaps and resume analysis",
 };
-
-// Import client components with dynamic loading
-const ClientLayout = dynamic(
-  () => import('../components/layout/ClientLayout'),
-  { ssr: false }
-);
 
 export default function RootLayout({
   children,
@@ -41,10 +19,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
+        <Providers>
+          {/* Cloud parallax background */}
+          <div className="parallax-clouds">
+            <div className="cloud-parallax cloud-layer-1">
+              <div className="cloud-lg"></div>
+            </div>
+            <div className="cloud-parallax cloud-layer-2">
+              <div className="cloud-md"></div>
+            </div>
+            <div className="cloud-parallax cloud-layer-3">
+              <div className="cloud-lg"></div>
+            </div>
+          </div>
           {children}
-          <ClientLayout />
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -105,7 +105,11 @@ export default function RoadmapPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
+          <div className="absolute -top-4 -left-4 cloud-sm opacity-30 animate-float-fast"></div>
+          <div className="absolute -bottom-2 -right-4 cloud-sm opacity-20 animate-float-medium"></div>
+        </div>
       </div>
     );
   }
@@ -113,10 +117,10 @@ export default function RoadmapPage() {
   if (!roadmap && !showGenerator) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Career Roadmap</h1>
-        <div className="text-center py-12 bg-white rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">No Career Roadmap Found</h2>
-          <p className="text-gray-600 mb-6">
+        <h1 className="text-4xl font-bold mb-6 text-slate-800">Career Roadmap</h1>
+        <div className="text-center py-12 bg-white/80 backdrop-filter backdrop-blur-md rounded-2xl shadow-xl shadow-sky-200/50 border border-slate-100">
+          <h2 className="text-2xl font-bold mb-4 text-slate-800">No Career Roadmap Found</h2>
+          <p className="text-slate-600 mb-6">
             You can generate a personalized career roadmap based on your resume and career goals.
           </p>
           
@@ -124,19 +128,19 @@ export default function RoadmapPage() {
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setShowGenerator(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
               >
                 Generate Your Roadmap
               </button>
             </div>
           ) : (
             <div>
-              <p className="text-yellow-700 mb-4">
+              <p className="text-amber-600 mb-4">
                 Please upload your resume first to generate a roadmap.
               </p>
               <button
                 onClick={() => router.push('/protected/candidate/profile')}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
               >
                 Complete Your Profile
               </button>
@@ -150,15 +154,17 @@ export default function RoadmapPage() {
   if (showGenerator) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Create Your Career Roadmap</h1>
-        <RoadmapGenerator 
-          resumeAnalysis={candidateProfile?.resumeAnalysis || null} 
-          onRoadmapGenerated={handleRoadmapGenerated}
-        />
+        <h1 className="text-4xl font-bold mb-6 text-slate-800">Create Your Career Roadmap</h1>
+        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 border border-slate-100 mb-6">
+          <RoadmapGenerator 
+            resumeAnalysis={candidateProfile?.resumeAnalysis || null} 
+            onRoadmapGenerated={handleRoadmapGenerated}
+          />
+        </div>
         <div className="mt-6 text-center">
           <button
             onClick={() => setShowGenerator(false)}
-            className="text-gray-600 hover:text-gray-800 underline"
+            className="text-slate-600 hover:text-slate-800 underline transition-colors duration-300"
           >
             Cancel
           </button>
@@ -170,10 +176,10 @@ export default function RoadmapPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Your Career Roadmap</h1>
+        <h1 className="text-4xl font-bold text-slate-800">Your Career Roadmap</h1>
         <button
           onClick={() => setShowGenerator(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+          className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
         >
           Generate New Roadmap
         </button>
@@ -181,20 +187,20 @@ export default function RoadmapPage() {
       
       {roadmap && (
         <div>
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-bold mb-4">Your Progress</h2>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-blue-600 h-3 rounded-full"
-                style={{ 
-                  width: `${Math.round(
-                    (roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100
-                  )}%` 
-                }}
-              ></div>
-            </div>
-            <div className="mt-2 text-right">
-              <span className="text-blue-600 font-semibold">
+          <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
+            <h2 className="text-xl font-bold mb-4 text-slate-800">Your Career Altitude</h2>
+            <div className="flex items-center">
+              <div className="w-full bg-slate-200/60 rounded-full h-4 mr-4 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-sky-400 to-sky-600 h-4 rounded-full"
+                  style={{ 
+                    width: `${Math.round(
+                      (roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100
+                    )}%` 
+                  }}
+                ></div>
+              </div>
+              <span className="text-sky-700 font-semibold whitespace-nowrap">
                 {roadmap.milestones.filter(m => m.completed).length} of {roadmap.milestones.length} completed
               </span>
             </div>

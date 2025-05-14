@@ -35,10 +35,10 @@ export default function ProtectedLayout({
   // Show loading state if we're loading auth
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100">
         <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500 mb-4"></div>
+          <p className="text-slate-600">Loading...</p>
         </div>
       </div>
     );
@@ -50,9 +50,9 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-slate-100">
       <Navbar />
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 p-8 overflow-auto page-content">
         <div className="max-w-6xl mx-auto">
           {children}
         </div>

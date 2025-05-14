@@ -1,0 +1,309 @@
+/* Cloud Theme CSS */
+
+/* Cloud Shapes */
+.cloud-sm {
+  width: 50px;
+  height: 30px;
+  background: white;
+  opacity: 0.3;
+  border-radius: 50px;
+  position: relative;
+  box-shadow: 0 8px 5px rgba(0, 0, 0, 0.1);
+}
+
+.cloud-sm:before,
+.cloud-sm:after {
+  content: '';
+  position: absolute;
+  background: white;
+  opacity: 0.3;
+  border-radius: 50%;
+}
+
+.cloud-sm:before {
+  width: 25px;
+  height: 25px;
+  top: -10px;
+  left: 10px;
+}
+
+.cloud-sm:after {
+  width: 25px;
+  height: 25px;
+  top: -15px;
+  right: 10px;
+}
+
+.cloud-md {
+  width: 100px;
+  height: 60px;
+  background: white;
+  opacity: 0.3;
+  border-radius: 100px;
+  position: relative;
+  box-shadow: 0 8px 5px rgba(0, 0, 0, 0.1);
+}
+
+.cloud-md:before,
+.cloud-md:after {
+  content: '';
+  position: absolute;
+  background: white;
+  opacity: 0.3;
+  border-radius: 50%;
+}
+
+.cloud-md:before {
+  width: 50px;
+  height: 50px;
+  top: -20px;
+  left: 15px;
+}
+
+.cloud-md:after {
+  width: 60px;
+  height: 60px;
+  top: -30px;
+  right: 15px;
+}
+
+.cloud-lg {
+  width: 150px;
+  height: 90px;
+  background: white;
+  opacity: 0.3;
+  border-radius: 150px;
+  position: relative;
+  box-shadow: 0 8px 5px rgba(0, 0, 0, 0.1);
+}
+
+.cloud-lg:before,
+.cloud-lg:after {
+  content: '';
+  position: absolute;
+  background: white;
+  opacity: 0.3;
+  border-radius: 50%;
+}
+
+.cloud-lg:before {
+  width: 75px;
+  height: 75px;
+  top: -30px;
+  left: 25px;
+}
+
+.cloud-lg:after {
+  width: 90px;
+  height: 90px;
+  top: -40px;
+  right: 25px;
+}
+
+/* Buttons with cloud hover effect */
+.cloud-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.cloud-btn:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.3);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.cloud-btn:hover:after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(4, 4);
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(30, 30);
+  }
+}
+
+/* Floating card effect */
+.float-card {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+
+.float-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px -10px rgba(186, 230, 253, 0.4);
+}
+
+/* Parallax cloud background */
+.parallax-clouds {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.cloud-parallax {
+  position: absolute;
+  opacity: 0.8;
+}
+
+.cloud-layer-1 {
+  top: 10%;
+  left: 10%;
+  animation: cloud-drift-1 80s linear infinite;
+}
+
+.cloud-layer-2 {
+  top: 25%;
+  right: 15%;
+  animation: cloud-drift-2 120s linear infinite;
+}
+
+.cloud-layer-3 {
+  bottom: 15%;
+  left: 20%;
+  animation: cloud-drift-3 100s linear infinite;
+}
+
+@keyframes cloud-drift-1 {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(100vw);
+  }
+  50.1% {
+    transform: translateX(-100vw);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes cloud-drift-2 {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-100vw);
+  }
+  50.1% {
+    transform: translateX(100vw);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes cloud-drift-3 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+/* Weather-themed status indicators */
+.status-sunny {
+  background: linear-gradient(to right, #facc15, #fbbf24);
+  color: #7c2d12;
+}
+
+.status-partly-cloudy {
+  background: linear-gradient(to right, #e0f2fe, #bae6fd);
+  color: #0c4a6e;
+}
+
+.status-rainy {
+  background: linear-gradient(to right, #bae6fd, #93c5fd);
+  color: #1e3a8a;
+}
+
+.status-stormy {
+  background: linear-gradient(to right, #a5b4fc, #818cf8);
+  color: #312e81;
+}
+
+/* Frosted glass effect */
+.frosted-glass {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Add top margin for page content to account for fixed navbar */
+.page-content {
+  margin-top: 5rem; /* Matches the navbar height */
+}
+
+/* Altimeter progress bar (for career "altitude") */
+.altimeter-progress {
+  position: relative;
+  width: 20px;
+  height: 200px;
+  background: rgba(241, 245, 249, 0.6);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.altimeter-progress-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to top, #0ea5e9, #0284c7);
+  border-radius: 10px;
+  transition: height 1s ease-out;
+}
+
+.altimeter-marker {
+  position: absolute;
+  width: 30px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.1);
+  right: -10px;
+}
+
+/* Responsive adjustments for the cloud theme */
+@media (max-width: 768px) {
+  .cloud-lg, .cloud-md {
+    transform: scale(0.7);
+  }
+  
+  .parallax-clouds {
+    display: none; /* Disable parallax on mobile for performance */
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-medium,
+  .animate-float-fast,
+  .cloud-parallax,
+  .float-card:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+} 
