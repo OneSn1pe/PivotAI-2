@@ -8,7 +8,6 @@ import { UserRole } from "@/types/user";
 import RoadmapViewer from "@/components/roadmap/RoadmapViewer";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import ErrorMessage from "@/components/ui/ErrorMessage";
-import TokenDebugPanel from "@/components/debugger/TokenDebugPanel";
 
 export default function CandidateDetailPage() {
   const { userProfile, loading: authLoading } = useAuth();
@@ -54,19 +53,16 @@ export default function CandidateDetailPage() {
   // Handle access denied
   if (accessType === "none" || error) {
     return (
-      <>
-        <ErrorMessage 
-          title="Access Denied" 
-          message={error || "You don't have permission to view this roadmap."} 
-          actionText="Go back to dashboard"
-          onAction={() => router.push(
-            userProfile?.role === UserRole.RECRUITER 
-              ? "/protected/recruiter/dashboard" 
-              : "/protected/candidate/dashboard"
-          )}
-        />
-        <TokenDebugPanel candidateId={candidateId} />
-      </>
+      <ErrorMessage 
+        title="Access Denied" 
+        message={error || "You don't have permission to view this roadmap."} 
+        actionText="Go back to dashboard"
+        onAction={() => router.push(
+          userProfile?.role === UserRole.RECRUITER
+            ? "/protected/recruiter/dashboard" 
+            : "/protected/candidate/dashboard"
+        )}
+      />
     );
   }
   
@@ -79,7 +75,6 @@ export default function CandidateDetailPage() {
           candidateName={candidateName}
         />
       )}
-      <TokenDebugPanel candidateId={candidateId} />
     </div>
   );
 } 
