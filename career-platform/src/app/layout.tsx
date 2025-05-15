@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import "@/styles/cloud-theme.css";
+import "@/styles/fantasy-theme.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "../components/providers";
@@ -7,8 +8,8 @@ import { Providers } from "../components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PivotAI - Career Roadmap Platform",
-  description: "AI-powered career roadmaps and resume analysis",
+  title: "PivotAI Career Quest - MMORPG",
+  description: "Your professional journey as an epic adventure",
 };
 
 export default function RootLayout({
@@ -20,17 +21,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          {/* Cloud parallax background */}
-          <div className="parallax-clouds">
-            <div className="cloud-parallax cloud-layer-1">
-              <div className="cloud-lg"></div>
-            </div>
-            <div className="cloud-parallax cloud-layer-2">
-              <div className="cloud-md"></div>
-            </div>
-            <div className="cloud-parallax cloud-layer-3">
-              <div className="cloud-lg"></div>
-            </div>
+          {/* Fantasy game background */}
+          <div className="game-background"></div>
+          <div className="parallax-fantasy">
+            <div className="fantasy-element stars-layer"></div>
+            <div className="fantasy-element floating-runes"></div>
           </div>
           {children}
         </Providers>

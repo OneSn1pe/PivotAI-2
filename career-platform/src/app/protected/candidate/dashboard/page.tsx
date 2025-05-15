@@ -10,6 +10,9 @@ import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
 import ResumeManager from '@/components/candidate/ResumeManager';
 import StatHexagon from '@/components/candidate/StatHexagon';
+import CharacterStats from '@/components/ui/CharacterStats';
+import QuestCard from '@/components/ui/QuestCard';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function CandidateDashboard() {
   const { userProfile } = useAuth();
@@ -25,6 +28,20 @@ export default function CandidateDashboard() {
   const [careerLevel, setCareerLevel] = useState(1);
   const [careerPoints, setCareerPoints] = useState(0);
   const [nextLevelPoints, setNextLevelPoints] = useState(100);
+  const [characterAttributes, setCharacterAttributes] = useState({
+    intelligence: 55,
+    charisma: 65,
+    strength: 70,
+    dexterity: 60,
+    wisdom: 50,
+    constitution: 75
+  });
+
+  // Mock character class - in a real implementation this would come from user profile
+  const [characterClass] = useState('Tech Wizard');
+
+  // Convert roadmap milestones to quests
+  const [quests, setQuests] = useState<Array<any>>([]);
 
   useEffect(() => {
     async function fetchRoadmap() {
@@ -52,7 +69,39 @@ export default function CandidateDashboard() {
             const level = Math.max(1, Math.floor(points / 100) + 1);
             setCareerLevel(level);
             setNextLevelPoints((level) * 100);
+
+            // Convert milestones to quests
+            const convertedQuests = roadmapData.milestones.map((milestone, index) => ({
+              id: `milestone-${index}`,
+              title: milestone.title,
+              description: milestone.description,
+              type: index === 0 ? 'main' : 'side',
+              difficulty: Math.min(5, Math.max(1, Math.ceil(index / 2) + 1)) as 1 | 2 | 3 | 4 | 5,
+              status: milestone.completed ? 'completed' : 'available',
+              rewards: {
+                xp: 25,
+                coins: 10
+              },
+              objectives: milestone.tasks ? milestone.tasks.map((task, taskIndex: number) => ({
+                id: `task-${index}-${taskIndex}`,
+                description: task.description,
+                completed: task.completed
+              })) : []
+            }));
+            
+            setQuests(convertedQuests);
           }
+        }
+        
+        // Set mock intelligence based on skills count if available
+        if (candidateProfile.resumeAnalysis?.skills) {
+          const skillCount = candidateProfile.resumeAnalysis.skills.length;
+          const calculatedIntelligence = Math.min(95, Math.max(40, skillCount * 5));
+          
+          setCharacterAttributes(prev => ({
+            ...prev,
+            intelligence: calculatedIntelligence
+          }));
         }
         
         setLoading(false);
@@ -281,316 +330,236 @@ export default function CandidateDashboard() {
     }
   };
 
+  const handleQuestClick = (questId: string) => {
+    console.log(`Quest ${questId} clicked`);
+    // In a real app, this would navigate to the quest details page
+    // or open a modal with quest information
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
-          <div className="absolute -top-4 -left-4 cloud-sm opacity-30 animate-float-fast"></div>
-          <div className="absolute -bottom-2 -right-4 cloud-sm opacity-20 animate-float-medium"></div>
-        </div>
+        <LoadingSpinner message="Loading guild data" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto pt-24">
       <div className="flex flex-col md:flex-row justify-between items-start mb-8">
         <div>
-          <h1 className="text-4xl font-bold mb-2 text-slate-800">
-            Welcome, {candidateProfile?.displayName || 'Candidate'}
+          <h1 className="text-3xl font-bold mb-2 text-slate-800">
+            Guild Hall of {candidateProfile?.displayName || 'Adventurer'}
           </h1>
-          <div className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-sky-500 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-              Level {careerLevel}
-            </div>
-            <div className="text-sm text-slate-500">
-              {careerPoints} / {nextLevelPoints} points
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4 md:mt-0 bg-white/80 backdrop-filter backdrop-blur-md p-3 rounded-xl shadow-md border border-slate-100">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full flex items-center justify-center text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <div className="text-xs text-slate-500">Career Points</div>
-              <div className="font-bold text-slate-800">{careerPoints}</div>
-            </div>
+          <div className="text-purple-600 font-medium">
+            {characterClass} • Career Adventurer
           </div>
         </div>
       </div>
       
       {!candidateProfile?.resumeUrl && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
-          <p className="text-yellow-700">
-            Complete your profile by uploading your resume to get personalized career recommendations.
+        <div className="quest-card mb-6">
+          <p className="text-amber-700 mb-2 flex items-center">
+            <span className="mr-2 text-lg">⚠️</span>
+            No character scroll detected! Upload your career scroll (resume) to unlock guild quests.
           </p>
           <button
             onClick={() => router.push('/protected/candidate/profile')}
-            className="mt-2 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white py-1 px-4 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
+            className="mt-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white py-2 px-4 rounded-md font-medium shadow-md shadow-purple-500/30 transition-all duration-300 quest-btn"
           >
-            Upload Resume
+            Create Scroll
           </button>
         </div>
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Career Level Progress */}
-        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
-          <h2 className="text-xl font-bold mb-4 text-sky-800">Career Journey</h2>
+        {/* Character Stats Panel */}
+        <div className="md:col-span-1">
+          <CharacterStats 
+            level={careerLevel}
+            xp={careerPoints}
+            nextLevelXp={nextLevelPoints}
+            attributes={characterAttributes}
+            className="mb-6"
+          />
           
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-slate-700">Level {careerLevel}</span>
-                <span className="text-sky-600 font-semibold">
-                  {careerPoints} / {nextLevelPoints}
-                </span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-3">
-                <div
-                  className="bg-gradient-to-r from-sky-400 to-blue-600 h-3 rounded-full"
-                  style={{ width: `${(careerPoints / nextLevelPoints) * 100}%` }}
-                ></div>
-              </div>
-            </div>
+          {/* Inventory/Skills */}
+          <div className="medieval-card p-4 mb-6">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Skill Inventory</h2>
             
-            <div className="flex flex-col space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Upload Resume</span>
-                <span className="font-medium text-sky-600">+25 points</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Complete Profile</span>
-                <span className="font-medium text-sky-600">+15 points</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Complete Milestone</span>
-                <span className="font-medium text-sky-600">+25 points</span>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t border-slate-200">
-              <h3 className="font-medium text-slate-800 mb-2">Achievements</h3>
-              <div className="flex space-x-2 overflow-x-auto pb-2">
-                {candidateProfile?.resumeUrl && (
-                  <div className="flex flex-col items-center">
-                    <div className="w-10 h-10 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full flex items-center justify-center text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs mt-1">Resume</span>
-                  </div>
-                )}
-                
-                {roadmap && roadmap.milestones.some(m => m.completed) && (
-                  <div className="flex flex-col items-center">
-                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-300 to-emerald-500 rounded-full flex items-center justify-center text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
-                    <span className="text-xs mt-1">Milestone</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Career Stats Hexagon */}
-        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
-          <StatHexagon resumeAnalysis={candidateProfile?.resumeAnalysis} />
-        </div>
-        
-        {/* Skills */}
-        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
-          <h2 className="text-xl font-bold mb-4 text-sky-800">Your Skills</h2>
-          
-          {candidateProfile?.resumeAnalysis?.skills ? (
-            candidateProfile.resumeAnalysis.skills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
-                  <span 
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div className="py-3">
-                <p className="text-gray-600">
-                  No specific skills were found in your resume. For best results, your resume should include a dedicated "Skills" section that explicitly lists technical skills, tools, programming languages, and other relevant competencies.
-                </p>
-                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-700">Resume Tip:</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Add a clear "Skills" section to your resume with a bulleted list of specific skills like: Python, React, Docker, SQL, Project Management, etc.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowResumeManager(true)}
-                  className="mt-4 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
-                >
-                  Update Resume
-                </button>
-              </div>
-            )
-          ) : (
-            <p className="text-gray-500 italic">Upload your resume to analyze your skills</p>
-          )}
-        </div>
-
-        {/* Resume Management */}
-        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card md:col-span-2">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-sky-800">Your Resume</h2>
-            <button
-              onClick={() => setShowResumeManager(!showResumeManager)}
-              className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
-            >
-              {showResumeManager ? 'Hide' : 'Manage Resume'}
-            </button>
-          </div>
-          
-          {showResumeManager ? (
-            <ResumeManager onUpdateComplete={handleResumeUpdate} />
-          ) : (
-            <div>
-              {candidateProfile?.resumeUrl ? (
-                <div>
-                  <div className="flex items-center mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-green-600 font-semibold">Resume uploaded</span>
-                  </div>
-                  
-                  <p className="text-gray-600 text-sm mb-4">
-                    {displayFileName && (
-                      <span className="block mb-1">File: <span className="font-medium">{displayFileName}</span></span>
-                    )}
-                    Update your resume to get a fresh analysis of your skills and areas for improvement.
-                  </p>
-                  
-                  <div className="flex space-x-3">
-                    <a 
-                      href="#"
-                      onClick={handleViewResume}
-                      className={`text-blue-600 hover:text-blue-800 text-sm underline ${validatingUrl || downloading ? 'opacity-50 cursor-wait' : ''}`}
-                      aria-disabled={validatingUrl || downloading}
+            {candidateProfile?.resumeAnalysis?.skills ? (
+              candidateProfile.resumeAnalysis.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
+                    <span 
+                      key={index}
+                      className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"
                     >
-                      {validatingUrl ? 'Validating...' : 
-                       downloading ? 'Downloading...' : 'Download Resume'}
-                    </a>
-                    <button
-                      onClick={() => setShowResumeManager(true)}
-                      className="text-blue-600 hover:text-blue-800 text-sm underline"
-                    >
-                      Update Resume
-                    </button>
-                  </div>
+                      {skill}
+                    </span>
+                  ))}
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-gray-500 mb-4">
-                    No resume uploaded yet.
+                <div className="py-3">
+                  <p className="text-slate-600 text-sm">
+                    No skills found in your scroll. You need to list your magical abilities to gain reputation with the guilds.
                   </p>
                   <button
                     onClick={() => setShowResumeManager(true)}
-                    className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
+                    className="mt-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300 quest-btn"
                   >
-                    Upload Resume
+                    Update Scroll
                   </button>
                 </div>
-              )}
-            </div>
-          )}
+              )
+            ) : (
+              <p className="text-slate-500 italic text-sm">Upload your scroll to reveal skills</p>
+            )}
+          </div>
           
-          {/* Add a discreet debug link at the bottom */}
-          <div className="mt-4 pt-3 border-t border-gray-100 text-right">
-            <a 
-              href="/protected/debug/resume-urls" 
-              className="text-xs text-gray-400 hover:text-gray-600"
-            >
-              Having trouble viewing your resume?
-            </a>
+          {/* Achievements */}
+          <div className="medieval-card p-4">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Achievements</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {candidateProfile?.resumeUrl && (
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white">
+                    📜
+                  </div>
+                  <span className="text-xs mt-1 text-center">Scroll Master</span>
+                </div>
+              )}
+              
+              {roadmap && roadmap.milestones.some(m => m.completed) && (
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white">
+                    🏆
+                  </div>
+                  <span className="text-xs mt-1 text-center">Quest Completer</span>
+                </div>
+              )}
+              
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center text-white opacity-50">
+                  🔮
+                </div>
+                <span className="text-xs mt-1 text-center text-gray-500">Locked</span>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Career Roadmap */}
-        <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card md:col-span-3">
-          <h2 className="text-xl font-bold mb-4 text-sky-800">Your Career Roadmap</h2>
-          
-          {roadmap ? (
-            <div className="relative">
-              <div className="absolute top-0 bottom-0 left-4 w-1 bg-blue-200"></div>
-              
-              <div className="space-y-6">
-                {roadmap.milestones.map((milestone, index) => (
-                  <div key={index} className="relative pl-10">
-                    <div className={`absolute left-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      milestone.completed ? 'bg-green-500' : 'bg-blue-500'
-                    }`}>
-                      {milestone.completed ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      ) : (
-                        <span className="text-white font-bold">{index + 1}</span>
-                      )}
-                    </div>
-                    
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <h3 className="font-bold text-lg">{milestone.title}</h3>
-                      <p className="text-gray-600 mb-2">{milestone.description}</p>
-                      
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {milestone.skills && milestone.skills.map((skill, skillIndex) => (
-                          <span key={skillIndex} className="bg-gray-200 px-2 py-1 rounded text-xs">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      <div className="flex justify-between items-center mt-4">
-                        <span className="text-sm text-gray-500">{milestone.timeframe}</span>
-                        
-                        {!milestone.completed && (
-                          <button 
-                            onClick={() => router.push('/protected/candidate/roadmap')}
-                            className="text-blue-600 text-sm hover:underline"
-                          >
-                            Mark as Complete
-                          </button>
+        
+        {/* Quests Panel */}
+        <div className="md:col-span-2">
+          <div className="parchment p-4 mb-6">
+            <h2 className="text-xl font-bold text-amber-800 mb-4">Quest Journal</h2>
+            
+            {showResumeManager ? (
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-amber-700">Scroll Management</h3>
+                  <button
+                    onClick={() => setShowResumeManager(false)}
+                    className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+                  >
+                    Return to Quests
+                  </button>
+                </div>
+                <ResumeManager onUpdateComplete={handleResumeUpdate} />
+              </div>
+            ) : (
+              <>
+                {candidateProfile?.resumeUrl && (
+                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-amber-200">
+                    <div className="flex items-center">
+                      <div className="mr-3 text-2xl">📜</div>
+                      <div>
+                        <div className="font-medium text-amber-800">Career Scroll</div>
+                        {displayFileName && (
+                          <div className="text-xs text-amber-600">{displayFileName}</div>
                         )}
                       </div>
                     </div>
+                    <div>
+                      <a 
+                        href="#"
+                        onClick={handleViewResume}
+                        className={`text-blue-600 hover:text-blue-800 text-sm mr-3 ${validatingUrl || downloading ? 'opacity-50 cursor-wait' : ''}`}
+                        aria-disabled={validatingUrl || downloading}
+                      >
+                        {validatingUrl ? 'Invoking...' : 
+                         downloading ? 'Summoning...' : 'View Scroll'}
+                      </a>
+                      <button
+                        onClick={() => setShowResumeManager(true)}
+                        className="text-purple-600 hover:text-purple-800 text-sm"
+                      >
+                        Update Scroll
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                )}
+              
+                {quests.length > 0 ? (
+                  <div className="space-y-4">
+                    {quests.map((quest) => (
+                      <QuestCard 
+                        key={quest.id}
+                        {...quest}
+                        onClick={handleQuestClick}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4">🗺️</div>
+                    <h3 className="text-lg font-semibold text-amber-800 mb-2">No Quests Available</h3>
+                    <p className="text-amber-700 mb-4">Visit the Career Map to discover new quests and adventures.</p>
+                    <button 
+                      onClick={() => router.push('/protected/candidate/roadmap')}
+                      className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-2 rounded-md text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300 quest-btn"
+                    >
+                      Explore Map
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          
+          {/* Daily Quests */}
+          <div className="medieval-card p-4">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Daily Quests</h2>
+            <div className="space-y-3">
+              <QuestCard 
+                id="daily-1"
+                title="Update Your Skill List"
+                description="Review and update your skills to maintain an accurate character sheet."
+                type="daily"
+                difficulty={1}
+                status="available"
+                rewards={{
+                  xp: 10,
+                  coins: 5
+                }}
+                onClick={handleQuestClick}
+              />
+              
+              <QuestCard 
+                id="daily-2"
+                title="Network with Guild Members"
+                description="Connect with at least one new professional in your field today."
+                type="daily"
+                difficulty={2}
+                status="available"
+                rewards={{
+                  xp: 15,
+                  coins: 10
+                }}
+                onClick={handleQuestClick}
+              />
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">
-                No career roadmap found. Generate your personalized career roadmap to get started.
-              </p>
-              <button
-                onClick={() => router.push('/protected/candidate/roadmap')}
-                className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-full font-medium shadow-md shadow-sky-500/30 transition-all duration-300"
-              >
-                Generate Roadmap
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

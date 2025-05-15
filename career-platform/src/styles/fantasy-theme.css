@@ -1,0 +1,349 @@
+/* Fantasy MMORPG Theme CSS */
+
+/* Base fantasy elements */
+.parchment {
+  background-color: #fffbeb;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23f59e0b' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  border: 4px solid #b45309;
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='75' height='75'%3E%3Cpath d='M2 2h71v71H2V2z' fill='none' stroke='%23b45309' stroke-width='4' stroke-linecap='square'/%3E%3Cpath d='M16 2v71M30 2v71M44 2v71M58 2v71M2 16h71M2 30h71M2 44h71M2 58h71' stroke='%23b45309' stroke-width='2' stroke-linecap='square' opacity='.4'/%3E%3C/svg%3E") 25;
+  border-width: 6px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+.medieval-card {
+  background-color: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.medieval-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, #7e22ce, #6b21a8);
+}
+
+/* Fantasy ornamental corners */
+.ornate-corners {
+  position: relative;
+}
+
+.ornate-corners::before,
+.ornate-corners::after,
+.ornate-corners > span::before,
+.ornate-corners > span::after {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.ornate-corners::before {
+  top: -2px;
+  left: -2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M0 0v12h2v-10h10v-2h-12z' fill='%236b21a8'/%3E%3C/svg%3E");
+}
+
+.ornate-corners::after {
+  top: -2px;
+  right: -2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 0v2h10v10h2v-12h-12z' fill='%236b21a8'/%3E%3C/svg%3E");
+}
+
+.ornate-corners > span::before {
+  bottom: -2px;
+  left: -2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M0 12v12h12v-2h-10v-10h-2z' fill='%236b21a8'/%3E%3C/svg%3E");
+}
+
+.ornate-corners > span::after {
+  bottom: -2px;
+  right: -2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 22v2h12v-12h-2v10h-10z' fill='%236b21a8'/%3E%3C/svg%3E");
+}
+
+/* Main game background */
+.game-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #1e293b, #111827);
+  z-index: -2;
+}
+
+/* Fantasy parallax elements */
+.parallax-fantasy {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.fantasy-element {
+  position: absolute;
+  opacity: 0.15;
+}
+
+.stars-layer {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 25px 5px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 50px 25px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 125px 20px, white, rgba(255,255,255,0)),
+    radial-gradient(2px 2px at 70px 77px, white, rgba(255,255,255,0)),
+    radial-gradient(2px 2px at 110px 34px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 10px 90px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 160px 50px, white, rgba(255,255,255,0)),
+    radial-gradient(3px 3px at 200px 60px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 30px 95px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 85px 120px, white, rgba(255,255,255,0)),
+    radial-gradient(1px 1px at 130px 130px, white, rgba(255,255,255,0)),
+    radial-gradient(3px 3px at 170px 90px, white, rgba(255,255,255,0));
+  background-size: 200px 150px;
+  animation: twinkling 10s linear infinite;
+}
+
+.floating-runes {
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ctext x='10' y='30' font-family='Arial' font-size='20' fill='%236b21a8'%3E⚡%3C/text%3E%3C/svg%3E"),
+                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ctext x='10' y='30' font-family='Arial' font-size='20' fill='%23a21caf'%3E⚔️%3C/text%3E%3C/svg%3E"),
+                    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ctext x='10' y='30' font-family='Arial' font-size='20' fill='%237e22ce'%3E🛡️%3C/text%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 150px 150px;
+  opacity: 0.05;
+  animation: runes-drift 60s linear infinite;
+}
+
+@keyframes twinkling {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes runes-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100px 100px;
+  }
+}
+
+/* Buttons with fantasy effects */
+.quest-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.quest-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3);
+}
+
+.quest-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.quest-btn:hover::after {
+  animation: magic-ripple 1s ease-out;
+}
+
+@keyframes magic-ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.8;
+  }
+  20% {
+    transform: scale(4, 4);
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(30, 30);
+  }
+}
+
+/* Character attributes meters */
+.attribute-meter {
+  width: 100%;
+  height: 10px;
+  background-color: #1e293b;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.attribute-intelligence {
+  background: linear-gradient(to right, #1e40af, #3b82f6);
+}
+
+.attribute-charisma {
+  background: linear-gradient(to right, #be185d, #ec4899);
+}
+
+.attribute-strength {
+  background: linear-gradient(to right, #991b1b, #ef4444);
+}
+
+.attribute-dexterity {
+  background: linear-gradient(to right, #065f46, #22c55e);
+}
+
+.attribute-wisdom {
+  background: linear-gradient(to right, #4338ca, #6366f1);
+}
+
+.attribute-constitution {
+  background: linear-gradient(to right, #9a3412, #f97316);
+}
+
+/* XP bar */
+.xp-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #1e293b;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(to right, #7e22ce, #a855f7, #7e22ce);
+  background-size: 200% 100%;
+  animation: xp-pulse 3s ease infinite;
+  border-radius: 4px;
+}
+
+@keyframes xp-pulse {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 0%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+/* Quest card */
+.quest-card {
+  background-color: #fffbeb;
+  border: 2px solid #fde68a;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.quest-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, #f59e0b, #d97706);
+}
+
+/* Level indicator */
+.level-badge {
+  background: linear-gradient(135deg, #4c1d95, #7e22ce);
+  color: white;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3);
+}
+
+.level-badge::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: rotate(45deg) translate(0, -100%);
+  animation: level-shine 2s ease-in-out infinite;
+}
+
+@keyframes level-shine {
+  0% {
+    transform: rotate(45deg) translate(0, -100%);
+  }
+  50% {
+    transform: rotate(45deg) translate(0, 100%);
+  }
+  100% {
+    transform: rotate(45deg) translate(0, 100%);
+  }
+}
+
+/* Responsive adjustments for the fantasy theme */
+@media (max-width: 768px) {
+  .floating-runes {
+    display: none; /* Disable parallax on mobile for performance */
+  }
+  
+  .stars-layer {
+    opacity: 0.1;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .xp-fill,
+  .level-badge::after,
+  .quest-btn:hover,
+  .stars-layer,
+  .floating-runes {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+} 

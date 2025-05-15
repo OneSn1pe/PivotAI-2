@@ -82,4 +82,11 @@ export enum UserRole {
       url: string;
       type: 'article' | 'video' | 'course' | 'book' | 'documentation';
     }[];
+    tasks?: MilestoneTask[];
+  }
+
+  export interface MilestoneTask {
+    id?: string;
+    description: string;
+    completed: boolean;
   }
