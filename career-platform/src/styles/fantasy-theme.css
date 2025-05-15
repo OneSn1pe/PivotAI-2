@@ -154,6 +154,30 @@
   }
 }
 
+/* Level up animation for particles */
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-100px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Achievement notification confetti animation */
+@keyframes fall-confetti {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
 /* Buttons with fantasy effects */
 .quest-btn {
   position: relative;
