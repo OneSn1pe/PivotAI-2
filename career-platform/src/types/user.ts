@@ -18,10 +18,16 @@ export enum UserRole {
     resumeFileName?: string;
     resumeAnalysis?: ResumeAnalysis;
     jobPreferences?: JobPreferences;
+    targetCompanies?: TargetCompany[];
     skills?: string[];
     updatedAt?: Date;
-    targetCompanies?: TargetCompany[];
-    targetRoles?: TargetRole[];
+  }
+  
+  export interface RecruiterProfile extends User {
+    role: UserRole.RECRUITER;
+    company: string;
+    position: string;
+    bookmarkedCandidates?: string[];
   }
   
   export interface ResumeAnalysis {
@@ -50,15 +56,10 @@ export enum UserRole {
     salaryExpectation: number;
     industries: string[];
   }
-  
+
   export interface TargetCompany {
     name: string;
     position: string;
-  }
-  
-  export interface TargetRole {
-    title: string;
-    industry: string;
   }
   
   export interface CareerRoadmap {
@@ -82,11 +83,4 @@ export enum UserRole {
       url: string;
       type: 'article' | 'video' | 'course' | 'book' | 'documentation';
     }[];
-    tasks?: MilestoneTask[];
-  }
-
-  export interface MilestoneTask {
-    id?: string;
-    description: string;
-    completed: boolean;
   }

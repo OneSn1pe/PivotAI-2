@@ -386,33 +386,33 @@ export default function CandidateDashboard() {
           {/* Inventory/Skills */}
           <div className="medieval-card p-4 mb-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">Skill Inventory</h2>
-            
-            {candidateProfile?.resumeAnalysis?.skills ? (
-              candidateProfile.resumeAnalysis.skills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
-                    <span 
-                      key={index}
+          
+          {candidateProfile?.resumeAnalysis?.skills ? (
+            candidateProfile.resumeAnalysis.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
+                  <span 
+                    key={index}
                       className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-3">
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="py-3">
                   <p className="text-slate-600 text-sm">
                     No skills found in your scroll. You need to list your magical abilities to gain reputation with the guilds.
                   </p>
-                  <button
-                    onClick={() => setShowResumeManager(true)}
+                <button
+                  onClick={() => setShowResumeManager(true)}
                     className="mt-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300 quest-btn"
-                  >
+                >
                     Update Scroll
-                  </button>
-                </div>
-              )
-            ) : (
+                </button>
+              </div>
+            )
+          ) : (
               <p className="text-slate-500 italic text-sm">Upload your scroll to reveal skills</p>
             )}
           </div>
@@ -428,7 +428,7 @@ export default function CandidateDashboard() {
                   </div>
                   <span className="text-xs mt-1 text-center">Scroll Master</span>
                 </div>
-              )}
+                    )}
               
               {roadmap && roadmap.milestones.some(m => m.completed) && (
                 <div className="flex flex-col items-center">
@@ -448,7 +448,7 @@ export default function CandidateDashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Quests Panel */}
         <div className="md:col-span-2">
           <div className="parchment p-4 mb-6">
@@ -458,12 +458,12 @@ export default function CandidateDashboard() {
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-amber-700">Scroll Management</h3>
-                  <button
+                          <button 
                     onClick={() => setShowResumeManager(false)}
                     className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
-                  >
+                          >
                     Return to Quests
-                  </button>
+                          </button>
                 </div>
                 <ResumeManager onUpdateComplete={handleResumeUpdate} />
               </div>
@@ -509,20 +509,20 @@ export default function CandidateDashboard() {
                         onClick={handleQuestClick}
                       />
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
+            </div>
+          ) : (
+            <div className="text-center py-8">
                     <div className="text-4xl mb-4">🗺️</div>
                     <h3 className="text-lg font-semibold text-amber-800 mb-2">No Quests Available</h3>
                     <p className="text-amber-700 mb-4">Visit the Career Map to discover new quests and adventures.</p>
-                    <button 
-                      onClick={() => router.push('/protected/candidate/roadmap')}
+              <button
+                onClick={() => router.push('/protected/candidate/roadmap')}
                       className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-2 rounded-md text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300 quest-btn"
-                    >
+              >
                       Explore Map
-                    </button>
-                  </div>
-                )}
+              </button>
+            </div>
+          )}
               </>
             )}
           </div>

@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <GameProvider>
-        {children}
+      {children}
       </GameProvider>
       <ClientLayout />
     </AuthProvider>

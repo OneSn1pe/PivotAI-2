@@ -120,7 +120,7 @@ export default function Navbar() {
               {/* Character class */}
               <div className="text-xs font-medium text-purple-100">
                 <div className="mb-1">{characterData.characterClass}</div>
-                <div className="flex items-center">
+            <div className="flex items-center">
                   <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-purple-500 to-purple-400" 
@@ -133,15 +133,15 @@ export default function Navbar() {
             </div>
 
             <div className="text-purple-100 mr-4 font-medium">
-              {userProfile.displayName}
-            </div>
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
+                {userProfile.displayName}
+              </div>
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
               className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300 quest-btn"
-            >
+              >
               {isLoggingOut ? 'Retreating...' : 'Logout'}
-            </button>
+              </button>
           </div>
           
           {/* Mobile menu button */}
