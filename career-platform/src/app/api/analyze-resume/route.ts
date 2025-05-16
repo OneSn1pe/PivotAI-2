@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { ResumeAnalysis } from '@/types/user';
 
+// Configure longer timeout for this serverless function
+export const runtime = 'nodejs'; // Use Node.js runtime instead of Edge runtime
+export const maxDuration = 120; // Set maximum duration to 120 seconds
+
 // Environment check for production
 const isProd = process.env.NODE_ENV === 'production';
 

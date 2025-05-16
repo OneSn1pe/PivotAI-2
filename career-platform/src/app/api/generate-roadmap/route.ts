@@ -5,6 +5,10 @@ import { db } from '@/config/firebase';
 import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
 
+// Configure longer timeout for this serverless function
+export const runtime = 'nodejs'; // Use Node.js runtime instead of Edge runtime
+export const maxDuration = 120; // Set maximum duration to 120 seconds
+
 // Check if OpenAI API key is available
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY is not defined');
@@ -131,16 +135,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
-        },
-        {
-          role: "user",
-          content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
+    try {
+      const completion = await withRetry(async () => {
+        console.log('Starting OpenAI API call...');
+        const result = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
+            },
+            {
+              role: "user",
+              content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
 
 Return a structured JSON roadmap with these components:
 {
@@ -187,66 +194,88 @@ Guidelines:
 - Resource types can be: article, video, course, book, or documentation
 - Prefer official documentation and well-known learning platforms
 - Return ONLY valid JSON with no additional text or formatting`
-        }
-      ]
-    });
+            }
+          ]
+        });
+        console.log('OpenAI API call completed successfully');
+        return result;
+      });
 
-    // Parse the response
-    const content = completion.choices[0].message.content;
-    if (!content) {
-      throw new Error('No content in OpenAI response');
-    }
+      // Parse the response
+      const content = completion.choices[0].message.content;
+      if (!content) {
+        throw new Error('No content in OpenAI response');
+      }
 
-    const { data, error } = safeJsonParse(content);
-    if (error) {
-      throw new Error('Failed to parse OpenAI response');
-    }
+      const { data, error } = safeJsonParse(content);
+      if (error) {
+        console.error('Failed to parse OpenAI response:', error);
+        console.log('Response content (first 200 chars):', content.substring(0, 200));
+        throw new Error('Failed to parse OpenAI response');
+      }
 
-    // Validate and structure the response
-    const roadmap: CareerRoadmap = {
-      id: candidateId,
-      candidateId: candidateId,
-      milestones: Array.isArray(data.milestones) ? data.milestones.map((m: any) => ({
-        ...m,
-        id: m.id || uuidv4(),
-        completed: false
-      })) : [],
-      candidateGapAnalysis: data.candidateGapAnalysis || {
-        currentStrengths: [],
-        criticalGaps: []
-      },
-      targetRoleRequirements: Array.isArray(data.targetRoleRequirements) ? data.targetRoleRequirements : [],
-      successMetrics: Array.isArray(data.successMetrics) ? data.successMetrics : [],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+      // Validate and structure the response
+      const roadmap: CareerRoadmap = {
+        id: candidateId,
+        candidateId: candidateId,
+        milestones: Array.isArray(data.milestones) ? data.milestones.map((m: any) => ({
+          ...m,
+          id: m.id || uuidv4(),
+          completed: false
+        })) : [],
+        candidateGapAnalysis: data.candidateGapAnalysis || {
+          currentStrengths: [],
+          criticalGaps: []
+        },
+        targetRoleRequirements: Array.isArray(data.targetRoleRequirements) ? data.targetRoleRequirements : [],
+        successMetrics: Array.isArray(data.successMetrics) ? data.successMetrics : [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-    // Check if a roadmap already exists for this candidate
-    const roadmapQuery = query(
-      collection(db as Firestore, 'roadmaps'),
-      where('candidateId', '==', candidateId)
-    );
-    
-    const roadmapSnapshot = await getDocs(roadmapQuery);
-    
-    // Delete all existing roadmaps for this candidate
-    if (!roadmapSnapshot.empty) {
-      console.log(`Deleting ${roadmapSnapshot.size} existing roadmaps for candidateId:`, candidateId);
-      
-      const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
-        deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
+      // Check if a roadmap already exists for this candidate
+      const roadmapQuery = query(
+        collection(db as Firestore, 'roadmaps'),
+        where('candidateId', '==', candidateId)
       );
       
-      await Promise.all(deletePromises);
+      const roadmapSnapshot = await getDocs(roadmapQuery);
+      
+      // Delete all existing roadmaps for this candidate
+      if (!roadmapSnapshot.empty) {
+        console.log(`Deleting ${roadmapSnapshot.size} existing roadmaps for candidateId:`, candidateId);
+        
+        const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
+          deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
+        );
+        
+        await Promise.all(deletePromises);
+      }
+      
+      // Store in Firestore
+      const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
+      roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
+      
+      console.log('Created new roadmap for candidateId:', candidateId);
+      
+      return NextResponse.json({ data: roadmap });
+    } catch (openaiError: any) {
+      console.error('OpenAI API call failed:', openaiError);
+      
+      // Check for timeout errors and return appropriate message
+      if (openaiError.message && openaiError.message.includes('timeout')) {
+        return NextResponse.json(
+          { 
+            error: 'OpenAI request timed out', 
+            message: 'The roadmap generation is taking too long. Try simplifying your request or try again later.',
+            details: openaiError.message 
+          },
+          { status: 504 }
+        );
+      }
+      
+      throw openaiError; // Let the outer catch block handle it
     }
-    
-    // Store in Firestore
-    const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
-    roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
-    
-    console.log('Created new roadmap for candidateId:', candidateId);
-    
-    return NextResponse.json({ data: roadmap });
   } catch (error) {
     console.error('Error generating roadmap:', error);
     return NextResponse.json(

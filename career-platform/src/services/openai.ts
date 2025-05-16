@@ -219,8 +219,10 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       // Check for required fields with fallbacks
       const validatedAnalysis: ResumeAnalysis = {
         skills: Array.isArray(data.skills) ? data.skills : [],
+        skillLevels: Array.isArray(data.skillLevels) ? data.skillLevels : [],
         experience: Array.isArray(data.experience) ? data.experience : [],
         education: Array.isArray(data.education) ? data.education : [],
+        certifications: Array.isArray(data.certifications) ? data.certifications : [],
         strengths: Array.isArray(data.strengths) ? data.strengths : [],
         weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
         recommendations: Array.isArray(data.recommendations) ? data.recommendations : []
@@ -282,8 +284,10 @@ export async function generateCareerRoadmap(
     const validatedAnalysis = {
       ...resumeAnalysis,
       skills: Array.isArray(resumeAnalysis.skills) ? resumeAnalysis.skills : [],
+      skillLevels: Array.isArray(resumeAnalysis.skillLevels) ? resumeAnalysis.skillLevels : [],
       experience: Array.isArray(resumeAnalysis.experience) ? resumeAnalysis.experience : [],
       education: Array.isArray(resumeAnalysis.education) ? resumeAnalysis.education : [],
+      certifications: Array.isArray(resumeAnalysis.certifications) ? resumeAnalysis.certifications : [],
       strengths: Array.isArray(resumeAnalysis.strengths) ? resumeAnalysis.strengths : [],
       weaknesses: Array.isArray(resumeAnalysis.weaknesses) ? resumeAnalysis.weaknesses : [],
       recommendations: Array.isArray(resumeAnalysis.recommendations) ? resumeAnalysis.recommendations : []
@@ -294,9 +298,11 @@ export async function generateCareerRoadmap(
     debug.log(`API URL: ${apiUrl}`);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 110000); // Client-side timeout of 110 seconds
     
     try {
+      debug.log('Sending roadmap generation request...');
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -311,6 +317,7 @@ export async function generateCareerRoadmap(
       });
       
       clearTimeout(timeoutId);
+      debug.log(`Received response with status: ${response.status}`);
       
       if (!response.ok) {
         let errorMessage = `Failed to generate roadmap (HTTP ${response.status})`;
@@ -325,8 +332,19 @@ export async function generateCareerRoadmap(
             errorMessage = data.message || data.error || errorMessage;
             errorDetails = data.details || '';
           }
+          
+          // Handle timeout errors specifically
+          if (response.status === 504 || responseText.toLowerCase().includes('timeout')) {
+            throw new Error('The roadmap generation timed out. The server might be busy or your request may be too complex. Please try again later with fewer target companies or a simpler resume.');
+          }
+          
         } catch (err) {
           debug.error('Error parsing error response:', err);
+          
+          // If we already determined it was a timeout error, rethrow that
+          if (err instanceof Error && err.message.includes('timed out')) {
+            throw err;
+          }
         }
         
         throw new Error(`${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`);
