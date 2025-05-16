@@ -163,8 +163,31 @@ function truncateResume(text: string, maxLength: number = 4000): string {
 // Helper function to safely parse JSON
 function safeJsonParse(text: string): { data: any; error: Error | null } {
   try {
-    return { data: JSON.parse(text), error: null };
+    // Remove markdown formatting if present
+    let cleanedText = text.trim();
+    
+    // Check if the text starts with a markdown code block
+    if (cleanedText.startsWith('```')) {
+      console.log('Detected markdown code block in response, attempting to clean');
+      
+      // Find where the actual JSON begins (after the first line)
+      const firstLineBreak = cleanedText.indexOf('\n');
+      if (firstLineBreak !== -1) {
+        cleanedText = cleanedText.substring(firstLineBreak + 1);
+      }
+      
+      // Remove closing code block if present
+      const closingBlockIndex = cleanedText.lastIndexOf('```');
+      if (closingBlockIndex !== -1) {
+        cleanedText = cleanedText.substring(0, closingBlockIndex).trim();
+      }
+      
+      console.log('Cleaned text first 50 chars:', cleanedText.substring(0, 50) + '...');
+    }
+    
+    return { data: JSON.parse(cleanedText), error: null };
   } catch (error) {
+    console.error('JSON Parse error:', error);
     return { data: null, error: error as Error };
   }
 }
@@ -254,7 +277,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text or formatting."
+          content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text, no markdown formatting, and no code blocks (no ```json). Your entire response must be raw, parseable JSON only."
         },
         {
           role: "user",
@@ -276,7 +299,7 @@ Guidelines:
 - For skillLevels: Assess only 3-5 key skills with evidence-based rating (1-10)
 - For experience: Include company, position, timeframe, and key achievements
 - If a section is missing from the resume, return an empty array
-- Return ONLY valid JSON with no additional text or formatting
+- CRITICAL: Return ONLY raw JSON with NO markdown code blocks, no \`\`\`json, and no additional text or formatting
 
 Resume: ${truncatedResume}`
         }

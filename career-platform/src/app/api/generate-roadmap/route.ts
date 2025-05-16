@@ -23,8 +23,31 @@ const openai = new OpenAI({
 // Helper function to safely parse JSON
 function safeJsonParse(text: string): { data: any; error: Error | null } {
   try {
-    return { data: JSON.parse(text), error: null };
+    // Remove markdown formatting if present
+    let cleanedText = text.trim();
+    
+    // Check if the text starts with a markdown code block
+    if (cleanedText.startsWith('```')) {
+      console.log('Detected markdown code block in response, attempting to clean');
+      
+      // Find where the actual JSON begins (after the first line)
+      const firstLineBreak = cleanedText.indexOf('\n');
+      if (firstLineBreak !== -1) {
+        cleanedText = cleanedText.substring(firstLineBreak + 1);
+      }
+      
+      // Remove closing code block if present
+      const closingBlockIndex = cleanedText.lastIndexOf('```');
+      if (closingBlockIndex !== -1) {
+        cleanedText = cleanedText.substring(0, closingBlockIndex).trim();
+      }
+      
+      console.log('Cleaned text first 50 chars:', cleanedText.substring(0, 50) + '...');
+    }
+    
+    return { data: JSON.parse(cleanedText), error: null };
   } catch (error) {
+    console.error('JSON Parse error:', error);
     return { data: null, error: error as Error };
   }
 }
@@ -143,7 +166,7 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
+              content: `You are a career coach specializing in helping candidates prepare for roles at top companies. Return ONLY raw JSON with NO markdown formatting or code blocks (no \`\`\`json). Your entire response must be valid parseable JSON only.`
             },
             {
               role: "user",
@@ -193,7 +216,7 @@ Guidelines:
 - Resources should be high-quality, free or low-cost, and directly relevant
 - Resource types can be: article, video, course, book, or documentation
 - Prefer official documentation and well-known learning platforms
-- Return ONLY valid JSON with no additional text or formatting`
+- CRITICAL: Return ONLY raw JSON with NO markdown code blocks, no \`\`\`json, and no additional text or formatting`
             }
           ]
         });
