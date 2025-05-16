@@ -5,16 +5,38 @@ import { db } from '@/config/firebase';
 import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
 
+// Add debug logging
+const debug = {
+  log: (...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[API:generate-roadmap]', ...args);
+    }
+  },
+  error: (...args: any[]) => {
+    console.error('[API:generate-roadmap:ERROR]', ...args);
+  }
+};
+
 // Check if OpenAI API key is available
 if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY is not defined');
 }
 
+// Initialize OpenAI with API key and timeout
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   timeout: 60000, // 60 second timeout for API calls
   maxRetries: 2,  // Built-in retries for transient errors
 });
+
+// Add type for OpenAI completion
+type OpenAICompletion = {
+  choices: Array<{
+    message: {
+      content: string | null;
+    };
+  }>;
+};
 
 // Helper function to safely parse JSON
 function safeJsonParse(text: string): { data: any; error: Error | null } {
@@ -70,6 +92,9 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  debug.log('Starting roadmap generation request');
+
   try {
     // Verify Firebase is initialized properly
     if (!db) {
@@ -130,17 +155,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
-        },
-        {
-          role: "user",
-          content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
+    debug.log('Input validation passed, proceeding with OpenAI call');
+
+    // Call OpenAI API with timeout handling
+    const completion = await Promise.race([
+      openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
+          },
+          {
+            role: "user",
+            content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
 
 Return a structured JSON roadmap with these components:
 {
@@ -187,9 +215,15 @@ Guidelines:
 - Resource types can be: article, video, course, book, or documentation
 - Prefer official documentation and well-known learning platforms
 - Return ONLY valid JSON with no additional text or formatting`
-        }
-      ]
-    });
+          }
+        ]
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OpenAI API request timed out after 55s')), 55000)
+      )
+    ]) as OpenAICompletion;
+
+    debug.log('OpenAI API call completed successfully');
 
     // Parse the response
     const content = completion.choices[0].message.content;
@@ -201,6 +235,8 @@ Guidelines:
     if (error) {
       throw new Error('Failed to parse OpenAI response');
     }
+
+    debug.log('Successfully parsed OpenAI response');
 
     // Validate and structure the response
     const roadmap: CareerRoadmap = {
@@ -221,6 +257,8 @@ Guidelines:
       updatedAt: new Date()
     };
 
+    debug.log('Roadmap structure created, proceeding with Firestore operations');
+
     // Check if a roadmap already exists for this candidate
     const roadmapQuery = query(
       collection(db as Firestore, 'roadmaps'),
@@ -231,7 +269,7 @@ Guidelines:
     
     // Delete all existing roadmaps for this candidate
     if (!roadmapSnapshot.empty) {
-      console.log(`Deleting ${roadmapSnapshot.size} existing roadmaps for candidateId:`, candidateId);
+      debug.log(`Deleting ${roadmapSnapshot.size} existing roadmaps for candidateId:`, candidateId);
       
       const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
         deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
@@ -242,16 +280,26 @@ Guidelines:
     
     // Store in Firestore
     const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
-    roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
+    roadmap.id = docRef.id;
     
-    console.log('Created new roadmap for candidateId:', candidateId);
+    const endTime = Date.now();
+    debug.log(`Roadmap generation completed in ${endTime - startTime}ms`);
     
     return NextResponse.json({ data: roadmap });
-  } catch (error) {
-    console.error('Error generating roadmap:', error);
+  } catch (error: any) {
+    const endTime = Date.now();
+    debug.error('Error generating roadmap:', error);
+    debug.error(`Request failed after ${endTime - startTime}ms`);
+
+    // Enhanced error response
     return NextResponse.json(
-      { error: 'Failed to generate roadmap' },
-      { status: 500 }
+      { 
+        error: 'Failed to generate roadmap',
+        details: error.message,
+        duration: endTime - startTime,
+        timestamp: new Date().toISOString()
+      },
+      { status: error.message.includes('timed out') ? 504 : 500 }
     );
   }
 }
