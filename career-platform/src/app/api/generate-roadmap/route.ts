@@ -166,7 +166,9 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: `You are a career coach specializing in helping candidates prepare for roles at top companies. Return ONLY raw JSON with NO markdown formatting or code blocks (no \`\`\`json). Your entire response must be valid parseable JSON only.`
+              content: `You are a career coach specializing in helping candidates prepare for roles at top companies. 
+Return ONLY raw JSON with absolutely NO markdown formatting or code blocks (no \`\`\`json). 
+Your entire response must be valid parseable JSON with no additional text.`
             },
             {
               role: "user",
@@ -193,11 +195,11 @@ Return a structured JSON roadmap with these components:
     ...
   ],
   "candidateGapAnalysis": {
-    "currentStrengths": ["strength1", ...],
-    "criticalGaps": ["gap1", ...]
+    "currentStrengths": ["strength1 based on resume", ...],
+    "criticalGaps": ["gap1 that needs addressing", ...]
   },
-  "targetRoleRequirements": ["requirement1", ...],
-  "successMetrics": ["metric1", ...]
+  "targetRoleRequirements": ["specific requirement for target positions", ...],
+  "successMetrics": ["concrete metric to measure progress", ...]
 }
 
 Prioritize high-impact skills and experiences that specifically align with the target companies' known requirements for the positions. Focus on achievable milestones within the 1-2 year timeframe.
@@ -208,15 +210,21 @@ Candidate's current profile:
 - Education: ${JSON.stringify(resumeAnalysis.education)}
 - Strengths: ${JSON.stringify(resumeAnalysis.strengths)}
 - Weaknesses: ${JSON.stringify(resumeAnalysis.weaknesses)}
+- Certifications: ${JSON.stringify(resumeAnalysis.certifications || [])}
+- Skill Levels: ${JSON.stringify(resumeAnalysis.skillLevels || [])}
 
 Guidelines:
-- Create exactly 5 milestones
+- Create exactly 5 milestones in logical progression order
 - Each milestone needs a unique ID
-- Include 2-3 specific resources per milestone
+- Include 2-3 specific resources per milestone with actual URLs
 - Resources should be high-quality, free or low-cost, and directly relevant
 - Resource types can be: article, video, course, book, or documentation
 - Prefer official documentation and well-known learning platforms
-- CRITICAL: Return ONLY raw JSON with NO markdown code blocks, no \`\`\`json, and no additional text or formatting`
+- For gap analysis, identify specific strengths the candidate has and critical skills they need
+- For target role requirements, list 5-7 key requirements that appear in job descriptions
+- For success metrics, provide 3-5 concrete ways to measure progress
+
+CRITICAL: Return ONLY raw JSON with NO markdown code blocks. Do not start with \`\`\`json or end with \`\`\`. Do not include any explanatory text before or after the JSON.`
             }
           ]
         });

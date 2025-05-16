@@ -277,7 +277,9 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text, no markdown formatting, and no code blocks (no ```json). Your entire response must be raw, parseable JSON only."
+          content: `You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. 
+Return ONLY raw JSON with absolutely NO markdown formatting or code blocks (no \`\`\`json). 
+Your entire response must be valid parseable JSON with no additional text.`
         },
         {
           role: "user",
@@ -285,21 +287,32 @@ export async function POST(request: NextRequest) {
 
 {
   "skills": ["skill1", "skill2", ...],
-  "skillLevels": [{"skill": "skill1", "level": 7, "evidence": "brief reason"}, ...],
-  "experience": ["role1 with key responsibilities", ...],
+  "skillLevels": [
+    {
+      "skill": "skill1",
+      "level": 7,
+      "evidence": "brief reason for this rating"
+    },
+    ...
+  ],
+  "experience": ["role1 with company, timeframe, and key responsibilities", ...],
   "education": ["degree with institution and year", ...],
   "certifications": ["certification name with issuing organization", ...],
-  "strengths": ["strength1", ...],
-  "weaknesses": ["weakness1", ...],
-  "recommendations": ["recommendation1", ...]
+  "strengths": ["strength1 based on resume content", ...],
+  "weaknesses": ["weakness1 or area for improvement", ...],
+  "recommendations": ["actionable recommendation based on analysis", ...]
 }
 
 Guidelines:
-- For skills: Extract ONLY explicitly mentioned technical and professional skills
-- For skillLevels: Assess only 3-5 key skills with evidence-based rating (1-10)
-- For experience: Include company, position, timeframe, and key achievements
-- If a section is missing from the resume, return an empty array
-- CRITICAL: Return ONLY raw JSON with NO markdown code blocks, no \`\`\`json, and no additional text or formatting
+- For skills: Extract ONLY explicitly mentioned technical and professional skills from the text (e.g., 'Python', 'React', 'Docker'). NO categories or inferred skills.
+- For skillLevels: Assess only 3-5 key skills with evidence-based rating (1-10) and brief justification
+- For experience: Include company, position, timeframe, and key achievements in each entry
+- For education: Include degree, field of study, institution, and graduation year
+- For certifications: Only include formal professional certifications explicitly mentioned
+- For strengths, weaknesses, and recommendations: Base these on concrete evidence from the resume
+- If a section is missing from the resume, return an empty array for that section
+
+CRITICAL: Return ONLY raw JSON with NO markdown code blocks. Do not start with \`\`\`json or end with \`\`\`. Do not include any explanatory text before or after the JSON.
 
 Resume: ${truncatedResume}`
         }
