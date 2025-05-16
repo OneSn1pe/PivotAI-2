@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { ResumeAnalysis } from '@/types/user';
 
 // Environment check for production
 const isProd = process.env.NODE_ENV === 'production';
@@ -149,12 +150,19 @@ export async function OPTIONS(request: NextRequest) {
   return response;
 }
 
-// Helper to truncate resume to a manageable size
-function truncateResume(text: string, maxLength = 4000): string {
+// Helper function to truncate resume text if too long
+function truncateResume(text: string, maxLength: number = 4000): string {
   if (text.length <= maxLength) return text;
-  
-  debug.log(`Truncating resume from ${text.length} to ${maxLength} characters`);
   return text.substring(0, maxLength) + '...';
+}
+
+// Helper function to safely parse JSON
+function safeJsonParse(text: string): { data: any; error: Error | null } {
+  try {
+    return { data: JSON.parse(text), error: null };
+  } catch (error) {
+    return { data: null, error: error as Error };
+  }
 }
 
 // Handle GET requests with proper error message
@@ -219,323 +227,87 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
 
 // Main POST handler for resume analysis
 export async function POST(request: NextRequest) {
-  debug.log('POST request received');
-  debug.request(request);
-  
-  // Track middleware effects
-  const middlewareReceived = Boolean(request.headers.get('x-middleware-processed'));
-  debug.middleware.received = middlewareReceived;
-  debug.log('Middleware processed:', middlewareReceived);
-  
-  const requestStartTime = performance.now();
-  
   try {
-    // Verify request content type
-    const contentType = request.headers.get('content-type');
-    debug.log('Content-Type:', contentType);
-    
-    // Check and log all request headers for debugging
-    const requestHeaders: Record<string, string> = {};
-    request.headers.forEach((value, key) => {
-      requestHeaders[key] = value;
-    });
-    debug.log('All request headers:', requestHeaders);
-    
-    if (!contentType || !contentType.includes('application/json')) {
-      debug.error('Invalid Content-Type header');
-      return createResponse({
-        error: 'Unsupported Media Type',
-        message: 'Content-Type must be application/json',
-        received: contentType,
-        middlewareProcessed: middlewareReceived,
-        debug: {
-          headers: requestHeaders,
-          method: request.method
-        }
-      }, 415);
-    }
-    
-    // Extract the body text for debugging
-    let requestText;
-    try {
-      requestText = await request.text();
-      debug.log('Request body length:', requestText.length);
-      debug.trace('Request body snippet:', requestText.substring(0, 200) + (requestText.length > 200 ? '...' : ''));
-    } catch (textError) {
-      debug.error('Failed to read request body:', textError);
-      return createResponse({
-        error: 'Bad Request',
-        message: 'Failed to read request body',
-        details: String(textError)
-      }, 400);
-    }
-    
-    // Parse JSON body
-    let body;
-    try {
-      body = JSON.parse(requestText);
-      debug.trace('Parsed body:', body);
-    } catch (err) {
-      debug.error('Failed to parse request body:', err);
-      return createResponse({
-        error: 'Bad Request',
-        message: 'Request body must be valid JSON',
-        receivedText: requestText.substring(0, 100) + (requestText.length > 100 ? '...' : '')
-      }, 400);
-    }
-    
-    // Extract resume text
+    // Get request body
+    const body = await request.json();
     const { resumeText } = body;
-    
+
     // Validate input
     if (!resumeText || typeof resumeText !== 'string' || resumeText.trim() === '') {
-      debug.error('Resume text is empty or not a string');
-      return createResponse({
-        error: 'Bad Request',
-        message: 'resumeText is required in the JSON body and must be a non-empty string',
-        receivedType: typeof resumeText
-      }, 400);
+      return NextResponse.json(
+        { error: 'Resume text is required and must be a non-empty string' },
+        { status: 400 }
+      );
     }
-    
-    debug.log('Resume text extracted, length:', resumeText.length);
-    
-    // Truncate resume text to avoid timeouts with very large resumes
+
+    // Truncate resume text if too long
     const truncatedResume = truncateResume(resumeText);
-    if (truncatedResume.length < resumeText.length) {
-      debug.log(`Resume was truncated from ${resumeText.length} to ${truncatedResume.length} characters`);
-    }
-    
-    if (!process.env.OPENAI_API_KEY) {
-      debug.error('OpenAI API key is missing');
-      return createResponse({
-        error: 'Internal Server Error',
-        message: 'Server configuration error: OpenAI API key is not configured'
-      }, 500);
-    }
-    
-    debug.log('Calling OpenAI API...');
-    const openaiStartTime = performance.now();
-    
-    // Call OpenAI API to analyze the resume with retry logic
-    try {
-      const completion = await withRetry(async () => {
-        return await openai.chat.completions.create({
-          model: "gpt-4o",
-          temperature: 0.1,
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no formatting. Include these keys as arrays of strings: skills, experience, education, strengths, weaknesses, recommendations.\n\nCRITICAL: For skills, ONLY include verbatim skills from the text (e.g., 'Python', 'React', 'Docker'). NO categories or inferred skills."
-            },
-            {
-              role: "user",
-              content: `Analyze this resume and return a JSON object with these arrays:
-              - skills (verbatim skills only, no categories)
-              - experience (roles and responsibilities)
-              - education
-              - strengths
-              - weaknesses
-              - recommendations
-              
-              Format: Raw JSON only, no markdown or extra text.
-              
-              Resume: ${truncatedResume}`
-            }
-          ]
-        });
-      }, 2, 2000);
-      
-      const openaiDuration = performance.now() - openaiStartTime;
-      debug.log(`OpenAI response received successfully (${Math.round(openaiDuration)}ms)`);
-      
-      // Parse the response from OpenAI
-      const rawAnalysisText = completion.choices[0].message.content || '{}';
-      let analysisText = rawAnalysisText;
-      let analysis;
-      
-      // Clean up the response by removing any markdown formatting
-      if (analysisText.startsWith('```')) {
-        // Find the first and last occurrence of code block markers
-        const firstBlockEnd = analysisText.indexOf('\n');
-        let lastBlockStart = analysisText.lastIndexOf('```');
-        
-        // Extract only the content between the markers
-        if (firstBlockEnd !== -1 && lastBlockStart !== -1 && lastBlockStart > firstBlockEnd) {
-          analysisText = analysisText.substring(firstBlockEnd + 1, lastBlockStart).trim();
-        } else if (firstBlockEnd !== -1) {
-          analysisText = analysisText.substring(firstBlockEnd + 1).trim();
-        }
-      }
-      
-      try {
-        analysis = JSON.parse(analysisText);
-        debug.trace('Parsed analysis:', analysis);
-      } catch (err) {
-        debug.error('Failed to parse OpenAI response:', err);
-        debug.log('Raw response:', rawAnalysisText.substring(0, 200) + (rawAnalysisText.length > 200 ? '...' : ''));
-        
-        // Attempt to extract skills using regex before falling back to default values
-        const extractedSkills = extractSkillsFromText(rawAnalysisText);
-        
-        // Provide a fallback structure when OpenAI doesn't return valid JSON
-        analysis = {
-          skills: extractedSkills.length > 0 ? extractedSkills : [],
-          experience: ["Professional experience extracted from resume"],
-          education: ["Education details extracted from resume"],
-          strengths: ["Identified strengths from resume"],
-          weaknesses: ["Areas for improvement based on resume"],
-          recommendations: ["Suggestions for career development"],
-          _error: "Generated fallback due to parsing error",
-          _rawResponse: rawAnalysisText.substring(0, 200) + (rawAnalysisText.length > 200 ? '...' : '')
-        };
-        
-        debug.log('Using fallback analysis structure with extracted skills:', extractedSkills);
-      }
-      
-      debug.log('Analysis successfully parsed and returning to client');
-      
-      // Verify and fix the analysis structure if needed
-      if (!analysis.skills || !Array.isArray(analysis.skills)) {
-        debug.log('Skills array missing, attempting to extract skills from raw text');
-        const extractedSkills = extractSkillsFromText(rawAnalysisText);
-        analysis.skills = extractedSkills.length > 0 ? extractedSkills : [];
-        debug.log('Using extracted skills or empty array:', analysis.skills);
-      }
-      
-      if (!analysis.experience || !Array.isArray(analysis.experience)) {
-        analysis.experience = ["Professional experience extracted from resume"];
-      }
-      if (!analysis.education || !Array.isArray(analysis.education)) {
-        analysis.education = ["Education details extracted from resume"];
-      }
-      if (!analysis.strengths || !Array.isArray(analysis.strengths)) {
-        analysis.strengths = ["Identified strengths from resume"];
-      }
-      if (!analysis.weaknesses || !Array.isArray(analysis.weaknesses)) {
-        analysis.weaknesses = ["Areas for improvement based on resume"];
-      }
-      if (!analysis.recommendations || !Array.isArray(analysis.recommendations)) {
-        analysis.recommendations = ["Suggestions for career development"];
-      }
-      
-      const totalDuration = performance.now() - requestStartTime;
-      debug.log(`Total request processed in ${Math.round(totalDuration)}ms`);
-      
-      // Return successful response
-      return createResponse({
-        ...analysis,
-        _debug: {
-          processingTime: Math.round(totalDuration),
-          openaiTime: Math.round(openaiDuration),
-          resumeLength: resumeText.length,
-          resumeTruncated: truncatedResume.length < resumeText.length,
-          timestamp: new Date().toISOString()
-        }
-      }, 200);
-      
-    } catch (openaiError: any) {
-      debug.error('OpenAI API call failed:', openaiError);
-      
-      // Enhanced error handling with more detailed diagnostics
-      let errorMessage = 'Failed to process resume with AI service';
-      let errorDetails = openaiError.message || String(openaiError);
-      let statusCode = 500;
-      
-      // Check for specific OpenAI error types
-      if (openaiError.status === 429) {
-        errorMessage = 'OpenAI API rate limit exceeded';
-        statusCode = 503; // Service Unavailable
-        errorDetails = 'The AI service is currently experiencing high demand. Please try again in a few moments.';
-      } else if (openaiError.message === 'OpenAI API request timed out after 20s') {
-        errorMessage = 'AI analysis timed out';
-        statusCode = 504; // Gateway Timeout
-        errorDetails = 'The resume analysis took too long to complete. Please try again with a shorter resume.';
-      } else if (openaiError.status === 401) {
-        errorMessage = 'OpenAI API authentication error';
-        errorDetails = 'Invalid API key or unauthorized access';
-      } else if (openaiError.status === 400) {
-        errorMessage = 'OpenAI API request error';
-        // For parameter errors, be more specific
-        if (errorDetails.includes('param') || errorDetails.includes('parameter')) {
-          errorDetails = `API parameter error: ${errorDetails}`;
-        }
-      }
-      
-      return createResponse({
-        error: errorMessage,
-        message: 'The AI analysis service encountered an error',
-        details: errorDetails,
-        timestamp: new Date().toISOString()
-      }, statusCode);
-    }
-    
-  } catch (error: any) {
-    // Log and handle unexpected errors
-    const totalDuration = performance.now() - requestStartTime;
-    debug.error(`Unhandled error in POST handler after ${Math.round(totalDuration)}ms:`, error);
-    
-    // Ensure we always return a valid JSON response
-    return createResponse({
-      error: 'Internal Server Error',
-      message: 'An unexpected server error occurred',
-      details: error.message || String(error),
-      timestamp: new Date().toISOString()
-    }, 500);
-  }
+
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0.1,
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text or formatting."
+        },
+        {
+          role: "user",
+          content: `Analyze this resume and extract the following information in a structured JSON object:
+
+{
+  "skills": ["skill1", "skill2", ...],
+  "skillLevels": [{"skill": "skill1", "level": 7, "evidence": "brief reason"}, ...],
+  "experience": ["role1 with key responsibilities", ...],
+  "education": ["degree with institution and year", ...],
+  "certifications": ["certification name with issuing organization", ...],
+  "strengths": ["strength1", ...],
+  "weaknesses": ["weakness1", ...],
+  "recommendations": ["recommendation1", ...]
 }
 
-// Helper function to extract skills from raw text when JSON parsing fails
-function extractSkillsFromText(text: string): string[] {
-  try {
-    // Look for patterns like "skills": [...] or "Skills:" followed by a list
-    const skillsJsonMatch = text.match(/"skills"\s*:\s*\[(.*?)\]/i);
-    if (skillsJsonMatch && skillsJsonMatch[1]) {
-      // Try to parse the array portion
-      try {
-        const arrayText = `[${skillsJsonMatch[1]}]`;
-        const skills = JSON.parse(arrayText);
-        if (Array.isArray(skills) && skills.length > 0) {
-          return skills.map(s => s.toString().trim()).filter(s => s);
+Guidelines:
+- For skills: Extract ONLY explicitly mentioned technical and professional skills
+- For skillLevels: Assess only 3-5 key skills with evidence-based rating (1-10)
+- For experience: Include company, position, timeframe, and key achievements
+- If a section is missing from the resume, return an empty array
+- Return ONLY valid JSON with no additional text or formatting
+
+Resume: ${truncatedResume}`
         }
-      } catch (err) {
-        // If JSON parsing fails, continue to other methods
-      }
+      ]
+    });
+
+    // Parse the response
+    const content = completion.choices[0].message.content;
+    if (!content) {
+      throw new Error('No content in OpenAI response');
     }
-    
-    // Look for list-like patterns with skills
-    const skillsList: string[] = [];
-    
-    // Match bulleted lists that might contain skills - using exec() in a loop instead of matchAll
-    const bulletRegex = /[•\-\*]\s*([^•\-\*\n]+)/g;
-    let bulletMatch: RegExpExecArray | null;
-    while ((bulletMatch = bulletRegex.exec(text)) !== null) {
-      if (bulletMatch[1] && bulletMatch[1].trim()) {
-        // Only include short entries that are likely to be skills (not paragraphs)
-        const skill = bulletMatch[1].trim();
-        if (skill.length < 50 && !skill.includes('.')) {
-          skillsList.push(skill);
-        }
-      }
+
+    const { data, error } = safeJsonParse(content);
+    if (error) {
+      throw new Error('Failed to parse OpenAI response');
     }
-    
-    // Match comma-separated lists that might be skills
-    if (skillsList.length === 0) {
-      const commaListMatch = text.match(/skills:?\s*([^\.]+)/i);
-      if (commaListMatch && commaListMatch[1]) {
-        const commaList = commaListMatch[1].split(',');
-        commaList.forEach(item => {
-          const skill = item.trim();
-          if (skill && skill.length < 50) {
-            skillsList.push(skill);
-          }
-        });
-      }
-    }
-    
-    // Return found skills or empty array
-    return skillsList.slice(0, 10); // Limit to 10 skills
-  } catch (err) {
-    console.error('Error extracting skills from text:', err);
-    return [];
+
+    // Validate and structure the response
+    const analysis: ResumeAnalysis = {
+      skills: Array.isArray(data.skills) ? data.skills : [],
+      skillLevels: Array.isArray(data.skillLevels) ? data.skillLevels : [],
+      experience: Array.isArray(data.experience) ? data.experience : [],
+      education: Array.isArray(data.education) ? data.education : [],
+      certifications: Array.isArray(data.certifications) ? data.certifications : [],
+      strengths: Array.isArray(data.strengths) ? data.strengths : [],
+      weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+      recommendations: Array.isArray(data.recommendations) ? data.recommendations : []
+    };
+
+    return NextResponse.json({ data: analysis });
+  } catch (error) {
+    console.error('Error analyzing resume:', error);
+    return NextResponse.json(
+      { error: 'Failed to analyze resume' },
+      { status: 500 }
+    );
   }
 }

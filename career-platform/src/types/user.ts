@@ -30,10 +30,18 @@ export enum UserRole {
     bookmarkedCandidates?: string[];
   }
   
+  export interface SkillLevel {
+    skill: string;
+    level: number;
+    evidence: string;
+  }
+  
   export interface ResumeAnalysis {
     skills: string[];
+    skillLevels: SkillLevel[];
     experience: string[];
     education: string[];
+    certifications: string[];
     strengths: string[];
     weaknesses: string[];
     recommendations: string[];
@@ -62,12 +70,10 @@ export enum UserRole {
     position: string;
   }
   
-  export interface CareerRoadmap {
-    id: string;
-    candidateId: string;
-    milestones: Milestone[];
-    createdAt: Date;
-    updatedAt: Date;
+  export interface Resource {
+    title: string;
+    url: string;
+    type: 'course' | 'book' | 'project' | 'article' | 'documentation';
   }
   
   export interface Milestone {
@@ -77,10 +83,21 @@ export enum UserRole {
     skills: string[];
     timeframe: string;
     completed: boolean;
+    resources: Resource[];
+  }
+  
+  export interface CandidateGapAnalysis {
+    currentStrengths: string[];
+    criticalGaps: string[];
+  }
+  
+  export interface CareerRoadmap {
+    id?: string;
+    candidateId: string;
+    milestones: Milestone[];
+    candidateGapAnalysis: CandidateGapAnalysis;
+    targetRoleRequirements: string[];
+    successMetrics: string[];
     createdAt?: Date;
-    resources: {
-      title: string;
-      url: string;
-      type: 'article' | 'video' | 'course' | 'book' | 'documentation';
-    }[];
+    updatedAt?: Date;
   }
