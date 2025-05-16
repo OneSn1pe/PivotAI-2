@@ -1,20 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { 
-      "src": "package.json", 
-      "use": "@vercel/next",
-      "config": {
-        "functions": {
-          "api/generate-roadmap/route.ts": {
-            "maxDuration": 60
-          },
-          "api/analyze-resume/route.ts": {
-            "maxDuration": 60
-          }
-        }
-      }
-    }
+    { "src": "package.json", "use": "@vercel/next" }
   ],
   "routes": [
     {

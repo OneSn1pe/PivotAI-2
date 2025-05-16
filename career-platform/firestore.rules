@@ -37,11 +37,6 @@ service cloud.firestore {
       // Allow recruiters to read candidate data, but not modify it
       allow read: if isOwner(userId) || isRecruiter();
       allow write: if isOwner(userId);
-      
-      // Allow updating resume analysis data
-      allow update: if isOwner(userId) && 
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['resumeUrl', 'resumeFileName', 'resumeAnalysis', 'updatedAt']);
     }
     
     // Roadmaps collection rules - UPDATED for better recruiter access
