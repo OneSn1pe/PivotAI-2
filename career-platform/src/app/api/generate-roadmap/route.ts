@@ -12,6 +12,8 @@ if (!process.env.OPENAI_API_KEY) {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 60000, // 60 second timeout for API calls
+  maxRetries: 2,  // Built-in retries for transient errors
 });
 
 // Helper function to safely parse JSON
@@ -21,6 +23,50 @@ function safeJsonParse(text: string): { data: any; error: Error | null } {
   } catch (error) {
     return { data: null, error: error as Error };
   }
+}
+
+// Add retry helper with exponential backoff
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs = 1000): Promise<T> {
+  let retries = 0;
+  let lastError: any;
+
+  while (retries <= maxRetries) {
+    try {
+      // Create a timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('OpenAI API request timed out after 60s'));
+        }, 60000); // 60 second client-side timeout
+      });
+      
+      // Race the function against the timeout
+      return await Promise.race([
+        fn(),
+        timeoutPromise
+      ]);
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if it's a timeout error from our client-side timeout
+      if (error.message === 'OpenAI API request timed out after 60s') {
+        console.error('Client-side timeout reached:', error.message);
+        throw error; // Don't retry on client-side timeouts
+      }
+      
+      // Only retry on rate limit errors
+      if (error.status === 429 && retries < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, retries);
+        console.log(`Rate limited (429), retrying in ${delay}ms (retry ${retries + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        retries++;
+      } else {
+        // Other errors or max retries reached, rethrow
+        throw error;
+      }
+    }
+  }
+  
+  throw lastError;
 }
 
 export async function POST(request: NextRequest) {
