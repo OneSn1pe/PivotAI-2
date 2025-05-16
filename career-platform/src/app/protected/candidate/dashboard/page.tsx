@@ -182,21 +182,11 @@ export default function CandidateDashboard() {
     }
     
     try {
-      // Extract file path from the validatedResumeUrl
       if (!candidateProfile?.uid) {
         throw new Error('User not authenticated');
       }
       
-      // Determine path and filename based on available information
-      let resumePath = '';
-      let filename = 'resume';
-      
-      // Check if we have a stored filename first
-      if (candidateProfile.resumeFileName) {
-        filename = candidateProfile.resumeFileName;
-      }
-      
-      // Find the most recent file directly from storage
+      // Find the most recent original file in storage
       const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
       const filesList = await listAll(userResumesRef);
       
@@ -204,12 +194,34 @@ export default function CandidateDashboard() {
         throw new Error('No resume files found in storage');
       }
       
+      // Look for the most recent original file (not plaintext)
+      const originalFiles = filesList.items.filter(item => 
+        item.name.includes('original_')
+      );
+      
+      if (originalFiles.length === 0) {
+        console.warn('No original files found, falling back to most recent file');
+      }
+      
       // Sort by name to get the most recent one (timestamps in names)
-      const sortedItems = [...filesList.items].sort((a, b) => {
+      const fileItems = originalFiles.length > 0 ? originalFiles : filesList.items;
+      const sortedItems = [...fileItems].sort((a, b) => {
         return b.name.localeCompare(a.name);
       });
       
-      resumePath = sortedItems[0].fullPath;
+      const resumePath = sortedItems[0].fullPath;
+      console.log('Found resume file:', resumePath);
+      
+      // Determine filename - use stored filename if available, or extract from path
+      let filename = candidateProfile.resumeFileName || 'resume';
+      
+      // If no stored filename, try to extract original name from path
+      if (!candidateProfile.resumeFileName && resumePath.includes('original_')) {
+        const pathParts = resumePath.split('original_');
+        if (pathParts.length > 1) {
+          filename = pathParts[1];
+        }
+      }
       
       // Use the file download hook with the most recent file's path
       await downloadAndSaveFile(resumePath, filename);

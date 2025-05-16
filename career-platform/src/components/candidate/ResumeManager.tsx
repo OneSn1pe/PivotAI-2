@@ -253,91 +253,68 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       // Create a unique path for the file that includes file extension
       const uniqueId = `${userProfile.uid}_${Date.now()}`;
       
-      // Create a text file containing the plaintext content
+      // 1. Upload the original file for preservation
+      const originalFilePath = `resumes/${userProfile.uid}/${uniqueId}_original_${originalFileName}`;
+      console.log(`Uploading original file to path: ${originalFilePath}`);
+      
+      // Use direct storage reference to upload original file
+      const originalFileRef = ref(storage, originalFilePath);
+      await uploadBytes(originalFileRef, file);
+      const originalFileUrl = await getDownloadURL(originalFileRef);
+      
+      console.log('Original file uploaded successfully, URL:', originalFileUrl);
+      
+      // 2. Create and upload a text file containing the plaintext content for analysis
       const plainTextBlob = new Blob([plainTextContent], { type: 'text/plain' });
       const plainTextFile = new File([plainTextBlob], `${uniqueId}_plaintext.txt`, { type: 'text/plain' });
       
-      // Upload the plaintext file
-      const filePath = `resumes/${userProfile.uid}/${uniqueId}_resume.txt`;
-      console.log(`Uploading plaintext version of ${originalFileName} to path: ${filePath}`);
+      const plaintextFilePath = `resumes/${userProfile.uid}/${uniqueId}_plaintext.txt`;
+      console.log(`Uploading plaintext version for analysis to path: ${plaintextFilePath}`);
       
-      const resumeUrl = await uploadFile(plainTextFile, filePath);
-      console.log('Plaintext file uploaded successfully, URL:', resumeUrl);
+      // Upload plaintext for analysis
+      await uploadFile(plainTextFile, plaintextFilePath);
       
-      // Analyze resume
+      // Analyze resume using the plaintext version
       setAnalyzing(true);
       console.log(`Starting resume analysis. Text length: ${plainTextContent.length}`);
       
       try {
-        console.log('Calling analyzeResume API...');
-        const analysisStartTime = performance.now();
-        
         const resumeAnalysis = await analyzeResume(plainTextContent);
-        
-        const analysisTime = performance.now() - analysisStartTime;
-        console.log(`Resume analysis completed in ${Math.round(analysisTime)}ms`);
-        
-        if (!resumeAnalysis) {
-          console.error('Resume analysis returned null or undefined');
-          throw new Error('Resume analysis failed. Please try again.');
-        }
-        
-        console.log('Analysis results:', resumeAnalysis);
-        
+        console.log('Resume analysis successful:', resumeAnalysis);
         setAnalysis(resumeAnalysis);
         
-        // Update user profile with the new URL and analysis
-        console.log('Updating user profile in Firestore...');
-        await updateDoc(doc(db, 'users', userProfile.uid), {
-          resumeUrl,
-          resumeFileName: originalFileName, // Store original filename for display
+        // Update user profile with both file URLs and analysis
+        const userRef = doc(db, 'users', userProfile.uid);
+        
+        await updateDoc(userRef, {
+          resumeUrl: originalFileUrl, // Use the original file URL for the profile
+          resumeFileName: originalFileName,
+          resumePlainTextUrl: plaintextFilePath, // Store the plaintext path separately
           resumeAnalysis,
-          updatedAt: serverTimestamp(),
+          lastResumeUpdate: serverTimestamp()
         });
         
-        console.log('Firestore update completed, updating UI state...');
-        
-        // Set the validated URL to the new URL
-        setValidatedResumeUrl(resumeUrl);
-        
-        // Update local state with new filename immediately
+        // Update local state
+        setValidatedResumeUrl(originalFileUrl);
         setDisplayFileName(originalFileName);
         
+        setSuccessMessage('Resume uploaded and analyzed successfully!');
         setAnalyzing(false);
-        setSuccessMessage('Resume updated and analyzed successfully!');
         
-        // Notify parent component of update
+        // Call onUpdate if provided
         if (onUpdateComplete) {
-          console.log('Notifying parent of update completion');
           onUpdateComplete();
         }
         
-        // Refresh the user's profile in AuthContext
-        await updateUserProfile();
-        
       } catch (analysisError) {
-        console.error('Error during resume analysis:', analysisError);
-        throw analysisError; // Re-throw to be caught by outer catch block
+        console.error('Resume analysis error:', analysisError);
+        setError('Failed to analyze resume: ' + (analysisError instanceof Error ? analysisError.message : String(analysisError)));
+        setAnalyzing(false);
       }
       
-    } catch (err) {
-      console.error('Overall error in handleUpload:', err);
-      setAnalyzing(false);
-      
-      // Provide more user-friendly error message
-      let errorMessage = 'Error: ' + (err instanceof Error ? err.message : String(err));
-      
-      // Check for specific API errors
-      if (err instanceof Error && 'status' in err) {
-        const apiError = err as Error & { status: number; details?: string };
-        if (apiError.status === 405) {
-          errorMessage = 'The resume analysis service is not accepting requests correctly. Please try again later.';
-        } else if (apiError.details) {
-          errorMessage = `${err.message}. ${apiError.details}`;
-        }
-      }
-      
-      setError(errorMessage);
+    } catch (uploadError) {
+      console.error('Resume upload error:', uploadError);
+      setError('Failed to upload resume: ' + (uploadError instanceof Error ? uploadError.message : String(uploadError)));
     }
   };
   
