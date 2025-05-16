@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { GameProvider } from '@/contexts/GameContext';
 import dynamic from 'next/dynamic';
 
 // Import client components with dynamic loading
@@ -14,9 +13,7 @@ const ClientLayout = dynamic(
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <GameProvider>
-        {children}
-      </GameProvider>
+      {children}
       <ClientLayout />
     </AuthProvider>
   );
