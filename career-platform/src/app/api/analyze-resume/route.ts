@@ -8,12 +8,11 @@ const isProd = process.env.NODE_ENV === 'production';
 // Debug helper that respects production environment
 const debug = {
   log: (...args: any[]) => {
-    if (!isProd) {
+    if (process.env.NODE_ENV !== 'production') {
       console.log('[API:analyze-resume]', ...args);
     }
   },
   error: (...args: any[]) => {
-    // Always log errors even in production
     console.error('[API:analyze-resume:ERROR]', ...args);
   },
   // Add additional debug level for detailed tracing
@@ -60,7 +59,7 @@ const openai = new OpenAI({
   maxRetries: 2,  // Built-in retries for transient errors
 });
 
-// Check if OpenAI API key is valid
+// Check if OpenAI API key is available
 if (!process.env.OPENAI_API_KEY) {
   debug.error('OPENAI_API_KEY is not defined in environment variables');
 }
@@ -225,6 +224,15 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
   throw lastError;
 }
 
+// Add type for OpenAI completion
+type OpenAICompletion = {
+  choices: Array<{
+    message: {
+      content: string | null;
+    };
+  }>;
+};
+
 // Main POST handler for resume analysis
 export async function POST(request: NextRequest) {
   try {
@@ -243,18 +251,19 @@ export async function POST(request: NextRequest) {
     // Truncate resume text if too long
     const truncatedResume = truncateResume(resumeText);
 
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      temperature: 0.1,
-      messages: [
-        {
-          role: "system",
-          content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text or formatting."
-        },
-        {
-          role: "user",
-          content: `Analyze this resume and extract the following information in a structured JSON object:
+    // Call OpenAI API with timeout handling
+    const completion = await Promise.race([
+      openai.chat.completions.create({
+        model: "gpt-4o",
+        temperature: 0.1,
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional resume analyzer. Extract key information from resumes and provide structured analysis. Return ONLY a valid JSON object with no additional text or formatting."
+          },
+          {
+            role: "user",
+            content: `Analyze this resume and extract the following information in a structured JSON object:
 
 {
   "skills": ["skill1", "skill2", ...],
@@ -275,9 +284,13 @@ Guidelines:
 - Return ONLY valid JSON with no additional text or formatting
 
 Resume: ${truncatedResume}`
-        }
-      ]
-    });
+          }
+        ]
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OpenAI API request timed out after 55s')), 55000)
+      )
+    ]) as OpenAICompletion;
 
     // Parse the response
     const content = completion.choices[0].message.content;
@@ -303,11 +316,13 @@ Resume: ${truncatedResume}`
     };
 
     return NextResponse.json({ data: analysis });
-  } catch (error) {
-    console.error('Error analyzing resume:', error);
+  } catch (error: any) {
     return NextResponse.json(
-      { error: 'Failed to analyze resume' },
-      { status: 500 }
+      { 
+        error: 'Failed to analyze resume',
+        details: error.message
+      },
+      { status: error.message.includes('timed out') ? 504 : 500 }
     );
   }
 }
