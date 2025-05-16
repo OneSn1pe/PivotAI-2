@@ -95,13 +95,4 @@ export function deleteCookie(name: string): void {
   if (typeof document === 'undefined') return;
   
   document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-}
-
-/**
- * Normalizes a role string for consistent comparison
- * This ensures case-insensitive role matching across the application
- */
-export function normalizeRole(role: string | undefined | null): string {
-  if (!role) return '';
-  return role.toLowerCase();
 } 

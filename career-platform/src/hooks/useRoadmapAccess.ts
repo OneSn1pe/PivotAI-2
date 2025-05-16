@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole, CareerRoadmap } from "@/types/user";
-import { normalizeRole } from "@/utils/environment";
 
 export function useRoadmapAccess(candidateId: string) {
   const { userProfile } = useAuth();
@@ -24,7 +23,7 @@ export function useRoadmapAccess(candidateId: string) {
         if (userProfile.uid === candidateId) {
           console.log(`[useRoadmapAccess] User is the owner of this roadmap`);
           setAccessType("owner");
-        } else if (normalizeRole(userProfile.role) === normalizeRole(UserRole.RECRUITER)) {
+        } else if (userProfile.role === UserRole.RECRUITER) {
           console.log(`[useRoadmapAccess] User is a recruiter, granting access`);
           setAccessType("recruiter");
         } else {
@@ -40,16 +39,38 @@ export function useRoadmapAccess(candidateId: string) {
         const response = await fetch(`/api/roadmaps/${candidateId}`);
         
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.details || `Failed to fetch roadmap: ${response.status}`);
+          const errorText = await response.text();
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch (e) {
+            errorData = { error: errorText };
+          }
+          
+          console.error(`[useRoadmapAccess] API error: ${response.status}`, errorData);
+          
+          // Enhanced error reporting
+          const errorDetails = {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData.error || 'Unknown error',
+            headers: {
+              contentType: response.headers.get('content-type'),
+              authStatus: response.headers.get('x-auth-status'),
+            }
+          };
+          
+          console.error('[useRoadmapAccess] Error details:', errorDetails);
+          throw new Error(errorData.error || `Failed to fetch roadmap: ${response.statusText}`);
         }
-
+        
         const data = await response.json();
+        console.log(`[useRoadmapAccess] Roadmap data fetched successfully`);
         setRoadmap(data.roadmap);
-        setLoading(false);
       } catch (err) {
-        console.error(`[useRoadmapAccess] Error:`, err);
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        console.error("[useRoadmapAccess] Error:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
         setLoading(false);
       }
     };

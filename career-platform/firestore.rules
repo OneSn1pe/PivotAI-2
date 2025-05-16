@@ -1,6 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if user is a recruiter using token claims
+    function isRecruiter() {
+      return request.auth != null && 
+        (
+          // Primary method: Check token claims (preferred and more efficient)
+          (request.auth.token.role == "recruiter" || 
+           request.auth.token.role == "RECRUITER" ||
+           request.auth.token.role == "Recruiter") ||
+          
+          // Fallback method: Check Firestore document (for backwards compatibility)
+          (
+            exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "recruiter" || 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "RECRUITER" ||
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "Recruiter")
+          )
+        );
+    }
+    
     // Helper function to check if user is accessing their own data
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
@@ -9,28 +28,48 @@ service cloud.firestore {
     // Development mode check - for more permissive rules in dev
     function isDevelopmentMode() {
       // This is a simplified check - in production this will be false
-      return true; // Set to true for local development
+      return false; // Set to true for local development
     }
     
     // Users collection rules
     match /users/{userId} {
       // Allow users to read/write their own data
-      allow read, write: if isOwner(userId) || isDevelopmentMode();
+      // Allow recruiters to read candidate data, but not modify it
+      allow read: if isOwner(userId) || isRecruiter();
+      allow write: if isOwner(userId);
     }
     
-    // Roadmaps collection rules
+    // Roadmaps collection rules - UPDATED for better recruiter access
     match /roadmaps/{roadmapId} {
-      // Allow operations on roadmaps during development
-      allow read, write, delete: if isDevelopmentMode() || 
-        (request.auth != null && resource != null && resource.data.candidateId == request.auth.uid);
+      // Allow owners to read/write their own roadmaps
+      // Allow recruiters to read ANY roadmaps, but not modify them
+      // Added more permissive rule to ensure recruiters can query the collection
+      allow read: if request.auth != null && (
+        isOwner(resource.data.candidateId) || 
+        isRecruiter() || 
+        isDevelopmentMode()
+      );
       
-      // Allow creation of new roadmaps
-      allow create: if isDevelopmentMode() || request.auth != null;
+      // More permissive list query for recruiters
+      allow list: if request.auth != null && isRecruiter();
+      
+      // Only owners can write to their roadmaps
+      allow write: if isOwner(resource.data.candidateId);
+    }
+    
+    // Allow recruiters to query all roadmaps collection
+    match /roadmaps {
+      allow list: if request.auth != null && isRecruiter();
     }
     
     // Debug tests collection - allow authenticated users to read/write for testing
     match /debug_tests/{testId} {
       allow read, write: if request.auth != null;
+    }
+    
+    // Recruiter-only test collection - only recruiters can access
+    match /recruiter_only_test/{testId} {
+      allow read, write: if isRecruiter();
     }
     
     // For development mode, uncomment this rule to allow all access (for testing)

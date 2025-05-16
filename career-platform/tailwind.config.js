@@ -69,72 +69,10 @@ module.exports = {
       'ml-2',
       'text-green-600',
       'hidden',
-      'md:block',
-      // Cloud Sky Theme Classes
-      'backdrop-filter',
-      'backdrop-blur-md',
-      'backdrop-blur-lg',
-      'from-sky-500',
-      'to-sky-700',
-      'from-sky-600',
-      'to-sky-800',
-      'from-yellow-400',
-      'to-amber-500',
-      'from-amber-500',
-      'to-amber-600',
-      'from-amber-600',
-      'to-amber-700',
-      'bg-gradient-to-r',
-      'bg-gradient-to-b',
-      'shadow-sky-500/20',
-      'shadow-amber-500/30',
-      'animate-float-slow',
-      'animate-float-medium',
-      'animate-float-fast',
-      'cloud-sm',
-      'cloud-md',
-      'cloud-lg',
-      'cloud-icon',
-      'cloud-btn'
+      'md:block'
     ],
     theme: {
-      extend: {
-        animation: {
-          'float-slow': 'float 20s ease-in-out infinite',
-          'float-medium': 'float 15s ease-in-out infinite alternate',
-          'float-fast': 'float 8s ease-in-out infinite alternate',
-          'pulse-glow': 'pulse-glow 4s ease-in-out infinite alternate'
-        },
-        keyframes: {
-          float: {
-            '0%, 100%': { transform: 'translateY(0) translateX(0)' },
-            '25%': { transform: 'translateY(-5px) translateX(5px)' },
-            '50%': { transform: 'translateY(0) translateX(10px)' },
-            '75%': { transform: 'translateY(5px) translateX(5px)' }
-          },
-          'pulse-glow': {
-            '0%, 100%': { 
-              opacity: 1,
-              boxShadow: '0 0 10px 2px rgba(56, 189, 248, 0.2)'
-            },
-            '50%': { 
-              opacity: 0.8,
-              boxShadow: '0 0 20px 5px rgba(56, 189, 248, 0.4)'
-            }
-          }
-        },
-        backdropBlur: {
-          'xs': '2px',
-        },
-        boxShadow: {
-          'cloud': '0 10px 15px -3px rgba(186, 230, 253, 0.3), 0 4px 6px -4px rgba(186, 230, 253, 0.4)',
-          'cloud-inner': 'inset 0 2px 4px 0 rgba(186, 230, 253, 0.2)'
-        },
-        transitionDuration: {
-          '2000': '2000ms',
-          '3000': '3000ms',
-        }
-      },
+      extend: {},
     },
     plugins: [],
   };

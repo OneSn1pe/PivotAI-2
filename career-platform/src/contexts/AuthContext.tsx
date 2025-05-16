@@ -23,9 +23,9 @@ interface AuthContextType {
   currentUser: FirebaseUser | null;
   userProfile: User | null;
   loading: boolean;
-  register: (email: string, password: string, displayName: string) => Promise<void>;
+  register: (email: string, password: string, role: UserRole, displayName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (role?: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: () => Promise<void>;
 }
@@ -155,6 +155,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // When in local development, initialize with dummy data if needed
+  useEffect(() => {
+    if (isDevMode && process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true') {
+      console.log('[AuthContext] Running in local development mode');
+      
+      // You can create mock data for development testing here
+      // This will make debugging easier without requiring real auth
+      const mockRecruiterProfile: User = {
+        uid: 'dev-recruiter-id',
+        email: 'dev-recruiter@example.com',
+        displayName: 'Dev Recruiter',
+        role: UserRole.RECRUITER,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+      };
+      
+      // Uncomment to use mock data when needed
+      // setUserProfile(mockRecruiterProfile);
+      // setLoading(false);
+    }
+  }, [isDevMode]);
+
   useEffect(() => {
     // Set persistence to LOCAL
     setPersistence(auth, browserLocalPersistence).catch(console.error);
@@ -228,16 +250,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const register = async (email: string, password: string, displayName: string) => {
+  const register = async (email: string, password: string, role: UserRole, displayName: string) => {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Create user profile in Firestore, always as candidate
+      // Create user profile in Firestore
       const userData: User = {
         uid: user.uid,
         email: user.email!,
         displayName,
-        role: UserRole.CANDIDATE,
+        role,
         createdAt: new Date(),
         lastLogin: new Date(),
       };
@@ -252,7 +274,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const token = await user.getIdToken(true); // Force refresh to get updated claims
       document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
       
-      router.push('/protected/candidate/dashboard');
+      router.push('/protected/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
@@ -276,14 +298,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         { merge: true }
       );
       
-      router.push('/protected/candidate/dashboard');
+      router.push('/protected/dashboard');
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (role?: UserRole) => {
     try {
       const provider = new GoogleAuthProvider();
       const { user } = await signInWithPopup(auth, provider);
@@ -292,12 +314,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       
       if (!userDoc.exists()) {
-        // New user, create profile as candidate
+        // If role is not provided, default to candidate
+        const actualRole = role || UserRole.CANDIDATE;
+        
+        // New user, create profile
         const userData: User = {
           uid: user.uid,
           email: user.email!,
           displayName: user.displayName || user.email!.split('@')[0],
-          role: UserRole.CANDIDATE,
+          role: actualRole,
           createdAt: new Date(),
           lastLogin: new Date(),
         };
@@ -320,8 +345,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const token = await user.getIdToken(true); // Force refresh to get updated claims
       setCookie('session', token, 3600);
       
-      // Always redirect to candidate dashboard
-      router.push('/protected/candidate/dashboard');
+      // Redirect based on user role
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as User;
+        if (userData.role === UserRole.CANDIDATE) {
+          router.push('/protected/candidate/dashboard');
+        } else {
+          router.push('/protected/recruiter/dashboard');
+        }
+      } else {
+        // For new users
+        if (role === UserRole.RECRUITER) {
+          router.push('/protected/recruiter/dashboard');
+        } else {
+          router.push('/protected/candidate/dashboard');
+        }
+      }
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
