@@ -6,26 +6,27 @@ import dynamic from 'next/dynamic';
 // Determine if we're in development mode
 const isDev = typeof process !== 'undefined' && process.env.NODE_ENV === 'development';
 
+// Safer dynamic import with explicit error handling
+const safeImport = (path: string) => {
+  return dynamic(
+    () => import(path)
+      .then(mod => mod.default || (() => null))
+      .catch(err => {
+        console.error(`Error loading component ${path}:`, err);
+        return () => null;
+      }),
+    { 
+      ssr: false, 
+      loading: () => null 
+    }
+  );
+};
+
 // Only import debug components in development mode
-const ApiDebugger = isDev ? dynamic(
-  () => import('@/components/debugger/ApiDebugger').catch(() => () => null),
-  { ssr: false, loading: () => null }
-) : () => null;
-
-const ErrorDebugger = isDev ? dynamic(
-  () => import('@/components/debugger/ErrorDebugger').catch(() => () => null),
-  { ssr: false, loading: () => null }
-) : () => null;
-
-const ApiTester = isDev ? dynamic(
-  () => import('@/components/debugger/ApiTester').catch(() => () => null),
-  { ssr: false, loading: () => null }
-) : () => null;
-
-const DiagnosticTools = isDev ? dynamic(
-  () => import('@/components/debugger/DiagnosticTools').catch(() => () => null),
-  { ssr: false, loading: () => null }
-) : () => null;
+const ApiDebugger = isDev ? safeImport('@/components/debugger/ApiDebugger') : () => null;
+const ErrorDebugger = isDev ? safeImport('@/components/debugger/ErrorDebugger') : () => null;
+const ApiTester = isDev ? safeImport('@/components/debugger/ApiTester') : () => null;
+const DiagnosticTools = isDev ? safeImport('@/components/debugger/DiagnosticTools') : () => null;
 
 // Debug Panel Component - only rendered in development
 function DebugPanel({ visible }: { visible: boolean }) {
@@ -153,42 +154,44 @@ export default function ClientLayout() {
     return null;
   }
   
-  // Add error handling for the main component
-  const [error, setError] = useState(false);
-  
-  // Use try/catch to prevent rendering errors from breaking the whole app
-  if (error) {
-    return null;
-  }
-  
+  // Use error boundary pattern to prevent rendering errors
   try {
     return (
       <>
-        {/* Only render debug components in development mode */}
-        <React.Suspense fallback={null}>
-          <ApiDebugger />
-        </React.Suspense>
+        {/* Safety wrapper for each debugger component */}
+        <div className="debug-wrapper">
+          <React.Suspense fallback={null}>
+            <ApiDebugger />
+          </React.Suspense>
+        </div>
         
-        <React.Suspense fallback={null}>
-          <ErrorDebugger />
-        </React.Suspense>
+        <div className="debug-wrapper">
+          <React.Suspense fallback={null}>
+            <ErrorDebugger />
+          </React.Suspense>
+        </div>
         
-        <React.Suspense fallback={null}>
-          <ApiTester />
-        </React.Suspense>
+        <div className="debug-wrapper">
+          <React.Suspense fallback={null}>
+            <ApiTester />
+          </React.Suspense>
+        </div>
         
-        <React.Suspense fallback={null}>
-          <DiagnosticTools />
-        </React.Suspense>
+        <div className="debug-wrapper">
+          <React.Suspense fallback={null}>
+            <DiagnosticTools />
+          </React.Suspense>
+        </div>
           
-        <React.Suspense fallback={null}>
-          <DebugPanel visible={isDev} />
-        </React.Suspense>
+        <div className="debug-wrapper">
+          <React.Suspense fallback={null}>
+            <DebugPanel visible={isDev} />
+          </React.Suspense>
+        </div>
       </>
     );
   } catch (err) {
     console.error("Error rendering ClientLayout:", err);
-    setError(true);
     return null;
   }
 } 

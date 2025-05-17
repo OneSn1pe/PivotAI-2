@@ -16,6 +16,9 @@ export enum UserRole {
     role: UserRole.CANDIDATE;
     resumeUrl?: string;
     resumeFileName?: string;
+    resumePlainTextUrl?: string;
+    originalResumePath?: string; // Path to the original file in storage
+    plaintextResumePath?: string; // Path to the plaintext version in storage
     resumeAnalysis?: ResumeAnalysis;
     jobPreferences?: JobPreferences;
     targetCompanies?: TargetCompany[];

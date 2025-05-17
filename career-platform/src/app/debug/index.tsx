@@ -108,9 +108,15 @@ const DebugPage = () => {
     },
     {
       title: 'Resume API Debug',
-      description: 'Debug the resume analysis API',
+      description: 'Test resume analysis API calls',
       path: '/debug/resume-api-debug',
       icon: '📄'
+    },
+    {
+      title: 'Resume Storage Debug',
+      description: 'Validate resume storage paths and file access',
+      path: '/debug/resume-storage-debug',
+      icon: '🗄️'
     }
   ];
 

@@ -98,66 +98,139 @@ export default function CandidateDashboard() {
 
   // Function to validate resume URL
   const validateResumeUrl = async () => {
-    if (!candidateProfile?.resumeUrl) return;
+    if (!candidateProfile?.uid) return;
     
     setValidatingUrl(true);
     
     try {
-      // Instead of using fetch (which can trigger CORS issues), 
-      // we'll directly check if URL pattern matches a Firebase Storage URL
-      const isStorageUrl = candidateProfile.resumeUrl.includes('firebasestorage.googleapis.com');
+      if (!candidateProfile.resumeUrl) {
+        throw new Error('No resume URL found in profile');
+      }
       
-      if (isStorageUrl) {
-        // For Firebase URLs, we'll trust it's valid since we just got it from Firebase
-        setValidatedResumeUrl(candidateProfile.resumeUrl || null);
-      } else {
-        // For non-Firebase URLs, we can try fetch
-        try {
-          const response = await fetch(candidateProfile.resumeUrl, { method: 'HEAD' });
-          if (response.ok) {
-            setValidatedResumeUrl(candidateProfile.resumeUrl || null);
-          } else {
-            throw new Error('URL not accessible');
+      // Try to access the resume file directly to validate
+      console.log('Validating resume URL:', candidateProfile.resumeUrl);
+      
+      try {
+        // First check if we can access the URL directly
+        const response = await fetch(candidateProfile.resumeUrl, { method: 'HEAD' });
+        if (response.ok) {
+          console.log('Resume URL is valid and accessible');
+          setValidatedResumeUrl(candidateProfile.resumeUrl);
+          return;
+        }
+        throw new Error(`URL returned status ${response.status}`);
+      } catch (urlError) {
+        console.warn('Could not access resume URL directly:', urlError);
+        
+        // Try to access the file using the storage path if available
+        if (candidateProfile.originalResumePath) {
+          console.log('Trying to access original file directly from storage:', candidateProfile.originalResumePath);
+          try {
+            const originalFileRef = ref(storage, candidateProfile.originalResumePath);
+            const originalUrl = await getDownloadURL(originalFileRef);
+            console.log('Successfully accessed original file:', originalUrl);
+            
+            // Update the profile with the correct URL if it's different
+            if (originalUrl !== candidateProfile.resumeUrl) {
+              await updateDoc(doc(db, 'users', candidateProfile.uid), {
+                resumeUrl: originalUrl,
+              });
+              console.log('Updated resume URL in database to match storage URL');
+            }
+            
+            setValidatedResumeUrl(originalUrl);
+            return;
+          } catch (storageError) {
+            console.warn('Could not access original file in storage:', storageError);
           }
-        } catch (fetchErr) {
-          throw new Error('URL validation failed');
+        }
+        
+        // If original file access fails, try the plaintext version
+        if (candidateProfile.plaintextResumePath) {
+          console.log('Trying to access plaintext file directly from storage:', candidateProfile.plaintextResumePath);
+          try {
+            const plaintextFileRef = ref(storage, candidateProfile.plaintextResumePath);
+            const plaintextUrl = await getDownloadURL(plaintextFileRef);
+            console.log('Successfully accessed plaintext file:', plaintextUrl);
+            
+            // Only update if we have no valid URL yet
+            if (!candidateProfile.resumeUrl) {
+              await updateDoc(doc(db, 'users', candidateProfile.uid), {
+                resumePlainTextUrl: plaintextUrl,
+              });
+              console.log('Updated plaintext URL in database');
+            }
+            
+            // Use plaintext as a fallback if no original was found
+            setValidatedResumeUrl(plaintextUrl);
+            return;
+          } catch (storageError) {
+            console.warn('Could not access plaintext file in storage:', storageError);
+          }
         }
       }
-    } catch (err) {
-      console.error('Resume URL validation error:', err);
       
-      // Try to recover by finding the most recent file
-      try {
-        if (!candidateProfile.uid) throw new Error('User not authenticated');
-        
-        const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
-        
-        // List all files in the user's resume directory
-        const filesList = await listAll(userResumesRef);
-        
-        if (filesList.items.length === 0) {
-          throw new Error('No resume files found in storage');
-        }
-        
-        // Sort by name to get the most recent one (since we use timestamps in filenames)
-        const sortedItems = [...filesList.items].sort((a, b) => {
+      // If all direct access attempts fail, search storage for the most recent file
+      console.log('Attempting storage search for most recent resume file');
+      const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
+      
+      // List all files in the user's resume directory
+      const filesList = await listAll(userResumesRef);
+      
+      if (filesList.items.length === 0) {
+        throw new Error('No resume files found in storage');
+      }
+      
+      // Look for original files first
+      const originalFiles = filesList.items.filter(item => 
+        item.name.includes('original_')
+      );
+      
+      let latestFile;
+      
+      if (originalFiles.length > 0) {
+        // Sort original files to get the most recent one
+        const sortedOriginals = [...originalFiles].sort((a, b) => {
           return b.name.localeCompare(a.name);
         });
+        latestFile = sortedOriginals[0];
+        console.log('Found most recent original file:', latestFile.fullPath);
+      } else {
+        // If no original files, look for plaintext files
+        const plaintextFiles = filesList.items.filter(item => 
+          item.name.includes('plaintext')
+        );
         
-        // Get the download URL of the most recent file
-        const latestFileUrl = await getDownloadURL(sortedItems[0]);
-        
-        // Update the database with the correct URL
-        await updateDoc(doc(db, 'users', candidateProfile.uid), {
-          resumeUrl: latestFileUrl,
-        });
-        
-        console.log('Updated resume URL in database to match most recent file');
-        setValidatedResumeUrl(latestFileUrl);
-      } catch (storageErr) {
-        console.error('Storage recovery error:', storageErr);
-        setValidatedResumeUrl(null);
+        if (plaintextFiles.length > 0) {
+          const sortedPlaintext = [...plaintextFiles].sort((a, b) => {
+            return b.name.localeCompare(a.name);
+          });
+          latestFile = sortedPlaintext[0];
+          console.log('Found most recent plaintext file:', latestFile.fullPath);
+        } else {
+          // Last resort: use any file
+          const sortedFiles = [...filesList.items].sort((a, b) => {
+            return b.name.localeCompare(a.name);
+          });
+          latestFile = sortedFiles[0];
+          console.log('Using most recent file of any type:', latestFile.fullPath);
+        }
       }
+      
+      // Get the download URL of the most recent file
+      const latestFileUrl = await getDownloadURL(latestFile);
+      
+      // Update the database with the correct URL
+      await updateDoc(doc(db, 'users', candidateProfile.uid), {
+        resumeUrl: latestFileUrl,
+        originalResumePath: latestFile.fullPath, // Also update the path for future reference
+      });
+      
+      console.log('Updated resume URL in database to match most recent file');
+      setValidatedResumeUrl(latestFileUrl);
+    } catch (storageErr) {
+      console.error('Storage recovery error:', storageErr);
+      setValidatedResumeUrl(null);
     } finally {
       setValidatingUrl(false);
     }

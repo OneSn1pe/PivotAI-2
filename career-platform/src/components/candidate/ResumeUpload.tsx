@@ -5,6 +5,8 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '@/config/firebase';
 
 // Extend Window interface to include our debug logs
 declare global {
@@ -208,9 +210,36 @@ export default function ResumeUpload() {
         debug.log('Starting file upload to Firebase Storage...');
         debug.log('This will replace any existing resume file');
         
-        const resumeUrl = await uploadFile(file, `resumes/${userProfile.uid}`);
+        // Create a unique file name that preserves the original extension
+        const fileExtension = file.name.split('.').pop() || '';
+        const timestamp = Date.now();
+        const uid = userProfile.uid;
+        const uniqueFileName = `${uid}_${timestamp}_original_${file.name}`;
+        const uniqueFilePath = `resumes/${uid}/${uniqueFileName}`;
+        
+        debug.log(`Uploading file with preserved extension (.${fileExtension}) to path: ${uniqueFilePath}`);
+        debugData.filePath = uniqueFilePath;
+        debugData.fileName = uniqueFileName;
+        debugData.fileExtension = fileExtension;
+        
+        // Use direct storage reference for better control
+        const storageRef = ref(storage, uniqueFilePath);
+        await uploadBytes(storageRef, file);
+        const resumeUrl = await getDownloadURL(storageRef);
+        
         debug.log('File uploaded successfully:', resumeUrl);
         debugData.resumeUrl = resumeUrl;
+        
+        // Also create and upload a plaintext version for analysis
+        const plainTextPath = `resumes/${uid}/${uid}_${timestamp}_plaintext.txt`;
+        const plainTextBlob = new Blob([resumeText], { type: 'text/plain' });
+        const plainTextFileRef = ref(storage, plainTextPath);
+        await uploadBytes(plainTextFileRef, plainTextBlob);
+        const plainTextUrl = await getDownloadURL(plainTextFileRef);
+        
+        debug.log('Plaintext version uploaded to:', plainTextPath);
+        debugData.plainTextPath = plainTextPath;
+        debugData.plainTextUrl = plainTextUrl;
         
         // Analyze resume with GPT-4
         setAnalyzing(true);
@@ -275,6 +304,10 @@ export default function ResumeUpload() {
           try {
             await updateDoc(doc(db, 'users', userProfile.uid), {
               resumeUrl,
+              resumeFileName: file.name,
+              originalResumePath: uniqueFilePath,
+              plaintextResumePath: plainTextPath,
+              resumePlainTextUrl: plainTextUrl,
               resumeAnalysis,
             });
             

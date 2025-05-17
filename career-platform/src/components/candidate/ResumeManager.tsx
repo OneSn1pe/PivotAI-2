@@ -271,8 +271,12 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       const plaintextFilePath = `resumes/${userProfile.uid}/${uniqueId}_plaintext.txt`;
       console.log(`Uploading plaintext version for analysis to path: ${plaintextFilePath}`);
       
-      // Upload plaintext for analysis
-      await uploadFile(plainTextFile, plaintextFilePath);
+      // Upload plaintext directly using uploadBytes to ensure it's definitely saved
+      const plaintextFileRef = ref(storage, plaintextFilePath);
+      await uploadBytes(plaintextFileRef, plainTextFile);
+      const plaintextFileUrl = await getDownloadURL(plaintextFileRef);
+      
+      console.log('Plaintext file uploaded successfully, URL:', plaintextFileUrl);
       
       // Analyze resume using the plaintext version
       setAnalyzing(true);
@@ -289,9 +293,11 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         await updateDoc(userRef, {
           resumeUrl: originalFileUrl, // Use the original file URL for the profile
           resumeFileName: originalFileName,
-          resumePlainTextUrl: plaintextFilePath, // Store the plaintext path separately
+          resumePlainTextUrl: plaintextFileUrl, // Store the plaintext URL not just the path
           resumeAnalysis,
-          lastResumeUpdate: serverTimestamp()
+          lastResumeUpdate: serverTimestamp(),
+          originalResumePath: originalFilePath, // Store the storage paths for direct access
+          plaintextResumePath: plaintextFilePath
         });
         
         // Update local state
@@ -348,37 +354,58 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         throw new Error('No resume files found in storage');
       }
       
-      // Sort by name to get the most recent one
-      const sortedItems = [...filesList.items].sort((a, b) => {
-        return b.name.localeCompare(a.name);
-      });
+      // Look for original files first (PDFs, DOCXs)
+      const originalFiles = filesList.items.filter(item => 
+        item.name.includes('original_')
+      );
       
-      // Use the most recent file's path directly
-      const resumePath = sortedItems[0].fullPath;
-      
-      // Determine filename
-      let filename = 'resume';
-      if (candidateProfile.resumeFileName) {
-        filename = candidateProfile.resumeFileName;
-      } else {
-        // Extract filename from path if available
-        const pathParts = resumePath.split('/');
-        filename = pathParts[pathParts.length - 1];
+      if (originalFiles.length === 0) {
+        console.warn('No original files found, will attempt to download plaintext version');
       }
       
-      // Use our custom hook to download the file directly from storage
-      await downloadAndSaveFile(resumePath, filename);
+      // Sort to get most recent file (either original or plaintext)
+      const filesToUse = originalFiles.length > 0 ? originalFiles : filesList.items;
+      const sortedFiles = [...filesToUse].sort((a, b) => b.name.localeCompare(a.name));
       
-      setSuccessMessage('Resume download initiated');
+      // Get the most recent file's metadata to extract the correct extension
+      const latestFile = sortedFiles[0];
+      
+      // Check if we have a stored path in the user profile for direct access
+      if (candidateProfile.originalResumePath) {
+        console.log('Using stored path from profile:', candidateProfile.originalResumePath);
+        try {
+          const directRef = ref(storage, candidateProfile.originalResumePath);
+          await downloadAndSaveFile(candidateProfile.originalResumePath, candidateProfile.resumeFileName || 'resume');
+          return;
+        } catch (directError) {
+          console.error('Failed to access file directly, falling back to search:', directError);
+          // Will continue to the regular download method
+        }
+      }
+      
+      // Reconstruct a filename that makes sense
+      let filename = displayFileName || candidateProfile.resumeFileName || 'resume';
+      const fileExtension = latestFile.name.split('.').pop();
+      if (fileExtension && !filename.endsWith(`.${fileExtension}`)) {
+        filename += `.${fileExtension}`;
+      }
+      
+      console.log(`Downloading file: ${latestFile.fullPath} as ${filename}`);
+      
+      // Try direct download first
+      try {
+        await downloadAndSaveFile(latestFile.fullPath, filename);
+        console.log('File downloaded successfully');
+      } catch (downloadError) {
+        console.error('Direct download failed, trying with URL:', downloadError);
+        // Fallback to URL-based download
+        window.open(validatedResumeUrl, '_blank');
+      }
       
     } catch (err) {
       console.error('Resume download error:', err);
-      setError('Error downloading resume: ' + (err instanceof Error ? err.message : String(err)));
-      
-      // Fallback: open in a new tab if all else fails
-      if (validatedResumeUrl) {
-        window.open(validatedResumeUrl, '_blank');
-      }
+      // Fallback: Try opening the URL directly in a new tab
+      window.open(validatedResumeUrl, '_blank');
     }
   };
   
