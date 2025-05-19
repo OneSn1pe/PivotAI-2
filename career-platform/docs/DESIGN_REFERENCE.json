@@ -1,476 +1,476 @@
 {
-    "name": "PivotAI Career Quest",
-    "description": "An immersive MMORPG experience that transforms career development into an epic adventure",
-    "overview": "PivotAI Career Quest transforms the original cloud-themed career platform into an immersive MMORPG experience where career development becomes an epic adventure. Users become 'Career Adventurers' who level up their professional skills, complete career quests, and unlock achievements on their journey to professional mastery.",
+  "name": "PivotAI Career Quest",
+  "description": "A goal-oriented professional development platform that transforms career growth into a structured journey",
+  "overview": "PivotAI Career Quest creates an engaging, progress-based career development experience. Users become 'Career Professionals' who enhance their skills, complete meaningful objectives, and track achievements on their journey to professional growth.",
+  
+  "corePlatformMechanics": {
+    "profileSystem": {
+      "paths": [
+        "Technology",
+        "Business",
+        "Creative"
+      ],
+      "attributes": {
+        "knowledge": "Learning capacity and specialized expertise",
+        "communication": "Networking and interpersonal abilities",
+        "execution": "Project management and deadline adherence",
+        "adaptability": "Problem-solving and flexibility",
+        "strategy": "Decision-making and long-term planning",
+        "balance": "Work-life integration and wellbeing"
+      },
+      "level": {
+        "range": [1, 60],
+        "description": "Overall professional development tier"
+      },
+      "progressPoints": "Earned through completing tasks, updating skills, and career milestones"
+    },
     
-    "coreGameMechanics": {
-      "characterSystem": {
-        "classes": [
-          "Tech Wizard",
-          "Business Paladin",
-          "Creative Bard"
-        ],
-        "attributes": {
-          "intelligence": "Knowledge-based skills and learning capacity",
-          "charisma": "Communication and networking abilities",
-          "strength": "Project execution and deadline management",
-          "dexterity": "Adaptability and quick problem-solving",
-          "wisdom": "Decision-making and strategic thinking",
-          "constitution": "Work-life balance and burnout resistance"
-        },
-        "level": {
-          "range": [1, 60],
-          "description": "Overall professional development level"
-        },
-        "experiencePoints": "Earned through completing tasks, updating skills, and career milestones"
+    "objectiveSystem": {
+      "majorObjectives": "Significant career milestones (certification completion, job applications, interviews)",
+      "minorObjectives": "Smaller professional development tasks (networking events, skill-building)",
+      "dailyTasks": "Regular career maintenance activities (application follow-ups, learning tasks)",
+      "taskManager": "Organized objective tracking with reward indicators and deadlines",
+      "progressPaths": "Series of related professional development activities"
+    },
+    
+    "progressionSystem": {
+      "skillFramework": "Visual skill development paths with branching specializations",
+      "accomplishments": "Badges and credentials for career achievements",
+      "resources": "Professional templates, tools, and learning materials",
+      "specialization": "Focus areas within specific career domains"
+    }
+  },
+  
+  "designSystem": {
+    "colorPalette": {
+      "primary": {
+        "deepTeal": {
+          "deep": {
+            "value": "#134e4a",
+            "tailwind": "teal-900"
+          },
+          "medium": {
+            "value": "#0f766e",
+            "tailwind": "teal-700"
+          },
+          "hover": {
+            "value": "#115e59",
+            "tailwind": "teal-800"
+          },
+          "light": {
+            "value": "#99f6e4",
+            "tailwind": "teal-200"
+          },
+          "lightest": {
+            "value": "#ccfbf1",
+            "tailwind": "teal-100"
+          }
+        }
       },
-      
-      "questSystem": {
-        "mainQuests": "Major career milestones (certification completion, job applications, interviews)",
-        "sideQuests": "Smaller professional development tasks (networking events, skill-building)",
-        "dailyQuests": "Regular career maintenance activities (application follow-ups, learning tasks)",
-        "questJournal": "Organized task management with quest rewards and deadlines",
-        "questChains": "Series of related professional development activities"
+      "secondary": {
+        "warmAmber": {
+          "rich": {
+            "value": "#d97706",
+            "tailwind": "amber-600"
+          },
+          "hover": {
+            "value": "#b45309",
+            "tailwind": "amber-700"
+          },
+          "light": {
+            "value": "#fef3c7",
+            "tailwind": "amber-100"
+          }
+        }
       },
-      
-      "progressionSystem": {
-        "skillTrees": "Visual skill development paths with branching specializations",
-        "achievements": "Badges and titles for career accomplishments",
-        "unlockables": "Professional templates, resources, and tools",
-        "professionMastery": "Specialization in specific career domains"
+      "attributes": {
+        "knowledge": {
+          "value": "#3b82f6",
+          "tailwind": "blue-500"
+        },
+        "communication": {
+          "value": "#8b5cf6",
+          "tailwind": "violet-500"
+        },
+        "execution": {
+          "value": "#ef4444",
+          "tailwind": "red-500"
+        },
+        "adaptability": {
+          "value": "#10b981",
+          "tailwind": "emerald-500"
+        },
+        "strategy": {
+          "value": "#6366f1",
+          "tailwind": "indigo-500"
+        },
+        "balance": {
+          "value": "#f97316",
+          "tailwind": "orange-500"
+        }
+      },
+      "ui": {
+        "taskDashboard": {
+          "background": {
+            "value": "#f8fafc",
+            "tailwind": "slate-50"
+          },
+          "border": {
+            "value": "#e2e8f0",
+            "tailwind": "slate-200"
+          }
+        },
+        "profilePage": {
+          "background": {
+            "value": "#f1f5f9",
+            "tailwind": "slate-100"
+          },
+          "border": {
+            "value": "#cbd5e1",
+            "tailwind": "slate-300"
+          }
+        },
+        "analyticsBackground": {
+          "value": "#334155",
+          "tailwind": "slate-700"
+        },
+        "resourceLibrary": {
+          "background": {
+            "value": "#f3f4f6",
+            "tailwind": "gray-100"
+          },
+          "border": {
+            "value": "#e5e7eb",
+            "tailwind": "gray-200"
+          }
+        },
+        "communityNetworking": {
+          "background": {
+            "value": "#eef2ff",
+            "tailwind": "indigo-50"
+          },
+          "border": {
+            "value": "#c7d2fe",
+            "tailwind": "indigo-200"
+          }
+        }
       }
     },
     
-    "designSystem": {
-      "colorPalette": {
-        "primary": {
-          "epicPurple": {
-            "deep": {
-              "value": "#4c1d95",
-              "tailwind": "bg-purple-900"
-            },
-            "medium": {
-              "value": "#7e22ce",
-              "tailwind": "bg-purple-700"
-            },
-            "hover": {
-              "value": "#6b21a8",
-              "tailwind": "bg-purple-800"
-            },
-            "light": {
-              "value": "#e9d5ff",
-              "tailwind": "bg-purple-200"
-            },
-            "lightest": {
-              "value": "#f3e8ff",
-              "tailwind": "bg-purple-100"
-            }
-          }
+    "typography": {
+      "fontFamily": {
+        "primary": "'Inter', sans-serif",
+        "secondary": "'Source Sans Pro', sans-serif"
+      },
+      "fontSize": {
+        "pageHeaders": {
+          "value": "2.25rem",
+          "tailwind": "text-4xl"
         },
-        "secondary": {
-          "guildGold": {
-            "rich": {
-              "value": "#f59e0b",
-              "tailwind": "bg-amber-500"
-            },
-            "hover": {
-              "value": "#d97706",
-              "tailwind": "bg-amber-600"
-            },
-            "light": {
-              "value": "#fef3c7",
-              "tailwind": "bg-amber-100"
-            }
-          }
+        "dashboardMetrics": {
+          "value": "1.5rem",
+          "tailwind": "text-2xl"
         },
-        "attributes": {
-          "intelligence": {
-            "value": "#3b82f6",
-            "tailwind": "bg-blue-500"
-          },
-          "charisma": {
-            "value": "#ec4899",
-            "tailwind": "bg-pink-500"
-          },
-          "strength": {
-            "value": "#ef4444",
-            "tailwind": "bg-red-500"
-          },
-          "dexterity": {
-            "value": "#22c55e",
-            "tailwind": "bg-green-500"
-          },
-          "wisdom": {
-            "value": "#6366f1",
-            "tailwind": "bg-indigo-500"
-          },
-          "constitution": {
-            "value": "#f97316",
-            "tailwind": "bg-orange-500"
-          }
+        "objectiveTitles": {
+          "value": "1.25rem",
+          "tailwind": "text-xl"
         },
-        "ui": {
-          "questLog": {
-            "background": {
-              "value": "#fffbeb",
-              "tailwind": "bg-amber-50"
-            },
-            "border": {
-              "value": "#fde68a",
-              "tailwind": "border-amber-200"
-            }
-          },
-          "characterSheet": {
-            "background": {
-              "value": "#f8fafc",
-              "tailwind": "bg-slate-50"
-            },
-            "border": {
-              "value": "#e2e8f0",
-              "tailwind": "border-slate-200"
-            }
-          },
-          "mapBackground": {
-            "value": "#1e293b",
-            "tailwind": "bg-slate-800"
-          },
-          "inventory": {
-            "background": {
-              "value": "#f3f4f6",
-              "tailwind": "bg-gray-100"
-            },
-            "border": {
-              "value": "#e5e7eb",
-              "tailwind": "border-gray-200"
-            }
-          },
-          "chatGuild": {
-            "background": {
-              "value": "#eef2ff",
-              "tailwind": "bg-indigo-50"
-            },
-            "border": {
-              "value": "#c7d2fe",
-              "tailwind": "border-indigo-200"
-            }
-          }
+        "bodyText": {
+          "value": "1rem",
+          "tailwind": "text-base"
+        },
+        "metricsAndData": {
+          "value": "0.875rem",
+          "tailwind": "text-sm"
+        },
+        "supportingText": {
+          "value": "0.75rem",
+          "tailwind": "text-xs"
         }
       },
-      
-      "typography": {
-        "fontFamily": {
-          "primary": "'QuestFont', fantasy",
-          "secondary": "'AdventurerSans', sans-serif"
-        },
-        "fontSize": {
-          "questTitles": {
-            "value": "2.25rem",
-            "tailwind": "text-4xl"
-          },
-          "characterStats": {
-            "value": "1.5rem",
-            "tailwind": "text-2xl"
-          },
-          "questObjectives": {
-            "value": "1.25rem",
-            "tailwind": "text-xl"
-          },
-          "bodyText": {
-            "value": "1rem",
-            "tailwind": "text-base"
-          },
-          "statsAndMeters": {
-            "value": "0.875rem",
-            "tailwind": "text-sm"
-          },
-          "tooltips": {
-            "value": "0.75rem",
-            "tailwind": "text-xs"
-          }
-        },
-        "fontEffects": {
-          "questHeaders": "Subtle glow effect with text-shadow",
-          "achievementText": "Gold gradient with sparkle animation",
-          "levelUpText": "Pulsing highlight animation",
-          "legendaryItems": "Rainbow gradient animation"
-        }
+      "fontTreatments": {
+        "sectionHeaders": "Subtle weight emphasis with letter-spacing",
+        "achievementNotifications": "Highlighted with accent color",
+        "levelUpNotifications": "Clean, elevated card with subtle animation",
+        "premiumContent": "Accent color with subtle icon"
+      }
+    },
+    
+    "layoutComponents": {
+      "mainInterface": {
+        "description": "Clean, modern fixed components with responsive layout",
+        "elements": [
+          "Profile snapshot and level in sidebar or header area",
+          "Progress visualization in dashboard header",
+          "Quick-access toolbar with common functions",
+          "Task tracker persistently visible in sidebar"
+        ]
       },
-      
-      "layoutComponents": {
-        "mainGameInterface": {
-          "description": "Game HUD-style fixed components with medieval/fantasy styling",
-          "elements": [
-            "Character portrait and level in top-left corner",
-            "Mini-map in top-right corner showing career progression",
-            "Action bar with quick-access abilities at bottom of screen",
-            "Quest tracker persistently visible on right side"
-          ]
-        },
-        "characterSheet": {
-          "description": "Full-page modal with tabbed interface",
-          "elements": [
-            "Character stats displayed as medieval-style meters",
-            "Skill trees visualized as interconnected constellations",
-            "Equipment slots for 'gear' (resume templates, portfolio pieces)",
-            "Achievement display with unlocked badges and titles"
-          ]
-        },
-        "questJournal": {
-          "description": "Parchment-styled scrollable interface",
-          "elements": [
-            "Categorized quests (Main, Side, Daily)",
-            "Quest cards with objectives, rewards, and difficulty rating",
-            "Progress indicators for multi-stage quests",
-            "Animated completion effects"
-          ]
-        },
-        "guildHall": {
-          "description": "Social space featuring connection opportunities",
-          "elements": [
-            "Industry-specific 'guilds' to join",
-            "Mentor/mentee system with 'party' formation",
-            "Guild reputation meters and rank"
-          ]
-        },
-        "worldMap": {
-          "description": "Career journey visualized as fantasy world map",
-          "elements": [
-            "Different regions representing industry sectors",
-            "Discovered job opportunities appear as location markers",
-            "Fast-travel to previously visited career milestones",
-            "Fog of war effect for unexplored career areas"
-          ]
-        }
+      "profileDashboard": {
+        "description": "Full-page layout with tabbed interface",
+        "elements": [
+          "Professional metrics displayed as clean progress bars",
+          "Skill visualization using modern node graphs",
+          "Portfolio and resume section with categorized entries",
+          "Achievement display with earned credentials"
+        ]
       },
-      
-      "uiComponents": {
-        "buttons": {
-          "primaryActionButton": {
-            "background": "bg-gradient-to-r from-purple-600 to-purple-800",
-            "hover": "bg-gradient-to-r from-purple-700 to-purple-900",
-            "textColor": "text-white",
-            "border": "border-2 border-purple-300",
-            "borderRadius": "rounded-lg",
-            "decoration": "Fantasy-styled corners with subtle glow effect",
-            "textStyle": "ALL CAPS with letterpress effect",
-            "hoverEffect": "Subtle pulse animation"
-          },
-          "questAcceptButton": {
-            "background": "bg-gradient-to-r from-amber-400 to-amber-600",
-            "hover": "bg-gradient-to-r from-amber-500 to-amber-700",
-            "icon": "Scroll with exclamation mark",
-            "border": "Ornate golden border"
-          },
-          "secondaryButton": {
-            "background": "bg-slate-700",
-            "border": "border border-slate-500",
-            "hover": "bg-slate-600",
-            "textColor": "text-slate-200",
-            "style": "Metal-plated appearance"
-          }
-        },
-        "progressIndicators": {
-          "xpBar": {
-            "background": "bg-slate-800",
-            "fill": "bg-gradient-to-r from-purple-500 via-purple-400 to-purple-600",
-            "border": "border-2 border-slate-600",
-            "animation": "Pulsing glow when near level-up",
-            "tooltip": "Shows exact XP numbers on hover"
-          },
-          "skillProgress": {
-            "style": "Circular progress indicators with fantasy styling",
-            "background": "bg-slate-700",
-            "fill": "Color-coded to skill type",
-            "animation": "Fills clockwise with particle effects"
-          },
-          "questProgress": {
-            "style": "Step-based indicators for multi-stage quests",
-            "background": "bg-amber-100",
-            "completed": "bg-amber-500 with check mark",
-            "current": "bg-amber-300 with pulsing glow",
-            "locked": "bg-gray-400 with lock icon"
-          }
-        },
-        "statMeters": {
-          "description": "Vertical or horizontal meters for each stat",
-          "background": "bg-slate-700",
-          "fill": "Color-coded to attribute",
-          "border": "Ornate styling specific to attribute",
-          "valueDisplay": "Current/Max (e.g., '75/100')",
-          "levelUpIndicators": "Showing increase potential"
-        },
-        "inventorySystem": {
-          "resumeComponents": {
-            "style": "Inventory slots with rarity-based borders",
-            "rarityBorders": {
-              "common": "border-gray-400",
-              "uncommon": "border-green-400",
-              "rare": "border-blue-400",
-              "epic": "border-purple-400",
-              "legendary": "border-amber-400 with animated glow"
-            }
-          },
-          "skillBadges": {
-            "layout": "Hexagonal grid layout",
-            "styling": "Color-coded by skill category",
-            "hoverEffects": "Skill description tooltip",
-            "states": "Locked/Unlocked visual states"
-          }
-        },
-        "dialogBoxes": {
-          "questDialog": {
-            "background": "Parchment texture with bg-amber-50",
-            "border": "border-4 border-amber-800 with ornate corners",
-            "layout": "Character portrait on left",
-            "textEffect": "Text appears with typewriter effect",
-            "buttons": "Accept/Decline buttons at bottom"
-          },
-          "levelUpNotification": {
-            "overlay": "Full-screen overlay with bg-black/70",
-            "text": "Large animated 'LEVEL UP!' text with glow effects",
-            "content": "Stat increases displayed with before/after values",
-            "showcase": "New abilities/unlocks showcased",
-            "effects": "Particle effects and triumphant sound"
-          },
-          "achievementAlert": {
-            "style": "Toast notification from top with bg-amber-100",
-            "icon": "Trophy icon with achievement name",
-            "reward": "XP reward displayed",
-            "animation": "Confetti animation"
-          }
-        }
+      "taskManager": {
+        "description": "Clean, minimal scrollable interface",
+        "elements": [
+          "Categorized objectives (Major, Minor, Daily)",
+          "Task cards with objectives, outcomes, and priority indicators",
+          "Progress indicators for multi-stage objectives",
+          "Completion animations that are subtle and professional"
+        ]
       },
-      
-      "gamifiedFeatures": {
-        "tutorialSystem": {
-          "description": "Interactive tutorial quest line with 'Guide' NPC",
-          "elements": [
-            "Step-by-step introduction to platform features",
-            "Tooltips that appear for first-time feature usage",
-            "Skip Tutorial option for experienced users",
-            "Tutorial rewards to encourage completion"
-          ]
-        },
-        "dailyEngagement": {
-          "description": "Features to encourage regular platform usage",
-          "elements": [
-            "Login rewards with increasing value for consecutive days",
-            "Daily quests that refresh every 24 hours",
-            "Rested XP bonus for returning users",
-            "Weekly challenges with premium rewards"
-          ]
-        },
-        "socialFeatures": {
-          "description": "Collaborative and competitive social elements",
-          "elements": [
-            "Guild system for professional networking groups",
-            "Party formation for collaborative projects",
-            "Mentor/mentee matchmaking with XP bonuses",
-            "Leaderboards for specific skills or industries",
-            "Raid events for group interview preparation"
-          ]
-        },
-        "rewardSystems": {
-          "currency": "Career Coins for marketplace purchases",
-          "lootDrops": "Random skill resources after completing tasks",
-          "achievementPoints": "Meta-progression across all activities",
-          "titles": "Unlockable professional titles displayed by username",
-          "mountsPets": "Visual companions representing career milestones"
-        }
+      "networkingHub": {
+        "description": "Professional networking interface",
+        "elements": [
+          "Industry-specific groups to join",
+          "Mentor/mentee matching system",
+          "Professional reputation metrics",
+          "Connection recommendations"
+        ]
       },
-      
-      "animationEffects": {
-        "characterAnimations": {
-          "idle": "Animation when dashboard is inactive",
-          "victory": "Pose on completing quests/achievements",
-          "levelUp": "Transformation effect",
-          "classSpecific": "Emotes and animations"
-        },
-        "environmentEffects": {
-          "background": "Dynamic background that evolves with career level",
-          "weather": "Effects based on recent performance (sunny for success, stormy for challenges)",
-          "dayCycle": "Day/night cycle representing work/life balance",
-          "seasonal": "Events tied to industry hiring cycles"
-        },
-        "uiAnimations": {
-          "buttonHover": "Effects with magical glow",
-          "questAcceptance": "Unfurling scroll animation",
-          "menuTransitions": "Fantasy-themed effects",
-          "notifications": "Effects with appropriate iconography"
-        }
-      },
-      
-      "responsiveDesign": {
-        "mobile": "Simplified HUD with expandable panels",
-        "tablet": "Dual-panel layout with character sheet and quest log",
-        "desktop": "Full immersive interface with all elements visible",
-        "largeDesktop": "Enhanced visual effects and expanded world map"
-      },
-      
-      "accessibilityFeatures": [
-        "High contrast mode with enhanced readability",
-        "Alternative UI that maintains game mechanics without fantasy visuals",
-        "Screen reader compatible quest descriptions and instructions",
-        "Customizable UI scaling and text size",
-        "Option to reduce animations and effects"
-      ],
-      
-      "pageElements": {
-        "dashboard": {
-          "description": "Character standing in central hub with NPCs representing different features",
-          "elements": [
-            "Quick-access portal icons to different 'zones' (Resume Builder, Job Search, etc.)",
-            "Daily quest board with flashing available quests",
-            "Mailbox for notifications and messages",
-            "Adventure log showing recent activities and progress"
-          ]
-        },
-        "careerRoadmap": {
-          "description": "Interactive fantasy world map with different regions for career paths",
-          "elements": [
-            "Skill constellation system with connecting nodes",
-            "Path selection with branching progression options",
-            "Discoverable hidden areas representing niche skills",
-            "Location-based quests tied to job opportunities"
-          ]
-        },
-        "profilePage": {
-          "description": "Full character visualization with equipped items",
-          "elements": [
-            "Detailed stat breakdown with tooltips",
-            "Experience log showing history of earned XP",
-            "Achievement gallery with unlocked badges",
-            "Reputation meters with different factions (industries)"
-          ]
-        },
-        "jobApplications": {
-          "description": "Job opportunities displayed as quest scrolls on a board",
-          "elements": [
-            "Difficulty rating from 1-5 stars",
-            "Required skills/level listed as prerequisites",
-            "Expected rewards (salary, benefits) as quest rewards",
-            "Application status with visual progress tracker"
-          ]
-        },
-        "resumeBuilder": {
-          "description": "Crafting-style interface for building resume components",
-          "elements": [
-            "Skill gems that can be slotted into resume template",
-            "Preview mode showing completed equipment",
-            "Material collection representing experiences and skills",
-            "Upgrade system for improving existing resume components"
-          ]
-        }
-      },
-      
-      "technicalImplementation": {
-        "frontend": [
-          "React components for modular UI elements",
-          "Tailwind CSS for styling with custom fantasy-themed extensions",
-          "Local storage for saving progress and preferences",
-          "Animation libraries for complex effects (Framer Motion)",
-          "SVG assets for scalable fantasy UI elements"
+      "careerRoadmap": {
+        "description": "Career journey visualized as interactive flowchart",
+        "elements": [
+          "Different sections representing industry sectors",
+          "Discovered job opportunities appear as cards",
+          "Quick-access to previously explored career milestones",
+          "Progressive disclosure for unexplored career areas"
         ]
       }
+    },
+    
+    "uiComponents": {
+      "buttons": {
+        "primaryActionButton": {
+          "background": "teal-700",
+          "hover": "teal-800",
+          "textColor": "white",
+          "border": "minimal or none",
+          "borderRadius": "rounded-md",
+          "textStyle": "Sentence case with medium weight",
+          "hoverEffect": "Subtle depth change"
+        },
+        "taskAcceptButton": {
+          "background": "amber-600",
+          "hover": "amber-700",
+          "icon": "Subtle check or plus icon",
+          "border": "none or subtle"
+        },
+        "secondaryButton": {
+          "background": "slate-100",
+          "border": "slate-300",
+          "hover": "slate-200",
+          "textColor": "slate-700",
+          "style": "Clean with subtle hover state"
+        }
+      },
+      "progressIndicators": {
+        "progressBar": {
+          "background": "slate-200",
+          "fill": "linear-gradient(to right, teal-600, teal-500)",
+          "border": "none",
+          "animation": "Subtle transition for updates",
+          "tooltip": "Shows exact progress percentage on hover"
+        },
+        "skillProgress": {
+          "style": "Clean circular progress indicators",
+          "background": "slate-100",
+          "fill": "Color-coded to skill type",
+          "animation": "Smooth fill animation"
+        },
+        "taskProgress": {
+          "style": "Step-based indicators for multi-stage tasks",
+          "background": "slate-100",
+          "completed": "emerald-500 with check icon",
+          "current": "sky-500 with subtle emphasis",
+          "pending": "slate-200"
+        }
+      },
+      "metricVisualizations": {
+        "description": "Horizontal progress bars for each attribute",
+        "background": "slate-100",
+        "fill": "Color-coded to attribute",
+        "border": "none",
+        "valueDisplay": "Current/Max (e.g., '75/100')",
+        "improvementIndicators": "Showing growth potential"
+      },
+      "resourceLibrary": {
+        "resumeComponents": {
+          "style": "Clean card-based layout with categorization",
+          "levelBorders": {
+            "basic": "subtle border",
+            "intermediate": "subtle accent border",
+            "advanced": "medium accent border",
+            "expert": "prominent accent border",
+            "premium": "accent border with subtle highlight"
+          }
+        },
+        "skillIndicators": {
+          "layout": "Modern tag/chip design",
+          "styling": "Color-coded by skill category",
+          "hoverEffects": "Skill description tooltip",
+          "states": "Active/Inactive visual states"
+        }
+      },
+      "notificationElements": {
+        "taskDialog": {
+          "background": "Clean white",
+          "border": "Subtle slate-200",
+          "layout": "Clean layout with clear hierarchy",
+          "textEffect": "Text appears with fade-in effect",
+          "buttons": "Accept/Decline actions clearly displayed"
+        },
+        "levelUpNotification": {
+          "overlay": "Elegant modal with rgba(255,255,255,0.95) background",
+          "text": "Clean 'Level Up' header with accent color",
+          "content": "Metric increases displayed with before/after values",
+          "showcase": "New capabilities highlighted",
+          "effects": "Subtle, professional animation"
+        },
+        "achievementAlert": {
+          "style": "Minimal toast notification with white background",
+          "icon": "Simple icon with achievement name",
+          "reward": "Progress points reward displayed",
+          "animation": "Clean slide-in animation"
+        }
+      }
+    },
+    
+    "engagementFeatures": {
+      "onboardingSystem": {
+        "description": "Interactive onboarding walkthrough with helpful tooltips",
+        "elements": [
+          "Step-by-step introduction to platform features",
+          "Contextual hints that appear for first-time feature usage",
+          "'Skip Tour' option for experienced users",
+          "Completion incentives to encourage full onboarding"
+        ]
+      },
+      "retentionElements": {
+        "description": "Features to encourage regular platform usage",
+        "elements": [
+          "Streak tracking for consistent platform usage",
+          "Daily objectives that refresh every 24 hours",
+          "'Momentum boost' for returning users",
+          "Weekly focus areas with enhanced outcomes"
+        ]
+      },
+      "communityFeatures": {
+        "description": "Professional networking elements",
+        "elements": [
+          "Professional groups for networking",
+          "Team formation for collaborative projects",
+          "Mentor/mentee matching with mutual benefits",
+          "Industry-specific leaderboards",
+          "Group preparation for interviews and presentations"
+        ]
+      },
+      "rewardSystems": {
+        "points": "Professional development points for resource access",
+        "resources": "Curated professional resources upon task completion",
+        "achievementTracking": "Progress measurement across all activities",
+        "credentials": "Verifiable professional credentials displayed on profile",
+        "visualizations": "Progress tracking representing career milestones"
+      }
+    },
+    
+    "animationEffects": {
+      "interfaceAnimations": {
+        "transitions": "Subtle transitions between states",
+        "completion": "Modest completion animations",
+        "levelUp": "Level-up transition effect",
+        "pathSpecific": "Path-specific visual elements"
+      },
+      "visualFeedback": {
+        "loading": "Clean, minimal loading states",
+        "states": "Success/error states with appropriate colors",
+        "progress": "Progress visualization that updates in real-time",
+        "modes": "Day/night mode representing user preferences"
+      },
+      "uiTransitions": {
+        "buttonHover": "Button hover effects with subtle state changes",
+        "taskAcceptance": "Task acceptance with clean confirmation",
+        "menuTransitions": "Menu transitions with professional animation",
+        "notifications": "Notification effects with appropriate iconography"
+      }
+    },
+    
+    "responsiveDesign": {
+      "mobile": "Streamlined interface with collapsible panels",
+      "tablet": "Dual-panel layout with profile and task manager",
+      "desktop": "Full interface with all elements appropriately placed",
+      "largeDesktop": "Enhanced data visualization and expanded roadmap"
+    },
+    
+    "accessibilityFeatures": [
+      "High contrast mode with enhanced readability",
+      "Screen reader compatible task descriptions and instructions",
+      "Customizable UI scaling and text size",
+      "Option to reduce animations and effects",
+      "Keyboard navigation support"
+    ],
+    
+    "pageElements": {
+      "dashboard": {
+        "description": "Clean, organized hub with metrics and quick access panels",
+        "elements": [
+          "Quick-access cards to different sections (Resume Builder, Job Search, etc.)",
+          "Daily task list with priority indicators",
+          "Notification center for updates and messages",
+          "Activity log showing recent progress and milestones"
+        ]
+      },
+      "careerRoadmap": {
+        "description": "Interactive career path visualization with node-based design",
+        "elements": [
+          "Skill development system with connecting modules",
+          "Path selection with branching options",
+          "Progressive disclosure for specialized skills",
+          "Location-based opportunities tied to job listings"
+        ]
+      },
+      "profilePage": {
+        "description": "Clean profile visualization with professional metrics",
+        "elements": [
+          "Detailed attribute breakdown with tooltips",
+          "Progress log showing history of earned points",
+          "Achievement gallery with earned credentials",
+          "Industry reputation metrics"
+        ]
+      },
+      "jobApplications": {
+        "description": "Job opportunities displayed as clean, modern cards",
+        "elements": [
+          "Difficulty/match rating from 1-5 indicators",
+          "Required skills/level listed as prerequisites",
+          "Expected outcomes (salary, benefits) clearly displayed",
+          "Application status with visual progress tracker"
+        ]
+      },
+      "resumeBuilder": {
+        "description": "Modern interface for building resume components",
+        "elements": [
+          "Skill tag system for resume customization",
+          "Preview mode showing completed resume",
+          "Experience collection representing professional history",
+          "Optimization system for improving existing resume components"
+        ]
+      }
+    },
+    
+    "technicalImplementation": {
+      "frontend": [
+        "React components for modular UI elements",
+        "Tailwind CSS for styling with custom atmospheric color extensions",
+        "Local storage for saving progress and preferences",
+        "Framer Motion for subtle, professional animations",
+        "SVG assets for scalable, modern UI elements"
+      ]
     }
   }
+}
