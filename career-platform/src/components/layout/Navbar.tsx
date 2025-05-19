@@ -13,14 +13,6 @@ export default function Navbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mock character data - in real implementation, this would come from user profile
-  const characterData = {
-    level: 15,
-    xp: 1250,
-    nextLevelXp: 2000,
-    characterClass: 'Tech Wizard'
-  };
-
   if (!userProfile) return null;
 
   const links = [
@@ -54,9 +46,6 @@ export default function Navbar() {
       window.location.href = '/auth/login';
     }
   };
-
-  // Calculate XP percentage for progress bar
-  const xpPercentage = Math.min(100, Math.max(0, (characterData.xp / characterData.nextLevelXp) * 100));
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-purple-900 to-purple-700 shadow-lg shadow-purple-500/20">
@@ -108,40 +97,18 @@ export default function Navbar() {
             </div>
           </div>
           
-          {/* Character Info and Logout */}
+          {/* User Info and Logout - Removed XP/Level components */}
           <div className="hidden md:flex items-center">
-            {/* Character level badge */}
-            <div className="mr-6 flex items-center">
-              <div className="level-badge mr-3">
-                <span className="mr-1">LVL</span>
-                {characterData.level}
-              </div>
-              
-              {/* Character class */}
-              <div className="text-xs font-medium text-purple-100">
-                <div className="mb-1">{characterData.characterClass}</div>
-            <div className="flex items-center">
-                  <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-purple-400" 
-                      style={{ width: `${xpPercentage}%` }}
-                    ></div>
-                  </div>
-                  <span className="ml-2 text-xs">{characterData.xp}/{characterData.nextLevelXp} XP</span>
-                </div>
-              </div>
-            </div>
-
             <div className="text-purple-100 mr-4 font-medium">
-                {userProfile.displayName}
-              </div>
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
+              {userProfile.displayName}
+            </div>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
               className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300 quest-btn"
-              >
+            >
               {isLoggingOut ? 'Retreating...' : 'Logout'}
-              </button>
+            </button>
           </div>
           
           {/* Mobile menu button */}
@@ -179,25 +146,7 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile character level */}
-            <div className="px-3 py-2">
-              <div className="flex items-center mb-2">
-                <div className="level-badge mr-3">
-                  <span className="mr-1">LVL</span>
-                  {characterData.level}
-                </div>
-                <div className="text-purple-100 text-sm">
-                  {characterData.characterClass}
-                </div>
-              </div>
-              <div className="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-4">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-purple-400" 
-                  style={{ width: `${xpPercentage}%` }}
-                ></div>
-              </div>
-            </div>
-
+            {/* Mobile user info - removed level/XP */}
             <div className="border-t border-purple-700 pt-4 pb-3">
               <div className="flex items-center px-3">
                 <div className="text-purple-100 text-sm font-medium">

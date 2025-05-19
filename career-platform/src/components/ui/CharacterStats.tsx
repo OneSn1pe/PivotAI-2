@@ -37,9 +37,6 @@ const AttributeBar: React.FC<AttributeBarProps> = ({
 };
 
 export interface CharacterStatsProps {
-  level: number;
-  xp: number;
-  nextLevelXp: number;
   attributes: {
     intelligence: number;
     charisma: number;
@@ -52,35 +49,13 @@ export interface CharacterStatsProps {
 }
 
 const CharacterStats: React.FC<CharacterStatsProps> = ({ 
-  level, 
-  xp, 
-  nextLevelXp, 
   attributes,
   className = ''
 }) => {
-  const xpPercentage = Math.min(100, Math.max(0, (xp / nextLevelXp) * 100));
-  
   return (
     <div className={`${className} medieval-card p-4`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-800">Character Stats</h3>
-        <div className="level-badge">
-          <span className="mr-1">LVL</span>
-          {level}
-        </div>
-      </div>
-      
       <div className="mb-4">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs font-medium text-slate-600">EXPERIENCE</span>
-          <span className="text-xs font-medium text-slate-600">{xp}/{nextLevelXp}</span>
-        </div>
-        <div className="xp-bar">
-          <div 
-            className="xp-fill" 
-            style={{ width: `${xpPercentage}%` }}
-          ></div>
-        </div>
+        <h3 className="text-lg font-semibold text-slate-800">Character Stats</h3>
       </div>
       
       <div className="grid grid-cols-1 gap-1">

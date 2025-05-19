@@ -205,7 +205,7 @@ export default function RoadmapPage() {
       {roadmap && (
         <div>
           <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 mb-8 border border-slate-100 float-card">
-            <h2 className="text-xl font-bold mb-4 text-slate-800">Your Career Altitude</h2>
+            <h2 className="text-xl font-bold mb-4 text-slate-800">Your Progress</h2>
             <div className="flex items-center">
               <div className="w-full bg-slate-200/60 rounded-full h-4 mr-4 overflow-hidden">
                 <div
