@@ -46,22 +46,6 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     if (onClick) onClick(id);
   };
 
-  const renderDifficultyIndicator = () => {
-    return (
-      <div className="flex items-center">
-        <span className="text-xs text-slate-600 mr-1">Complexity:</span>
-        <div className="flex">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div 
-              key={index} 
-              className={`h-1.5 w-6 mx-0.5 rounded-full ${index < difficulty ? 'bg-teal-600' : 'bg-slate-200'}`}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   const renderObjectiveBadge = () => {
     let bgColor = '';
     let textColor = '';
@@ -156,12 +140,11 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
       className={`bg-white p-6 md:p-7 rounded-lg shadow-card border border-slate-200 ${isDisabled ? 'opacity-75' : ''} ${className} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-card-hover transition-all duration-300'}`}
       onClick={isDisabled ? undefined : handleClick}
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex items-start mb-4">
         <div className="flex space-x-2">
           {renderObjectiveBadge()}
           {renderStatusBadge()}
         </div>
-        <div>{renderDifficultyIndicator()}</div>
       </div>
       
       <h3 className="text-lg font-semibold text-slate-800 mb-3 font-inter">{title}</h3>

@@ -109,10 +109,7 @@ export default function CandidateDashboard() {
       }
       
       // Determine difficulty (1-5) based on skills required or custom logic
-      const difficulty = Math.min(
-        5, 
-        Math.max(1, Math.ceil((milestone.skills?.length || 0) / 2))
-      );
+      const difficulty = 3; // Default to middle value since we're not showing complexity anymore
       
       // Create tasks from milestone resources or other data
       const tasks = milestone.resources?.map((resource, idx) => ({
@@ -138,7 +135,7 @@ export default function CandidateDashboard() {
         difficulty: difficulty as 1 | 2 | 3 | 4 | 5,
         status: milestone.completed ? 'completed' : 'available',
         rewards: {
-          points: 100 + (difficulty * 20),
+          points: 100,
           resources: milestone.resources?.map(resource => ({
             id: `resource-${resource.type}-${Math.random().toString(36).substring(2, 9)}`,
             name: resource.title,
