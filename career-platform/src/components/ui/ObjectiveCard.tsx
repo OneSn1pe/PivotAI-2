@@ -54,7 +54,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
           {Array.from({ length: 5 }).map((_, index) => (
             <div 
               key={index} 
-              className={`h-1.5 w-5 mx-0.5 rounded-full ${index < difficulty ? 'bg-teal-600' : 'bg-slate-200'}`}
+              className={`h-1.5 w-6 mx-0.5 rounded-full ${index < difficulty ? 'bg-teal-600' : 'bg-slate-200'}`}
             />
           ))}
         </div>
@@ -86,7 +86,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     }
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md`}>
+      <span className={`px-2.5 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md`}>
         {label}
       </span>
     );
@@ -142,7 +142,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     }
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md flex items-center`}>
+      <span className={`px-2.5 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md flex items-center`}>
         {icon}
         {label}
       </span>
@@ -153,10 +153,10 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
 
   return (
     <div 
-      className={`bg-white p-6 rounded-lg shadow-card border border-slate-200 ${isDisabled ? 'opacity-75' : ''} ${className} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-card-hover transition-all duration-300'}`}
+      className={`bg-white p-6 md:p-7 rounded-lg shadow-card border border-slate-200 ${isDisabled ? 'opacity-75' : ''} ${className} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-card-hover transition-all duration-300'}`}
       onClick={isDisabled ? undefined : handleClick}
     >
-      <div className="flex justify-between items-start mb-3">
+      <div className="flex justify-between items-start mb-4">
         <div className="flex space-x-2">
           {renderObjectiveBadge()}
           {renderStatusBadge()}
@@ -164,20 +164,20 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         <div>{renderDifficultyIndicator()}</div>
       </div>
       
-      <h3 className="text-lg font-semibold text-slate-800 mb-2 font-inter">{title}</h3>
+      <h3 className="text-lg font-semibold text-slate-800 mb-3 font-inter">{title}</h3>
       
-      <p className="text-sm text-slate-600 mb-4">{description}</p>
+      <p className="text-sm text-slate-600 mb-5">{description}</p>
       
       {tasks && tasks.length > 0 && (
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-slate-700 mb-2 font-inter">Action Items:</h4>
-          <ul className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <div className="mb-5">
+          <h4 className="text-sm font-medium text-slate-700 mb-2.5 font-inter">Action Items:</h4>
+          <ul className="space-y-2.5 bg-slate-50 p-4 rounded-lg border border-slate-200">
             {tasks.map(task => (
               <li 
                 key={task.id} 
                 className="flex items-start text-sm"
               >
-                <span className="inline-block w-5 h-5 mr-2 flex-shrink-0 mt-0.5">
+                <span className="inline-block w-5 h-5 mr-2.5 flex-shrink-0 mt-0.5">
                   {task.completed ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -198,10 +198,10 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
       )}
       
       {/* Outcome section */}
-      <div className="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <h4 className="text-sm font-medium text-slate-700 mb-2 font-inter">Outcome:</h4>
+      <div className="mb-5 bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <h4 className="text-sm font-medium text-slate-700 mb-2.5 font-inter">Outcome:</h4>
         <div className="flex items-center">
-          <div className="bg-teal-100 text-teal-800 rounded-full px-2 py-0.5 text-xs font-medium mr-2">
+          <div className="bg-teal-100 text-teal-800 rounded-full px-2.5 py-0.5 text-xs font-medium mr-3">
             +{rewards.points} Points
           </div>
           {rewards.resources && rewards.resources.length > 0 && (
@@ -212,7 +212,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         </div>
       </div>
       
-      <div className="pt-2 border-t border-slate-100 flex justify-end">
+      <div className="pt-3 border-t border-slate-100 flex justify-end">
         <button
           onClick={(e) => {
             e.stopPropagation();

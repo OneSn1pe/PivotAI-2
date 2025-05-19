@@ -195,7 +195,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
           <p className="text-sm text-slate-500">{description}</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {sortedObjectives.map(objective => (
             <ObjectiveCard
               key={objective.id}
