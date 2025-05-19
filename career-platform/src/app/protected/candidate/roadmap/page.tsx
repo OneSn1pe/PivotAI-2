@@ -15,6 +15,74 @@ export default function RoadmapPage() {
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Add CSS to ensure navbar matches exactly
+  useEffect(() => {
+    // Add a style tag to ensure navbar displays exactly as in other pages
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Reset any potential custom styling */
+      nav {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 10 !important;
+        width: 100% !important;
+        flex-direction: row !important;
+        height: auto !important;
+        background: linear-gradient(to right, var(--tw-gradient-stops)) !important;
+        --tw-gradient-from: #581c87 !important;
+        --tw-gradient-to: #7e22ce !important;
+        --tw-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+        --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color) !important;
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;
+        --tw-shadow-color: rgba(168, 85, 247, 0.2) !important;
+      }
+
+      /* Exact container structure */
+      nav > div.max-w-7xl {
+        max-width: 80rem !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        position: relative !important;
+      }
+
+      /* Ornamental elements */
+      nav > div > div.absolute.inset-0 {
+        position: absolute !important;
+        inset: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+        opacity: 0.1 !important;
+      }
+
+      /* Main flex container for navbar content */
+      nav > div > div.flex {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        height: 5rem !important;
+      }
+      
+      /* Override any sidebar styles that might be affecting the roadmap navbar */
+      .sidebar, aside {
+        display: none !important;
+      }
+      
+      /* Main content padding to account for navbar */
+      .page-content {
+        padding-top: 5rem !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     async function fetchRoadmap() {
       if (!userProfile) return;

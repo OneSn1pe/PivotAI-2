@@ -46,7 +46,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="bg-blue-700 text-white w-72 flex-shrink-0 min-h-screen shadow-lg">
+    <aside className="sidebar bg-blue-700 text-white w-72 flex-shrink-0 min-h-screen shadow-lg">
       <div className="p-8 border-b border-blue-600">
         <Link href="/protected/candidate/dashboard" className="text-2xl font-bold flex items-center justify-center">
           <span className="text-white hover:text-blue-200 transition-colors">PivotAI</span>
@@ -54,7 +54,7 @@ export default function Sidebar() {
       </div>
       
       <div className="flex flex-col justify-between h-[calc(100vh-112px)]">
-        <nav className="mt-6 px-4">
+        <nav className="sidebar-nav mt-6 px-4">
           <div className="mb-4 text-blue-300 text-sm font-medium px-4">MENU</div>
           <ul className="space-y-2">
             {links.map((link) => (
