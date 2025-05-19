@@ -16,6 +16,11 @@
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/" }
   ],
+  "functions": {
+    "api/analyze-resume/**/*.ts": { "maxDuration": 60 },
+    "api/generate-roadmap/**/*.ts": { "maxDuration": 60 },
+    "api/roadmaps/**/*.ts": { "maxDuration": 60 }
+  },
   "env": {
     "NODE_ENV": "production",
     "NEXT_PUBLIC_API_URL": "${VERCEL_URL}"
