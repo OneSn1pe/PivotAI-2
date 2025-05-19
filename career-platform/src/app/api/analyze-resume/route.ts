@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Enable Edge Runtime for better performance and streaming capability
-export const runtime = 'edge';
-
 // Initialize OpenAI with API key and timeout
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 45000, // 45 second timeout for API calls
-  maxRetries: 3,  // Increased retries for transient errors
+  timeout: 25000, // 25 second timeout for API calls
+  maxRetries: 2,  // Built-in retries for transient errors
 });
 
 // Safe JSON stringify with error handling
@@ -102,11 +99,11 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
 
   while (retries <= maxRetries) {
     try {
-      // Create a timeout promise with longer duration
+      // Create a timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error('OpenAI API request timed out after 40s'));
-        }, 40000); // 40 second timeout - increased from 20s
+          reject(new Error('OpenAI API request timed out after 20s'));
+        }, 20000); // 20 second timeout
       });
       
       // Race the function against the timeout
@@ -117,20 +114,14 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
     } catch (error: any) {
       lastError = error;
       
-      // Enhanced error logging
-      console.error(`API call error (attempt ${retries+1}/${maxRetries+1}):`, 
-        error.status || error.code || 'unknown',
-        error.message || 'No error message');
-      
       // Check if it's a timeout error from our client-side timeout
-      if (error.message === 'OpenAI API request timed out after 40s') {
+      if (error.message === 'OpenAI API request timed out after 20s') {
         throw error; // Don't retry on client-side timeouts
       }
       
-      // Retry on more error types: rate limits, connection issues, and server errors
-      if ((error.status === 429 || error.status >= 500 || error.code === 'ECONNRESET') && retries < maxRetries) {
+      // Only retry on rate limit errors
+      if (error.status === 429 && retries < maxRetries) {
         const delay = initialDelayMs * Math.pow(2, retries);
-        console.log(`Retrying in ${delay}ms (attempt ${retries+1} of ${maxRetries})`);
         await new Promise(resolve => setTimeout(resolve, delay));
         retries++;
       } else {
@@ -160,16 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    let requestData;
-    try {
-      requestData = await request.json();
-    } catch (parseError) {
-      return createResponse({
-        error: 'Invalid JSON',
-        message: 'Failed to parse request body as JSON',
-        details: parseError instanceof Error ? parseError.message : String(parseError)
-      }, 400);
-    }
+    const requestData = await request.json();
     
     // Validate request data
     if (!requestData || !requestData.resumeText) {
@@ -182,19 +164,22 @@ export async function POST(request: NextRequest) {
     // Extract and truncate resume text
     const resumeText = truncateResume(requestData.resumeText);
     
-    // Use a more concise prompt to reduce token count
+    // Prepare the prompt for OpenAI
     const prompt = `
-    Analyze this resume and extract key information as JSON:
+    Analyze the following resume and extract key information:
     
     ${resumeText}
     
-    Extract: 
-    - skills (technical and soft)
-    - experience (companies, titles, dates, achievements)
-    - education (schools, degrees, dates)
-    - strengths (3-5 points)
-    - weaknesses (3-5 points)
-    - recommendations (3-5 points)
+    Please provide the following information in JSON format:
+    1. Contact information (name, email, phone, location)
+    2. Summary of skills (technical skills, soft skills)
+    3. Work experience (company names, job titles, dates, key achievements)
+    4. Education (institutions, degrees, dates)
+    5. Certifications or special qualifications
+    6. Languages spoken
+    7. Overall assessment of resume quality (1-10 scale)
+    8. Areas for improvement
+    9. Suggested job roles based on experience
     `;
     
     // Call OpenAI API with retry logic
@@ -202,11 +187,11 @@ export async function POST(request: NextRequest) {
       return await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are a resume analysis assistant. Extract key information in concise JSON format.' },
+          { role: 'system', content: 'You are a helpful resume analysis assistant. Extract key information from resumes and provide structured data in JSON format.' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.1, // Lower temperature for more deterministic responses
-        max_tokens: 1200, // Reduced from 1500 to improve response time
+        temperature: 0.2,
+        max_tokens: 1500,
         response_format: { type: 'json_object' }
       });
     });
@@ -251,14 +236,6 @@ export async function POST(request: NextRequest) {
     // Handle various error types
     const errorStatus = error.status || 500;
     const errorMessage = error.message || 'Unknown error occurred';
-    
-    // More detailed error reporting
-    console.error('Resume analysis failed:', {
-      message: errorMessage,
-      status: errorStatus,
-      stack: error.stack,
-      time: new Date().toISOString()
-    });
     
     return createResponse({
       error: 'Analysis Failed',

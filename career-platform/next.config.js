@@ -22,20 +22,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Enable experimental features for edge runtime support and API response caching
-  experimental: {
-    serverComponentsExternalPackages: ['firebase-admin'],
-    workerThreads: true, // Enable worker threads for better parallelization
-    optimizeCss: true, // Enable CSS optimization
-    serverActions: {
-      bodySizeLimit: '4mb', // Increase limit for large request bodies
-    },
-    instrumentationHook: true, // Enable instrumentation hooks for monitoring
-  },
-
-  // Enable incremental static regeneration with short revalidation periods
-  staticPageGenerationTimeout: 120, // Increase timeout for static page generation
-  
   // Configure image optimization
   images: {
     domains: [
@@ -50,7 +36,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    minimumCacheTTL: 60 * 60 * 24, // 24 hours cache for images
   },
   
   // Custom webpack configuration
@@ -63,32 +48,10 @@ const nextConfig = {
       os: false,
     };
     
-    // Add performance optimizations
-    config.optimization = {
-      ...config.optimization,
-      runtimeChunk: 'single',
-      splitChunks: {
-        chunks: 'all',
-        maxInitialRequests: Infinity,
-        minSize: 20000,
-        maxSize: 250000,
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module) {
-              // Get the name of the package
-              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
-              return `npm.${packageName.replace('@', '')}`;
-            },
-          },
-        },
-      },
-    };
-    
     return config;
   },
   
-  // Configure headers to allow CORS and add caching
+  // Configure headers to allow CORS
   async headers() {
     return [
       {
@@ -101,32 +64,12 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
         ],
       },
-      {
-        // Add caching for static assets
-        source: '/static/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-        ],
-      },
-      {
-        // Add caching for API responses that don't need to be real-time
-        source: '/api/static/:path*',
-        headers: [
-          { key: 'Cache-Control', value: 'public, max-age=60, s-maxage=300, stale-while-revalidate=300' },
-        ],
-      },
     ];
   },
   
   // Environment variables available at build time
   env: {
-    NEXT_PUBLIC_API_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
-    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV || 'development',
-  },
-  
-  // Configure memory for Vercel serverless functions (available on Pro plan)
-  serverRuntimeConfig: {
-    PROJECT_ROOT: __dirname
+    NEXT_PUBLIC_API_URL: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
   },
 };
 
