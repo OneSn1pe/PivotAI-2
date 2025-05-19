@@ -58,7 +58,7 @@ export default function CandidateDashboard() {
       setValidatedResumeUrl(url);
     } catch (error) {
       console.error('Error validating resume URL:', error);
-      setValidatedResumeUrl(null);
+        setValidatedResumeUrl(null);
     } finally {
       setValidatingUrl(false);
     }
@@ -199,7 +199,7 @@ export default function CandidateDashboard() {
       {/* Welcome Section */}
       <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div>
+        <div>
             <h1 className="text-3xl font-bold text-slate-800 font-inter">Welcome, {candidateProfile?.displayName || 'Professional'}</h1>
             <p className="text-slate-600 mt-2">
               Your career development hub. Track progress, complete objectives, and advance professionally.
@@ -267,7 +267,7 @@ export default function CandidateDashboard() {
             ) : (
               <div className="text-center py-4">
                 <p className="text-slate-500 text-sm">No skills found in your resume</p>
-                <button 
+                <button
                   onClick={() => setShowResumeManager(true)}
                   className="mt-2 text-teal-700 hover:text-teal-800 text-sm font-medium"
                 >
@@ -304,7 +304,7 @@ export default function CandidateDashboard() {
                 >
                   View Full Career Path
                 </button>
-              </div>
+                </div>
             ) : (
               <div className="text-center py-4">
                 <p className="text-slate-500 text-sm mb-3">No career path created yet</p>
@@ -318,7 +318,7 @@ export default function CandidateDashboard() {
             )}
           </div>
         </div>
-        
+
         {/* Right Column - Task Manager */}
         <div className="md:col-span-2">
           {objectives.length > 0 ? (
@@ -333,7 +333,7 @@ export default function CandidateDashboard() {
               <p className="text-slate-600 mb-6">
                 Generate a career path to receive personalized professional objectives.
               </p>
-              <button 
+              <button
                 onClick={() => router.push('/protected/candidate/roadmap/generator')}
                 className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
               >
