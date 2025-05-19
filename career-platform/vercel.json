@@ -18,7 +18,7 @@
     "NEXT_PUBLIC_API_URL": "${VERCEL_URL}"
   },
   "functions": {
-    "api/generate-roadmap/*.js": {
+    "src/app/api/generate-roadmap/route.ts": {
       "memory": 1024,
       "maxDuration": 120
     }
