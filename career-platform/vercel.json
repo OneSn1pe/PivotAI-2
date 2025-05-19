@@ -20,5 +20,11 @@
     "NODE_ENV": "production",
     "NEXT_PUBLIC_API_URL": "${VERCEL_URL}"
   },
+  "functions": {
+    "api/generate-roadmap/*.js": {
+      "memory": 1024,
+      "maxDuration": 120
+    }
+  },
   "public": true
 } 

@@ -23,8 +23,8 @@ if (!process.env.OPENAI_API_KEY) {
 // Initialize OpenAI with proper timeout settings
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000, // 60 second timeout
-  maxRetries: 2,  // Retry twice on transient errors
+  timeout: 90000, // Increase to 90 second timeout
+  maxRetries: 3,  // Increase retries on transient errors
 });
 
 // Helper function to truncate large objects for API calls
@@ -44,7 +44,7 @@ function truncateForAPI(obj: any, maxLength = 4000): any {
 }
 
 // Add retry helper with exponential backoff
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs = 1000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs = 1000): Promise<T> {
   let retries = 0;
   let lastError: any;
 
@@ -53,8 +53,8 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs
       // Create a timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error('Operation timed out after 60s'));
-        }, 60000); // 60 second client-side timeout
+          reject(new Error('Operation timed out after 90s'));
+        }, 90000); // 90 second client-side timeout
       });
       
       // Race the function against the timeout
@@ -66,7 +66,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs
       lastError = error;
       
       // Check if it's a timeout error from our client-side timeout
-      if (error.message === 'Operation timed out after 60s') {
+      if (error.message === 'Operation timed out after 90s') {
         debug.error('Client-side timeout reached:', error.message);
         throw error; // Don't retry on client-side timeouts
       }
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     try {
       completion = await withRetry(async () => {
         return await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: "gpt-3.5-turbo-1106", // Use 3.5 Turbo which is faster than GPT-4
           messages: [
             {
               role: "system",
@@ -203,8 +203,9 @@ Guidelines:
 - Return ONLY valid JSON with no additional text or formatting`
             }
           ],
-          temperature: 0.2, // Lower temperature for more consistent output
-          max_tokens: 2000, // Limit the response size
+          temperature: 0.1, // Lower temperature for more consistent output
+          max_tokens: 1500, // Limit the response size
+          response_format: { type: "json_object" }, // Force JSON response format
         });
       });
     } catch (openaiError: any) {

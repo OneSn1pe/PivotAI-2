@@ -139,17 +139,48 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
         console.warn('Error deleting existing roadmaps, continuing with generation:', deleteErr);
       }
       
-      // Generate new roadmap
-      const roadmap = await generateCareerRoadmap(
+      // Set up a timeout to handle server-side timeouts
+      const generatePromise = generateCareerRoadmap(
         validatedResumeAnalysis, 
         validTargetCompanies,
         userProfile.uid
       );
       
-      setGeneratedRoadmap(roadmap);
+      // Create a timeout promise that resolves to null after 90 seconds
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => {
+          console.log('Client-side timeout triggered for roadmap generation');
+          resolve(null);
+        }, 90000); // 90 second timeout
+      });
       
-      // Notify parent component
-      onRoadmapGenerated(roadmap.id || userProfile.uid);
+      // Race between the API call and the timeout
+      const result = await Promise.race([generatePromise, timeoutPromise]);
+      
+      if (result === null) {
+        // Timeout occurred, show user-friendly message
+        console.warn('Roadmap generation timed out, retrying with simpler request...');
+        
+        // Try one more time with a simplified request (fewer companies if multiple were selected)
+        const simplifiedCompanies = validTargetCompanies.slice(0, 1); // Just use first company
+        
+        try {
+          const fallbackRoadmap = await generateCareerRoadmap(
+            validatedResumeAnalysis,
+            simplifiedCompanies,
+            userProfile.uid
+          );
+          
+          setGeneratedRoadmap(fallbackRoadmap);
+          onRoadmapGenerated(fallbackRoadmap.id || userProfile.uid);
+        } catch (secondError) {
+          throw new Error('Roadmap generation timed out. Please try again later or contact support.');
+        }
+      } else {
+        // Success - normal flow
+        setGeneratedRoadmap(result);
+        onRoadmapGenerated(result.id || userProfile.uid);
+      }
     } catch (err) {
       console.error('Error generating roadmap:', err);
       setError(err instanceof Error ? err.message : 'Failed to generate roadmap. Please try again.');
