@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/next" }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
@@ -16,12 +19,6 @@
   "env": {
     "NODE_ENV": "production",
     "NEXT_PUBLIC_API_URL": "${VERCEL_URL}"
-  },
-  "functions": {
-    "src/app/api/generate-roadmap/route.ts": {
-      "memory": 1024,
-      "maxDuration": 120
-    }
   },
   "public": true
 } 
