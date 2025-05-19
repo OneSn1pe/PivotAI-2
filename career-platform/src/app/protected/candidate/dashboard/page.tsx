@@ -34,7 +34,6 @@ export default function CandidateDashboard() {
   const { downloadAndSaveFile, downloading } = useFileDownload();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showResumeManager, setShowResumeManager] = useState(false);
   const [validatedResumeUrl, setValidatedResumeUrl] = useState<string | null>(null);
   const [validatingUrl, setValidatingUrl] = useState(false);
   const [displayFileName, setDisplayFileName] = useState<string | null>(candidateProfile?.resumeFileName || null);
@@ -155,7 +154,6 @@ export default function CandidateDashboard() {
   };
 
   const handleResumeUpdate = (fileName: string) => {
-    setShowResumeManager(false);
     setDisplayFileName(fileName);
     
     // Reload the candidate profile to get the updated resume URL
@@ -180,12 +178,6 @@ export default function CandidateDashboard() {
     }
   };
 
-  const handleViewResume = () => {
-    if (validatedResumeUrl) {
-      window.open(validatedResumeUrl, '_blank');
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -206,22 +198,13 @@ export default function CandidateDashboard() {
             </p>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center">
             <button
-              onClick={() => setShowResumeManager(true)}
+              onClick={() => router.push('/protected/candidate/profile')}
               className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
             >
               {displayFileName ? 'Update Resume' : 'Upload Resume'}
             </button>
-            
-            {displayFileName && validatedResumeUrl && (
-              <button
-                onClick={() => handleViewResume()}
-                className="bg-slate-100 border border-slate-300 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
-              >
-                View Resume
-              </button>
-            )}
           </div>
         </div>
         
@@ -235,16 +218,6 @@ export default function CandidateDashboard() {
           </div>
         )}
       </div>
-      
-      {showResumeManager && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
-            <ResumeManager
-              onUpdateComplete={handleResumeUpdate}
-            />
-          </div>
-        </div>
-      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column - Professional Info */}
@@ -268,7 +241,7 @@ export default function CandidateDashboard() {
               <div className="text-center py-4">
                 <p className="text-slate-500 text-sm">No skills found in your resume</p>
                 <button
-                  onClick={() => setShowResumeManager(true)}
+                  onClick={() => router.push('/protected/candidate/profile')}
                   className="mt-2 text-teal-700 hover:text-teal-800 text-sm font-medium"
                 >
                   Upload or update your resume

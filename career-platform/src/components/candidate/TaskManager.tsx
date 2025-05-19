@@ -50,10 +50,9 @@ const TaskManager: React.FC<TaskManagerProps> = ({
   const sortObjectives = (objectives: ObjectiveProps[]): ObjectiveProps[] => {
     return [...objectives].sort((a, b) => {
       const statusOrder: Record<ObjectiveStatus, number> = {
-        'in-progress': 0,
-        'available': 1,
-        'completed': 2,
-        'locked': 3
+        'available': 0,
+        'completed': 1,
+        'locked': 2
       };
       
       return statusOrder[a.status] - statusOrder[b.status];
@@ -128,16 +127,6 @@ const TaskManager: React.FC<TaskManagerProps> = ({
         }`}
       >
         All
-      </button>
-      <button
-        onClick={() => handleStatusFilterChange('in-progress')}
-        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-          statusFilter === 'in-progress'
-            ? 'bg-blue-700 text-white'
-            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-        }`}
-      >
-        In Progress
       </button>
       <button
         onClick={() => handleStatusFilterChange('available')}
