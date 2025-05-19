@@ -70,56 +70,122 @@ module.exports = {
       'text-green-600',
       'hidden',
       'md:block',
-      // Cloud Sky Theme Classes
+      // Professional Theme Classes
       'backdrop-filter',
       'backdrop-blur-md',
       'backdrop-blur-lg',
-      'from-sky-500',
-      'to-sky-700',
-      'from-sky-600',
-      'to-sky-800',
-      'from-yellow-400',
-      'to-amber-500',
+      // Teal color classes (primary)
+      'from-teal-600',
+      'to-teal-800',
+      'from-teal-700',
+      'to-teal-900',
+      'from-teal-800',
+      'to-teal-950',
+      'text-teal-50',
+      'text-teal-100',
+      'text-teal-700',
+      'text-teal-800',
+      'text-teal-900',
+      'bg-teal-50',
+      'bg-teal-100',
+      'bg-teal-700',
+      'bg-teal-800',
+      'bg-teal-900',
+      'border-teal-200',
+      'border-teal-300',
+      'border-teal-700',
+      'hover:bg-teal-800',
+      'hover:text-teal-100',
+      'hover:from-teal-700',
+      'hover:to-teal-900',
+      'shadow-teal-500/20',
+      'shadow-teal-500/30',
+      // Amber color classes (secondary)
       'from-amber-500',
       'to-amber-600',
       'from-amber-600',
       'to-amber-700',
+      'text-amber-50',
+      'text-amber-600',
+      'text-amber-700',
+      'text-amber-800',
+      'bg-amber-50',
+      'bg-amber-100',
+      'bg-amber-600',
+      'bg-amber-700',
+      'border-amber-200',
+      'border-amber-600',
+      'hover:bg-amber-700',
+      'hover:from-amber-600',
+      'hover:to-amber-700',
+      'shadow-amber-500/30',
+      // Attribute colors
+      'bg-blue-500',
+      'bg-violet-500',
+      'bg-red-500',
+      'bg-emerald-500',
+      'bg-indigo-500',
+      'bg-orange-500',
+      'text-blue-500',
+      'text-violet-500',
+      'text-red-500',
+      'text-emerald-500',
+      'text-indigo-500',
+      'text-orange-500',
+      // Slate UI colors
+      'bg-slate-50',
+      'bg-slate-100',
+      'bg-slate-200',
+      'bg-slate-700',
+      'border-slate-200',
+      'border-slate-300',
+      'text-slate-600',
+      'text-slate-700',
+      'text-slate-800',
+      // Gradient backgrounds
       'bg-gradient-to-r',
       'bg-gradient-to-b',
-      'shadow-sky-500/20',
-      'shadow-amber-500/30',
-      'animate-float-slow',
-      'animate-float-medium',
-      'animate-float-fast',
-      'cloud-sm',
-      'cloud-md',
-      'cloud-lg',
-      'cloud-icon',
-      'cloud-btn'
+      'bg-gradient-to-br',
+      // Animation classes
+      'animate-fade-in',
+      'animate-slide-in',
+      'animate-progress',
+      'transition-all',
+      'duration-300'
     ],
     theme: {
       extend: {
+        fontFamily: {
+          'inter': ['Inter', 'sans-serif'],
+          'source': ['"Source Sans Pro"', 'sans-serif']
+        },
         animation: {
-          'float-slow': 'float 20s ease-in-out infinite',
-          'float-medium': 'float 15s ease-in-out infinite alternate',
-          'float-fast': 'float 8s ease-in-out infinite alternate',
-          'pulse-glow': 'pulse-glow 4s ease-in-out infinite alternate'
+          'fade-in': 'fadeIn 0.5s ease-out',
+          'slide-in': 'slideIn 0.3s ease-out',
+          'progress': 'progress 1s ease-out',
+          'pulse-subtle': 'pulse-subtle 3s ease-in-out infinite alternate'
         },
         keyframes: {
-          float: {
-            '0%, 100%': { transform: 'translateY(0) translateX(0)' },
-            '25%': { transform: 'translateY(-5px) translateX(5px)' },
-            '50%': { transform: 'translateY(0) translateX(10px)' },
-            '75%': { transform: 'translateY(5px) translateX(5px)' }
+          fadeIn: {
+            '0%': { opacity: 0 },
+            '100%': { opacity: 1 }
           },
-          'pulse-glow': {
+          slideIn: {
+            '0%': { transform: 'translateY(10px)', opacity: 0 },
+            '100%': { transform: 'translateY(0)', opacity: 1 }
+          },
+          progress: {
+            '0%': { width: '0%' },
+            '100%': { width: '100%' }
+          },
+          'pulse-subtle': {
             '0%, 100%': { 
               opacity: 1,
-              boxShadow: '0 0 10px 2px rgba(56, 189, 248, 0.2)'
+              boxShadow: '0 0 8px 1px rgba(15, 118, 110, 0.2)'
             },
             '50%': { 
-              opacity: 0.8,
-              boxShadow: '0 0 20px 5px rgba(56, 189, 248, 0.4)'
+              opacity: 0.9,
+              boxShadow: '0 0 12px 3px rgba(15, 118, 110, 0.3)'
             }
           }
         },
@@ -127,8 +193,10 @@ module.exports = {
           'xs': '2px',
         },
         boxShadow: {
-          'cloud': '0 10px 15px -3px rgba(186, 230, 253, 0.3), 0 4px 6px -4px rgba(186, 230, 253, 0.4)',
-          'cloud-inner': 'inset 0 2px 4px 0 rgba(186, 230, 253, 0.2)'
+          'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+          'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
+          'button': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          'button-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
         },
         transitionDuration: {
           '2000': '2000ms',

@@ -1,7 +1,7 @@
 import React from 'react';
 
 export type ObjectiveDifficulty = 1 | 2 | 3 | 4 | 5;
-export type ObjectiveType = 'main' | 'side' | 'daily';
+export type ObjectiveType = 'major' | 'minor' | 'daily';
 export type ObjectiveStatus = 'available' | 'in-progress' | 'completed' | 'locked';
 
 export interface ObjectiveProps {
@@ -12,16 +12,15 @@ export interface ObjectiveProps {
   difficulty: ObjectiveDifficulty;
   status: ObjectiveStatus;
   rewards: {
-    xp: number;
-    coins?: number;
-    items?: Array<{
+    points: number;
+    resources?: Array<{
       id: string;
       name: string;
-      rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+      type: 'template' | 'guide' | 'tool' | 'course' | 'certification';
     }>;
   };
   requiredLevel?: number;
-  objectives?: Array<{
+  tasks?: Array<{
     id: string;
     description: string;
     completed: boolean;
@@ -39,7 +38,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
   status,
   rewards,
   requiredLevel,
-  objectives,
+  tasks,
   onClick,
   className = ''
 }) => {
@@ -47,20 +46,18 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     if (onClick) onClick(id);
   };
 
-  const renderDifficultyStars = () => {
+  const renderDifficultyIndicator = () => {
     return (
-      <div className="flex">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <svg 
-            key={index} 
-            xmlns="http://www.w3.org/2000/svg" 
-            className={`h-4 w-4 ${index < difficulty ? 'text-amber-500' : 'text-gray-300'}`}
-            viewBox="0 0 20 20" 
-            fill="currentColor"
-          >
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
-        ))}
+      <div className="flex items-center">
+        <span className="text-xs text-slate-600 mr-1">Complexity:</span>
+        <div className="flex">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div 
+              key={index} 
+              className={`h-1.5 w-5 mx-0.5 rounded-full ${index < difficulty ? 'bg-teal-600' : 'bg-slate-200'}`}
+            />
+          ))}
+        </div>
       </div>
     );
   };
@@ -71,12 +68,12 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     let label = '';
 
     switch (type) {
-      case 'main':
+      case 'major':
         bgColor = 'bg-teal-100';
         textColor = 'text-teal-800';
         label = 'MAJOR';
         break;
-      case 'side':
+      case 'minor':
         bgColor = 'bg-blue-100';
         textColor = 'text-blue-800';
         label = 'MINOR';
@@ -89,7 +86,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     }
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium ${bgColor} ${textColor} rounded border border-${textColor.replace('text-', '')}/30`}>
+      <span className={`px-2 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md`}>
         {label}
       </span>
     );
@@ -133,8 +130,8 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         label = 'COMPLETED';
         break;
       case 'locked':
-        bgColor = 'bg-gray-100';
-        textColor = 'text-gray-600';
+        bgColor = 'bg-slate-100';
+        textColor = 'text-slate-600';
         icon = (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -145,7 +142,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     }
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium ${bgColor} ${textColor} rounded border border-${textColor.replace('text-', '')}/30 flex items-center`}>
+      <span className={`px-2 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md flex items-center`}>
         {icon}
         {label}
       </span>
@@ -164,24 +161,24 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
           {renderObjectiveBadge()}
           {renderStatusBadge()}
         </div>
-        <div>{renderDifficultyStars()}</div>
+        <div>{renderDifficultyIndicator()}</div>
       </div>
       
       <h3 className="text-lg font-semibold text-slate-800 mb-2 font-inter">{title}</h3>
       
       <p className="text-sm text-slate-600 mb-4">{description}</p>
       
-      {objectives && objectives.length > 0 && (
+      {tasks && tasks.length > 0 && (
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-slate-700 mb-2 font-inter">Tasks:</h4>
+          <h4 className="text-sm font-medium text-slate-700 mb-2 font-inter">Action Items:</h4>
           <ul className="space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-            {objectives.map(objective => (
+            {tasks.map(task => (
               <li 
-                key={objective.id} 
+                key={task.id} 
                 className="flex items-start text-sm"
               >
                 <span className="inline-block w-5 h-5 mr-2 flex-shrink-0 mt-0.5">
-                  {objective.completed ? (
+                  {task.completed ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
@@ -191,14 +188,29 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
                     </svg>
                   )}
                 </span>
-                <span className={objective.completed ? 'line-through text-slate-400' : 'text-slate-700'}>
-                  {objective.description}
+                <span className={task.completed ? 'line-through text-slate-400' : 'text-slate-700'}>
+                  {task.description}
                 </span>
               </li>
             ))}
           </ul>
         </div>
       )}
+      
+      {/* Outcome section */}
+      <div className="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <h4 className="text-sm font-medium text-slate-700 mb-2 font-inter">Outcome:</h4>
+        <div className="flex items-center">
+          <div className="bg-teal-100 text-teal-800 rounded-full px-2 py-0.5 text-xs font-medium mr-2">
+            +{rewards.points} Points
+          </div>
+          {rewards.resources && rewards.resources.length > 0 && (
+            <div className="text-xs text-slate-600">
+              + {rewards.resources.length} Professional {rewards.resources.length === 1 ? 'Resource' : 'Resources'}
+            </div>
+          )}
+        </div>
+      </div>
       
       <div className="pt-2 border-t border-slate-100 flex justify-end">
         <button

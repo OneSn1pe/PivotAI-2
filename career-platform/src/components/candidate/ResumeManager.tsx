@@ -16,7 +16,7 @@ import mammoth from 'mammoth';
 let pdfjsLib: any = null;
 
 interface ResumeManagerProps {
-  onUpdateComplete?: () => void;
+  onUpdateComplete?: (fileName: string) => void;
 }
 
 export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) {
@@ -309,7 +309,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         // Notify parent component of update
         if (onUpdateComplete) {
           console.log('Notifying parent of update completion');
-          onUpdateComplete();
+          onUpdateComplete(originalFileName);
         }
         
         // Refresh the user's profile in AuthContext

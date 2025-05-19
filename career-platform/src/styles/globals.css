@@ -39,7 +39,7 @@ input, select, textarea, button {
 
 /* Focus styles for accessibility */
 :focus {
-  outline: 2px solid #4f46e5;
+  outline: 2px solid #0f766e;
   outline-offset: 2px;
 }
 
@@ -54,12 +54,12 @@ nav {
   flex-direction: row !important;
   height: auto !important;
   background: linear-gradient(to right, var(--tw-gradient-stops)) !important;
-  --tw-gradient-from: #581c87 !important;
-  --tw-gradient-to: #7e22ce !important;
-  --tw-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
-  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color) !important;
+  --tw-gradient-from: #134e4a !important;
+  --tw-gradient-to: #0f766e !important;
+  --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -1px var(--tw-shadow-color) !important;
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;
-  --tw-shadow-color: rgba(168, 85, 247, 0.2) !important;
+  --tw-shadow-color: rgba(15, 118, 110, 0.2) !important;
 }
 
 /* Exact container structure */
@@ -86,7 +86,7 @@ nav > div > div.flex {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  height: 5rem !important;
+  height: 4rem !important;
 }
 
 /* Ensure sidebar doesn't conflict with navbar */
@@ -101,11 +101,29 @@ aside.sidebar {
   transition-duration: 300ms;
 }
 
+/* Shadow styles */
+.shadow-card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease;
+}
+
+.shadow-card-hover {
+  box-shadow: 0 10px 15px -3px rgba(15, 118, 110, 0.1), 0 4px 6px -2px rgba(15, 118, 110, 0.05);
+}
+
+.shadow-button {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-button-hover {
+  box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.1), 0 2px 4px -1px rgba(15, 118, 110, 0.06);
+}
+
 /* Progress bars */
 .progress-bar {
-  @apply w-full bg-gray-200 rounded-full h-2 mb-2;
+  @apply w-full bg-slate-200 rounded-full h-2 mb-2;
 }
 
 .progress-bar-fill {
-  @apply h-2 rounded-full bg-blue-600;
+  @apply h-2 rounded-full bg-teal-600;
 } 

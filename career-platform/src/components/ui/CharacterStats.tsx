@@ -18,92 +18,97 @@ const AttributeBar: React.FC<AttributeBarProps> = ({
   const percentage = Math.min(100, Math.max(0, (value / maxValue) * 100));
   
   return (
-    <div className="mb-3">
+    <div className="mb-4">
       <div className="flex justify-between items-center mb-1">
         <div className="flex items-center">
           <span className="inline-block mr-2">{icon}</span>
-          <span className="text-sm font-medium text-slate-700">{name}</span>
+          <span className="text-sm font-medium text-slate-700 font-inter">{name}</span>
         </div>
         <span className="text-xs font-medium text-slate-600">{value}/{maxValue}</span>
       </div>
-      <div className="attribute-meter">
+      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
         <div 
-          className={`${attributeClass}`} 
-          style={{ width: `${percentage}%`, height: '100%' }}
+          className={`${attributeClass} h-full rounded-full`} 
+          style={{ width: `${percentage}%` }}
         ></div>
       </div>
     </div>
   );
 };
 
-export interface CharacterStatsProps {
+export interface ProfessionalAttributesProps {
   attributes: {
-    intelligence: number;
-    charisma: number;
-    strength: number;
-    dexterity: number;
-    wisdom: number;
-    constitution: number;
+    knowledge: number;
+    communication: number;
+    execution: number;
+    adaptability: number;
+    strategy: number;
+    balance: number;
   };
   className?: string;
 }
 
-const CharacterStats: React.FC<CharacterStatsProps> = ({ 
+const ProfessionalAttributes: React.FC<ProfessionalAttributesProps> = ({ 
   attributes,
   className = ''
 }) => {
   return (
-    <div className={`${className} medieval-card p-4`}>
+    <div className={`${className} bg-white p-5 rounded-lg shadow-card border border-slate-200`}>
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-slate-800">Character Stats</h3>
+        <h3 className="text-lg font-semibold text-slate-800 font-inter">Professional Attributes</h3>
+        <p className="text-sm text-slate-600 mt-1">These metrics represent your core professional capabilities</p>
       </div>
       
-      <div className="grid grid-cols-1 gap-1">
+      <div className="space-y-1">
         <AttributeBar 
-          name="Intelligence" 
-          value={attributes.intelligence} 
+          name="Knowledge" 
+          value={attributes.knowledge} 
           maxValue={100} 
-          attributeClass="attribute-intelligence"
+          attributeClass="bg-blue-500"
           icon="🧠" 
         />
         <AttributeBar 
-          name="Charisma" 
-          value={attributes.charisma} 
+          name="Communication" 
+          value={attributes.communication} 
           maxValue={100} 
-          attributeClass="attribute-charisma"
+          attributeClass="bg-violet-500"
           icon="💬" 
         />
         <AttributeBar 
-          name="Strength" 
-          value={attributes.strength} 
+          name="Execution" 
+          value={attributes.execution} 
           maxValue={100} 
-          attributeClass="attribute-strength"
-          icon="💪" 
+          attributeClass="bg-red-500"
+          icon="🎯" 
         />
         <AttributeBar 
-          name="Dexterity" 
-          value={attributes.dexterity} 
+          name="Adaptability" 
+          value={attributes.adaptability} 
           maxValue={100} 
-          attributeClass="attribute-dexterity"
-          icon="⚡" 
+          attributeClass="bg-emerald-500"
+          icon="🔄" 
         />
         <AttributeBar 
-          name="Wisdom" 
-          value={attributes.wisdom} 
+          name="Strategy" 
+          value={attributes.strategy} 
           maxValue={100} 
-          attributeClass="attribute-wisdom"
-          icon="🧙" 
+          attributeClass="bg-indigo-500"
+          icon="📈" 
         />
         <AttributeBar 
-          name="Constitution" 
-          value={attributes.constitution} 
+          name="Balance" 
+          value={attributes.balance} 
           maxValue={100} 
-          attributeClass="attribute-constitution"
-          icon="❤️" 
+          attributeClass="bg-orange-500"
+          icon="⚖️" 
         />
+      </div>
+      
+      <div className="mt-5 pt-4 border-t border-slate-100">
+        <p className="text-xs text-slate-500">Attributes increase as you complete related tasks and milestones</p>
       </div>
     </div>
   );
 };
 
-export default CharacterStats; 
+export default ProfessionalAttributes; 
