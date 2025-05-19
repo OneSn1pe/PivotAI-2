@@ -10,6 +10,7 @@ import { ResumeAnalysis, CandidateProfile } from '@/types/user';
 declare global {
   interface Window {
     _debugLogs?: any[];  // Changed from specific type to any[] to match other declarations
+    resumeAnalysisDebug?: any; // Add this for resume analysis debugging
   }
 }
 
@@ -33,6 +34,7 @@ export default function ResumeUpload() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   // Log component mounting for debugging
   useEffect(() => {
@@ -178,6 +180,27 @@ export default function ResumeUpload() {
       return;
     }
     
+    // Initialize resume analysis debug object in window
+    window.resumeAnalysisDebug = {
+      startTime: new Date(),
+      steps: [],
+      errorDetails: null,
+      finalResponse: null
+    };
+    
+    // Function to log steps to the debug object and console
+    const logStep = (step: string, data: any = {}) => {
+      const stepInfo = { 
+        step, 
+        timestamp: new Date(), 
+        timeSinceStart: new Date().getTime() - window.resumeAnalysisDebug!.startTime.getTime(),
+        ...data 
+      };
+      console.log(`[RESUME_ANALYSIS] ${step}:`, stepInfo);
+      window.resumeAnalysisDebug!.steps.push(stepInfo);
+      return stepInfo;
+    };
+    
     const requestStartTime = new Date();
     const debugData: any = {
       requestStartTime,
@@ -192,12 +215,14 @@ export default function ResumeUpload() {
     try {
       debug.group('Resume Upload Process');
       debug.log('Starting resume upload and analysis');
+      logStep('uploadStart', { fileName: file.name, fileSize: file.size, fileType: file.type });
       
       setError(null); // Clear any previous errors
       setSuccessMessage(null); // Clear any previous success messages
       
       // Check Firebase connectivity first
       debug.log('Checking Firebase connectivity...');
+      logStep('checkingFirebase');
       try {
         // Simple Firestore ping to check connection
         if (!userProfile || !userProfile.uid) {
@@ -207,19 +232,25 @@ export default function ResumeUpload() {
         // Upload file to Firebase Storage
         debug.log('Starting file upload to Firebase Storage...');
         debug.log('This will replace any existing resume file');
+        logStep('fileUploadStart');
         
+        setAnalyzing(true);
+        
+        // Upload file to Firebase Storage
         const resumeUrl = await uploadFile(file, `resumes/${userProfile.uid}`);
         debug.log('File uploaded successfully:', resumeUrl);
         debugData.resumeUrl = resumeUrl;
+        logStep('fileUploadComplete', { resumeUrl });
         
         // Analyze resume with GPT-4
-        setAnalyzing(true);
         debug.log('Analyzing resume text. Length:', resumeText.length);
         debugData.resumeTextLength = resumeText.length;
+        logStep('analysisStart');
         
         if (!resumeText || resumeText.trim() === '') {
           const error = new Error('Unable to extract text from file. Please try a different file format.');
           debug.error(error.message);
+          logStep('textExtractionFailed', { error: error.message });
           throw error;
         }
         
@@ -227,10 +258,12 @@ export default function ResumeUpload() {
         const textSample = resumeText.substring(0, 200) + '...';
         debug.log('Text sample:', textSample);
         debugData.textSample = textSample;
+        logStep('textExtracted', { textLength: resumeText.length, sample: textSample });
         
         try {
           debug.log('Calling analyzeResume API...');
           debugData.apiCallStartTime = new Date();
+          logStep('apiCallStart');
           
           // Add retry logic for API calls
           let attempts = 0;
@@ -242,14 +275,27 @@ export default function ResumeUpload() {
               attempts++;
               if (attempts > 1) {
                 debug.log(`Retry attempt ${attempts}/${maxAttempts}...`);
+                logStep('apiRetry', { attempt: attempts, maxAttempts });
               }
               
+              const apiStartTime = performance.now();
               resumeAnalysis = await analyzeResume(resumeText);
+              const apiDuration = performance.now() - apiStartTime;
+              
+              logStep('apiResponse', { 
+                duration: apiDuration,
+                attempt: attempts
+              });
               
               if (!resumeAnalysis) {
                 throw new Error('Resume analysis returned empty result');
               }
             } catch (apiRetryError) {
+              logStep('apiError', { 
+                attempt: attempts, 
+                error: apiRetryError instanceof Error ? apiRetryError.message : String(apiRetryError)
+              });
+              
               if (attempts >= maxAttempts) {
                 throw apiRetryError;
               }
@@ -269,9 +315,18 @@ export default function ResumeUpload() {
           setAnalysis(resumeAnalysis);
           debugData.analysisReceived = !!resumeAnalysis;
           debug.log('Resume analysis complete:', resumeAnalysis);
+          logStep('analysisComplete', { 
+            skillsCount: resumeAnalysis.skills.length,
+            experienceCount: resumeAnalysis.experience.length,
+            strengthsCount: resumeAnalysis.strengths.length,
+            weaknessesCount: resumeAnalysis.weaknesses.length
+          });
+          
+          window.resumeAnalysisDebug!.finalResponse = resumeAnalysis;
           
           // Update user profile with resume URL and analysis
           debug.log('Updating user profile in Firestore...');
+          logStep('firestoreUpdateStart');
           try {
             await updateDoc(doc(db, 'users', userProfile.uid), {
               resumeUrl,
@@ -283,6 +338,7 @@ export default function ResumeUpload() {
             setAnalyzing(false);
             setSuccessMessage('Resume uploaded and analyzed successfully! Previous resume (if any) has been replaced.');
             debugData.success = true;
+            logStep('firestoreUpdateComplete');
           } catch (firestoreError: any) {
             debug.error('Error updating Firestore:', firestoreError);
             // Continue and show success even if Firestore update fails
@@ -293,12 +349,23 @@ export default function ResumeUpload() {
             debugData.firestoreError = firestoreError instanceof Error ? 
               { message: firestoreError.message, stack: firestoreError.stack } : 
               String(firestoreError);
+            logStep('firestoreUpdateError', { error: firestoreError instanceof Error ? firestoreError.message : String(firestoreError) });
           }
         } catch (apiError: any) {
           debug.error('API error during resume analysis:', apiError);
           debugData.apiError = apiError instanceof Error ? 
             { message: apiError.message, stack: apiError.stack } : 
             String(apiError);
+          
+          window.resumeAnalysisDebug!.errorDetails = {
+            message: apiError instanceof Error ? apiError.message : String(apiError),
+            stack: apiError instanceof Error ? apiError.stack : undefined,
+            phase: 'apiCall'
+          };
+          
+          logStep('apiFailure', { 
+            error: apiError instanceof Error ? apiError.message : String(apiError)
+          });
           
           // Detailed network debugging for API errors
           debug.log('Checking if API error is a network issue...');
@@ -334,6 +401,11 @@ export default function ResumeUpload() {
         console.error('Error uploading resume:', error);
         debug.error('Overall error in upload process:', error);
         
+        logStep('uploadError', { 
+          error: error instanceof Error ? error.message : String(error),
+          phase: 'upload'
+        });
+        
         // If not already set by a specific handler
         if (!debugData.apiError && !debugData.apiTestError) {
           debugData.generalError = error instanceof Error ? 
@@ -352,6 +424,14 @@ export default function ResumeUpload() {
         debug.log('Debug data:', debugData);
         setDebugInfo(debugData);
         debug.groupEnd();
+        
+        logStep('processComplete', { 
+          totalDuration: new Date().getTime() - window.resumeAnalysisDebug!.startTime.getTime(),
+          success: window.resumeAnalysisDebug!.finalResponse !== null,
+          steps: window.resumeAnalysisDebug!.steps.length
+        });
+        
+        console.log('Full resume analysis debug:', window.resumeAnalysisDebug);
         
         // Add debug data to console for easy access
         if (!window._debugLogs) window._debugLogs = [];
@@ -389,19 +469,58 @@ export default function ResumeUpload() {
     Boolean(userProfile.resumeUrl);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg">
+    <div className="p-6 bg-white rounded-lg shadow-lg relative">
       <h2 className="text-2xl font-bold mb-4">Upload Your Resume</h2>
       <p className="text-sm text-gray-600 mb-4">Uploading a new resume will replace any existing resume in your profile.</p>
+      
+      {/* Debug toggle button */}
+      <button 
+        onClick={() => setShowDebugInfo(!showDebugInfo)}
+        className="absolute top-2 right-2 text-xs text-gray-400 hover:text-gray-600"
+      >
+        {showDebugInfo ? 'Hide Debug' : 'Debug'}
+      </button>
       
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           <p className="font-bold">Error</p>
           <p>{error}</p>
+          <div className="flex gap-2 mt-1">
+            <button 
+              onClick={() => console.log('Debug info:', debugInfo)} 
+              className="text-xs underline"
+            >
+              Show debug info in console
+            </button>
+            <button 
+              onClick={() => {
+                console.log("Resume Analysis Debug Data:", window.resumeAnalysisDebug);
+                alert("Debug data logged to console. Press F12 to view.");
+              }} 
+              className="text-xs text-blue-600 underline"
+            >
+              Debug Analysis
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {showDebugInfo && (
+        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded text-xs font-mono">
+          <h4 className="font-bold">Resume Analysis Debug</h4>
+          <div>Steps: {window.resumeAnalysisDebug?.steps?.length || 0}</div>
+          <div>Start Time: {window.resumeAnalysisDebug?.startTime?.toISOString()}</div>
+          <div>Status: {window.resumeAnalysisDebug?.errorDetails ? 'Error' : (window.resumeAnalysisDebug?.finalResponse ? 'Complete' : 'In Progress')}</div>
+          {window.resumeAnalysisDebug?.errorDetails && (
+            <div className="text-red-500 mt-1">
+              Error: {window.resumeAnalysisDebug.errorDetails.message}
+            </div>
+          )}
           <button 
-            onClick={() => console.log('Debug info:', debugInfo)} 
-            className="text-xs underline mt-1"
+            onClick={() => console.log("Full debug data:", window.resumeAnalysisDebug)} 
+            className="mt-1 underline"
           >
-            Show debug info in console
+            Log Full Debug Data
           </button>
         </div>
       )}

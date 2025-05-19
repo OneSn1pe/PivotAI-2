@@ -126,10 +126,38 @@ export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' |
  */
 export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis> {
   debug.log('analyzeResume called');
+  const startTime = performance.now();
+  const debugSteps: any[] = [];
+  
+  // Helper for tracking steps with timing
+  const logStep = (step: string, data: any = {}) => {
+    const timeFromStart = performance.now() - startTime;
+    const stepInfo = {
+      step,
+      timeMs: Math.round(timeFromStart),
+      ...data
+    };
+    debug.log(`[STEP:${step}]`, stepInfo);
+    debugSteps.push(stepInfo);
+    
+    // Add to global debug object if it exists
+    if (typeof window !== 'undefined' && window.resumeAnalysisDebug) {
+      window.resumeAnalysisDebug.clientSteps = window.resumeAnalysisDebug.clientSteps || [];
+      window.resumeAnalysisDebug.clientSteps.push({
+        ...stepInfo,
+        timestamp: new Date()
+      });
+    }
+    
+    return stepInfo;
+  };
+  
+  logStep('analyzeResume.start', { textLength: resumeText.length });
   
   try {
     // Validate input
     if (!resumeText || resumeText.trim() === '') {
+      logStep('analyzeResume.error', { error: 'Empty resume text' });
       throw new Error('Resume text is empty. Please upload a valid resume file.');
     }
     
@@ -138,16 +166,20 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
     // Build API URL
     const baseUrl = getApiBaseUrl();
     const apiUrl = `${baseUrl}/api/analyze-resume`;
-    debug.log(`API URL: ${apiUrl}`);
+    logStep('apiUrl.built', { apiUrl, baseUrl });
     
     // Set up request with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      logStep('request.timeout', { timeout: 60000 });
+    }, 60000);
     
     try {
-      debug.log('Sending API request...');
+      logStep('request.start');
       
       // Make API request - ensure we're using POST method
+      const fetchStartTime = performance.now();
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -156,11 +188,17 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         body: JSON.stringify({ resumeText }),
         signal: controller.signal
       });
+      const fetchEndTime = performance.now();
       
       // Clear timeout
       clearTimeout(timeoutId);
       
-      debug.log(`Response received, status: ${response.status}`);
+      logStep('response.received', { 
+        status: response.status, 
+        statusText: response.statusText,
+        timeMs: Math.round(fetchEndTime - fetchStartTime),
+        headers: Object.fromEntries(Array.from(response.headers.entries()))
+      });
       
       // Check if response is ok
       if (!response.ok) {
@@ -168,9 +206,12 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         let responseText = '';
         try {
           responseText = await response.text();
-          debug.log('Error response text:', responseText);
+          logStep('error.responseText', { 
+            text: responseText.substring(0, 500),
+            length: responseText.length
+          });
         } catch (textErr) {
-          debug.error('Failed to get response text:', textErr);
+          logStep('error.failedToGetText', { error: String(textErr) });
         }
         
         // Try to parse the error response
@@ -182,9 +223,15 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
             const errorData = JSON.parse(responseText);
             errorMessage = errorData.message || errorData.error || errorMessage;
             errorDetails = errorData.details || '';
-            debug.log('Parsed error response:', errorData);
+            
+            // Log error data including debug info from the server
+            logStep('error.parsed', { 
+              message: errorMessage,
+              details: errorDetails,
+              debug: errorData._debug || errorData.meta?._debug || null
+            });
           } catch (parseErr) {
-            debug.error('Error parsing error response:', parseErr);
+            logStep('error.failedToParse', { error: String(parseErr) });
             // Use the raw text if parsing fails
             errorMessage = responseText.substring(0, 100) || errorMessage;
           }
@@ -195,38 +242,63 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
         (enhancedError as any).status = response.status;
         (enhancedError as any).details = errorDetails;
         (enhancedError as any).url = apiUrl;
+        (enhancedError as any).debugSteps = debugSteps;
         
+        logStep('error.throwing', { message: errorMessage, status: response.status });
         throw enhancedError;
       }
       
       // Get the response text
+      const parseStartTime = performance.now();
       const responseText = await response.text();
-      debug.log('Got response text, length:', responseText.length);
+      
+      logStep('response.text', { 
+        length: responseText.length,
+        sample: responseText.substring(0, 150) + '...'
+      });
       
       // Safely parse JSON
       const { data, error } = safeJsonParse(responseText);
+      const parseEndTime = performance.now();
+      
+      logStep('response.parsed', { 
+        parseTimeMs: Math.round(parseEndTime - parseStartTime),
+        success: !error,
+        serverDebug: data?.meta?._debug || null
+      });
       
       if (error) {
-        debug.error('Failed to parse API response:', error);
+        logStep('parse.error', { error: String(error) });
         throw new Error('Failed to parse analysis results. Please try again.');
       }
       
       // Validate response data structure
-      if (!data) {
-        throw new Error('Resume analysis returned empty response');
+      if (!data || (!data.analysis && !data.skills)) {
+        logStep('validation.error', { data: JSON.stringify(data).substring(0, 200) });
+        throw new Error('Resume analysis returned empty or invalid response');
       }
+      
+      // Check if the response is in the expected format or wrapped in data.analysis
+      const analysisData = data.analysis || data;
       
       // Check for required fields with fallbacks
       const validatedAnalysis: ResumeAnalysis = {
-        skills: Array.isArray(data.skills) ? data.skills : [],
-        experience: Array.isArray(data.experience) ? data.experience : [],
-        education: Array.isArray(data.education) ? data.education : [],
-        strengths: Array.isArray(data.strengths) ? data.strengths : [],
-        weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
-        recommendations: Array.isArray(data.recommendations) ? data.recommendations : []
+        skills: Array.isArray(analysisData.skills) ? analysisData.skills : [],
+        experience: Array.isArray(analysisData.experience) ? analysisData.experience : [],
+        education: Array.isArray(analysisData.education) ? analysisData.education : [],
+        strengths: Array.isArray(analysisData.strengths) ? analysisData.strengths : [],
+        weaknesses: Array.isArray(analysisData.weaknesses) ? analysisData.weaknesses : [],
+        recommendations: Array.isArray(analysisData.recommendations) ? analysisData.recommendations : []
       };
       
-      debug.log('Analysis successful!');
+      const totalTime = performance.now() - startTime;
+      logStep('analyzeResume.success', { 
+        timeMs: Math.round(totalTime),
+        skillsCount: validatedAnalysis.skills.length,
+        experienceCount: validatedAnalysis.experience.length,
+        meta: data.meta || null
+      });
+      
       return validatedAnalysis;
       
     } catch (fetchError: any) {
@@ -235,24 +307,47 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       
       // Add more context to error
       let errorMessage = fetchError.message || 'Unknown error';
+      let errorType = 'unknown';
       
       if (fetchError.name === 'AbortError') {
-        debug.error('Request timeout after 60 seconds');
+        errorType = 'timeout';
         errorMessage = 'Resume analysis timed out. Please try again.';
       } else if (fetchError.message?.includes('NetworkError')) {
+        errorType = 'network';
         errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (fetchError.status) {
+        errorType = 'api';
       }
+      
+      logStep('fetch.error', { 
+        type: errorType,
+        message: errorMessage,
+        originalError: String(fetchError),
+        status: fetchError.status || null,
+        stack: fetchError.stack || null
+      });
       
       const enhancedError = new Error(errorMessage);
       (enhancedError as any).originalError = fetchError;
-      (enhancedError as any).type = 'network_error';
+      (enhancedError as any).type = errorType;
+      (enhancedError as any).debugSteps = debugSteps;
       
-      debug.error('Fetch error:', enhancedError);
       throw enhancedError;
     }
     
   } catch (error: any) {
-    debug.error('Resume analysis error:', error);
+    const totalTime = performance.now() - startTime;
+    logStep('analyzeResume.failed', { 
+      timeMs: Math.round(totalTime),
+      error: error.message,
+      type: error.type || 'unknown'
+    });
+    
+    // Attach debug steps to the error object
+    if (!error.debugSteps) {
+      error.debugSteps = debugSteps;
+    }
+    
     throw error;
   }
 }
