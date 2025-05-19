@@ -147,15 +147,15 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         </div>
       </div>
       
-      <h3 className="text-lg font-semibold text-slate-800 mb-3 font-inter">{title}</h3>
+      <h3 className="text-lg font-semibold text-slate-800 mb-3 font-inter line-clamp-1">{title}</h3>
       
-      <p className="text-sm text-slate-600 mb-5">{description}</p>
+      <p className="text-sm text-slate-600 mb-5 line-clamp-2">{description}</p>
       
       {tasks && tasks.length > 0 && (
         <div className="mb-5">
           <h4 className="text-sm font-medium text-slate-700 mb-2.5 font-inter">Action Items:</h4>
           <ul className="space-y-2.5 bg-slate-50 p-4 rounded-lg border border-slate-200">
-            {tasks.map(task => (
+            {tasks.slice(0, 3).map(task => (
               <li 
                 key={task.id} 
                 className="flex items-start text-sm"
@@ -171,11 +171,16 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
                     </svg>
                   )}
                 </span>
-                <span className={task.completed ? 'line-through text-slate-400' : 'text-slate-700'}>
+                <span className={`${task.completed ? 'line-through text-slate-400' : 'text-slate-700'} truncate`}>
                   {task.description}
                 </span>
               </li>
             ))}
+            {tasks.length > 3 && (
+              <li className="text-sm text-slate-500 mt-1 pl-8">
+                +{tasks.length - 3} more items
+              </li>
+            )}
           </ul>
         </div>
       )}

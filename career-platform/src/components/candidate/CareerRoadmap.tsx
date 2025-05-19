@@ -149,129 +149,117 @@ const CareerPath: React.FC<CareerPathProps> = ({
     sortedMilestones = roadmapData?.milestones || [];
   }
 
-  // Add extra error reporting for milestone rendering issues
+  // Replace the renderMilestone function with a more compact one
   const renderMilestone = (milestone: Milestone, index: number) => {
     try {
       return (
-        <div key={milestone.id || `milestone-${index}`} className={`flex flex-col md:flex-row mb-10 items-center`}>
-          {/* Timeline dot */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
-            <div className={`w-6 h-6 rounded-full shadow ${
-              milestone.completed ? 'bg-emerald-500' : 'bg-teal-600'
-            } z-10`}></div>
-          </div>
+        <div 
+          key={milestone.id || `milestone-${index}`} 
+          className={`bg-white rounded-lg shadow-card border ${
+            milestone.completed ? 'border-teal-300' : 'border-slate-200'
+          } transition-all duration-200 hover:shadow-card-hover h-full`}
+        >
+          <div className={`h-2 w-full rounded-t-lg ${
+            milestone.completed ? 'bg-emerald-500' : 'bg-teal-600'
+          }`}></div>
           
-          {/* Content container with alternating sides */}
-          <div className={`flex ${
-            index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-          } w-full items-center`}>
-            {/* Spacer for first half */}
-            <div className="hidden md:block md:w-1/2"></div>
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="text-base font-semibold text-slate-800 font-inter pr-2">{milestone.title || 'Untitled Milestone'}</h3>
+              <span className="text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded-full border border-slate-200 flex-shrink-0">{milestone.timeframe || 'No timeframe'}</span>
+            </div>
             
-            {/* Card content */}
-            <div className="w-full md:w-1/2 p-6 bg-white rounded-lg shadow-card border border-slate-200">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="text-lg font-semibold text-slate-800 font-inter">{milestone.title || 'Untitled Milestone'}</h3>
-                <span className="text-sm text-slate-600 bg-slate-50 px-2 py-1 rounded-full border border-slate-200">{milestone.timeframe || 'No timeframe'}</span>
-              </div>
-              
-              <p className="text-slate-600 mb-4">{milestone.description || 'No description provided'}</p>
-              
-              {/* Skills needed for milestone */}
-              {milestone.skills && milestone.skills.length > 0 ? (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm text-slate-700 font-inter mb-2">Skills to develop:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {milestone.skills.map((skill, skillIndex) => (
-                      <span key={skillIndex} className="bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs border border-slate-200">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm text-slate-700 font-inter mb-2">Skills to develop:</h4>
-                  <p className="text-xs text-slate-500 italic">No specific skills listed for this milestone.</p>
-                </div>
-              )}
-              
-              {/* Resources for milestone */}
-              {milestone.resources && milestone.resources.length > 0 ? (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm text-slate-700 font-inter mb-2">Resources:</h4>
-                  <div className="space-y-2">
-                    {milestone.resources.map((resource, resourceIndex) => (
-                      <a
-                        key={resourceIndex}
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-teal-700 hover:text-teal-800 text-sm"
-                      >
-                        <span className="mr-2">
-                          {resource.type === 'article' && '📄'}
-                          {resource.type === 'video' && '🎥'}
-                          {resource.type === 'course' && '📚'}
-                          {resource.type === 'book' && '📖'}
-                          {resource.type === 'documentation' && '📋'}
-                        </span>
-                        {resource.title}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm text-slate-700 font-inter mb-2">Resources:</h4>
-                  <p className="text-xs text-slate-500 italic">No resources listed for this milestone.</p>
-                </div>
-              )}
-              
-              {/* Completion checkbox */}
-              {isEditable && (
-                <div className="flex items-center pt-2 border-t border-slate-100">
-                  <input
-                    type="checkbox"
-                    id={`milestone-${milestone.id}`}
-                    checked={milestone.completed}
-                    onChange={(e) => {
-                      if (onMilestoneToggle) {
-                        const checked = e.target.checked;
-                        // Set local state immediately for UI feedback
-                        setLocalToggling((prev) => ({ 
-                          ...prev, 
-                          [milestone.id]: true 
-                        }));
-                        
-                        onMilestoneToggle(milestone.id, checked)
-                          .then(() => {
-                            // Clear toggling state when done
-                            setLocalToggling((prev) => ({ 
-                              ...prev, 
-                              [milestone.id]: false 
-                            }));
-                          })
-                          .catch((err) => {
-                            console.error('Error toggling milestone:', err);
-                            setLocalToggling((prev) => ({ 
-                              ...prev, 
-                              [milestone.id]: false 
-                            }));
-                          });
-                      }
-                    }}
-                    className="mr-2 h-4 w-4 text-teal-600 rounded focus:ring-teal-500"
-                  />
-                  <label htmlFor={`milestone-${milestone.id}`} className="text-sm text-slate-700">
-                    {milestone.completed ? 'Completed' : 'Mark as completed'}
-                  </label>
-                  {localToggling[milestone.id] && (
-                    <span className="ml-2 text-xs text-slate-500">Updating...</span>
+            <p className="text-sm text-slate-600 mb-4 line-clamp-2">{milestone.description || 'No description provided'}</p>
+            
+            {/* Skills needed for milestone */}
+            {milestone.skills && milestone.skills.length > 0 ? (
+              <div className="mb-4">
+                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {milestone.skills.slice(0, 3).map((skill, skillIndex) => (
+                    <span key={skillIndex} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs border border-slate-200">
+                      {skill}
+                    </span>
+                  ))}
+                  {milestone.skills.length > 3 && (
+                    <span className="text-xs text-slate-500">+{milestone.skills.length - 3} more</span>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
+                <p className="text-xs text-slate-500 italic">No specific skills listed for this milestone.</p>
+              </div>
+            )}
+            
+            {/* Resources with links */}
+            {milestone.resources && milestone.resources.length > 0 ? (
+              <div className="mb-4">
+                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
+                <div className="space-y-1">
+                  {milestone.resources.slice(0, 3).map((resource, resourceIndex) => (
+                    <a
+                      key={resourceIndex}
+                      href={resource.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-teal-700 hover:text-teal-800 text-xs truncate"
+                    >
+                      <span className="mr-1">
+                        {resource.type === 'article' && '📄'}
+                        {resource.type === 'video' && '🎥'}
+                        {resource.type === 'course' && '📚'}
+                        {resource.type === 'book' && '📖'}
+                        {resource.type === 'documentation' && '📋'}
+                      </span>
+                      {resource.title}
+                    </a>
+                  ))}
+                  {milestone.resources.length > 3 && (
+                    <p className="text-xs text-slate-500">+{milestone.resources.length - 3} more resources</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
+                <p className="text-xs text-slate-500 italic">No resources listed for this milestone.</p>
+              </div>
+            )}
+            
+            {/* Completion checkbox */}
+            {isEditable && (
+              <div className="flex items-center pt-2 border-t border-slate-100">
+                <input
+                  type="checkbox"
+                  id={`milestone-${milestone.id}`}
+                  checked={milestone.completed}
+                  onChange={(e) => {
+                    if (onMilestoneToggle) {
+                      const checked = e.target.checked;
+                      setLocalToggling((prev) => ({ ...prev, [milestone.id]: true }));
+                      
+                      onMilestoneToggle(milestone.id, checked)
+                        .then(() => {
+                          setLocalToggling((prev) => ({ ...prev, [milestone.id]: false }));
+                        })
+                        .catch((err) => {
+                          console.error('Error toggling milestone:', err);
+                          setLocalToggling((prev) => ({ ...prev, [milestone.id]: false }));
+                        });
+                    }
+                  }}
+                  className="mr-2 h-4 w-4 text-teal-600 rounded focus:ring-teal-500"
+                />
+                <label htmlFor={`milestone-${milestone.id}`} className="text-xs text-slate-700">
+                  {milestone.completed ? 'Completed' : 'Mark as completed'}
+                </label>
+                {localToggling[milestone.id] && (
+                  <span className="ml-2 text-xs text-slate-500">Updating...</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       );
@@ -304,11 +292,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
         </div>
       ) : (
         <div className="relative">
-          {/* Timeline vertical line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-teal-200 z-0"></div>
-          
-          {/* Milestones */}
-          <div className="relative z-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {sortedMilestones.map((milestone, index) => 
               renderMilestone(milestone, index)
             )}

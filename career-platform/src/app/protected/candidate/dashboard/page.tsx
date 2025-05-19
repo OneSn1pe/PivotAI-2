@@ -255,7 +255,7 @@ export default function CandidateDashboard() {
           {/* Skills Panel */}
           <div className="bg-white p-5 rounded-lg shadow-card border border-slate-200">
             <h2 className="text-lg font-semibold text-slate-800 font-inter mb-4">Skill Inventory</h2>
-            
+          
             {candidateProfile?.resumeAnalysis?.skills && candidateProfile.resumeAnalysis.skills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
