@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
     
     Please provide the following information in JSON format:
     1. Contact information (name, email, phone, location)
-    2. Summary of skills (technical skills, soft skills)
+    2. List of technical and soft skills
     3. Work experience (company names, job titles, dates, key achievements)
     4. Education (institutions, degrees, dates)
     5. Certifications or special qualifications
