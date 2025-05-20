@@ -21,6 +21,9 @@ export default function PreferencesPage() {
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Define maximum number of allowed companies
+  const MAX_COMPANIES = 3;
+
   useEffect(() => {
     // Load existing preferences if available
     const loadPreferences = async () => {
@@ -50,6 +53,10 @@ export default function PreferencesPage() {
   };
 
   const addCompany = () => {
+    // Don't add more companies if already at the maximum
+    if (targetCompanies.length >= MAX_COMPANIES) {
+      return;
+    }
     setTargetCompanies([...targetCompanies, { name: '', position: '' }]);
   };
 
@@ -167,13 +174,23 @@ export default function PreferencesPage() {
                 </div>
               ))}
               
-              <button
-                type="button"
-                onClick={addCompany}
-                className="w-full py-2 px-4 border border-sky-300 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors"
-              >
-                + Add Another Company
-              </button>
+              {/* Only show the add button if below maximum companies */}
+              {targetCompanies.length < MAX_COMPANIES && (
+                <button
+                  type="button"
+                  onClick={addCompany}
+                  className="w-full py-2 px-4 border border-sky-300 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors"
+                >
+                  + Add Another Company
+                </button>
+              )}
+              
+              {/* Show a message when maximum companies reached */}
+              {targetCompanies.length >= MAX_COMPANIES && (
+                <div className="text-center py-2 text-sky-600 text-sm">
+                  Maximum of {MAX_COMPANIES} target companies reached
+                </div>
+              )}
             </div>
           </div>
           
