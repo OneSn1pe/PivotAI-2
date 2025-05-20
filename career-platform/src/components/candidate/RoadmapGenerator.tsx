@@ -3,7 +3,7 @@ import { ResumeAnalysis, TargetCompany, CareerRoadmap as RoadmapType, Milestone 
 import { generateCareerRoadmap, deleteAllRoadmaps } from '@/services/openai';
 import CareerRoadmap from './CareerRoadmap';
 import { useAuth } from '@/contexts/AuthContext';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 interface RoadmapGeneratorProps {
@@ -23,35 +23,103 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
   const [generatedRoadmap, setGeneratedRoadmap] = useState<RoadmapType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastGenerationTime, setLastGenerationTime] = useState<Date | null>(null);
+  const [timeUntilNextGeneration, setTimeUntilNextGeneration] = useState<string | null>(null);
 
-  // Load existing target companies from user profile
+  // Load existing target companies and last generation time from user profile
   useEffect(() => {
-    async function loadTargetCompanies() {
+    async function loadUserData() {
       if (!userProfile) return;
       
       try {
         setLoading(true);
         const userDoc = await getDoc(doc(db, 'users', userProfile.uid));
         
-        if (userDoc.exists() && userDoc.data().targetCompanies) {
-          const savedCompanies = userDoc.data().targetCompanies;
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
           
-          if (savedCompanies.length > 0) {
-            console.log('Loaded target companies from profile:', savedCompanies);
-            setTargetCompanies(savedCompanies);
+          // Load target companies
+          if (userData.targetCompanies && userData.targetCompanies.length > 0) {
+            console.log('Loaded target companies from profile:', userData.targetCompanies);
+            setTargetCompanies(userData.targetCompanies);
+          }
+          
+          // Load last roadmap generation time
+          if (userData.lastRoadmapGeneration) {
+            const lastGenTime = userData.lastRoadmapGeneration.toDate ? 
+              userData.lastRoadmapGeneration.toDate() : 
+              new Date(userData.lastRoadmapGeneration);
+            
+            setLastGenerationTime(lastGenTime);
+            console.log('Last roadmap generation time:', lastGenTime);
+            
+            // Calculate time remaining until next allowed generation
+            updateTimeRemaining(lastGenTime);
           }
         } else {
-          console.log('No target companies found in user profile');
+          console.log('No user data found in profile');
         }
       } catch (error) {
-        console.error('Error loading target companies:', error);
+        console.error('Error loading user data:', error);
       } finally {
         setLoading(false);
       }
     }
     
-    loadTargetCompanies();
+    loadUserData();
   }, [userProfile]);
+  
+  // Update the countdown timer every minute
+  useEffect(() => {
+    if (!lastGenerationTime) return;
+    
+    // Initial update
+    updateTimeRemaining(lastGenerationTime);
+    
+    // Set up interval for updates
+    const interval = setInterval(() => {
+      updateTimeRemaining(lastGenerationTime);
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, [lastGenerationTime]);
+  
+  // Calculate and update time remaining until next generation is allowed
+  const updateTimeRemaining = (lastGenTime: Date) => {
+    // Calculate when next generation is allowed (1 hour after last generation)
+    const nextAllowedTime = new Date(lastGenTime.getTime() + 60 * 60 * 1000); // 1 hour in milliseconds
+    const now = new Date();
+    
+    // If current time is past the next allowed time, clear the restriction
+    if (now >= nextAllowedTime) {
+      setTimeUntilNextGeneration(null);
+      return;
+    }
+    
+    // Calculate time difference in minutes
+    const diffMs = nextAllowedTime.getTime() - now.getTime();
+    const diffMinutes = Math.ceil(diffMs / 60000);
+    
+    if (diffMinutes > 0) {
+      setTimeUntilNextGeneration(
+        diffMinutes === 1 ? 
+          '1 minute' : 
+          `${diffMinutes} minutes`
+      );
+    } else {
+      setTimeUntilNextGeneration(null);
+    }
+  };
+  
+  // Check if user can generate a new roadmap
+  const canGenerateRoadmap = (): boolean => {
+    if (!lastGenerationTime) return true;
+    
+    const now = new Date();
+    const nextAllowedTime = new Date(lastGenerationTime.getTime() + 60 * 60 * 1000); // 1 hour after last generation
+    
+    return now >= nextAllowedTime;
+  };
 
   // Add a new empty target company field
   const addTargetCompany = () => {
@@ -75,6 +143,12 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
 
   // Validate input before generating roadmap
   const validateInput = (): boolean => {
+    // Check if user is allowed to generate a roadmap (rate limiting)
+    if (!canGenerateRoadmap()) {
+      setError(`Please wait ${timeUntilNextGeneration} before generating another roadmap. Limited to 1 per hour.`);
+      return false;
+    }
+    
     // Check if we have resume analysis
     if (!resumeAnalysis) {
       setError('Please upload your resume first to generate a roadmap.');
@@ -119,15 +193,22 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
-      // Save the valid target companies to the user's profile
+      // Update the last generation time in the user's profile and save target companies
+      const now = new Date();
       try {
         await updateDoc(doc(db, 'users', userProfile.uid), {
           targetCompanies: validTargetCompanies,
-          updatedAt: new Date()
+          lastRoadmapGeneration: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
-        console.log('Successfully saved target companies to user profile');
+        
+        // Update local state with the new generation time
+        setLastGenerationTime(now);
+        updateTimeRemaining(now);
+        
+        console.log('Successfully saved target companies and updated generation timestamp');
       } catch (saveErr) {
-        console.error('Error saving target companies to profile:', saveErr);
+        console.error('Error updating user profile:', saveErr);
         // Continue with roadmap generation even if saving fails
       }
       
@@ -174,6 +255,17 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
             <p className="text-slate-600 mb-6">
               Enter the companies and positions you're targeting for your career path, and we'll generate a personalized roadmap based on your resume and goals.
             </p>
+            
+            {timeUntilNextGeneration && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-md mb-6">
+                <p className="text-amber-700 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Roadmap generation is limited to once per hour. You can generate another roadmap in {timeUntilNextGeneration}.
+                </p>
+              </div>
+            )}
             
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-3 text-slate-800">Target Companies</h3>
@@ -242,7 +334,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
             
             <button
               onClick={handleGenerateRoadmap}
-              disabled={generating}
+              disabled={generating || !!timeUntilNextGeneration}
               className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded shadow-button disabled:opacity-50 transition-all duration-300"
             >
               {generating ? (
@@ -253,7 +345,9 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                   </svg>
                   Generating Your Roadmap...
                 </span>
-              ) : 'Generate Career Roadmap'}
+              ) : timeUntilNextGeneration ? 
+                `Generation Limit Reached` : 
+                'Generate Career Roadmap'}
             </button>
             
             <p className="text-center text-slate-500 mt-2 text-sm">
@@ -270,6 +364,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Expected generation time: Under 1 minute
+                  {timeUntilNextGeneration && ` • Limited to 1 per hour`}
                 </span>
               )}
             </p>
