@@ -20,7 +20,7 @@ export default function RoadmapGeneratorPage() {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
         </div>
       </div>
     );
@@ -32,7 +32,7 @@ export default function RoadmapGeneratorPage() {
         <h1 className="text-4xl font-bold text-slate-800">Create Your Career Roadmap</h1>
         <button
           onClick={() => router.push('/protected/candidate/roadmap')}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-2 rounded-full text-sm font-medium shadow-md shadow-amber-500/30 transition-all duration-300"
+          className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-6 py-2 rounded-lg text-sm font-medium shadow-md shadow-teal-500/30 transition-all duration-300"
         >
           Back
         </button>
