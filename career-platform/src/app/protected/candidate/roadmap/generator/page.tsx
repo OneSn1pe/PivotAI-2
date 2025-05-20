@@ -28,7 +28,7 @@ export default function RoadmapGeneratorPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-4xl font-bold text-slate-800">Create Your Career Roadmap</h1>
         <button
           onClick={() => router.push('/protected/candidate/roadmap')}
@@ -37,7 +37,15 @@ export default function RoadmapGeneratorPage() {
           Back
         </button>
       </div>
-      <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 border border-slate-100 mb-6">
+      
+      <p className="text-slate-600 mb-6 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Quick process — generates a personalized career roadmap in under a minute
+      </p>
+      
+      <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-teal-200/50 border border-slate-100 mb-6">
         <RoadmapGenerator 
           resumeAnalysis={candidateProfile?.resumeAnalysis || null} 
           onRoadmapGenerated={handleRoadmapGenerated}
