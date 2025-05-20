@@ -8,6 +8,13 @@ import { JobPreferences, CandidateProfile, TargetCompany } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import { generateCareerRoadmap } from '@/services/openai';
 
+// Maximum number of items allowed for each preference category
+const MAX_ITEMS = {
+  roles: 3,
+  locations: 3,
+  industries: 3
+};
+
 export default function JobPreferencesForm() {
   const { userProfile } = useAuth();
   const router = useRouter();
@@ -24,6 +31,7 @@ export default function JobPreferencesForm() {
   const [industry, setIndustry] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   useEffect(() => {
     // Load existing preferences if available
@@ -44,33 +52,66 @@ export default function JobPreferencesForm() {
   }, [candidateProfile]);
   
   const handleAddRole = () => {
-    if (role && !preferences.roles.includes(role)) {
-      setPreferences({
-        ...preferences,
-        roles: [...preferences.roles, role],
-      });
-      setRole('');
+    if (!role) return;
+    
+    if (preferences.roles.includes(role)) {
+      setErrors({...errors, roles: 'This role is already added'});
+      return;
     }
+    
+    if (preferences.roles.length >= MAX_ITEMS.roles) {
+      setErrors({...errors, roles: `You can only add up to ${MAX_ITEMS.roles} roles`});
+      return;
+    }
+    
+    setPreferences({
+      ...preferences,
+      roles: [...preferences.roles, role],
+    });
+    setRole('');
+    setErrors({...errors, roles: ''});
   };
   
   const handleAddLocation = () => {
-    if (location && !preferences.locations.includes(location)) {
-      setPreferences({
-        ...preferences,
-        locations: [...preferences.locations, location],
-      });
-      setLocation('');
+    if (!location) return;
+    
+    if (preferences.locations.includes(location)) {
+      setErrors({...errors, locations: 'This location is already added'});
+      return;
     }
+    
+    if (preferences.locations.length >= MAX_ITEMS.locations) {
+      setErrors({...errors, locations: `You can only add up to ${MAX_ITEMS.locations} locations`});
+      return;
+    }
+    
+    setPreferences({
+      ...preferences,
+      locations: [...preferences.locations, location],
+    });
+    setLocation('');
+    setErrors({...errors, locations: ''});
   };
   
   const handleAddIndustry = () => {
-    if (industry && !preferences.industries.includes(industry)) {
-      setPreferences({
-        ...preferences,
-        industries: [...preferences.industries, industry],
-      });
-      setIndustry('');
+    if (!industry) return;
+    
+    if (preferences.industries.includes(industry)) {
+      setErrors({...errors, industries: 'This industry is already added'});
+      return;
     }
+    
+    if (preferences.industries.length >= MAX_ITEMS.industries) {
+      setErrors({...errors, industries: `You can only add up to ${MAX_ITEMS.industries} industries`});
+      return;
+    }
+    
+    setPreferences({
+      ...preferences,
+      industries: [...preferences.industries, industry],
+    });
+    setIndustry('');
+    setErrors({...errors, industries: ''});
   };
   
   const handleRemoveItem = (type: 'roles' | 'locations' | 'industries', index: number) => {
@@ -78,6 +119,8 @@ export default function JobPreferencesForm() {
       ...preferences,
       [type]: preferences[type].filter((_, i) => i !== index),
     });
+    // Clear any errors when an item is removed
+    setErrors({...errors, [type]: ''});
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,6 +188,9 @@ export default function JobPreferencesForm() {
         <div>
           <label className="block text-gray-700 font-semibold mb-2">
             Desired Roles
+            <span className="text-xs font-normal text-gray-500 ml-2">
+              (Maximum {MAX_ITEMS.roles})
+            </span>
           </label>
           <div className="flex mb-2">
             <input
@@ -157,11 +203,19 @@ export default function JobPreferencesForm() {
             <button
               type="button"
               onClick={handleAddRole}
-              className="bg-blue-500 text-white px-4 rounded-r hover:bg-blue-600"
+              disabled={preferences.roles.length >= MAX_ITEMS.roles}
+              className={`${
+                preferences.roles.length >= MAX_ITEMS.roles 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600'
+              } text-white px-4 rounded-r`}
             >
               Add
             </button>
           </div>
+          {errors.roles && (
+            <p className="text-red-500 text-sm mt-1">{errors.roles}</p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2">
             {preferences.roles.map((role, index) => (
               <span 
@@ -184,6 +238,9 @@ export default function JobPreferencesForm() {
         <div>
           <label className="block text-gray-700 font-semibold mb-2">
             Preferred Locations
+            <span className="text-xs font-normal text-gray-500 ml-2">
+              (Maximum {MAX_ITEMS.locations})
+            </span>
           </label>
           <div className="flex mb-2">
             <input
@@ -196,11 +253,19 @@ export default function JobPreferencesForm() {
             <button
               type="button"
               onClick={handleAddLocation}
-              className="bg-blue-500 text-white px-4 rounded-r hover:bg-blue-600"
+              disabled={preferences.locations.length >= MAX_ITEMS.locations}
+              className={`${
+                preferences.locations.length >= MAX_ITEMS.locations 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600'
+              } text-white px-4 rounded-r`}
             >
               Add
             </button>
           </div>
+          {errors.locations && (
+            <p className="text-red-500 text-sm mt-1">{errors.locations}</p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2">
             {preferences.locations.map((location, index) => (
               <span 
@@ -258,6 +323,9 @@ export default function JobPreferencesForm() {
         <div>
           <label className="block text-gray-700 font-semibold mb-2">
             Preferred Industries
+            <span className="text-xs font-normal text-gray-500 ml-2">
+              (Maximum {MAX_ITEMS.industries})
+            </span>
           </label>
           <div className="flex mb-2">
             <input
@@ -270,11 +338,19 @@ export default function JobPreferencesForm() {
             <button
               type="button"
               onClick={handleAddIndustry}
-              className="bg-blue-500 text-white px-4 rounded-r hover:bg-blue-600"
+              disabled={preferences.industries.length >= MAX_ITEMS.industries}
+              className={`${
+                preferences.industries.length >= MAX_ITEMS.industries 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600'
+              } text-white px-4 rounded-r`}
             >
               Add
             </button>
           </div>
+          {errors.industries && (
+            <p className="text-red-500 text-sm mt-1">{errors.industries}</p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2">
             {preferences.industries.map((industry, index) => (
               <span 
