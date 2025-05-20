@@ -115,7 +115,7 @@ export default function ProfilePage() {
   if (!userProfile) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
       </div>
     );
   }
@@ -128,24 +128,24 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-sky-800">Your Profile</h1>
+        <h1 className="text-3xl font-bold text-slate-800">Your Profile</h1>
         <button
           onClick={() => router.push('/protected/candidate/dashboard')}
-          className="bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-all"
+          className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-medium py-2 px-4 rounded-lg shadow-md shadow-teal-500/30 transition-all"
         >
           Back to Dashboard
         </button>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-slate-200 mb-6">
         {tabs.map(tab => (
           <button
             key={tab.id}
             className={`py-2 px-4 font-medium text-sm ${
               activeTab === tab.id
-                ? 'text-sky-600 border-b-2 border-sky-500'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-teal-600 border-b-2 border-teal-500'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -154,17 +154,17 @@ export default function ProfilePage() {
         ))}
       </div>
       
-      <div className="bg-white/80 backdrop-filter backdrop-blur-md p-8 rounded-xl shadow-xl shadow-sky-200/50 border border-slate-100 float-card">
+      <div className="bg-white/80 backdrop-filter backdrop-blur-md p-8 rounded-xl shadow-xl shadow-teal-200/30 border border-slate-100 float-card">
         {activeTab === 'resume' && (
           <ResumeManager onUpdateComplete={() => router.refresh()} />
         )}
         
         {activeTab === 'target-companies' && (
           <>
-            <h2 className="text-xl font-semibold mb-6 text-sky-700">Set Your Target Companies</h2>
+            <h2 className="text-xl font-semibold mb-6 text-slate-700">Set Your Target Companies</h2>
             
             {saveSuccess && (
-              <div className="mb-6 p-4 rounded-lg status-partly-cloudy">
+              <div className="mb-6 p-4 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
                 Target companies saved successfully!
               </div>
             )}
@@ -178,9 +178,9 @@ export default function ProfilePage() {
                 
                 <div className="space-y-4">
                   {targetCompanies.map((company, index) => (
-                    <div key={index} className="p-4 bg-white/90 rounded-lg border border-sky-100 shadow-sm">
+                    <div key={index} className="p-4 bg-white/90 rounded-lg border border-teal-100 shadow-sm">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-sky-700">Company #{index + 1}</span>
+                        <span className="font-medium text-teal-700">Company #{index + 1}</span>
                         {targetCompanies.length > 1 && (
                           <button 
                             type="button" 
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                             id={`company-name-${index}`} 
                             value={company.name}
                             onChange={(e) => handleCompanyChange(index, 'name', e.target.value)}
-                            className="w-full p-2 border border-sky-200 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-sky-500 focus:border-sky-500"
+                            className="w-full p-2 border border-slate-300 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-teal-500 focus:border-teal-500"
                             placeholder="e.g., Google, Microsoft"
                           />
                         </div>
@@ -216,7 +216,7 @@ export default function ProfilePage() {
                             id={`company-position-${index}`}
                             value={company.position}
                             onChange={(e) => handleCompanyChange(index, 'position', e.target.value)}
-                            className="w-full p-2 border border-sky-200 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-sky-500 focus:border-sky-500"
+                            className="w-full p-2 border border-slate-300 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-teal-500 focus:border-teal-500"
                             placeholder="e.g., Software Engineer, Product Manager"
                           />
                         </div>
@@ -229,7 +229,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={addCompany}
-                      className="w-full py-2 px-4 border border-sky-300 rounded-lg text-sky-600 hover:bg-sky-50 transition-colors"
+                      className="w-full py-2 px-4 border border-teal-300 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
                     >
                       + Add Another Company
                     </button>
@@ -237,7 +237,7 @@ export default function ProfilePage() {
                   
                   {/* Show a message when maximum companies reached */}
                   {targetCompanies.length >= MAX_COMPANIES && (
-                    <div className="text-center py-2 text-sky-600 text-sm">
+                    <div className="text-center py-2 text-teal-600 text-sm">
                       Maximum of {MAX_COMPANIES} target companies reached
                     </div>
                   )}
@@ -248,12 +248,14 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`cloud-btn w-full bg-gradient-to-r from-sky-500 to-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-all
-                    ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:from-sky-600 hover:to-blue-700'}`}
+                  className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded-md shadow-button transition-all disabled:opacity-50"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">
-                      <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></span>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
                       Saving...
                     </span>
                   ) : 'Save Target Companies'}

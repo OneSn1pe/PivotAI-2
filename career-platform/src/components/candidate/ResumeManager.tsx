@@ -341,12 +341,12 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4">Manage Your Resume</h2>
+      <h2 className="text-xl font-bold mb-4 text-slate-800">Manage Your Resume</h2>
       
       {candidateProfile?.resumeUrl && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-lg mb-2">Current Resume</h3>
-          <p className="text-sm text-gray-600 mb-3">
+        <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+          <h3 className="font-semibold text-lg mb-2 text-slate-800">Current Resume</h3>
+          <p className="text-sm text-slate-600 mb-3">
             {displayFileName ? (
               <>File: <span className="font-medium">{displayFileName}</span> • </>
             ) : null}
@@ -368,12 +368,12 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       )}
       
       <div className="mb-6">
-        <h3 className="font-semibold text-lg mb-3">Update Your Resume</h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <h3 className="font-semibold text-lg mb-3 text-slate-800">Update Your Resume</h3>
+        <p className="text-sm text-slate-600 mb-4">
           Upload a new resume to update your profile and get a fresh analysis of your skills and areas for improvement.
         </p>
         
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+        <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
           <input
             type="file"
             onChange={handleFileChange}
@@ -385,13 +385,13 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             htmlFor="resume-file"
             className="cursor-pointer block"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-slate-600">
               {file ? file.name : 'Click to select a resume file'}
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-slate-500">
               PDF, DOCX, or TXT (max 5MB)
             </p>
           </label>
@@ -399,7 +399,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         
         {file && plainTextContent && (
           <div className="mt-4">
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-slate-600 mb-2">
               {file.type === 'text/plain' ? 
                 'Text file ready to upload.' : 
                 `Your ${file.type === 'application/pdf' ? 'PDF' : 'DOCX'} has been converted to plaintext (${plainTextContent.length} characters).`}
@@ -407,7 +407,7 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             <button
               onClick={handleUpload}
               disabled={uploading || analyzing}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50"
+              className="w-full bg-teal-700 hover:bg-teal-800 text-white font-semibold py-2 px-4 rounded shadow-button transition-all disabled:opacity-50"
             >
               {uploading 
                 ? `Uploading... ${Math.round(progress)}%` 
@@ -426,34 +426,34 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       )}
       
       {successMessage && (
-        <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-lg">
+        <div className="mb-4 p-4 bg-teal-50 text-teal-700 rounded-lg">
           {successMessage}
         </div>
       )}
       
       {analysis && (
         <div className="mt-6">
-          <h3 className="font-semibold text-lg mb-3">Analysis Results</h3>
+          <h3 className="font-semibold text-lg mb-3 text-slate-800">Analysis Results</h3>
           
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">Skills</h4>
+              <h4 className="font-medium text-slate-700 mb-2">Skills</h4>
               {analysis.skills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {analysis.skills.map((skill, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    <span key={index} className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">
                       {skill}
                     </span>
                   ))}
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-slate-600 mb-3">
                     No specific skills were detected in your resume.
                   </p>
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
-                    <h5 className="text-sm font-medium text-yellow-800">Resume Tip:</h5>
-                    <p className="text-sm text-yellow-700 mt-1">
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+                    <h5 className="text-sm font-medium text-amber-800">Resume Tip:</h5>
+                    <p className="text-sm text-amber-700 mt-1">
                       For better results, include a dedicated "Skills" section in your resume with explicitly listed skills (e.g., "Python", "React", "Project Management").
                     </p>
                   </div>
@@ -462,28 +462,28 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">Strengths</h4>
+              <h4 className="font-medium text-slate-700 mb-2">Strengths</h4>
               <ul className="list-disc pl-5 space-y-1">
                 {analysis.strengths.map((strength, index) => (
-                  <li key={index} className="text-gray-700">{strength}</li>
+                  <li key={index} className="text-slate-700">{strength}</li>
                 ))}
               </ul>
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">Areas for Improvement</h4>
+              <h4 className="font-medium text-slate-700 mb-2">Areas for Improvement</h4>
               <ul className="list-disc pl-5 space-y-1">
                 {analysis.weaknesses.map((weakness, index) => (
-                  <li key={index} className="text-gray-700">{weakness}</li>
+                  <li key={index} className="text-slate-700">{weakness}</li>
                 ))}
               </ul>
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">Recommendations</h4>
+              <h4 className="font-medium text-slate-700 mb-2">Recommendations</h4>
               <ul className="list-disc pl-5 space-y-1">
                 {analysis.recommendations.map((recommendation, index) => (
-                  <li key={index} className="text-gray-700">{recommendation}</li>
+                  <li key={index} className="text-slate-700">{recommendation}</li>
                 ))}
               </ul>
             </div>
