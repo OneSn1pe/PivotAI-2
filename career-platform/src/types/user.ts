@@ -82,5 +82,6 @@ export enum UserRole {
       title: string;
       url: string;
       type: 'article' | 'video' | 'course' | 'book' | 'documentation';
+      usageGuide?: string;
     }[];
   }

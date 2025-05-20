@@ -152,85 +152,252 @@ const CareerPath: React.FC<CareerPathProps> = ({
   // Replace the renderMilestone function with a more compact one
   const renderMilestone = (milestone: Milestone, index: number) => {
     try {
+      const isExpanded = expandedMilestones[milestone.id] || false;
+      
       return (
         <div 
           key={milestone.id || `milestone-${index}`} 
           className={`bg-white rounded-lg shadow-card border ${
             milestone.completed ? 'border-teal-300' : 'border-slate-200'
-          } transition-all duration-200 hover:shadow-card-hover h-full`}
+          } transition-all duration-300 hover:shadow-card-hover h-full ${
+            isExpanded ? 'sm:col-span-2 lg:col-span-3 xl:col-span-2 row-span-2' : ''
+          }`}
+          style={{
+            transition: 'all 0.3s ease-in-out',
+            transform: isExpanded ? 'scale(1.02)' : 'scale(1)',
+            zIndex: isExpanded ? 10 : 1
+          }}
         >
           <div className={`h-2 w-full rounded-t-lg ${
             milestone.completed ? 'bg-emerald-500' : 'bg-teal-600'
           }`}></div>
           
           <div className="p-4">
-            <div className="flex justify-between items-start mb-3">
+            <div 
+              className="flex justify-between items-start mb-3 cursor-pointer"
+              onClick={() => toggleExpand(milestone.id)}
+              tabIndex={0}
+              role="button"
+              aria-expanded={isExpanded}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleExpand(milestone.id);
+                }
+              }}
+            >
               <h3 className="text-base font-semibold text-slate-800 font-inter pr-2">{milestone.title || 'Untitled Milestone'}</h3>
-              <span className="text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded-full border border-slate-200 flex-shrink-0">{milestone.timeframe || 'No timeframe'}</span>
+              <div className="flex items-center">
+                <span className="text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded-full border border-slate-200 flex-shrink-0 mr-2">{milestone.timeframe || 'No timeframe'}</span>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
             
-            <p className="text-sm text-slate-600 mb-4 line-clamp-2">{milestone.description || 'No description provided'}</p>
-            
-            {/* Skills needed for milestone */}
-            {milestone.skills && milestone.skills.length > 0 ? (
-              <div className="mb-4">
-                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
-                <div className="flex flex-wrap gap-1">
-                  {milestone.skills.slice(0, 3).map((skill, skillIndex) => (
-                    <span key={skillIndex} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs border border-slate-200">
-                      {skill}
-                    </span>
-                  ))}
-                  {milestone.skills.length > 3 && (
-                    <span className="text-xs text-slate-500">+{milestone.skills.length - 3} more</span>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
-                <p className="text-xs text-slate-500 italic">No specific skills listed for this milestone.</p>
-              </div>
-            )}
-            
-            {/* Resources with links */}
-            {milestone.resources && milestone.resources.length > 0 ? (
-              <div className="mb-4">
-                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
-                <div className="space-y-1">
-                  {milestone.resources.slice(0, 3).map((resource, resourceIndex) => (
-                    <a
-                      key={resourceIndex}
-                      href={resource.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-teal-700 hover:text-teal-800 text-xs truncate"
-                    >
-                      <span className="mr-1">
-                        {resource.type === 'article' && '📄'}
-                        {resource.type === 'video' && '🎥'}
-                        {resource.type === 'course' && '📚'}
-                        {resource.type === 'book' && '📖'}
-                        {resource.type === 'documentation' && '📋'}
+            <div className={`transition-all duration-300 ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 overflow-hidden opacity-0'}`}>
+              <p className="text-sm text-slate-600 mb-4">{milestone.description || 'No description provided'}</p>
+              
+              {/* Skills needed for milestone - show all when expanded */}
+              {milestone.skills && milestone.skills.length > 0 ? (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {milestone.skills.map((skill, skillIndex) => (
+                      <span key={skillIndex} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs border border-slate-200">
+                        {skill}
                       </span>
-                      {resource.title}
-                    </a>
-                  ))}
-                  {milestone.resources.length > 3 && (
-                    <p className="text-xs text-slate-500">+{milestone.resources.length - 3} more resources</p>
-                  )}
+                    ))}
+                  </div>
                 </div>
+              ) : (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
+                  <p className="text-xs text-slate-500 italic">No specific skills listed for this milestone.</p>
+                </div>
+              )}
+              
+              {/* Resources with links - show all when expanded */}
+              {milestone.resources && milestone.resources.length > 0 ? (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
+                  <div className="space-y-3">
+                    {milestone.resources.map((resource, resourceIndex) => (
+                      <div key={resourceIndex} className="bg-slate-50 p-3 rounded-md border border-slate-100">
+                        <a
+                          href={resource.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-teal-700 hover:text-teal-800 text-xs font-medium mb-1"
+                        >
+                          <span className="mr-1">
+                            {resource.type === 'article' && '📄'}
+                            {resource.type === 'video' && '🎥'}
+                            {resource.type === 'course' && '📚'}
+                            {resource.type === 'book' && '📖'}
+                            {resource.type === 'documentation' && '📋'}
+                            {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && '🔗'}
+                          </span>
+                          {resource.title}
+                        </a>
+                        {resource.usageGuide ? (
+                          <div className="mt-1">
+                            <h5 className="text-xs font-medium text-slate-700 mb-1">How to use this resource effectively:</h5>
+                            <p className="text-xs text-slate-600">{resource.usageGuide}</p>
+                          </div>
+                        ) : (
+                          <div className="mt-1">
+                            <h5 className="text-xs font-medium text-slate-700 mb-1">Usage guide:</h5>
+                            {resource.type === 'article' && (
+                              <p className="text-xs text-slate-600">
+                                Read this article thoroughly and take notes on key points. Try to apply the concepts discussed to your current skill development. Consider creating a summary to reinforce your understanding.
+                              </p>
+                            )}
+                            {resource.type === 'video' && (
+                              <p className="text-xs text-slate-600">
+                                Watch the complete video, pausing to take notes on important concepts. Consider implementing what you learn in a small practice project to reinforce your understanding.
+                              </p>
+                            )}
+                            {resource.type === 'course' && (
+                              <p className="text-xs text-slate-600">
+                                Follow this course from start to finish, completing all exercises and projects. Set a consistent schedule and allocate dedicated time each week to make steady progress.
+                              </p>
+                            )}
+                            {resource.type === 'book' && (
+                              <p className="text-xs text-slate-600">
+                                Read thoroughly, taking notes on key concepts. Consider creating a study group to discuss chapters or implementing code examples as you progress through the material.
+                              </p>
+                            )}
+                            {resource.type === 'documentation' && (
+                              <p className="text-xs text-slate-600">
+                                Use as a reference while working on projects. Focus on sections most relevant to your current skills gap. Practice implementing examples to solidify your understanding.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
+                  <p className="text-xs text-slate-500 italic">No resources listed for this milestone.</p>
+                </div>
+              )}
+              
+              {/* Minimize button */}
+              <div className="text-center mt-4">
+                <button 
+                  onClick={() => toggleExpand(milestone.id)}
+                  className="text-xs text-teal-600 hover:text-teal-800 font-medium flex items-center justify-center w-full"
+                  aria-label="Minimize milestone details"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-3 w-3 mr-1 rotate-180" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  Minimize
+                </button>
               </div>
-            ) : (
-              <div className="mb-4">
-                <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
-                <p className="text-xs text-slate-500 italic">No resources listed for this milestone.</p>
-              </div>
-            )}
+            </div>
+            
+            {/* Non-expanded view - preview content */}
+            <div className={`transition-all duration-300 ${isExpanded ? 'hidden' : 'block'}`}>
+              <p className="text-sm text-slate-600 mb-4 line-clamp-2">{milestone.description || 'No description provided'}</p>
+              
+              {/* Skills preview */}
+              {milestone.skills && milestone.skills.length > 0 ? (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {milestone.skills.slice(0, 3).map((skill, skillIndex) => (
+                      <span key={skillIndex} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs border border-slate-200">
+                        {skill}
+                      </span>
+                    ))}
+                    {milestone.skills.length > 3 && (
+                      <span className="text-xs text-slate-500">+{milestone.skills.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Skills to develop:</h4>
+                  <p className="text-xs text-slate-500 italic">No specific skills listed for this milestone.</p>
+                </div>
+              )}
+              
+              {/* Resources preview */}
+              {milestone.resources && milestone.resources.length > 0 ? (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
+                  <div className="space-y-1">
+                    {milestone.resources.slice(0, 3).map((resource, resourceIndex) => (
+                      <a
+                        key={resourceIndex}
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-teal-700 hover:text-teal-800 text-xs truncate"
+                      >
+                        <span className="mr-1">
+                          {resource.type === 'article' && '📄'}
+                          {resource.type === 'video' && '🎥'}
+                          {resource.type === 'course' && '📚'}
+                          {resource.type === 'book' && '📖'}
+                          {resource.type === 'documentation' && '📋'}
+                          {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && '🔗'}
+                        </span>
+                        {resource.title}
+                      </a>
+                    ))}
+                    {milestone.resources.length > 3 && (
+                      <p className="text-xs text-slate-500">+{milestone.resources.length - 3} more resources</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <h4 className="font-medium text-xs text-slate-700 font-inter mb-2">Resources:</h4>
+                  <p className="text-xs text-slate-500 italic">No resources listed for this milestone.</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Hint to click for more details */}
+            <div className={`text-center mt-2 mb-1 ${isExpanded ? 'hidden' : 'block'}`}>
+              <button 
+                onClick={() => toggleExpand(milestone.id)}
+                className="text-xs text-teal-600 hover:text-teal-800 font-medium flex items-center justify-center w-full"
+              >
+                Click to see full details
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-3 w-3 ml-1" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
             
             {/* Completion checkbox */}
             {isEditable && (
-              <div className="flex items-center pt-2 border-t border-slate-100">
+              <div className="flex items-center pt-2 border-t border-slate-100 mt-3">
                 <input
                   type="checkbox"
                   id={`milestone-${milestone.id}`}
@@ -292,7 +459,7 @@ const CareerPath: React.FC<CareerPathProps> = ({
         </div>
       ) : (
         <div className="relative">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-auto">
             {sortedMilestones.map((milestone, index) => 
               renderMilestone(milestone, index)
             )}
