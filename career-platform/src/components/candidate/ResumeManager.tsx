@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { useFileDownload } from '@/hooks/useFileDownload';
 import { analyzeResume } from '@/services/openai';
 import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
@@ -23,7 +22,6 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   const { userProfile, updateUserProfile } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const { uploadFile, uploading, progress } = useFileUpload();
-  const { downloadAndSaveFile, downloading } = useFileDownload();
   
   const [file, setFile] = useState<File | null>(null);
   const [plainTextContent, setPlainTextContent] = useState('');
@@ -341,70 +339,6 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
     }
   };
   
-  // Function to view/download resume using the new hook
-  const handleViewResume = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    
-    // Force refresh to get latest resume
-    await forceGetLatestResume();
-    
-    if (validatingUrl) {
-      setError('Please wait, validating resume access...');
-      return;
-    }
-    
-    if (!validatedResumeUrl) {
-      setError('Cannot access resume file. No resume found.');
-      return;
-    }
-    
-    try {
-      if (!candidateProfile?.uid) {
-        throw new Error('User not authenticated');
-      }
-      
-      // Get all files in storage to find most recent
-      const userResumesRef = ref(storage, `resumes/${candidateProfile.uid}`);
-      const filesList = await listAll(userResumesRef);
-      
-      if (filesList.items.length === 0) {
-        throw new Error('No resume files found in storage');
-      }
-      
-      // Sort by name to get the most recent one
-      const sortedItems = [...filesList.items].sort((a, b) => {
-        return b.name.localeCompare(a.name);
-      });
-      
-      // Use the most recent file's path directly
-      const resumePath = sortedItems[0].fullPath;
-      
-      // Determine filename
-      let filename = 'resume';
-      if (candidateProfile.resumeFileName) {
-        filename = candidateProfile.resumeFileName;
-      } else {
-        // Extract filename from path if available
-        const pathParts = resumePath.split('/');
-        filename = pathParts[pathParts.length - 1];
-      }
-      
-      // Use our custom hook to download the file directly from storage
-      await downloadAndSaveFile(resumePath, filename);
-      
-      setSuccessMessage('Resume download initiated');
-      
-    } catch (err) {
-      console.error('Resume download error:', err);
-      setError('Error downloading resume: ' + (err instanceof Error ? err.message : String(err)));
-      
-      // Fallback: open in a new tab if all else fails
-      if (validatedResumeUrl) {
-        window.open(validatedResumeUrl, '_blank');
-      }
-    }
-  };
-  
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-bold mb-4">Manage Your Resume</h2>
@@ -430,21 +364,6 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
               ) : 'Unknown'
             }
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <a 
-              href="#"
-              onClick={handleViewResume}
-              className={`inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 ${(validatingUrl || downloading) ? 'opacity-50 cursor-wait' : ''}`}
-              aria-disabled={validatingUrl || downloading}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              {validatingUrl ? 'Validating...' : 
-               downloading ? 'Downloading...' : 'Download Resume'}
-            </a>
-          </div>
         </div>
       )}
       
