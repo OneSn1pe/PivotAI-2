@@ -202,16 +202,27 @@ export async function POST(request: NextRequest) {
     
     ${resumeText}
     
-    Please provide the following information in JSON format:
-    1. Contact information (name, email, phone, location)
-    2. List of technical and soft skills
-    3. Work experience (company names, job titles, dates, key achievements)
-    4. Education (institutions, degrees, dates)
-    5. Certifications or special qualifications
-    6. Languages spoken
-    7. Overall assessment of resume quality (1-10 scale)
-    8. Areas for improvement
-    9. Suggested job roles based on experience
+    Please provide the following information in this EXACT JSON format:
+    {
+      "skills": [list of technical and soft skills as an array of strings],
+      "experience": [list of work experiences as an array of strings],
+      "education": [list of education items as an array of strings],
+      "strengths": [list of resume strengths as an array of strings],
+      "weaknesses": [list of areas for improvement as an array of strings],
+      "recommendations": [list of job role recommendations as an array of strings],
+      "contact_information": {
+        "name": "Full Name",
+        "email": "email@example.com",
+        "phone": "phone number",
+        "location": "City, State"
+      },
+      "certifications": [list of certifications as an array of strings],
+      "languages": [list of languages as an array of strings],
+      "quality_score": number from 1-10
+    }
+    
+    IMPORTANT: Use the EXACT field names shown above. Make sure all arrays are properly formatted.
+    For any field that cannot be determined, use an empty array [] or appropriate default value.
     `;
     
     checkpoints.push(logApiCheckpoint("OpenAI prompt prepared"));
@@ -247,6 +258,69 @@ export async function POST(request: NextRequest) {
     try {
       parsedResponse = JSON.parse(responseText);
       checkpoints.push(logApiCheckpoint("Response parsed successfully"));
+      
+      // Transform the response to ensure it matches the expected format
+      const transformResponse = (data: any) => {
+        // Ensure all expected fields exist with proper format
+        const transformed: any = {
+          skills: Array.isArray(data.skills) ? data.skills : [],
+          experience: Array.isArray(data.experience) ? data.experience : [],
+          education: Array.isArray(data.education) ? data.education : [],
+          strengths: Array.isArray(data.strengths) ? data.strengths : [],
+          weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+          recommendations: Array.isArray(data.recommendations) ? data.recommendations : [],
+        };
+        
+        // Map common alternative field names
+        const fieldMappings = {
+          skills: ['technical_skills', 'soft_skills', 'summary_of_skills', 'skill_set'],
+          experience: ['work_experience', 'professional_experience', 'work_history', 'employment_history'],
+          education: ['educational_background', 'academic_history'],
+          strengths: ['strong_points', 'positive_aspects', 'resume_strengths'],
+          weaknesses: ['areas_for_improvement', 'improvement_areas', 'weak_points'],
+          recommendations: ['suggested_job_roles', 'career_suggestions', 'job_recommendations']
+        };
+        
+        // Check for alternate field names if primary is empty
+        Object.entries(fieldMappings).forEach(([primary, alternates]) => {
+          if (transformed[primary].length === 0) {
+            for (const alt of alternates) {
+              if (Array.isArray(data[alt]) && data[alt].length > 0) {
+                transformed[primary] = data[alt];
+                break;
+              }
+            }
+          }
+        });
+        
+        // Add additional fields that might be useful
+        if (data.contact_information) {
+          transformed.contact_information = data.contact_information;
+        }
+        
+        if (data.certifications) {
+          transformed.certifications = data.certifications;
+        }
+        
+        if (data.languages) {
+          transformed.languages = data.languages;
+        }
+        
+        if (data.quality_score) {
+          transformed.quality_score = data.quality_score;
+        }
+        
+        return transformed;
+      };
+      
+      // Transform the parsed response
+      parsedResponse = transformResponse(parsedResponse);
+      checkpoints.push(logApiCheckpoint("Response transformed", { 
+        skillsCount: parsedResponse.skills?.length || 0,
+        experienceCount: parsedResponse.experience?.length || 0,
+        educationCount: parsedResponse.education?.length || 0
+      }));
+      
     } catch (err) {
       // Handle parsing errors
       checkpoints.push(logApiCheckpoint("Failed to parse response", { error: (err as Error).message }));

@@ -312,17 +312,62 @@ export default function ResumeUpload() {
           debugData.apiCallDuration = debugData.apiCallEndTime - debugData.apiCallStartTime;
           debug.log(`API call completed in ${debugData.apiCallDuration}ms`);
           
-          setAnalysis(resumeAnalysis);
+          // Ensure the analysis has all required fields
+          const ensureValidAnalysis = (analysis: any): ResumeAnalysis => {
+            if (!analysis) return {
+              skills: [],
+              experience: [],
+              education: [],
+              strengths: [],
+              weaknesses: [],
+              recommendations: []
+            };
+            
+            // Helper to ensure array fields
+            const ensureArray = (value: any): string[] => {
+              if (Array.isArray(value)) return value;
+              if (typeof value === 'string') return [value];
+              return [];
+            };
+            
+            return {
+              skills: ensureArray(analysis.skills),
+              experience: ensureArray(analysis.experience),
+              education: ensureArray(analysis.education),
+              strengths: ensureArray(analysis.strengths),
+              weaknesses: ensureArray(analysis.weaknesses),
+              recommendations: ensureArray(analysis.recommendations),
+              // Keep any additional fields from the analysis
+              ...(analysis || {})
+            };
+          };
+          
+          // Validate and set the analysis
+          const validatedAnalysis = ensureValidAnalysis(resumeAnalysis);
+          setAnalysis(validatedAnalysis);
+          
           debugData.analysisReceived = !!resumeAnalysis;
-          debug.log('Resume analysis complete:', resumeAnalysis);
+          debug.log('Resume analysis complete:', validatedAnalysis);
+          
+          // Log any missing fields for debugging
+          const missingFields = Object.entries(validatedAnalysis)
+            .filter(([_, value]) => Array.isArray(value) && value.length === 0)
+            .map(([key]) => key);
+            
+          if (missingFields.length > 0) {
+            debug.warn('Missing fields in analysis:', missingFields);
+            debugData.missingFields = missingFields;
+            logStep('missingFields', { fields: missingFields });
+          }
+          
           logStep('analysisComplete', { 
-            skillsCount: resumeAnalysis.skills.length,
-            experienceCount: resumeAnalysis.experience.length,
-            strengthsCount: resumeAnalysis.strengths.length,
-            weaknessesCount: resumeAnalysis.weaknesses.length
+            skillsCount: validatedAnalysis.skills.length,
+            experienceCount: validatedAnalysis.experience.length,
+            strengthsCount: validatedAnalysis.strengths.length,
+            weaknessesCount: validatedAnalysis.weaknesses.length
           });
           
-          window.resumeAnalysisDebug!.finalResponse = resumeAnalysis;
+          window.resumeAnalysisDebug!.finalResponse = validatedAnalysis;
           
           // Update user profile with resume URL and analysis
           debug.log('Updating user profile in Firestore...');

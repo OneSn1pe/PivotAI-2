@@ -281,15 +281,56 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       // Check if the response is in the expected format or wrapped in data.analysis
       const analysisData = data.analysis || data;
       
+      // Helper function to safely extract arrays from potentially nested structures
+      const safeExtractArray = (obj: any, fieldName: string): string[] => {
+        // Direct field match
+        if (Array.isArray(obj[fieldName])) {
+          return obj[fieldName];
+        }
+        
+        // Check for nested objects
+        const nestedFields = {
+          skills: ['technical_skills', 'soft_skills', 'summary_of_skills', 'skill_set'],
+          experience: ['work_experience', 'professional_experience', 'work_history', 'employment_history'],
+          education: ['educational_background', 'academic_history'],
+          strengths: ['strong_points', 'positive_aspects', 'resume_strengths'],
+          weaknesses: ['areas_for_improvement', 'improvement_areas', 'weak_points', 'resume_weaknesses'],
+          recommendations: ['suggested_job_roles', 'career_suggestions', 'job_recommendations', 'career_paths']
+        };
+        
+        // Check alternate field names
+        const alternateNames = nestedFields[fieldName as keyof typeof nestedFields] || [];
+        for (const altName of alternateNames) {
+          if (Array.isArray(obj[altName])) {
+            return obj[altName];
+          }
+        }
+        
+        // Check if the field is within contact_information
+        if (obj.contact_information && obj.contact_information[fieldName]) {
+          const value = obj.contact_information[fieldName];
+          return Array.isArray(value) ? value : [value];
+        }
+        
+        // Return empty array as fallback
+        return [];
+      };
+      
       // Check for required fields with fallbacks
       const validatedAnalysis: ResumeAnalysis = {
-        skills: Array.isArray(analysisData.skills) ? analysisData.skills : [],
-        experience: Array.isArray(analysisData.experience) ? analysisData.experience : [],
-        education: Array.isArray(analysisData.education) ? analysisData.education : [],
-        strengths: Array.isArray(analysisData.strengths) ? analysisData.strengths : [],
-        weaknesses: Array.isArray(analysisData.weaknesses) ? analysisData.weaknesses : [],
-        recommendations: Array.isArray(analysisData.recommendations) ? analysisData.recommendations : []
+        skills: safeExtractArray(analysisData, 'skills'),
+        experience: safeExtractArray(analysisData, 'experience'),
+        education: safeExtractArray(analysisData, 'education'),
+        strengths: safeExtractArray(analysisData, 'strengths'),
+        weaknesses: safeExtractArray(analysisData, 'weaknesses'),
+        recommendations: safeExtractArray(analysisData, 'recommendations')
       };
+      
+      // Debug log the full API response and extracted fields
+      if (process.env.NODE_ENV !== 'production') {
+        debug.log('Full API response:', data);
+        debug.log('Extracted fields:', validatedAnalysis);
+      }
       
       const totalTime = performance.now() - startTime;
       logStep('analyzeResume.success', { 
