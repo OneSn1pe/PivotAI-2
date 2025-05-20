@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 export type ObjectiveDifficulty = 1 | 2 | 3 | 4 | 5;
 export type ObjectiveType = 'major' | 'minor' | 'daily';
@@ -42,8 +43,15 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
   onClick,
   className = ''
 }) => {
+  const router = useRouter();
+
   const handleClick = () => {
     if (onClick) onClick(id);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push('/protected/candidate/roadmap');
   };
 
   const renderObjectiveBadge = () => {
@@ -84,14 +92,10 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
 
     switch (status) {
       case 'available':
-        bgColor = 'bg-amber-100';
-        textColor = 'text-amber-800';
-        icon = (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-          </svg>
-        );
-        label = 'OPEN';
+        bgColor = '';
+        textColor = '';
+        icon = null;
+        label = '';
         break;
       case 'completed':
         bgColor = 'bg-emerald-100';
@@ -113,6 +117,10 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         );
         label = 'LOCKED';
         break;
+    }
+
+    if (status === 'available') {
+      return null;
     }
 
     return (
@@ -175,27 +183,9 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         </div>
       )}
       
-      {/* Outcome section */}
-      <div className="mb-5 bg-slate-50 p-4 rounded-lg border border-slate-200">
-        <h4 className="text-sm font-medium text-slate-700 mb-2.5 font-inter">Outcome:</h4>
-        <div className="flex items-center">
-          <div className="bg-teal-100 text-teal-800 rounded-full px-2.5 py-0.5 text-xs font-medium mr-3">
-            +{rewards.points} Points
-          </div>
-          {rewards.resources && rewards.resources.length > 0 && (
-            <div className="text-xs text-slate-600">
-              + {rewards.resources.length} Professional {rewards.resources.length === 1 ? 'Resource' : 'Resources'}
-            </div>
-          )}
-        </div>
-      </div>
-      
       <div className="pt-3 border-t border-slate-100 flex justify-end">
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
+          onClick={handleViewDetails}
           disabled={isDisabled}
           className={`text-sm font-medium ${isDisabled ? 'text-slate-400' : 'text-teal-700 hover:text-teal-800'}`}
         >
