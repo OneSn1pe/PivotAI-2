@@ -60,9 +60,8 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/protected/candidate/dashboard" className="text-white text-xl font-inter font-bold flex items-center">
-                <span className="mr-2 text-2xl">🧭</span>
                 <span className="relative">
-                  PivotAI Career
+                  PivotAI
                   <span className="absolute h-0.5 w-full bottom-0 left-0 bg-teal-200 rounded-full transform translate-y-1"></span>
                 </span>
               </Link>
