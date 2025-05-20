@@ -18,6 +18,10 @@ import { auth, db } from '@/config/firebase';
 import { User, UserRole } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import { isDevelopmentMode, setCookie, deleteCookie, logEnvironmentInfo } from '@/utils/environment';
+import logger from '@/utils/logger';
+
+// Create a namespaced logger for auth
+const log = logger.createNamespace('Auth');
 
 interface AuthContextType {
   currentUser: FirebaseUser | null;
@@ -46,7 +50,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Only set custom claims if needed - track if we've already done it
   const [claimsSet, setClaimsSet] = useState(false);
 
-  console.log(`[AuthContext] Provider initialized, isDevMode: ${isDevMode}`);
+  log.info(`Provider initialized, isDevMode: ${isDevMode}`);
   
   // Log environment info on initialization
   useEffect(() => {
@@ -60,13 +64,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     // Skip in development mode to avoid errors
     if (isDevMode) {
-      console.log('[AuthContext] Skipping custom claims in development mode');
+      log.info('Skipping custom claims in development mode');
       setClaimsSet(true);
       return true;
     }
     
     try {
-      console.log(`[AuthContext] Setting custom claims for user: ${uid}`);
+      log.info(`Setting custom claims for user: ${uid}`);
       
       // Try multiple endpoints in sequence until one succeeds
       const endpoints = [
@@ -98,7 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (success) break;
         
         try {
-          console.log(`[AuthContext] Trying endpoint: ${endpoint.url}`);
+          log.info(`Trying endpoint: ${endpoint.url}`);
           const response = await fetch(endpoint.url, {
             method: 'POST',
             headers: {
@@ -110,21 +114,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const data = await response.json();
           
           if (response.ok) {
-            console.log(`[AuthContext] Successfully set claims using ${endpoint.url}:`, data);
+            log.info(`Successfully set claims using ${endpoint.url}:`, data);
             success = true;
             setClaimsSet(true);
           } else {
-            console.warn(`[AuthContext] Endpoint ${endpoint.url} failed:`, data.error);
+            log.warn(`Endpoint ${endpoint.url} failed:`, data.error);
             finalError = data.error;
           }
         } catch (err) {
-          console.warn(`[AuthContext] Error with endpoint ${endpoint.url}:`, err);
+          log.warn(`Error with endpoint ${endpoint.url}:`, err);
           finalError = err;
         }
       }
       
       if (!success) {
-        console.error('[AuthContext] All claim setting endpoints failed:', finalError);
+        log.error('All claim setting endpoints failed:', finalError);
         return false;
       }
       
@@ -136,28 +140,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           // Force refresh the token to get the new claims
           const token = await currentUser.getIdToken(true);
-          console.log('[AuthContext] Token refreshed with new claims');
+          log.info('Token refreshed with new claims');
           
           // Update the session cookie with the new token using our utility
           if (typeof document !== 'undefined') {
             setCookie('session', token, 3600);
-            console.log('[AuthContext] Updated session cookie with fresh token');
+            log.info('Updated session cookie with fresh token');
           }
         } catch (refreshError) {
-          console.error('[AuthContext] Error refreshing token after setting claims:', refreshError);
+          log.error('Error refreshing token after setting claims:', refreshError);
         }
       }
       
       return true;
     } catch (error) {
-      console.error('[AuthContext] Error setting custom claims:', error);
+      log.error('Error setting custom claims:', error);
       return false;
     }
   };
 
   useEffect(() => {
     // Set persistence to LOCAL
-    setPersistence(auth, browserLocalPersistence).catch(console.error);
+    setPersistence(auth, browserLocalPersistence).catch(err => log.error('Error setting persistence:', err));
 
     let mounted = true;
 
@@ -165,7 +169,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!mounted) return;
 
       try {
-        console.log(`[AuthContext] Auth state changed: User ${user ? 'present' : 'absent'}`);
+        log.info(`Auth state changed: User ${user ? 'present' : 'absent'}`);
         setCurrentUser(user);
         
         if (user) {
@@ -173,7 +177,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
-            console.log(`[AuthContext] User role: ${userData.role}`);
+            log.info(`User role: ${userData.role}`);
             setUserProfile(userData);
             
             // Set custom claims if needed - but don't do it repeatedly
@@ -190,9 +194,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   
                   // Set the cookie using our utility function
                   setCookie('session', token, 3600);
-                  console.log('[AuthContext] Set session cookie');
+                  log.info('Set session cookie');
                 } catch (tokenErr) {
-                  console.error('[AuthContext] Error getting token:', tokenErr);
+                  log.error('Error getting token:', tokenErr);
                 }
               }
             }
@@ -211,14 +215,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUserProfile(null);
           // Clear the session cookie using our utility
           deleteCookie('session');
-          console.log('[AuthContext] Cleared session cookie');
+          log.info('Cleared session cookie');
         }
       } catch (error) {
-        console.error('[AuthContext] Error in auth state change:', error);
+        log.error('Error in auth state change:', error);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     });
 

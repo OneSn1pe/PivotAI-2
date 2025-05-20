@@ -2,6 +2,10 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import logger from '@/utils/logger';
+
+// Create a namespaced logger for Firebase config
+const log = logger.createNamespace('Firebase');
 
 // Check if we're in development mode
 const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true' ||
@@ -14,10 +18,10 @@ const isBrowser = typeof window !== 'undefined';
 const isProduction = process.env.NODE_ENV === 'production';
 const isLocalhost = isBrowser && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-console.log(`[Firebase Config] Running in ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);
-console.log(`[Firebase Config] Auth domain: ${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}`);
-console.log(`[Firebase Config] Environment: ${isProduction ? 'production' : 'development'}`);
-console.log(`[Firebase Config] Hostname: ${isBrowser ? window.location.hostname : 'server'}`);
+log.info(`Running in ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} mode`);
+log.info(`Auth domain: ${process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}`);
+log.info(`Environment: ${isProduction ? 'production' : 'development'}`);
+log.info(`Hostname: ${isBrowser ? window.location.hostname : 'server'}`);
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -37,7 +41,7 @@ const auth = getAuth(app);
 if (isBrowser) {
   setPersistence(auth, browserLocalPersistence)
     .catch((error) => {
-      console.error('Error setting auth persistence:', error);
+      log.error('Error setting auth persistence:', error);
     });
 }
 
@@ -64,11 +68,11 @@ export function setSessionCookie(token: string) {
     
     // Set the cookie
     document.cookie = cookieOptions.join('; ');
-    console.log(`[Firebase Config] Set session cookie with options: ${cookieOptions.join(', ')}`);
+    log.info(`Set session cookie with options: ${cookieOptions.join(', ')}`);
     
     return true;
   } catch (err) {
-    console.error('[Firebase Config] Error setting session cookie:', err);
+    log.error('Error setting session cookie:', err);
     return false;
   }
 }
@@ -81,12 +85,12 @@ if (isBrowser) {
       try {
         const token = await user.getIdToken();
         setSessionCookie(token);
-        console.log('[Firebase Config] Updated session cookie on auth state change');
+        log.info('Updated session cookie on auth state change');
       } catch (err) {
-        console.error('[Firebase Config] Error setting cookie on auth state change:', err);
+        log.error('Error setting cookie on auth state change:', err);
       }
     } else {
-      console.log('[Firebase Config] User signed out, clearing session cookie');
+      log.info('User signed out, clearing session cookie');
       document.cookie = 'session=; path=/; max-age=0';
     }
   });

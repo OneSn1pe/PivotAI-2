@@ -1,10 +1,26 @@
 import React from 'react';
 import Link from 'next/link';
 import ContactForm from '@/components/ContactForm';
+import Script from 'next/script';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 via-slate-50 to-slate-100">
+      <Script id="structured-data" type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "PivotAI - Career Development Platform",
+          "url": "https://pivotai.me/",
+          "description": "AI-powered career development platform with personalized roadmaps and skill recommendations",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://pivotai.me/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        })}
+      </Script>
+      
       <header className="bg-white/70 backdrop-filter backdrop-blur-md shadow-md sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-teal-800 font-inter">PivotAI Career</h1>

@@ -1,18 +1,8 @@
 import { ResumeAnalysis, TargetCompany, CareerRoadmap } from '@/types/user';
+import logger from '@/utils/logger';
 
-// Debug helper with support for production environment
-const debug = {
-  log: (...args: any[]) => {
-    if (typeof window !== 'undefined') {
-      console.log('[CLIENT:openai-service]', ...args);
-    }
-  },
-  error: (...args: any[]) => {
-    if (typeof window !== 'undefined') {
-      console.error('[CLIENT:openai-service:ERROR]', ...args);
-    }
-  }
-};
+// Create a namespaced logger for OpenAI service
+const log = logger.createNamespace('OpenAI');
 
 // Get base URL for API calls in both development and production
 const getApiBaseUrl = () => {
@@ -42,11 +32,11 @@ const safeJsonParse = (text: string) => {
  * Debug function to test API endpoints with various HTTP methods
  */
 export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' | 'OPTIONS' = 'GET', body?: any): Promise<any> {
-  debug.log(`Testing ${method} ${endpoint}...`);
+  log.debug(`Testing ${method} ${endpoint}...`);
   
   const baseUrl = getApiBaseUrl();
   const apiUrl = `${baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-  debug.log(`Full URL: ${apiUrl}`);
+  log.debug(`Full URL: ${apiUrl}`);
   
   const headers: Record<string, string> = {
     'Accept': 'application/json',
@@ -57,9 +47,9 @@ export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' |
   }
   
   try {
-    debug.log(`Sending ${method} request to ${apiUrl}`);
-    debug.log('Headers:', headers);
-    if (body) debug.log('Body:', body);
+    log.debug(`Sending ${method} request to ${apiUrl}`);
+    log.debug('Headers:', headers);
+    if (body) log.debug('Body:', body);
     
     const options: RequestInit = {
       method,
@@ -74,23 +64,23 @@ export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' |
     
     const response = await fetch(apiUrl, options);
     
-    debug.log(`Response status: ${response.status} ${response.statusText}`);
+    log.debug(`Response status: ${response.status} ${response.statusText}`);
     
     // Log response headers
     const responseHeaders: Record<string, string> = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
-    debug.log('Response headers:', responseHeaders);
+    log.debug('Response headers:', responseHeaders);
     
     // Only try to parse body for non-OPTIONS requests
     if (method !== 'OPTIONS') {
       const responseText = await response.text();
-      debug.log('Response body (text):', responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
+      log.debug('Response body (text):', responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''));
       
       const { data, error } = safeJsonParse(responseText);
       if (error) {
-        debug.error('Failed to parse response as JSON:', error);
+        log.error('Failed to parse response as JSON:', error);
         return { 
           ok: response.ok, 
           status: response.status, 
@@ -114,7 +104,7 @@ export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' |
       headers: responseHeaders
     };
   } catch (error) {
-    debug.error(`Request error (${method} ${apiUrl}):`, error);
+    log.error(`Request error (${method} ${apiUrl}):`, error);
     throw error;
   }
 }
@@ -125,7 +115,7 @@ export async function testApiEndpoint(endpoint: string, method: 'GET' | 'POST' |
  * @returns A structured analysis of the resume
  */
 export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis> {
-  debug.log('analyzeResume called');
+  log.debug('analyzeResume called');
   const startTime = performance.now();
   const debugSteps: any[] = [];
   
@@ -137,7 +127,7 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       timeMs: Math.round(timeFromStart),
       ...data
     };
-    debug.log(`[STEP:${step}]`, stepInfo);
+    log.debug(`[STEP:${step}]`, stepInfo);
     debugSteps.push(stepInfo);
     
     // Add to global debug object if it exists
@@ -161,7 +151,7 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       throw new Error('Resume text is empty. Please upload a valid resume file.');
     }
     
-    debug.log(`Resume text length: ${resumeText.length}`);
+    log.debug(`Resume text length: ${resumeText.length}`);
     
     // Build API URL
     const baseUrl = getApiBaseUrl();
@@ -328,8 +318,8 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       
       // Debug log the full API response and extracted fields
       if (process.env.NODE_ENV !== 'production') {
-        debug.log('Full API response:', data);
-        debug.log('Extracted fields:', validatedAnalysis);
+        log.debug('Full API response:', data);
+        log.debug('Extracted fields:', validatedAnalysis);
       }
       
       const totalTime = performance.now() - startTime;
@@ -398,7 +388,7 @@ export async function generateCareerRoadmap(
   targetCompanies: TargetCompany[],
   candidateId?: string
 ): Promise<CareerRoadmap> {
-  debug.log('generateCareerRoadmap called');
+  log.debug('generateCareerRoadmap called');
   
   try {
     // Validate inputs to prevent API errors
@@ -411,7 +401,7 @@ export async function generateCareerRoadmap(
     }
     
     if (!candidateId) {
-      debug.log('Warning: candidateId not provided');
+      log.debug('Warning: candidateId not provided');
     }
     
     // Ensure all expected arrays exist in resumeAnalysis
@@ -427,7 +417,7 @@ export async function generateCareerRoadmap(
     
     const baseUrl = getApiBaseUrl();
     const apiUrl = `${baseUrl}/api/generate-roadmap`;
-    debug.log(`API URL: ${apiUrl}`);
+    log.debug(`API URL: ${apiUrl}`);
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -454,7 +444,7 @@ export async function generateCareerRoadmap(
         
         try {
           const responseText = await response.text();
-          debug.log('Error response:', responseText);
+          log.debug('Error response:', responseText);
           
           const { data, error } = safeJsonParse(responseText);
           if (data) {
@@ -462,31 +452,31 @@ export async function generateCareerRoadmap(
             errorDetails = data.details || '';
           }
         } catch (err) {
-          debug.error('Error parsing error response:', err);
+          log.error('Error parsing error response:', err);
         }
         
         throw new Error(`${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`);
       }
       
       const responseText = await response.text();
-      debug.log(`Response received, length: ${responseText.length}`);
+      log.debug(`Response received, length: ${responseText.length}`);
       
       const { data, error } = safeJsonParse(responseText);
       
       if (error) {
-        debug.error('Failed to parse roadmap response:', error);
+        log.error('Failed to parse roadmap response:', error);
         throw new Error('Failed to parse roadmap results. Please try again.');
       }
       
       if (!data || !Array.isArray(data.milestones)) {
-        debug.error('Invalid roadmap data structure:', data);
+        log.error('Invalid roadmap data structure:', data);
         throw new Error('Invalid roadmap data returned from server');
       }
       
       // With the updated API, the response may not include the document ID if it's an update
       // Make sure we handle this case properly
       if (!data.id) {
-        debug.log('Warning: Roadmap ID not found in response, using provided ID if any');
+        log.debug('Warning: Roadmap ID not found in response, using provided ID if any');
       }
       
       return data as CareerRoadmap;
@@ -494,15 +484,15 @@ export async function generateCareerRoadmap(
       clearTimeout(timeoutId);
       
       if (fetchError.name === 'AbortError') {
-        debug.error('Request timeout');
+        log.error('Request timeout');
         throw new Error('Roadmap generation timed out. Please try again.');
       }
       
-      debug.error('Fetch error:', fetchError);
+      log.error('Fetch error:', fetchError);
       throw fetchError;
     }
   } catch (error) {
-    debug.error('Error generating roadmap:', error);
+    log.error('Error generating roadmap:', error);
     throw error;
   }
 }
@@ -513,7 +503,7 @@ export async function generateCareerRoadmap(
  * @returns Information about the deletion operation
  */
 export async function deleteAllRoadmaps(candidateId: string): Promise<{ success: boolean, count: number }> {
-  debug.log('deleteAllRoadmaps called for candidateId:', candidateId);
+  log.debug('deleteAllRoadmaps called for candidateId:', candidateId);
   
   try {
     if (!candidateId) {
@@ -522,7 +512,7 @@ export async function deleteAllRoadmaps(candidateId: string): Promise<{ success:
     
     const baseUrl = getApiBaseUrl();
     const apiUrl = `${baseUrl}/api/delete-roadmaps`;
-    debug.log(`API URL: ${apiUrl}`);
+    log.debug(`API URL: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -537,14 +527,14 @@ export async function deleteAllRoadmaps(candidateId: string): Promise<{ success:
       
       try {
         const responseText = await response.text();
-        debug.log('Error response:', responseText);
+        log.debug('Error response:', responseText);
         
         const { data, error } = safeJsonParse(responseText);
         if (data) {
           errorMessage = data.message || data.error || errorMessage;
         }
       } catch (err) {
-        debug.error('Error parsing error response:', err);
+        log.error('Error parsing error response:', err);
       }
       
       throw new Error(errorMessage);
@@ -553,17 +543,17 @@ export async function deleteAllRoadmaps(candidateId: string): Promise<{ success:
     const { data, error } = safeJsonParse(await response.text());
     
     if (error) {
-      debug.error('Failed to parse response:', error);
+      log.error('Failed to parse response:', error);
       throw new Error('Failed to parse delete response');
     }
     
-    debug.log('Roadmaps deleted successfully:', data);
+    log.debug('Roadmaps deleted successfully:', data);
     return { 
       success: true, 
       count: data.count || 0 
     };
   } catch (error) {
-    debug.error('Error deleting roadmaps:', error);
+    log.error('Error deleting roadmaps:', error);
     throw error;
   }
 }
