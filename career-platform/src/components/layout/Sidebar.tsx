@@ -15,9 +15,8 @@ export default function Sidebar() {
 
   const links = [
     { href: '/protected/candidate/dashboard', label: 'Dashboard', icon: 'home' },
-    { href: '/protected/candidate/profile', label: 'Profile', icon: 'user' },
+    { href: '/protected/candidate/profile', label: 'Profile & Preferences', icon: 'user' },
     { href: '/protected/candidate/roadmap', label: 'Career Roadmap', icon: 'map' },
-    { href: '/protected/candidate/preferences', label: 'Job Preferences', icon: 'settings' },
   ];
 
   const handleLogout = async () => {

@@ -17,9 +17,8 @@ export default function Navbar() {
 
   const links = [
     { href: '/protected/candidate/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/protected/candidate/profile', label: 'Profile', icon: '👤' },
+    { href: '/protected/candidate/profile', label: 'Profile & Preferences', icon: '👤' },
     { href: '/protected/candidate/roadmap', label: 'Career Path', icon: '🛣️' },
-    { href: '/protected/candidate/preferences', label: 'Preferences', icon: '⚙️' },
   ];
 
   const handleLogout = async () => {
