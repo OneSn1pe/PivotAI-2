@@ -47,7 +47,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-teal-900 to-teal-700 shadow-md shadow-teal-700/20">
+    <nav className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-teal-900 to-teal-700 shadow-md shadow-teal-700/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         {/* Subtle header accent */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
