@@ -2,7 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 
 export type ObjectiveDifficulty = 1 | 2 | 3 | 4 | 5;
-export type ObjectiveType = 'major' | 'minor' | 'daily';
+export type ObjectiveType = 'technical' | 'non-technical';
 export type ObjectiveStatus = 'available' | 'completed' | 'locked';
 
 export interface ObjectiveProps {
@@ -10,6 +10,7 @@ export interface ObjectiveProps {
   title: string;
   description: string;
   type: ObjectiveType;
+  category?: ObjectiveType; // Added for backward compatibility
   difficulty: ObjectiveDifficulty;
   status: ObjectiveStatus;
   rewards: {
@@ -60,20 +61,15 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     let label = '';
 
     switch (type) {
-      case 'major':
-        bgColor = 'bg-teal-100';
-        textColor = 'text-teal-800';
-        label = 'MAJOR';
+      case 'technical':
+        bgColor = 'bg-indigo-100';
+        textColor = 'text-indigo-800';
+        label = 'TECHNICAL';
         break;
-      case 'minor':
-        bgColor = 'bg-blue-100';
-        textColor = 'text-blue-800';
-        label = 'MINOR';
-        break;
-      case 'daily':
-        bgColor = 'bg-emerald-100';
-        textColor = 'text-emerald-800';
-        label = 'DAILY';
+      case 'non-technical':
+        bgColor = 'bg-amber-100';
+        textColor = 'text-amber-800';
+        label = 'SOFT SKILL';
         break;
     }
 

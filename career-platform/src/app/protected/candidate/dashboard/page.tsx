@@ -98,14 +98,27 @@ export default function CandidateDashboard() {
     if (!roadmapData.milestones) return;
     
     const convertedObjectives = roadmapData.milestones.map((milestone, index) => {
-      // Determine objective type based on milestone properties or index
-      let type: 'major' | 'minor' | 'daily' = 'minor';
+      // Determine if milestone is technical based on skills and title keywords
+      const technicalKeywords = [
+        'code', 'programming', 'software', 'development', 'technical', 'algorithm',
+        'framework', 'language', 'database', 'api', 'engineering', 'architecture',
+        'deploy', 'frontend', 'backend', 'fullstack', 'test', 'debug', 'devops',
+        'cloud', 'system', 'infrastructure', 'security', 'network'
+      ];
       
-      if (index === 0 || index === roadmapData.milestones.length - 1) {
-        type = 'major'; // First and last milestones are major
-      } else if (index % 3 === 0) {
-        type = 'daily'; // Every third milestone is a daily task
-      }
+      // Check if milestone skills or title contain technical keywords
+      const hasTechnicalSkills = milestone.skills?.some(skill => 
+        technicalKeywords.some(keyword => 
+          skill.toLowerCase().includes(keyword.toLowerCase())
+        )
+      );
+      
+      const hasTechnicalTitle = technicalKeywords.some(keyword => 
+        milestone.title.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
+      // Determine objective type based on technical content
+      const type = hasTechnicalSkills || hasTechnicalTitle ? 'technical' : 'non-technical';
       
       // Determine difficulty (1-5) based on skills required or custom logic
       const difficulty = 3; // Default to middle value since we're not showing complexity anymore
@@ -130,7 +143,8 @@ export default function CandidateDashboard() {
         id: milestone.id,
         title: milestone.title,
         description: milestone.description,
-        type,
+        type, // 'technical' or 'non-technical'
+        category: type, // Adding an explicit category property for clarity
         difficulty: difficulty as 1 | 2 | 3 | 4 | 5,
         status: milestone.completed ? 'completed' : 'available',
         rewards: {
@@ -145,7 +159,13 @@ export default function CandidateDashboard() {
       };
     });
     
-    setObjectives(convertedObjectives);
+    // Sort objectives by type - technical first, then non-technical
+    const sortedObjectives = [
+      ...convertedObjectives.filter(obj => obj.type === 'technical'),
+      ...convertedObjectives.filter(obj => obj.type === 'non-technical')
+    ];
+    
+    setObjectives(sortedObjectives);
   };
 
   const handleQuestClick = (objectiveId: string) => {

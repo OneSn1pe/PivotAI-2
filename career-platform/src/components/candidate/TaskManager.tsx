@@ -46,7 +46,7 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     return groups;
   }, {} as Record<ObjectiveType, ObjectiveProps[]>);
   
-  // Sort objectives by status (in-progress first, then available, then completed, then locked)
+  // Sort objectives by status (available first, then completed, then locked)
   const sortObjectives = (objectives: ObjectiveProps[]): ObjectiveProps[] => {
     return [...objectives].sort((a, b) => {
       const statusOrder: Record<ObjectiveStatus, number> = {
@@ -83,34 +83,24 @@ const TaskManager: React.FC<TaskManagerProps> = ({
         All Tasks
       </button>
       <button
-        onClick={() => handleFilterChange('major')}
+        onClick={() => handleFilterChange('technical')}
         className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-          activeFilter === 'major'
-            ? 'bg-teal-700 text-white'
+          activeFilter === 'technical'
+            ? 'bg-indigo-700 text-white'
             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
         }`}
       >
-        Major Objectives
+        Technical Skills
       </button>
       <button
-        onClick={() => handleFilterChange('minor')}
+        onClick={() => handleFilterChange('non-technical')}
         className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-          activeFilter === 'minor'
-            ? 'bg-teal-700 text-white'
+          activeFilter === 'non-technical'
+            ? 'bg-amber-700 text-white'
             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
         }`}
       >
-        Minor Objectives
-      </button>
-      <button
-        onClick={() => handleFilterChange('daily')}
-        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-          activeFilter === 'daily'
-            ? 'bg-teal-700 text-white'
-            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-        }`}
-      >
-        Daily Tasks
+        Soft Skills
       </button>
     </div>
   );
@@ -163,17 +153,13 @@ const TaskManager: React.FC<TaskManagerProps> = ({
     let description = '';
     
     switch (type) {
-      case 'major':
-        title = 'Major Objectives';
-        description = 'Significant career milestones that require focused effort';
+      case 'technical':
+        title = 'Technical Skills Development';
+        description = 'Technical abilities, programming, development, and specialized knowledge tasks';
         break;
-      case 'minor':
-        title = 'Minor Objectives';
-        description = 'Smaller professional development tasks to enhance your skills';
-        break;
-      case 'daily':
-        title = 'Daily Tasks';
-        description = 'Regular career maintenance activities to keep momentum';
+      case 'non-technical':
+        title = 'Soft Skills & Professional Growth';
+        description = 'Communication, leadership, teamwork, and career advancement activities';
         break;
     }
     
@@ -224,9 +210,8 @@ const TaskManager: React.FC<TaskManagerProps> = ({
       
       {activeFilter === 'all' ? (
         <>
-          {renderObjectivesByType('major')}
-          {renderObjectivesByType('minor')}
-          {renderObjectivesByType('daily')}
+          {renderObjectivesByType('technical')}
+          {renderObjectivesByType('non-technical')}
         </>
       ) : (
         renderObjectivesByType(activeFilter)
