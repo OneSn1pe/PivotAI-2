@@ -198,12 +198,18 @@ export default function CandidateDashboard() {
             </p>
           </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
             <button
               onClick={() => router.push('/protected/candidate/profile')}
               className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
             >
               {displayFileName ? 'Update Resume' : 'Upload Resume'}
+            </button>
+            <button
+              onClick={() => router.push('/protected/candidate/profile?tab=target-companies')}
+              className="bg-slate-100 hover:bg-slate-200 text-teal-700 border border-teal-300 px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+            >
+              Target Companies
             </button>
           </div>
         </div>
