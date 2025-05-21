@@ -166,6 +166,7 @@ Return a structured JSON roadmap with these components:
       "skills": ["skill1", "skill2"],
       "timeframe": "1-3 months",
       "completed": false,
+      "skillType": "technical" or "soft",
       "resources": [
         {
           "title": "Resource name",
@@ -186,6 +187,10 @@ Return a structured JSON roadmap with these components:
 
 Prioritize high-impact skills and experiences that specifically align with the target companies' known requirements for the positions. Focus on achievable milestones within the 1-2 year timeframe.
 
+Use the following guidance for skillType:
+- "technical": for milestones focused on coding, programming, software, development, algorithms, frameworks, databases, technical systems, engineering, etc.
+- "soft": for milestones focused on communication, leadership, teamwork, time management, emotional intelligence, collaboration, etc.
+
 Candidate's current profile:
 - Skills: ${JSON.stringify(truncatedAnalysis.skills)}
 - Experience: ${JSON.stringify(truncatedAnalysis.experience)}
@@ -200,6 +205,7 @@ Guidelines:
 - Resources should be high-quality, free or low-cost, and directly relevant
 - Resource types can be: article, video, course, book, or documentation
 - Prefer official documentation and well-known learning platforms
+- Every milestone MUST have a skillType field marked as either "technical" or "soft"
 - Return ONLY valid JSON with no additional text or formatting`
             }
           ],
@@ -360,6 +366,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
       skills: resumeAnalysis?.skills?.slice(0, 3) || ["Technical Skills", "Communication", "Problem Solving"],
       timeframe: "1-3 months",
       completed: false,
+      skillType: "technical",
       resources: [
         {
           title: "Online Learning Platform",
@@ -380,6 +387,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
       skills: ["Project Management", "Documentation"],
       timeframe: "2-4 months",
       completed: false,
+      skillType: "technical",
       resources: [
         {
           title: "Portfolio Best Practices",
@@ -400,6 +408,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
       skills: ["Communication", "Networking"],
       timeframe: "3-6 months",
       completed: false,
+      skillType: "soft",
       resources: [
         {
           title: "LinkedIn Networking Guide",
@@ -420,6 +429,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
       skills: ["Interview Skills", "Technical Knowledge"],
       timeframe: "1-2 months",
       completed: false,
+      skillType: "soft",
       resources: [
         {
           title: "Practice Interview Questions",
@@ -440,6 +450,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
       skills: ["Resume Writing", "Cover Letter Writing"],
       timeframe: "1-2 months",
       completed: false,
+      skillType: "soft",
       resources: [
         {
           title: "Resume Templates",

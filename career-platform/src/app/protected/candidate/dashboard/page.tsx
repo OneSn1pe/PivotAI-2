@@ -98,27 +98,36 @@ export default function CandidateDashboard() {
     if (!roadmapData.milestones) return;
     
     const convertedObjectives = roadmapData.milestones.map((milestone, index) => {
-      // Determine if milestone is technical based on skills and title keywords
-      const technicalKeywords = [
-        'code', 'programming', 'software', 'development', 'technical', 'algorithm',
-        'framework', 'language', 'database', 'api', 'engineering', 'architecture',
-        'deploy', 'frontend', 'backend', 'fullstack', 'test', 'debug', 'devops',
-        'cloud', 'system', 'infrastructure', 'security', 'network'
-      ];
+      // Use the milestone's skillType to determine if it's technical or not
+      // If skillType is not available (for backwards compatibility), fall back to keyword detection
+      let type: 'technical' | 'non-technical';
       
-      // Check if milestone skills or title contain technical keywords
-      const hasTechnicalSkills = milestone.skills?.some(skill => 
-        technicalKeywords.some(keyword => 
-          skill.toLowerCase().includes(keyword.toLowerCase())
-        )
-      );
-      
-      const hasTechnicalTitle = technicalKeywords.some(keyword => 
-        milestone.title.toLowerCase().includes(keyword.toLowerCase())
-      );
-      
-      // Determine objective type based on technical content
-      const type = hasTechnicalSkills || hasTechnicalTitle ? 'technical' : 'non-technical';
+      if (milestone.skillType) {
+        // Use the explicitly set skillType
+        type = milestone.skillType === 'technical' ? 'technical' : 'non-technical';
+      } else {
+        // Fallback to keyword detection for older data
+        const technicalKeywords = [
+          'code', 'programming', 'software', 'development', 'technical', 'algorithm',
+          'framework', 'language', 'database', 'api', 'engineering', 'architecture',
+          'deploy', 'frontend', 'backend', 'fullstack', 'test', 'debug', 'devops',
+          'cloud', 'system', 'infrastructure', 'security', 'network'
+        ];
+        
+        // Check if milestone skills or title contain technical keywords
+        const hasTechnicalSkills = milestone.skills?.some(skill => 
+          technicalKeywords.some(keyword => 
+            skill.toLowerCase().includes(keyword.toLowerCase())
+          )
+        );
+        
+        const hasTechnicalTitle = technicalKeywords.some(keyword => 
+          milestone.title.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        // Determine objective type based on technical content
+        type = hasTechnicalSkills || hasTechnicalTitle ? 'technical' : 'non-technical';
+      }
       
       // Determine difficulty (1-5) based on skills required or custom logic
       const difficulty = 3; // Default to middle value since we're not showing complexity anymore

@@ -78,6 +78,7 @@ export enum UserRole {
     skills: string[];
     timeframe: string;
     completed: boolean;
+    skillType: 'technical' | 'soft';
     createdAt?: Date;
     resources: {
       title: string;
