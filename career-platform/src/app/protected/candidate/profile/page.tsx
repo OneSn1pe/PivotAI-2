@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ResumeManager from '@/components/candidate/ResumeManager';
+import LinkedInProfileImport from '@/components/candidate/LinkedInProfileImport';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -136,6 +137,9 @@ export default function ProfilePage() {
           Back to Dashboard
         </button>
       </div>
+
+      {/* LinkedIn Profile Import - will only show when needed */}
+      <LinkedInProfileImport />
 
       {/* Tab Navigation */}
       <div className="flex border-b border-slate-200 mb-6">

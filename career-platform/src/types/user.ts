@@ -10,6 +10,7 @@ export enum UserRole {
     role: UserRole;
     createdAt: Date;
     lastLogin: Date;
+    provider?: 'password' | 'google' | 'linkedin';
   }
   
   export interface CandidateProfile extends User {

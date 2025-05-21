@@ -11,9 +11,10 @@ import {
   setPersistence,
   browserLocalPersistence,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  OAuthProvider
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { User, UserRole } from '@/types/user';
 import { useRouter } from 'next/navigation';
@@ -30,6 +31,7 @@ interface AuthContextType {
   register: (email: string, password: string, displayName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithLinkedIn: () => Promise<{ linkedInProfile?: any, accessToken?: string }>;
   logout: () => Promise<void>;
   updateUserProfile: () => Promise<void>;
 }
@@ -330,6 +332,103 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const loginWithLinkedIn = async () => {
+    try {
+      log.info('Starting LinkedIn login process');
+      
+      // Create LinkedIn OAuth provider
+      const provider = new OAuthProvider('linkedin.com');
+      
+      // Request additional scopes for profile and email
+      provider.addScope('profile');
+      provider.addScope('email');
+      // Add scope for r_emailaddress to get email
+      provider.addScope('r_emailaddress');
+      // Add scope for r_liteprofile to get basic profile info
+      provider.addScope('r_liteprofile');
+      
+      // Add custom parameters to retrieve LinkedIn data
+      provider.setCustomParameters({
+        // Force re-consent to ensure we get fresh tokens
+        prompt: 'consent',
+        // Request access type to retrieve refresh token
+        access_type: 'offline'
+      });
+      
+      // Sign in with popup
+      const result = await signInWithPopup(auth, provider);
+      
+      // Get the user credentials
+      const user = result.user;
+      log.info(`LinkedIn login successful for user: ${user.uid}`);
+      
+      // The LinkedIn access token
+      const credential = OAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken;
+      
+      if (!accessToken) {
+        throw new Error('Failed to get LinkedIn access token');
+      }
+      
+      // Check if user exists in Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // New user - create profile
+        log.info('Creating new user profile for LinkedIn user');
+        
+        const userData: User = {
+          uid: user.uid,
+          displayName: user.displayName || 'LinkedIn User',
+          email: user.email || '',
+          role: UserRole.CANDIDATE,
+          createdAt: new Date(),
+          lastLogin: new Date(),
+          provider: 'linkedin'
+        };
+        
+        // Store user data in Firestore
+        await setDoc(doc(db, 'users', user.uid), userData);
+        setUserProfile(userData);
+        
+        // Set custom claims for new user
+        await setCustomClaims(user.uid);
+      } else {
+        // Existing user - update profile
+        const userData = userDoc.data() as User;
+        setUserProfile(userData);
+        
+        // Update last login time
+        await updateDoc(doc(db, 'users', user.uid), {
+          lastLogin: new Date(),
+          provider: 'linkedin'
+        });
+      }
+      
+      // Now fetch LinkedIn profile data using the access token
+      let linkedInProfile;
+      try {
+        // We'll implement the LinkedIn profile API call in a separate service
+        // This will need to be handled by a server function for security
+        const response = await fetch('/api/linkedin/profile', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+        
+        linkedInProfile = await response.json();
+      } catch (profileError) {
+        log.warn('Error fetching LinkedIn profile:', profileError);
+        // Continue login process even if profile fetch fails
+      }
+      
+      return { linkedInProfile, accessToken };
+    } catch (error) {
+      log.error('LinkedIn login error:', error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       // Set loading state to avoid race conditions
@@ -394,6 +493,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     login,
     loginWithGoogle,
+    loginWithLinkedIn,
     logout,
     updateUserProfile,
   }), [currentUser, userProfile, loading]);
