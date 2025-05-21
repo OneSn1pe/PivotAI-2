@@ -159,6 +159,9 @@ export default function HomePage() {
               <Link href="#contact" className="text-teal-100 hover:text-white transition-colors">
                 Contact
               </Link>
+              <Link href="/privacy-policy" className="text-teal-100 hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
             </div>
           </div>
           
