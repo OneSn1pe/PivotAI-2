@@ -3,16 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ResumeManager from '@/components/candidate/ResumeManager';
+import LinkedInProfileImport from '@/components/candidate/LinkedInProfileImport';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { CandidateProfile, TargetCompany } from '@/types/user';
-import TargetCompaniesManager from '@/components/candidate/TargetCompaniesManager';
-import JobPreferencesManager from '@/components/candidate/JobPreferencesManager';
-import CandidateProfileBanner from '@/components/candidate/CandidateProfileBanner';
 
 interface TabConfig {
-  id: 'resume' | 'target-companies' | 'job-preferences';
+  id: 'resume' | 'target-companies';
   title: string;
 }
 
@@ -22,8 +20,8 @@ export default function ProfilePage() {
   const searchParams = useSearchParams();
   const candidateProfile = userProfile as CandidateProfile | null;
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'resume' | 'target-companies' | 'job-preferences'>(
-    tabParam === 'target-companies' ? 'target-companies' : tabParam === 'job-preferences' ? 'job-preferences' : 'resume'
+  const [activeTab, setActiveTab] = useState<'resume' | 'target-companies'>(
+    tabParam === 'target-companies' ? 'target-companies' : 'resume'
   );
   const [targetCompanies, setTargetCompanies] = useState<TargetCompany[]>([{ name: '', position: '' }]);
   const [loading, setLoading] = useState(false);
@@ -36,8 +34,6 @@ export default function ProfilePage() {
     // Update active tab when URL param changes
     if (tabParam === 'target-companies') {
       setActiveTab('target-companies');
-    } else if (tabParam === 'job-preferences') {
-      setActiveTab('job-preferences');
     } else if (tabParam === 'resume') {
       setActiveTab('resume');
     }
@@ -128,72 +124,149 @@ export default function ProfilePage() {
   const tabs: TabConfig[] = [
     { id: 'resume', title: 'Resume & Skills' },
     { id: 'target-companies', title: 'Target Companies' },
-    { id: 'job-preferences', title: 'Job Preferences' },
   ];
   
   return (
-    <div className="max-w-6xl mx-auto space-y-8 p-4">
-      <CandidateProfileBanner />
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-slate-800">Your Profile</h1>
+        <button
+          onClick={() => router.push('/protected/candidate/dashboard')}
+          className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-medium py-2 px-4 rounded-lg shadow-md shadow-teal-500/30 transition-all"
+        >
+          Back to Dashboard
+        </button>
+      </div>
+
+      {/* LinkedIn Profile Import - will only show when needed */}
+      <LinkedInProfileImport />
+
+      {/* Tab Navigation */}
+      <div className="flex border-b border-slate-200 mb-6">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`py-2 px-4 font-medium text-sm ${
+              activeTab === tab.id
+                ? 'text-teal-600 border-b-2 border-teal-500'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.title}
+          </button>
+        ))}
+      </div>
       
-      <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 overflow-hidden">
-        <div className="flex flex-wrap gap-4 mb-5">
-          {/* Tab navigation */}
-          <button
-            onClick={() => setActiveTab('resume')}
-            className={`px-4 py-2 rounded-md font-medium transition-all ${
-              activeTab === 'resume' 
-                ? 'bg-teal-700 text-white shadow-button' 
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Resume Management
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('target-companies')}
-            className={`px-4 py-2 rounded-md font-medium transition-all ${
-              activeTab === 'target-companies' 
-                ? 'bg-teal-700 text-white shadow-button' 
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Target Companies
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('job-preferences')}
-            className={`px-4 py-2 rounded-md font-medium transition-all ${
-              activeTab === 'job-preferences' 
-                ? 'bg-teal-700 text-white shadow-button' 
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            Job Preferences
-          </button>
-        </div>
-        
-        {/* Resume Management */}
+      <div className="bg-white/80 backdrop-filter backdrop-blur-md p-8 rounded-xl shadow-xl shadow-teal-200/30 border border-slate-100 float-card">
         {activeTab === 'resume' && (
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-6 font-inter">Resume Management</h2>
-            <ResumeManager />
-          </div>
+          <ResumeManager onUpdateComplete={() => router.refresh()} />
         )}
         
-        {/* Target Companies */}
         {activeTab === 'target-companies' && (
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-6 font-inter">Target Companies</h2>
-            <TargetCompaniesManager />
-          </div>
-        )}
-        
-        {/* Job Preferences */}
-        {activeTab === 'job-preferences' && (
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-6 font-inter">Job Preferences</h2>
-            <JobPreferencesManager />
-          </div>
+          <>
+            <h2 className="text-xl font-semibold mb-6 text-slate-700">Set Your Target Companies</h2>
+            
+            {saveSuccess && (
+              <div className="mb-6 p-4 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
+                Target companies saved successfully!
+              </div>
+            )}
+            
+            <form className="space-y-8" onSubmit={handleSubmit}>
+              {/* Target Companies */}
+              <div className="relative">
+                <div className="absolute -top-4 -right-4">
+                  <div className="cloud-sm opacity-30"></div>
+                </div>
+                
+                <div className="space-y-4">
+                  {targetCompanies.map((company, index) => (
+                    <div key={index} className="p-4 bg-white/90 rounded-lg border border-teal-100 shadow-sm">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-teal-700">Company #{index + 1}</span>
+                        {targetCompanies.length > 1 && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeCompany(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor={`company-name-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                            Company Name
+                          </label>
+                          <input 
+                            type="text" 
+                            id={`company-name-${index}`} 
+                            value={company.name}
+                            onChange={(e) => handleCompanyChange(index, 'name', e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-teal-500 focus:border-teal-500"
+                            placeholder="e.g., Google, Microsoft"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor={`company-position-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                            Target Position
+                          </label>
+                          <input 
+                            type="text" 
+                            id={`company-position-${index}`}
+                            value={company.position}
+                            onChange={(e) => handleCompanyChange(index, 'position', e.target.value)}
+                            className="w-full p-2 border border-slate-300 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-teal-500 focus:border-teal-500"
+                            placeholder="e.g., Software Engineer, Product Manager"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Only show the add button if below maximum companies */}
+                  {targetCompanies.length < MAX_COMPANIES && (
+                    <button
+                      type="button"
+                      onClick={addCompany}
+                      className="w-full py-2 px-4 border border-teal-300 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
+                    >
+                      + Add Another Company
+                    </button>
+                  )}
+                  
+                  {/* Show a message when maximum companies reached */}
+                  {targetCompanies.length >= MAX_COMPANIES && (
+                    <div className="text-center py-2 text-teal-600 text-sm">
+                      Maximum of {MAX_COMPANIES} target companies reached
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="pt-6">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded-md shadow-button transition-all disabled:opacity-50"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : 'Save Target Companies'}
+                </button>
+              </div>
+            </form>
+          </>
         )}
       </div>
     </div>
