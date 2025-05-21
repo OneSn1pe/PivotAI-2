@@ -26,7 +26,7 @@ export default function CareerPathPage() {
         top: 0 !important;
         left: 0 !important;
         right: 0 !important;
-        z-index: 10 !important;
+        z-index: 50 !important;
         width: 100% !important;
         flex-direction: row !important;
         height: auto !important;
