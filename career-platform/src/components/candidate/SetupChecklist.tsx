@@ -15,7 +15,9 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
 
   // Determine completion status of each step
   const resumeUploaded = Boolean(candidateProfile?.resumeFileName);
-  const hasTargetCompanies = Boolean(candidateProfile?.targetCompanies && candidateProfile.targetCompanies.length > 0);
+  const hasTargetCompanies = Boolean(candidateProfile?.targetCompanies && candidateProfile.targetCompanies.length > 0 && 
+    // Ensure at least one company has a non-empty name
+    candidateProfile.targetCompanies.some(company => company.name.trim() !== ''));
   const roadmapGenerated = Boolean(roadmap);
   
   // Calculate overall progress
@@ -176,7 +178,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {hasTargetCompanies
-                    ? `${candidateProfile?.targetCompanies?.length} company targets selected`
+                    ? `${candidateProfile?.targetCompanies?.filter(company => company.name.trim() !== '').length} company targets selected`
                     : "Tell us which companies you're aiming for"}
                 </p>
               </div>
