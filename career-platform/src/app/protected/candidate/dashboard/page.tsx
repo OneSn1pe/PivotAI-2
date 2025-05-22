@@ -13,6 +13,7 @@ import ProfessionalAttributes from '@/components/candidate/ProfessionalAttribute
 import ObjectiveCard from '@/components/ui/ObjectiveCard';
 import TaskManager from '@/components/candidate/TaskManager';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import SetupChecklist from '@/components/candidate/SetupChecklist';
 
 // Define an extended milestone interface to handle tasks property
 interface MilestoneWithTasks {
@@ -253,6 +254,9 @@ export default function CandidateDashboard() {
           </div>
         )}
       </div>
+      
+      {/* Setup Checklist */}
+      <SetupChecklist candidateProfile={candidateProfile} roadmap={roadmap} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column - Professional Info */}
