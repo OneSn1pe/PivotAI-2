@@ -3,7 +3,7 @@ import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
 import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone } from '@/types/user';
+import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
 
 // Debug helper
 const debug = {
@@ -105,6 +105,14 @@ export async function POST(request: NextRequest) {
     }
 
     debug.log(`Processing roadmap generation for candidate: ${candidateId}`);
+
+    // Determine professional field (default to computer-science for backward compatibility)
+    let professionalField: ProfessionalField = 'computer-science';
+    if (resumeAnalysis?.professionalField) {
+      professionalField = resumeAnalysis.professionalField;
+    } else if (targetCompanies && targetCompanies.length > 0 && targetCompanies[0].industry) {
+      professionalField = targetCompanies[0].industry;
+    }
 
     // Check if targetCompanies is provided and valid
     let companiesForRoadmap = targetCompanies;
@@ -269,7 +277,7 @@ Guidelines:
       debug.log('Generating fallback roadmap due to OpenAI error');
       
       // Return error response with fallback roadmap
-      const fallbackRoadmap = createFallbackRoadmap(resumeAnalysis, candidateId);
+      const fallbackRoadmap = createFallbackRoadmap(resumeAnalysis, candidateId, professionalField);
       return NextResponse.json({
         ...fallbackRoadmap,
         _error: {
@@ -312,7 +320,8 @@ Guidelines:
       milestones = parsedResponse.milestones.map((milestone: any) => ({
         ...milestone,
         id: milestone.id || uuidv4(),
-        completed: false // Always start with uncompleted milestones for new roadmap
+        completed: false, // Always start with uncompleted milestones for new roadmap
+        professionalField
       }));
       
       // Extract additional analysis components if available
@@ -325,7 +334,7 @@ Guidelines:
       debug.log('Raw response content:', completion.choices[0].message.content?.substring(0, 200) + '...');
       
       // Fallback: generate synthetic milestones
-      milestones = createFallbackMilestones(resumeAnalysis);
+      milestones = createFallbackMilestones(resumeAnalysis, professionalField);
     }
 
     // Check if a roadmap already exists for this candidate
@@ -356,6 +365,7 @@ Guidelines:
     const roadmap: CareerRoadmap = {
       id: uuidv4(),
       candidateId: candidateId.toString(),
+      professionalField,
       milestones,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -406,10 +416,11 @@ Guidelines:
 }
 
 // Helper function to create fallback milestones when OpenAI fails
-function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
+function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalField: ProfessionalField = 'computer-science'): Milestone[] {
   return [
     {
       id: uuidv4(),
+      professionalField,
       title: "Core Technical Skills Development",
       description: "Focus on developing fundamental technical skills needed for target roles",
       category: "technical" as const,
@@ -477,6 +488,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
     },
     {
       id: uuidv4(),
+      professionalField,
       title: "System Design Fundamentals",
       description: "Learn core system design principles and architectural patterns",
       category: "fundamental" as const,
@@ -543,6 +555,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
     },
     {
       id: uuidv4(),
+      professionalField,
       title: "AI/ML Specialization",
       description: "Develop expertise in machine learning and artificial intelligence",
       category: "niche" as const,
@@ -612,6 +625,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
     },
     {
       id: uuidv4(),
+      professionalField,
       title: "Professional Communication & Leadership",
       description: "Develop effective communication and leadership skills for career advancement",
       category: "soft" as const,
@@ -692,6 +706,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
     },
     {
       id: uuidv4(),
+      professionalField,
       title: "Advanced Frontend Development",
       description: "Master advanced frontend technologies and modern development practices",
       category: "technical" as const,
@@ -759,6 +774,7 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
     },
     {
       id: uuidv4(),
+      professionalField,
       title: "Algorithm & Data Structure Mastery",
       description: "Strengthen computational thinking and problem-solving fundamentals",
       category: "fundamental" as const,
@@ -827,11 +843,12 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
 }
 
 // Helper function to create a complete fallback roadmap
-function createFallbackRoadmap(resumeAnalysis: ResumeAnalysis, candidateId: string): CareerRoadmap {
+function createFallbackRoadmap(resumeAnalysis: ResumeAnalysis, candidateId: string, professionalField: ProfessionalField = 'computer-science'): CareerRoadmap {
   return {
     id: uuidv4(),
     candidateId: candidateId.toString(),
-    milestones: createFallbackMilestones(resumeAnalysis),
+    professionalField,
+    milestones: createFallbackMilestones(resumeAnalysis, professionalField),
     createdAt: new Date(),
     updatedAt: new Date(),
   };

@@ -3,6 +3,54 @@ export enum UserRole {
     RECRUITER = 'recruiter',
   }
   
+  // Professional field types
+  export type ProfessionalField = 'computer-science' | 'engineering' | 'medicine' | 'business' | 'law';
+
+  // Field-specific category types
+  export type CSCategories = 'technical' | 'fundamental' | 'niche' | 'soft';
+  export type EngineeringCategories = 'design' | 'analysis' | 'implementation' | 'safety' | 'regulatory';
+  export type MedicineCategories = 'clinical' | 'research' | 'patient-care' | 'diagnostic' | 'compliance';
+  export type BusinessCategories = 'strategy' | 'operations' | 'finance' | 'leadership' | 'market-analysis';
+  export type LawCategories = 'research' | 'litigation' | 'advisory' | 'compliance' | 'negotiation';
+
+  export type MilestoneCategory = CSCategories | EngineeringCategories | MedicineCategories | BusinessCategories | LawCategories;
+
+  // Professional competency areas (replacing RPG attributes)
+  export interface ProfessionalCompetencies {
+    // Core competencies across all fields
+    technical_expertise: number;      // Domain-specific technical skills
+    communication: number;            // Written and verbal communication
+    problem_solving: number;          // Analytical and creative problem solving
+    project_management: number;       // Planning, organization, execution
+    continuous_learning: number;      // Adaptation and skill development
+    professional_ethics: number;     // Ethical decision-making and integrity
+  }
+
+  // Field-specific competency extensions
+  export interface EngineeringCompetencies extends ProfessionalCompetencies {
+    design_thinking: number;          // Creative design and innovation
+    safety_awareness: number;         // Risk assessment and safety protocols
+    regulatory_knowledge: number;     // Standards and compliance understanding
+  }
+
+  export interface MedicineCompetencies extends ProfessionalCompetencies {
+    clinical_judgment: number;        // Medical decision-making
+    patient_care: number;            // Empathy and bedside manner
+    evidence_based_practice: number; // Research and data-driven decisions
+  }
+
+  export interface BusinessCompetencies extends ProfessionalCompetencies {
+    strategic_thinking: number;       // Long-term planning and vision
+    financial_acumen: number;        // Financial analysis and planning
+    market_insight: number;          // Customer and market understanding
+  }
+
+  export interface LawCompetencies extends ProfessionalCompetencies {
+    legal_reasoning: number;         // Analysis and argumentation
+    research_skills: number;        // Case law and precedent research
+    client_relations: number;       // Trust-building and communication
+  }
+
   export interface User {
     uid: string;
     email: string;
@@ -15,13 +63,21 @@ export enum UserRole {
   
   export interface CandidateProfile extends User {
     role: UserRole.CANDIDATE;
+    professionalField?: ProfessionalField;        // NEW: Field selection
+    specialization?: string;                      // NEW: Field-specific specialization
     resumeUrl?: string;
     resumeFileName?: string;
     resumeAnalysis?: ResumeAnalysis;
     jobPreferences?: JobPreferences;
     targetCompanies?: TargetCompany[];
     skills?: string[];
+    competencies?: ProfessionalCompetencies;      // NEW: Professional competencies
     updatedAt?: Date;
+    licenseStatus?: {                             // NEW: Professional licensing
+      required: boolean;
+      obtained: string[];
+      pursuing: string[];
+    };
   }
   
   export interface RecruiterProfile extends User {
@@ -38,6 +94,7 @@ export enum UserRole {
     strengths: string[];
     weaknesses: string[];
     recommendations: string[];
+    professionalField?: ProfessionalField;        // NEW: Detected field
     _error?: string;
     _rawResponse?: string;
     _debug?: {
@@ -61,21 +118,22 @@ export enum UserRole {
   export interface TargetCompany {
     name: string;
     position: string;
+    industry?: ProfessionalField;  // NEW: Target industry for this company
   }
   
   export interface CareerRoadmap {
     id: string;
     candidateId: string;
+    professionalField: ProfessionalField;         // NEW: Field-specific roadmaps
     milestones: Milestone[];
     createdAt: Date;
     updatedAt: Date;
   }
 
-  // Enhanced milestone categorization types
-  export type MilestoneCategory = 'technical' | 'fundamental' | 'niche' | 'soft';
-
-  // Technical milestone attributes
-  export interface TechnicalAttributes {
+  // Field-specific milestone attributes
+  
+  // Computer Science attributes
+  export interface CSAttributes {
     technologies: string[];
     programmingLanguages?: string[];
     frameworks?: string[];
@@ -87,12 +145,74 @@ export enum UserRole {
       description: string;
       url?: string;
     }[];
-    performanceTargets?: {
-      metric: string;
-      target: string;
-    }[];
     learningPath: 'guided' | 'self-directed' | 'mentored' | 'bootcamp';
     certificationAvailable?: boolean;
+  }
+
+  // Engineering attributes
+  export interface EngineeringAttributes {
+    engineeringDiscipline: 'mechanical' | 'electrical' | 'civil' | 'chemical' | 'software' | 'aerospace' | 'biomedical' | 'industrial';
+    designTools: string[];                     // CAD software, simulation tools
+    standards: string[];                       // ISO, ASME, IEEE standards
+    safetyRequirements: string[];             // Safety protocols and compliance
+    projectScale: 'component' | 'system' | 'facility' | 'infrastructure';
+    deliverables: {
+      type: 'design-drawings' | 'prototype' | 'analysis-report' | 'specification' | 'certification';
+      description: string;
+      url?: string;
+    }[];
+    regulatoryCompliance: string[];           // Required certifications and approvals
+    professionalDevelopment: string[];       // PE license, certifications
+  }
+
+  // Medicine attributes  
+  export interface MedicineAttributes {
+    medicalSpecialty: 'primary-care' | 'surgery' | 'pediatrics' | 'cardiology' | 'neurology' | 'psychiatry' | 'radiology' | 'pathology' | 'emergency' | 'other';
+    clinicalSkills: string[];                // Patient care skills
+    diagnosticTools: string[];               // Medical equipment and procedures
+    treatmentProtocols: string[];            // Evidence-based practices
+    patientPopulation: string[];             // Demographics served
+    deliverables: {
+      type: 'case-study' | 'research-paper' | 'clinical-protocol' | 'patient-outcome' | 'presentation';
+      description: string;
+      url?: string;
+    }[];
+    cmeRequirements: number;                 // Continuing medical education hours
+    boardCertifications: string[];          // Specialty certifications
+    ethicsTraining: boolean;                 // Medical ethics compliance
+  }
+
+  // Business attributes
+  export interface BusinessAttributes {
+    businessFunction: 'strategy' | 'operations' | 'finance' | 'marketing' | 'sales' | 'hr' | 'consulting' | 'entrepreneurship';
+    industryKnowledge: string[];             // Sector expertise
+    analyticalTools: string[];              // Excel, SQL, Tableau, etc.
+    leadershipScope: 'individual' | 'team' | 'department' | 'organization';
+    financialImpact: string;                 // Budget size, revenue impact
+    deliverables: {
+      type: 'business-plan' | 'financial-model' | 'market-analysis' | 'strategy-document' | 'presentation';
+      description: string;
+      url?: string;
+    }[];
+    certifications: string[];               // MBA, CPA, PMP, etc.
+    networkingGoals: string[];              // Professional connections
+  }
+
+  // Law attributes
+  export interface LawAttributes {
+    practiceArea: 'corporate' | 'litigation' | 'criminal' | 'family' | 'intellectual-property' | 'real-estate' | 'tax' | 'immigration' | 'employment';
+    jurisdiction: string[];                  // State/federal bar admissions
+    clientType: 'individual' | 'small-business' | 'corporate' | 'government' | 'non-profit';
+    legalResearch: string[];                // Databases and resources used
+    caseExperience: number;                 // Years of practice
+    deliverables: {
+      type: 'legal-brief' | 'contract' | 'case-analysis' | 'legal-memo' | 'court-filing';
+      description: string;
+      url?: string;
+    }[];
+    barAdmissions: string[];               // State bar memberships
+    cleRequirements: number;               // Continuing legal education hours
+    specializations: string[];             // Niche legal expertise
   }
 
   // Fundamental milestone attributes
@@ -140,39 +260,54 @@ export enum UserRole {
     improvementPattern: 'linear' | 'plateau-breakthrough' | 'continuous' | 'milestone-based';
   }
 
-  // Category-specific attributes interface
+  // Field and category-specific attributes interface
   export interface MilestoneAttributes {
-    technical?: TechnicalAttributes;
+    // Computer Science
+    cs?: CSAttributes;
+    // Engineering
+    engineering?: EngineeringAttributes;
+    // Medicine
+    medicine?: MedicineAttributes;
+    // Business
+    business?: BusinessAttributes;
+    // Law
+    law?: LawAttributes;
+    // Legacy support
+    technical?: CSAttributes;
     fundamental?: FundamentalAttributes;
     niche?: NicheAttributes;
     soft?: SoftAttributes;
   }
 
-  // Enhanced milestone interface
+  // Enhanced milestone interface with field support
   export interface Milestone {
     id: string;
     title: string;
     description: string;
+    professionalField: ProfessionalField;        // NEW: Field this milestone belongs to
     category: MilestoneCategory;
     subcategory?: string;
     skills: string[];
     timeframe: string;
     completed: boolean;
-    difficulty: 1 | 2 | 3 | 4 | 5;
     priority: 'low' | 'medium' | 'high' | 'critical';
     prerequisites?: string[];
     estimatedHours?: number;
     createdAt?: Date;
     completedAt?: Date;
     
-    // Category-specific attributes
+    // Field and category-specific attributes
     attributes: MilestoneAttributes;
     
-    // Enhanced resources
+    // Enhanced resources with field-specific types
     resources: {
       title: string;
       url: string;
-      type: 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification';
+      type: 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification' 
+            | 'cad-tutorial' | 'simulation-software' | 'standards-document' | 'technical-drawing'
+            | 'clinical-guideline' | 'medical-journal' | 'cme-course' | 'case-study' | 'medical-database'
+            | 'market-report' | 'financial-model' | 'business-plan-template'
+            | 'case-law' | 'statute' | 'legal-brief' | 'bar-exam-prep' | 'legal-database';
       usageGuide?: string;
       estimatedTime?: string;
       cost?: 'free' | 'paid' | 'freemium';
@@ -189,10 +324,16 @@ export enum UserRole {
     
     // Assessment criteria
     successCriteria: string[];
-    assessmentMethods?: ('self-assessment' | 'peer-review' | 'project-demo' | 'certification' | 'interview')[];
+    assessmentMethods?: ('self-assessment' | 'peer-review' | 'project-demo' | 'certification' | 'interview' | 'clinical-evaluation' | 'case-presentation')[];
+    
+    // Professional development tracking
+    competencyImpact?: {
+      [key in keyof ProfessionalCompetencies]?: number;  // How much this milestone improves each competency (0-10)
+    };
     
     // Legacy support for backward compatibility
     skillType?: 'technical' | 'soft';
+    difficulty?: 1 | 2 | 3 | 4 | 5;  // Made optional for backward compatibility
   }
 
   // Legacy milestone interface for backward compatibility
@@ -280,16 +421,21 @@ export enum UserRole {
   };
 
   // Helper function to convert legacy milestones to new format
-  export const migrateLegacyMilestone = (legacy: LegacyMilestone): Milestone => {
+  export const migrateLegacyMilestone = (legacy: LegacyMilestone, professionalField: ProfessionalField = 'computer-science'): Milestone => {
     const category = categorizeMilestone(legacy);
     
     return {
       ...legacy,
+      professionalField,
       category,
       difficulty: 3 as const, // Default difficulty
       priority: 'medium' as const, // Default priority
       attributes: {},
       successCriteria: ['Complete all learning resources', 'Apply skills in practical context'],
+      competencyImpact: {
+        technical_expertise: 5,
+        continuous_learning: 3
+      },
       skillType: legacy.skillType, // Maintain backward compatibility
     };
   };
