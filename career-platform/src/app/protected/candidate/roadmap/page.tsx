@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/config/firebase';
 import { CareerRoadmap, Milestone, CandidateProfile } from '@/types/user';
 import { useRouter } from 'next/navigation';
-import CareerPath from '@/components/candidate/CareerRoadmap';
+import CategorizedCareerRoadmap from '@/components/candidate/CategorizedCareerRoadmap';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -221,7 +221,7 @@ export default function CareerPathPage() {
             </div>
           </div>
           
-          <CareerPath 
+          <CategorizedCareerRoadmap 
             roadmap={roadmap} 
             isEditable={true}
             onMilestoneToggle={handleToggleMilestone}

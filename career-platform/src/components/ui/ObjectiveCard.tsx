@@ -1,8 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-export type ObjectiveDifficulty = 1 | 2 | 3 | 4 | 5;
-export type ObjectiveType = 'technical' | 'non-technical';
+export type ObjectiveType = 'technical' | 'fundamental' | 'niche' | 'soft';
 export type ObjectiveStatus = 'available' | 'completed' | 'locked';
 
 export interface ObjectiveProps {
@@ -11,8 +10,9 @@ export interface ObjectiveProps {
   description: string;
   type: ObjectiveType;
   category?: ObjectiveType; // Added for backward compatibility
-  difficulty: ObjectiveDifficulty;
   status: ObjectiveStatus;
+  priority?: 'low' | 'medium' | 'high' | 'critical';
+  estimatedHours?: number;
   rewards: {
     points: number;
     resources?: Array<{
@@ -36,8 +36,9 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
   title,
   description,
   type,
-  difficulty,
   status,
+  priority,
+  estimatedHours,
   rewards,
   requiredLevel,
   tasks,
@@ -58,24 +59,40 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
   const renderObjectiveBadge = () => {
     let bgColor = '';
     let textColor = '';
+    let icon = '';
     let label = '';
 
     switch (type) {
       case 'technical':
-        bgColor = 'bg-indigo-100';
-        textColor = 'text-indigo-800';
+        bgColor = 'bg-teal-100';
+        textColor = 'text-teal-800';
+        icon = '💻';
         label = 'TECHNICAL';
         break;
-      case 'non-technical':
-        bgColor = 'bg-amber-100';
-        textColor = 'text-amber-800';
-        label = 'SOFT SKILL';
+      case 'fundamental':
+        bgColor = 'bg-blue-100';
+        textColor = 'text-blue-800';
+        icon = '🏗️';
+        label = 'FUNDAMENTAL';
+        break;
+      case 'niche':
+        bgColor = 'bg-purple-100';
+        textColor = 'text-purple-800';
+        icon = '🚀';
+        label = 'NICHE';
+        break;
+      case 'soft':
+        bgColor = 'bg-orange-100';
+        textColor = 'text-orange-800';
+        icon = '🤝';
+        label = 'SOFT SKILLS';
         break;
     }
 
     return (
-      <span className={`px-2.5 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md`}>
-        {label}
+      <span className={`px-2.5 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md flex items-center gap-1`}>
+        <span>{icon}</span>
+        <span>{label}</span>
       </span>
     );
   };
@@ -127,6 +144,34 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     );
   };
 
+  const renderPriorityBadge = () => {
+    if (!priority || priority === 'medium') return null;
+
+    let bgColor = '';
+    let textColor = '';
+
+    switch (priority) {
+      case 'critical':
+        bgColor = 'bg-red-100';
+        textColor = 'text-red-800';
+        break;
+      case 'high':
+        bgColor = 'bg-orange-100';
+        textColor = 'text-orange-800';
+        break;
+      case 'low':
+        bgColor = 'bg-gray-100';
+        textColor = 'text-gray-800';
+        break;
+    }
+
+    return (
+      <span className={`px-2 py-0.5 text-xs font-medium ${bgColor} ${textColor} rounded`}>
+        {priority.toUpperCase()}
+      </span>
+    );
+  };
+
   const isDisabled = status === 'locked';
 
   return (
@@ -134,16 +179,25 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
       className={`bg-white p-6 md:p-7 rounded-lg shadow-card border border-slate-200 ${isDisabled ? 'opacity-75' : ''} ${className} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-card-hover transition-all duration-300'}`}
       onClick={isDisabled ? undefined : handleClick}
     >
-      <div className="flex items-start mb-4">
-        <div className="flex space-x-2">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex flex-wrap gap-2">
           {renderObjectiveBadge()}
           {renderStatusBadge()}
+          {renderPriorityBadge()}
         </div>
       </div>
       
       <h3 className="text-lg font-semibold text-slate-800 mb-3 font-inter line-clamp-1">{title}</h3>
       
-      <p className="text-sm text-slate-600 mb-5 line-clamp-2">{description}</p>
+      <p className="text-sm text-slate-600 mb-4 line-clamp-2">{description}</p>
+
+      {estimatedHours && (
+        <div className="flex justify-end mb-4">
+          <span className="text-xs text-slate-500">
+            Est. {estimatedHours}h
+          </span>
+        </div>
+      )}
       
       {tasks && tasks.length > 0 && (
         <div className="mb-5">

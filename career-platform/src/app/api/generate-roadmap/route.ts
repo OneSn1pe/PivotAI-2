@@ -163,15 +163,38 @@ Return a structured JSON roadmap with these components:
       "id": "${uuidv4()}",
       "title": "Milestone name",
       "description": "Detailed description with actionable steps",
+      "category": "technical|fundamental|niche|soft",
+      "subcategory": "Optional specific classification",
       "skills": ["skill1", "skill2"],
       "timeframe": "1-3 months",
       "completed": false,
-      "skillType": "technical" or "soft",
+      "difficulty": 1-5,
+      "priority": "low|medium|high|critical",
+      "estimatedHours": 40,
+      "successCriteria": ["criterion1", "criterion2"],
+      "attributes": {
+        "technical": {
+          "technologies": ["React", "Node.js"],
+          "projectType": "fullstack",
+          "complexityLevel": "intermediate",
+          "deliverables": [{"type": "deployed-app", "description": "Working application"}],
+          "learningPath": "self-directed"
+        }
+      },
       "resources": [
         {
           "title": "Resource name",
           "url": "resource_url",
-          "type": "course/book/project/article/documentation"
+          "type": "course|book|project|article|documentation|certification",
+          "estimatedTime": "2 weeks",
+          "cost": "free|paid|freemium"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "task-1",
+          "description": "Complete tutorial",
+          "completed": false
         }
       ]
     },
@@ -187,9 +210,32 @@ Return a structured JSON roadmap with these components:
 
 Prioritize high-impact skills and experiences that specifically align with the target companies' known requirements for the positions. Focus on achievable milestones within the 1-2 year timeframe.
 
-Use the following guidance for skillType:
-- "technical": for milestones focused on coding, programming, software, development, algorithms, frameworks, databases, technical systems, engineering, etc.
-- "soft": for milestones focused on communication, leadership, teamwork, time management, emotional intelligence, collaboration, etc.
+Use the following guidance for milestone categories:
+- "technical": Programming, software development, frameworks, databases, APIs, coding projects
+- "fundamental": Problem-solving, system design, architecture, debugging, testing, core CS concepts
+- "niche": Specialized technologies like blockchain, AI/ML, AR/VR, IoT, emerging technologies
+- "soft": Communication, leadership, teamwork, emotional intelligence, time management, networking
+
+For technical milestones, include detailed attributes like:
+- technologies: specific tools/frameworks
+- projectType: frontend/backend/fullstack/mobile/devops/data/ai-ml
+- complexityLevel: beginner/intermediate/advanced/expert
+- deliverables: what they should build/create
+
+For fundamental milestones, focus on:
+- competencyArea: problem-solving/analytical-thinking/research/documentation
+- industryScope: universal/tech-specific/domain-specific
+- conceptualAreas: key concepts being learned
+
+For niche milestones, emphasize:
+- specializationDomain: the specific niche area
+- marketDemand: emerging/growing/stable
+- careerImpact: differentiator/requirement/cutting-edge
+
+For soft milestones, highlight:
+- skillCategory: communication/leadership/teamwork/etc
+- developmentMethod: practice-based/feedback-driven/mentorship
+- applicationScenarios: where these skills apply
 
 Candidate's current profile:
 - Skills: ${JSON.stringify(truncatedAnalysis.skills)}
@@ -199,13 +245,15 @@ Candidate's current profile:
 - Weaknesses: ${JSON.stringify(truncatedAnalysis.weaknesses)}
 
 Guidelines:
-- Create exactly 5 milestones
+- Create exactly 6 milestones (2 technical, 2 fundamental, 1 niche, 1 soft)
 - Each milestone needs a unique ID
 - Include 2-3 specific resources per milestone
+- Add 1-3 tasks per milestone for progress tracking
+- Include success criteria for each milestone
+- Estimate hours required (20-100 hours per milestone)
+- Set appropriate difficulty (1-5) and priority levels
 - Resources should be high-quality, free or low-cost, and directly relevant
-- Resource types can be: article, video, course, book, or documentation
 - Prefer official documentation and well-known learning platforms
-- Every milestone MUST have a skillType field marked as either "technical" or "soft"
 - Return ONLY valid JSON with no additional text or formatting`
             }
           ],
@@ -361,107 +409,256 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
   return [
     {
       id: uuidv4(),
-      title: "Skill Development",
-      description: "Focus on developing core skills needed for target roles",
-      skills: resumeAnalysis?.skills?.slice(0, 3) || ["Technical Skills", "Communication", "Problem Solving"],
+      title: "Core Technical Skills Development",
+      description: "Focus on developing fundamental technical skills needed for target roles",
+      category: "technical" as const,
+      subcategory: "core-development",
+      skills: resumeAnalysis?.skills?.slice(0, 3) || ["JavaScript", "React", "Node.js"],
       timeframe: "1-3 months",
       completed: false,
-      skillType: "technical",
+      difficulty: 3 as const,
+      priority: "high" as const,
+      estimatedHours: 60,
+      attributes: {
+        technical: {
+          technologies: ["JavaScript", "React", "Node.js"],
+          projectType: "fullstack",
+          complexityLevel: "intermediate",
+          deliverables: [
+            {
+              type: "code-repository",
+              description: "Personal project showcasing learned skills"
+            }
+          ],
+          learningPath: "self-directed"
+        }
+      },
       resources: [
         {
           title: "Online Learning Platform",
           url: "https://www.coursera.org",
-          type: "course"
+          type: "course",
+          estimatedTime: "4 weeks",
+          cost: "freemium"
         },
         {
           title: "Skill Assessment Tool",
           url: "https://www.linkedin.com/learning",
-          type: "course"
+          type: "course",
+          estimatedTime: "2 weeks",
+          cost: "paid"
         }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Complete online course modules",
+          completed: false
+        },
+        {
+          id: "task-2",
+          description: "Build a practice project",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Complete all learning modules",
+        "Build functional project",
+        "Pass skill assessment"
       ]
     },
     {
       id: uuidv4(),
-      title: "Portfolio Building",
-      description: "Create portfolio showcasing your abilities",
-      skills: ["Project Management", "Documentation"],
+      title: "System Design Fundamentals",
+      description: "Learn core system design principles and architectural patterns",
+      category: "fundamental" as const,
+      subcategory: "system-architecture",
+      skills: ["System Design", "Architecture", "Scalability"],
       timeframe: "2-4 months",
       completed: false,
-      skillType: "technical",
+      difficulty: 4 as const,
+      priority: "high" as const,
+      estimatedHours: 80,
+      attributes: {
+        fundamental: {
+          competencyArea: "problem-solving",
+          industryScope: "tech-specific",
+          careerStage: "mid-level",
+          conceptualAreas: ["System Architecture", "Database Design", "Scalability"],
+          theoreticalDepth: "intermediate",
+          applicationAreas: ["Web Development", "Backend Systems"],
+          buildsUpon: ["Programming Fundamentals"],
+          enablesAdvancement: ["Senior Development Roles"],
+          knowledgeType: "conceptual"
+        }
+      },
       resources: [
         {
-          title: "Portfolio Best Practices",
-          url: "https://github.com/readme/guides",
-          type: "article"
+          title: "System Design Primer",
+          url: "https://github.com/donnemartin/system-design-primer",
+          type: "documentation",
+          estimatedTime: "6 weeks",
+          cost: "free"
         },
         {
-          title: "GitHub Guides",
-          url: "https://guides.github.com",
-          type: "documentation"
+          title: "Designing Data-Intensive Applications",
+          url: "https://dataintensive.net",
+          type: "book",
+          estimatedTime: "8 weeks",
+          cost: "paid"
         }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Study system design patterns",
+          completed: false
+        },
+        {
+          id: "task-2",
+          description: "Practice designing scalable systems",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Understand key architectural patterns",
+        "Design a simple distributed system",
+        "Explain trade-offs in system design"
       ]
     },
     {
       id: uuidv4(),
-      title: "Networking",
-      description: "Expand professional network in target industry",
-      skills: ["Communication", "Networking"],
+      title: "AI/ML Specialization",
+      description: "Develop expertise in machine learning and artificial intelligence",
+      category: "niche" as const,
+      subcategory: "artificial-intelligence",
+      skills: ["Machine Learning", "Python", "Data Science"],
       timeframe: "3-6 months",
       completed: false,
-      skillType: "soft",
+      difficulty: 5 as const,
+      priority: "medium" as const,
+      estimatedHours: 120,
+      attributes: {
+        niche: {
+          specializationDomain: "artificial-intelligence",
+          marketDemand: "growing",
+          expertiseLevel: "working-knowledge",
+          industryAdoption: "mainstream",
+          competitorLandscape: "moderate-competition",
+          careerImpact: "differentiator",
+          salaryPremium: 20,
+          learningCurve: "steep",
+          resourceAvailability: "abundant",
+          communitySize: "large",
+          trendDirection: "rising",
+          longevityEstimate: "5+ years"
+        }
+      },
       resources: [
         {
-          title: "LinkedIn Networking Guide",
-          url: "https://www.linkedin.com/help/linkedin/answer/a566195",
-          type: "article"
+          title: "Machine Learning Course",
+          url: "https://www.coursera.org/learn/machine-learning",
+          type: "course",
+          estimatedTime: "12 weeks",
+          cost: "freemium"
         },
         {
-          title: "Industry Events Calendar",
-          url: "https://www.meetup.com",
-          type: "article"
+          title: "TensorFlow Documentation",
+          url: "https://www.tensorflow.org/learn",
+          type: "documentation",
+          estimatedTime: "4 weeks",
+          cost: "free"
         }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Complete ML fundamentals course",
+          completed: false
+        },
+        {
+          id: "task-2",
+          description: "Build ML project using TensorFlow",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Understand ML algorithms",
+        "Build and deploy ML model",
+        "Demonstrate practical ML application"
       ]
     },
     {
       id: uuidv4(),
-      title: "Interview Preparation",
-      description: "Prepare for interviews at target companies",
-      skills: ["Interview Skills", "Technical Knowledge"],
-      timeframe: "1-2 months",
+      title: "Professional Communication & Leadership",
+      description: "Develop effective communication and leadership skills for career advancement",
+      category: "soft" as const,
+      subcategory: "leadership-communication",
+      skills: ["Communication", "Leadership", "Team Management"],
+      timeframe: "2-4 months",
       completed: false,
-      skillType: "soft",
+      difficulty: 3 as const,
+      priority: "high" as const,
+      estimatedHours: 40,
+      attributes: {
+        soft: {
+          skillCategory: "leadership",
+          developmentMethod: "practice-based",
+          applicationScenarios: ["Team meetings", "Project presentations", "Client interactions"],
+          roleRelevance: "team-lead",
+          assessmentDifficulty: "somewhat-subjective",
+          measurementMethods: ["360-feedback", "peer-review"],
+          behavioralMarkers: [
+            {
+              indicator: "Leads team meetings effectively",
+              frequency: "weekly"
+            },
+            {
+              indicator: "Provides clear project updates",
+              frequency: "daily"
+            }
+          ],
+          developmentTimeframe: "months",
+          improvementPattern: "continuous"
+        }
+      },
       resources: [
         {
-          title: "Practice Interview Questions",
-          url: "https://www.interviewcake.com",
-          type: "article"
+          title: "Effective Communication Skills",
+          url: "https://www.coursera.org/learn/communication-skills",
+          type: "course",
+          estimatedTime: "6 weeks",
+          cost: "freemium"
         },
         {
-          title: "Mock Interview Platform",
-          url: "https://www.pramp.com",
-          type: "course"
+          title: "Leadership Fundamentals",
+          url: "https://www.linkedin.com/learning/leadership-fundamentals",
+          type: "course",
+          estimatedTime: "4 weeks",
+          cost: "paid"
         }
-      ]
-    },
-    {
-      id: uuidv4(),
-      title: "Application Submission",
-      description: "Apply to target positions with customized materials",
-      skills: ["Resume Writing", "Cover Letter Writing"],
-      timeframe: "1-2 months",
-      completed: false,
-      skillType: "soft",
-      resources: [
+      ],
+      tasks: [
         {
-          title: "Resume Templates",
-          url: "https://www.resume.io",
-          type: "article"
+          id: "task-1",
+          description: "Complete communication skills course",
+          completed: false
         },
         {
-          title: "Job Application Tracker",
-          url: "https://www.notion.so/templates/job-hunt-tracker",
-          type: "article"
+          id: "task-2",
+          description: "Practice public speaking",
+          completed: false
+        },
+        {
+          id: "task-3",
+          description: "Lead a team project",
+          completed: false
         }
+      ],
+      successCriteria: [
+        "Deliver confident presentations",
+        "Receive positive team feedback",
+        "Successfully lead project to completion"
       ]
     }
   ];

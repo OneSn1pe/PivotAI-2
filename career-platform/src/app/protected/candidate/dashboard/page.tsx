@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { getDocs, collection, query, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CareerRoadmap, CandidateProfile } from '@/types/user';
+import { CareerRoadmap, CandidateProfile, Milestone, categorizeMilestone, migrateLegacyMilestone } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
@@ -99,67 +99,78 @@ export default function CandidateDashboard() {
     if (!roadmapData.milestones) return;
     
     const convertedObjectives = roadmapData.milestones.map((milestone, index) => {
-      // Use the milestone's skillType to determine if it's technical or not
-      // If skillType is not available (for backwards compatibility), fall back to keyword detection
-      let type: 'technical' | 'non-technical';
+      // Process milestone to ensure it has proper categorization
+      let processedMilestone: Milestone;
       
-      if (milestone.skillType) {
-        // Use the explicitly set skillType
-        type = milestone.skillType === 'technical' ? 'technical' : 'non-technical';
+      // Check if milestone has new categorization or needs migration
+      if ('category' in milestone && milestone.category) {
+        // Already has new format
+        processedMilestone = milestone as Milestone;
       } else {
-        // Fallback to keyword detection for older data
-        const technicalKeywords = [
-          'code', 'programming', 'software', 'development', 'technical', 'algorithm',
-          'framework', 'language', 'database', 'api', 'engineering', 'architecture',
-          'deploy', 'frontend', 'backend', 'fullstack', 'test', 'debug', 'devops',
-          'cloud', 'system', 'infrastructure', 'security', 'network'
-        ];
-        
-        // Check if milestone skills or title contain technical keywords
-        const hasTechnicalSkills = milestone.skills?.some(skill => 
-          technicalKeywords.some(keyword => 
-            skill.toLowerCase().includes(keyword.toLowerCase())
-          )
-        );
-        
-        const hasTechnicalTitle = technicalKeywords.some(keyword => 
-          milestone.title.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        // Determine objective type based on technical content
-        type = hasTechnicalSkills || hasTechnicalTitle ? 'technical' : 'non-technical';
+        // Legacy format - migrate
+        const legacyMilestone = {
+          ...milestone,
+          id: milestone.id || `milestone-${index}`,
+          title: milestone.title || 'Untitled Milestone',
+          description: milestone.description || 'No description provided',
+          timeframe: milestone.timeframe || 'No timeframe specified',
+          completed: !!milestone.completed,
+          skills: Array.isArray(milestone.skills) ? milestone.skills : [],
+          resources: Array.isArray(milestone.resources) ? milestone.resources : [],
+          skillType: (milestone as any).skillType || 'technical',
+          createdAt: milestone.createdAt || new Date()
+        };
+
+        processedMilestone = migrateLegacyMilestone(legacyMilestone);
+      }
+
+      // Get the milestone category
+      const category = processedMilestone.category || categorizeMilestone(processedMilestone);
+      
+      // Create tasks from milestone resources and tasks
+      const tasks = [];
+      
+      // Add resource tasks
+      if (processedMilestone.resources?.length > 0) {
+        processedMilestone.resources.forEach((resource, idx) => {
+          tasks.push({
+            id: `resource-task-${processedMilestone.id}-${idx}`,
+            description: `Review ${resource.title}`,
+            completed: false,
+          });
+        });
       }
       
-      // Determine difficulty (1-5) based on skills required or custom logic
-      const difficulty = 3; // Default to middle value since we're not showing complexity anymore
+             // Add milestone tasks if they exist
+       if (processedMilestone.tasks && processedMilestone.tasks.length > 0) {
+         tasks.push(...processedMilestone.tasks.map(task => ({
+           id: task.id,
+           description: task.description,
+           completed: task.completed,
+         })));
+       }
       
-      // Create tasks from milestone resources or other data
-      const tasks = milestone.resources?.map((resource, idx) => ({
-        id: `task-${milestone.id}-${idx}`,
-        description: `Review ${resource.title}`,
-        completed: false,
-      })) || [];
-      
-      // Add skills as tasks if needed
-      if (milestone.skills && milestone.skills.length > 0) {
+      // Add skills as tasks if needed and no other tasks exist
+      if (tasks.length === 0 && processedMilestone.skills && processedMilestone.skills.length > 0) {
         tasks.push({
-          id: `skill-task-${milestone.id}`,
-          description: `Develop skills in: ${milestone.skills.join(', ')}`,
+          id: `skill-task-${processedMilestone.id}`,
+          description: `Develop skills in: ${processedMilestone.skills.join(', ')}`,
           completed: false,
         });
       }
       
       return {
-        id: milestone.id,
-        title: milestone.title,
-        description: milestone.description,
-        type, // 'technical' or 'non-technical'
-        category: type, // Adding an explicit category property for clarity
-        difficulty: difficulty as 1 | 2 | 3 | 4 | 5,
-        status: milestone.completed ? 'completed' : 'available',
+        id: processedMilestone.id,
+        title: processedMilestone.title,
+        description: processedMilestone.description,
+        type: category, // Use the new four-category system
+        category: category, // Adding an explicit category property for clarity
+        status: processedMilestone.completed ? 'completed' : 'available',
+        priority: processedMilestone.priority || 'medium',
+        estimatedHours: processedMilestone.estimatedHours,
         rewards: {
           points: 100,
-          resources: milestone.resources?.map(resource => ({
+          resources: processedMilestone.resources?.map(resource => ({
             id: `resource-${resource.type}-${Math.random().toString(36).substring(2, 9)}`,
             name: resource.title,
             type: resource.type as any,
@@ -169,11 +180,13 @@ export default function CandidateDashboard() {
       };
     });
     
-    // Sort objectives by type - technical first, then non-technical
-    const sortedObjectives = [
-      ...convertedObjectives.filter(obj => obj.type === 'technical'),
-      ...convertedObjectives.filter(obj => obj.type === 'non-technical')
-    ];
+    // Sort objectives by category priority: technical, fundamental, niche, soft
+    const categoryOrder = ['technical', 'fundamental', 'niche', 'soft'];
+    const sortedObjectives = convertedObjectives.sort((a, b) => {
+      const aIndex = categoryOrder.indexOf(a.type);
+      const bIndex = categoryOrder.indexOf(b.type);
+      return aIndex - bIndex;
+    });
     
     setObjectives(sortedObjectives);
   };
