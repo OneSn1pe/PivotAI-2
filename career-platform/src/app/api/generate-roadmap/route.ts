@@ -106,12 +106,32 @@ export async function POST(request: NextRequest) {
 
     debug.log(`Processing roadmap generation for candidate: ${candidateId}`);
 
-    // Determine professional field (default to computer-science for backward compatibility)
+    // Determine professional field - prioritize user's explicit selection
     let professionalField: ProfessionalField = 'computer-science';
-    if (resumeAnalysis?.professionalField) {
-      professionalField = resumeAnalysis.professionalField;
-    } else if (targetCompanies && targetCompanies.length > 0 && targetCompanies[0].industry) {
-      professionalField = targetCompanies[0].industry;
+    
+    // First, try to get the user's explicitly selected professional field
+    try {
+      const userDoc = await getDoc(doc(db as Firestore, 'users', candidateId));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.professionalField) {
+          professionalField = userData.professionalField;
+          debug.log(`Using user's selected professional field: ${professionalField}`);
+        } else {
+          // Fallback to inferring from other sources
+          if (resumeAnalysis?.professionalField) {
+            professionalField = resumeAnalysis.professionalField;
+            debug.log(`Using professional field from resume analysis: ${professionalField}`);
+          } else if (targetCompanies && targetCompanies.length > 0 && targetCompanies[0].industry) {
+            professionalField = targetCompanies[0].industry;
+            debug.log(`Using professional field from first target company: ${professionalField}`);
+          } else {
+            debug.log(`Using default professional field: ${professionalField}`);
+          }
+        }
+      }
+    } catch (error) {
+      debug.error('Error fetching user professional field, using default:', error);
     }
 
     // Check if targetCompanies is provided and valid
