@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ResumeManager from '@/components/candidate/ResumeManager';
 import LinkedInProfileImport from '@/components/candidate/LinkedInProfileImport';
+import ProfessionalFieldSelector from '@/components/candidate/ProfessionalFieldSelector';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { CandidateProfile, TargetCompany } from '@/types/user';
 
 interface TabConfig {
-  id: 'resume' | 'target-companies';
+  id: 'resume' | 'target-companies' | 'professional-field';
   title: string;
 }
 
@@ -20,8 +21,8 @@ export default function ProfilePage() {
   const searchParams = useSearchParams();
   const candidateProfile = userProfile as CandidateProfile | null;
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'resume' | 'target-companies'>(
-    tabParam === 'target-companies' ? 'target-companies' : 'resume'
+  const [activeTab, setActiveTab] = useState<'resume' | 'target-companies' | 'professional-field'>(
+    tabParam === 'target-companies' ? 'target-companies' : tabParam === 'professional-field' ? 'professional-field' : 'resume'
   );
   const [targetCompanies, setTargetCompanies] = useState<TargetCompany[]>([{ name: '', position: '' }]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,8 @@ export default function ProfilePage() {
     // Update active tab when URL param changes
     if (tabParam === 'target-companies') {
       setActiveTab('target-companies');
+    } else if (tabParam === 'professional-field') {
+      setActiveTab('professional-field');
     } else if (tabParam === 'resume') {
       setActiveTab('resume');
     }
@@ -63,7 +66,11 @@ export default function ProfilePage() {
 
   const handleCompanyChange = (index: number, field: keyof TargetCompany, value: string) => {
     const updatedCompanies = [...targetCompanies];
-    updatedCompanies[index][field] = value;
+    if (field === 'industry') {
+      updatedCompanies[index][field] = value as any; // The industry field expects ProfessionalField type
+    } else {
+      updatedCompanies[index][field] = value;
+    }
     setTargetCompanies(updatedCompanies);
   };
 
@@ -123,6 +130,7 @@ export default function ProfilePage() {
 
   const tabs: TabConfig[] = [
     { id: 'resume', title: 'Resume & Skills' },
+    { id: 'professional-field', title: 'Professional Field' },
     { id: 'target-companies', title: 'Target Companies' },
   ];
   
@@ -161,6 +169,10 @@ export default function ProfilePage() {
       <div className="bg-white/80 backdrop-filter backdrop-blur-md p-8 rounded-xl shadow-xl shadow-teal-200/30 border border-slate-100 float-card">
         {activeTab === 'resume' && (
           <ResumeManager onUpdateComplete={() => router.refresh()} />
+        )}
+        
+        {activeTab === 'professional-field' && (
+          <ProfessionalFieldSelector />
         )}
         
         {activeTab === 'target-companies' && (
