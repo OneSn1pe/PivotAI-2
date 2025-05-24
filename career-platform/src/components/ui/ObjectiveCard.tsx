@@ -144,33 +144,7 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
     );
   };
 
-  const renderPriorityBadge = () => {
-    if (!priority || priority === 'medium') return null;
 
-    let bgColor = '';
-    let textColor = '';
-
-    switch (priority) {
-      case 'critical':
-        bgColor = 'bg-red-100';
-        textColor = 'text-red-800';
-        break;
-      case 'high':
-        bgColor = 'bg-orange-100';
-        textColor = 'text-orange-800';
-        break;
-      case 'low':
-        bgColor = 'bg-gray-100';
-        textColor = 'text-gray-800';
-        break;
-    }
-
-    return (
-      <span className={`px-2 py-0.5 text-xs font-medium ${bgColor} ${textColor} rounded`}>
-        {priority.toUpperCase()}
-      </span>
-    );
-  };
 
   const isDisabled = status === 'locked';
 
@@ -183,7 +157,6 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
         <div className="flex flex-wrap gap-2">
           {renderObjectiveBadge()}
           {renderStatusBadge()}
-          {renderPriorityBadge()}
         </div>
       </div>
       

@@ -213,17 +213,6 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
                 <span className={`text-xs px-2 py-1 rounded-full ${config.bgColor} ${config.textColor} font-medium`}>
                   {config.name}
                 </span>
-                <span className="text-xs text-slate-500">
-                  Difficulty: {'★'.repeat(milestone.difficulty || 3)}
-                </span>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  milestone.priority === 'critical' ? 'bg-red-100 text-red-800' :
-                  milestone.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                  milestone.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {milestone.priority || 'medium'}
-                </span>
               </div>
               <h3 className="text-lg font-semibold text-slate-800 font-inter">{milestone.title}</h3>
               <p className="text-sm text-slate-600 mt-1">{milestone.timeframe}</p>

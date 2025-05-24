@@ -247,18 +247,19 @@ Candidate's current profile:
 Guidelines:
 - Create exactly 6 milestones (2 technical, 2 fundamental, 1 niche, 1 soft)
 - Each milestone needs a unique ID
-- Include 2-3 specific resources per milestone
+- Include exactly 3 specific resources per milestone
 - Add 1-3 tasks per milestone for progress tracking
 - Include success criteria for each milestone
 - Estimate hours required (20-100 hours per milestone)
 - Set appropriate difficulty (1-5) and priority levels
 - Resources should be high-quality, free or low-cost, and directly relevant
 - Prefer official documentation and well-known learning platforms
+- CRITICAL: All resources must be real, verified, and from reputable sources - verify URLs exist and are accessible
 - Return ONLY valid JSON with no additional text or formatting`
             }
           ],
           temperature: 0.2, // Lower temperature for more consistent output
-          max_tokens: 2000, // Limit the response size
+          max_tokens: 3000, // Increased limit for 6 milestones
         });
       });
     } catch (openaiError: any) {
@@ -447,6 +448,13 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
           type: "course",
           estimatedTime: "2 weeks",
           cost: "paid"
+        },
+        {
+          title: "Practice Projects Repository",
+          url: "https://github.com/tuvtran/project-based-learning",
+          type: "project",
+          estimatedTime: "6 weeks",
+          cost: "free"
         }
       ],
       tasks: [
@@ -506,6 +514,13 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
           type: "book",
           estimatedTime: "8 weeks",
           cost: "paid"
+        },
+        {
+          title: "High Scalability Blog",
+          url: "http://highscalability.com/",
+          type: "article",
+          estimatedTime: "4 weeks",
+          cost: "free"
         }
       ],
       tasks: [
@@ -567,6 +582,13 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
           url: "https://www.tensorflow.org/learn",
           type: "documentation",
           estimatedTime: "4 weeks",
+          cost: "free"
+        },
+        {
+          title: "Kaggle Learn",
+          url: "https://www.kaggle.com/learn",
+          type: "course",
+          estimatedTime: "8 weeks",
           cost: "free"
         }
       ],
@@ -636,6 +658,13 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
           type: "course",
           estimatedTime: "4 weeks",
           cost: "paid"
+        },
+        {
+          title: "Toastmasters International",
+          url: "https://www.toastmasters.org/",
+          type: "course",
+          estimatedTime: "12 weeks",
+          cost: "paid"
         }
       ],
       tasks: [
@@ -659,6 +688,139 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis): Milestone[] {
         "Deliver confident presentations",
         "Receive positive team feedback",
         "Successfully lead project to completion"
+      ]
+    },
+    {
+      id: uuidv4(),
+      title: "Advanced Frontend Development",
+      description: "Master advanced frontend technologies and modern development practices",
+      category: "technical" as const,
+      subcategory: "frontend-specialization",
+      skills: ["React", "TypeScript", "Modern CSS", "Performance Optimization"],
+      timeframe: "2-3 months",
+      completed: false,
+      difficulty: 4 as const,
+      priority: "medium" as const,
+      estimatedHours: 70,
+      attributes: {
+        technical: {
+          technologies: ["React", "TypeScript", "Vite", "CSS-in-JS"],
+          projectType: "frontend",
+          complexityLevel: "advanced",
+          deliverables: [
+            {
+              type: "deployed-app",
+              description: "Advanced React application with TypeScript"
+            }
+          ],
+          learningPath: "self-directed"
+        }
+      },
+      resources: [
+        {
+          title: "Advanced React Patterns",
+          url: "https://epicreact.dev/",
+          type: "course",
+          estimatedTime: "6 weeks",
+          cost: "paid"
+        },
+        {
+          title: "TypeScript Deep Dive",
+          url: "https://www.typescriptlang.org/docs/",
+          type: "documentation",
+          estimatedTime: "4 weeks",
+          cost: "free"
+        },
+        {
+          title: "Frontend Masters",
+          url: "https://frontendmasters.com/",
+          type: "course",
+          estimatedTime: "8 weeks",
+          cost: "paid"
+        }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Build component library with TypeScript",
+          completed: false
+        },
+        {
+          id: "task-2",
+          description: "Implement performance optimizations",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Create reusable component library",
+        "Achieve 95+ Lighthouse performance score",
+        "Implement advanced React patterns"
+      ]
+    },
+    {
+      id: uuidv4(),
+      title: "Algorithm & Data Structure Mastery",
+      description: "Strengthen computational thinking and problem-solving fundamentals",
+      category: "fundamental" as const,
+      subcategory: "computer-science-fundamentals",
+      skills: ["Algorithms", "Data Structures", "Problem Solving", "Computational Thinking"],
+      timeframe: "3-4 months",
+      completed: false,
+      difficulty: 4 as const,
+      priority: "high" as const,
+      estimatedHours: 90,
+      attributes: {
+        fundamental: {
+          competencyArea: "analytical-thinking",
+          industryScope: "universal",
+          careerStage: "all-levels",
+          conceptualAreas: ["Big O Notation", "Graph Theory", "Dynamic Programming"],
+          theoreticalDepth: "deep",
+          applicationAreas: ["Software Engineering", "Technical Interviews"],
+          buildsUpon: ["Basic Programming"],
+          enablesAdvancement: ["Senior Engineering Roles"],
+          knowledgeType: "procedural"
+        }
+      },
+      resources: [
+        {
+          title: "LeetCode Practice Platform",
+          url: "https://leetcode.com/",
+          type: "course",
+          estimatedTime: "Ongoing",
+          cost: "freemium"
+        },
+        {
+          title: "Introduction to Algorithms (CLRS)",
+          url: "https://mitpress.mit.edu/books/introduction-algorithms",
+          type: "book",
+          estimatedTime: "12 weeks",
+          cost: "paid"
+        },
+        {
+          title: "AlgoExpert",
+          url: "https://www.algoexpert.io/",
+          type: "course",
+          estimatedTime: "10 weeks",
+          cost: "paid"
+        }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Solve 100 algorithmic problems",
+          completed: false
+        },
+        {
+          id: "task-2",
+          description: "Implement common data structures",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Solve problems efficiently with optimal time complexity",
+        "Explain algorithmic trade-offs clearly",
+        "Pass technical coding interviews"
       ]
     }
   ];

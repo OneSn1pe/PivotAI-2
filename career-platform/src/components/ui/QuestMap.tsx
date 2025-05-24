@@ -161,16 +161,7 @@ const QuestMap: React.FC<QuestMapProps> = ({
             />
           )}
           
-          {/* Node difficulty indicator (stars) */}
-          <g transform={`translate(0, ${-nodeSize - 5})`}>
-            <foreignObject width={nodeSize * 2} height="20" x={-nodeSize/2} y="0">
-              <div className="flex justify-center">
-                {Array.from({ length: node.quest.difficulty }).map((_, i) => (
-                  <span key={i} className="text-[8px] text-amber-500">★</span>
-                ))}
-              </div>
-            </foreignObject>
-          </g>
+
           
           {/* Main node circle */}
           <circle
