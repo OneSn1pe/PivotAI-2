@@ -420,7 +420,7 @@ export async function generateCareerRoadmap(
     log.debug(`API URL: ${apiUrl}`);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout for roadmap generation
     
     try {
       const response = await fetch(apiUrl, {

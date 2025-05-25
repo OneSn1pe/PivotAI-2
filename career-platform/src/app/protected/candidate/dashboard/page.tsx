@@ -116,7 +116,16 @@ export default function CandidateDashboard() {
           timeframe: milestone.timeframe || 'No timeframe specified',
           completed: !!milestone.completed,
           skills: Array.isArray(milestone.skills) ? milestone.skills : [],
-          resources: Array.isArray(milestone.resources) ? milestone.resources : [],
+          resources: Array.isArray(milestone.resources) ? milestone.resources.map(r => ({
+            title: r.title,
+            url: r.url,
+            type: ['article', 'video', 'course', 'book', 'documentation', 'project', 'certification'].includes(r.type) 
+              ? r.type as 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification'
+              : 'documentation',
+            usageGuide: r.usageGuide,
+            estimatedTime: r.estimatedTime,
+            cost: r.cost
+          })) : [],
           skillType: (milestone as any).skillType || 'technical',
           createdAt: milestone.createdAt || new Date()
         };
@@ -341,6 +350,39 @@ export default function CandidateDashboard() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Daily Task Manager Panel */}
+          <div className="bg-white p-5 rounded-lg shadow-card border border-slate-200">
+            <h2 className="text-lg font-semibold text-slate-800 font-inter mb-4 flex items-center">
+              <span className="text-blue-600 mr-2">📅</span>
+              Daily Task Manager
+            </h2>
+            
+            <div className="space-y-3">
+              <p className="text-slate-600 text-sm">
+                Break down your milestones into manageable daily tasks with intelligent scheduling.
+              </p>
+              
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">AI-Powered</span>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Smart Scheduling</span>
+                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Focus Blocks</span>
+              </div>
+              
+              <div className="space-y-2">
+                <button
+                  onClick={() => router.push('/protected/candidate/tasks')}
+                  className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 px-4 rounded text-sm font-medium transition-all duration-300"
+                >
+                  Open Task Manager
+                </button>
+                
+                <div className="text-xs text-slate-500 text-center">
+                  Generate today's schedule from your milestones
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

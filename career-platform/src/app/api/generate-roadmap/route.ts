@@ -20,11 +20,11 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY is not defined');
 }
 
-// Initialize OpenAI with proper timeout settings
+// Initialize OpenAI with extended timeout settings for roadmap generation
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000, // 60 second timeout
-  maxRetries: 2,  // Retry twice on transient errors
+  timeout: 120000, // 120 second timeout (2 minutes) for complex roadmap generation
+  maxRetries: 2,   // Retry twice on transient errors
 });
 
 // Helper function to truncate large objects for API calls
@@ -53,8 +53,8 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs
       // Create a timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error('Operation timed out after 60s'));
-        }, 60000); // 60 second client-side timeout
+          reject(new Error('Operation timed out after 120s'));
+        }, 120000); // 120 second client-side timeout
       });
       
       // Race the function against the timeout
@@ -66,7 +66,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs
       lastError = error;
       
       // Check if it's a timeout error from our client-side timeout
-      if (error.message === 'Operation timed out after 60s') {
+      if (error.message === 'Operation timed out after 120s') {
         debug.error('Client-side timeout reached:', error.message);
         throw error; // Don't retry on client-side timeouts
       }

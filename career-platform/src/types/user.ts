@@ -439,3 +439,106 @@ export enum UserRole {
       skillType: legacy.skillType, // Maintain backward compatibility
     };
   };
+
+  // Daily Task Management Types
+  export interface DailyTask {
+    id: string;
+    milestoneId: string;
+    milestoneTitle: string;
+    taskDescription: string;
+    scheduledDate: Date;
+    estimatedMinutes: number;
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    category: MilestoneCategory;
+    professionalField: ProfessionalField;
+    completed: boolean;
+    completedAt?: Date;
+    notes?: string;
+    deferredTo?: Date;
+    deferralReason?: string;
+    resourceLinks?: string[];
+    tags?: string[];
+  }
+
+  export interface DailySchedule {
+    id: string;
+    candidateId: string;
+    date: Date;
+    tasks: DailyTask[];
+    totalEstimatedMinutes: number;
+    completedTasks: number;
+    focusBlocks: FocusBlock[];
+    createdAt: Date;
+    updatedAt: Date;
+  }
+
+  export interface FocusBlock {
+    id: string;
+    title: string;
+    startTime: string; // Format: "09:00"
+    endTime: string;   // Format: "10:30"
+    taskIds: string[];
+    type: 'deep-work' | 'learning' | 'practice' | 'review' | 'break';
+    description?: string;
+  }
+
+  export interface WeeklyProgress {
+    weekStartDate: Date;
+    weekEndDate: Date;
+    totalTasksScheduled: number;
+    totalTasksCompleted: number;
+    totalMinutesScheduled: number;
+    totalMinutesWorked: number;
+    milestoneProgress: {
+      milestoneId: string;
+      milestoneTitle: string;
+      tasksCompleted: number;
+      totalTasks: number;
+      progressPercentage: number;
+    }[];
+    streakDays: number;
+    categoryBreakdown: {
+      [key in MilestoneCategory]?: {
+        tasksCompleted: number;
+        minutesWorked: number;
+      };
+    };
+  }
+
+  export interface TaskTemplate {
+    id: string;
+    milestoneCategory: MilestoneCategory;
+    taskType: 'learning' | 'practice' | 'project' | 'review' | 'research';
+    title: string;
+    description: string;
+    estimatedMinutes: number;
+    difficulty: 1 | 2 | 3 | 4 | 5;
+    frequency: 'daily' | 'weekly' | 'bi-weekly' | 'monthly';
+    prerequisites?: string[];
+    resources?: string[];
+  }
+
+  export interface SchedulePreferences {
+    userId: string;
+    workingHours: {
+      start: string; // "09:00"
+      end: string;   // "18:00"
+    };
+    preferredFocusBlockDuration: number; // minutes
+    breakDuration: number; // minutes
+    workDays: ('monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday')[];
+    dailyGoalMinutes: number;
+    maxTasksPerDay: number;
+    priorityDistribution: {
+      critical: number; // percentage
+      high: number;
+      medium: number;
+      low: number;
+    };
+    categoryPreferences: {
+      [key in MilestoneCategory]?: {
+        preferredTimeOfDay: 'morning' | 'afternoon' | 'evening';
+        maxMinutesPerDay: number;
+      };
+    };
+  }
