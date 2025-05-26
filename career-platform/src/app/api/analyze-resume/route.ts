@@ -10,7 +10,7 @@ const logApiCheckpoint = (message: string, data: any = {}) => {
 // Initialize OpenAI with API key and timeout
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 25000, // 25 second timeout for API calls
+  timeout: 120000, // 2 minute timeout for API calls
   maxRetries: 2,  // Built-in retries for transient errors
 });
 
@@ -114,8 +114,8 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
       // Create a timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error('OpenAI API request timed out after 20s'));
-        }, 20000); // 20 second timeout
+          reject(new Error('OpenAI API request timed out after 2 minutes'));
+        }, 120000); // 2 minute timeout
       });
       
       // Race the function against the timeout
@@ -134,7 +134,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
       });
       
       // Check if it's a timeout error from our client-side timeout
-      if (error.message === 'OpenAI API request timed out after 20s') {
+      if (error.message === 'OpenAI API request timed out after 2 minutes') {
         throw error; // Don't retry on client-side timeouts
       }
       

@@ -162,8 +162,8 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-      logStep('request.timeout', { timeout: 60000 });
-    }, 60000);
+      logStep('request.timeout', { timeout: 120000 });
+    }, 120000);
     
     try {
       logStep('request.start');
@@ -420,7 +420,7 @@ export async function generateCareerRoadmap(
     log.debug(`API URL: ${apiUrl}`);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
     
     try {
       const response = await fetch(apiUrl, {
