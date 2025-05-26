@@ -8,10 +8,12 @@ interface SetupChecklistProps {
 }
 
 const LOCAL_STORAGE_KEY = 'pivotai_setup_checklist_minimized';
+const LOCAL_STORAGE_DISMISSED_KEY = 'pivotai_setup_checklist_dismissed';
 
 const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadmap }) => {
   const router = useRouter();
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   // Determine completion status of each step
   const resumeUploaded = Boolean(candidateProfile?.resumeFileName);
@@ -24,19 +26,28 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
   const totalSteps = 3;
   const completedSteps = [resumeUploaded, hasTargetCompanies, roadmapGenerated].filter(Boolean).length;
   const progressPercentage = (completedSteps / totalSteps) * 100;
-  
-  // Initialize minimized state from localStorage
+  const isCompleted = completedSteps === totalSteps;
+
+  // Initialize state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Check if user has dismissed the component when completed
+      const dismissed = localStorage.getItem(LOCAL_STORAGE_DISMISSED_KEY);
+      if (dismissed === 'true' && isCompleted) {
+        setIsDismissed(true);
+        return;
+      }
+
+      // Initialize minimized state
       const savedState = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedState !== null) {
         setIsMinimized(savedState === 'true');
       } else {
         // Default to minimized if all steps are completed
-        setIsMinimized(completedSteps === totalSteps);
+        setIsMinimized(isCompleted);
       }
     }
-  }, [completedSteps]);
+  }, [completedSteps, isCompleted]);
   
   // Save minimized state to localStorage when it changes
   const handleToggleMinimize = () => {
@@ -47,12 +58,35 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
     }
   };
 
+  // Handle dismissing the component permanently when completed
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LOCAL_STORAGE_DISMISSED_KEY, 'true');
+    }
+  };
+
+  // Reset dismissal if setup becomes incomplete again
+  useEffect(() => {
+    if (!isCompleted && isDismissed) {
+      setIsDismissed(false);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(LOCAL_STORAGE_DISMISSED_KEY);
+      }
+    }
+  }, [isCompleted, isDismissed]);
+
+  // Don't render if dismissed
+  if (isDismissed) {
+    return null;
+  }
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-slate-800 font-inter flex items-center">
           <span>Setup Progress</span>
-          {completedSteps === totalSteps && (
+          {isCompleted && (
             <span className="ml-2 text-xs font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
               Complete
             </span>
@@ -64,21 +98,34 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
             {completedSteps}/{totalSteps} Complete
           </span>
           
-          <button 
-            onClick={handleToggleMinimize}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-            aria-label={isMinimized ? "Expand setup checklist" : "Minimize setup checklist"}
-          >
-            {isMinimized ? (
+          {isCompleted ? (
+            <button 
+              onClick={handleDismiss}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Dismiss setup checklist"
+              title="Hide this checklist permanently"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-            )}
-          </button>
+            </button>
+          ) : (
+            <button 
+              onClick={handleToggleMinimize}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label={isMinimized ? "Expand setup checklist" : "Minimize setup checklist"}
+            >
+              {isMinimized ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
       </div>
       
@@ -90,13 +137,34 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
         ></div>
       </div>
       
-      {/* Minimized summary - shown when minimized */}
-      {isMinimized && (
+      {/* Completion notice with dismiss option */}
+      {isCompleted && (
+        <div className="bg-teal-50 p-4 rounded-lg border border-teal-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-teal-800">Setup completed!</p>
+                <p className="text-xs text-teal-600">Your personalized career plan is ready.</p>
+              </div>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="text-teal-600 hover:text-teal-800 text-sm font-medium"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Minimized summary - shown when minimized and not completed */}
+      {isMinimized && !isCompleted && (
         <div className="text-xs text-slate-500 flex justify-between">
           <span>
-            {completedSteps === totalSteps 
-              ? "All setup steps completed" 
-              : `${completedSteps} of ${totalSteps} setup steps completed`}
+            {completedSteps} of {totalSteps} setup steps completed
           </span>
           <button 
             onClick={() => setIsMinimized(false)}
@@ -107,8 +175,8 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
         </div>
       )}
       
-      {/* Expanded content - shown when not minimized */}
-      {!isMinimized && (
+      {/* Expanded content - shown when not minimized and not completed */}
+      {!isMinimized && !isCompleted && (
         <>
           {/* Checklist Items */}
           <div className="space-y-4 mt-4">
@@ -221,20 +289,6 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
               </div>
             </div>
           </div>
-          
-          {completedSteps === totalSteps && (
-            <div className="mt-6 text-center">
-              <div className="bg-teal-50 p-3 rounded-lg">
-                <div className="flex justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <p className="text-sm font-medium text-teal-800 mt-1">All steps completed!</p>
-                <p className="text-xs text-teal-600 mt-1">Your personalized career plan is ready.</p>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

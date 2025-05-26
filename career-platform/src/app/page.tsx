@@ -1,18 +1,30 @@
 import React from 'react';
 import Link from 'next/link';
-import ContactForm from '@/components/ContactForm';
 import Script from 'next/script';
+import { 
+  Target, 
+  TrendingUp, 
+  Users, 
+  Briefcase, 
+  FileText, 
+  Award,
+  ArrowRight,
+  PlayCircle,
+  Calendar,
+  Star,
+  Check
+} from 'lucide-react';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 via-slate-50 to-slate-100">
+    <div className="min-h-screen bg-white">
       <Script id="structured-data" type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          "name": "PivotAI - Career Development Platform",
+          "name": "PivotAI Career Quest - Career Development Platform",
           "url": "https://pivotai.me/",
-          "description": "AI-powered career development platform with personalized roadmaps and skill recommendations",
+          "description": "Transform your career growth into a structured journey with goal-oriented platform, skill development paths, and professional networking.",
           "potentialAction": {
             "@type": "SearchAction",
             "target": "https://pivotai.me/search?q={search_term_string}",
@@ -21,152 +33,445 @@ export default function HomePage() {
         })}
       </Script>
       
-      <header className="bg-white/70 backdrop-filter backdrop-blur-md shadow-md sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-teal-800 font-inter">PivotAI Career</h1>
-          <div>
-            <Link 
-              href="/auth/login"
-              className="mr-4 text-teal-700 hover:text-teal-900 font-medium"
-            >
-              Login
-            </Link>
-            <Link 
-              href="/auth/register"
-              className="bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-button hover:shadow-button-hover"
-            >
-              Get Started
-            </Link>
+      {/* Navigation Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold text-slate-900">
+                PivotAI <span className="text-teal-700">Career Quest</span>
+              </h1>
+            </div>
+            
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-slate-600 hover:text-slate-900 transition-colors">Features</a>
+              <a href="#career-paths" className="text-slate-600 hover:text-slate-900 transition-colors">Career Paths</a>
+              <a href="#pricing" className="text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
+              <a href="#resources" className="text-slate-600 hover:text-slate-900 transition-colors">Resources</a>
+            </nav>
+            
+            <div className="flex items-center space-x-4">
+              <Link 
+                href="/auth/login"
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Login
+              </Link>
+              <Link 
+                href="/auth/register"
+                className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+              >
+                Start Your Journey
+              </Link>
+            </div>
           </div>
         </div>
       </header>
 
       <main>
-        <section className="py-12 md:py-20 bg-gradient-to-r from-teal-700 to-teal-900 text-white relative overflow-hidden">
-          <div className="absolute top-10 right-10 opacity-20">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-40 w-40 text-teal-200" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v3.758a1 1 0 01-.293.707l-4 4C.817 14.769 2.156 18 4.828 18h10.343c2.673 0 4.012-3.231 2.122-5.121l-4-4A1 1 0 0113 8.172V4.414l.707-.707A1 1 0 0013 2H7zm2 6.172V4h2v4.172a3 3 0 00.879 2.12l1.027 1.028a4 4 0 00-2.171.102l-.47.156a4 4 0 01-2.53 0l-.563-.187a1.993 1.993 0 00-.114-.035l1.063-1.063A3 3 0 009 8.172z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="absolute bottom-5 left-20 opacity-10">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-64 w-64 text-teal-200" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
-            </svg>
-          </div>
-          <div className="container mx-auto px-4 relative z-1">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div className="md:w-1/2 lg:w-5/12 md:pr-8">
-                <h2 className="text-4xl md:text-5xl font-extrabold mb-6 font-inter">
-                  Accelerate Your Career With AI-Powered Guidance
-                </h2>
-                <p className="text-xl mb-8">
-                  Get personalized career roadmaps, skill recommendations, and connect with recruiters looking for talent like you.
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-slate-50 to-teal-50 py-20 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
+                  Transform Your Career Growth Into a Structured Journey
+                </h1>
+                <p className="text-xl lg:text-2xl text-slate-600 mt-6 max-w-3xl">
+                  Join thousands of professionals who've leveled up their careers with our goal-oriented platform. Track progress, unlock opportunities, and achieve your professional goals.
                 </p>
-                <Link 
-                  href="/auth/register"
-                  className="bg-white text-teal-700 hover:bg-teal-50 px-6 py-3 rounded-lg font-medium text-lg inline-block transition-all shadow-button hover:shadow-button-hover"
-                >
-                  Start Your Journey
-                </Link>
-              </div>
-              <div className="hidden md:block md:w-1/2 lg:w-7/12 mt-8 md:mt-0">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 w-full border border-teal-600/20 shadow-card">
-                  <div className="aspect-w-16 aspect-h-9 bg-white/20 rounded-lg w-full"></div>
+                <div className="flex gap-4 mt-10">
+                  <Link 
+                    href="/auth/register"
+                    className="bg-teal-700 hover:bg-teal-800 text-white px-8 py-4 rounded-lg font-semibold text-lg inline-flex items-center transition-colors"
+                  >
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                  <Link 
+                    href="#how-it-works"
+                    className="bg-white hover:bg-slate-50 text-slate-700 px-8 py-4 rounded-lg font-semibold text-lg border border-slate-300 inline-flex items-center transition-colors"
+                  >
+                    <PlayCircle className="mr-2 h-5 w-5" />
+                    See How It Works
+                  </Link>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-        
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-10 text-teal-900 font-inter">How It Works</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-card hover:shadow-card-hover border border-slate-200 transition-all duration-300 h-full relative">
-                <div className="w-12 h-12 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-xl font-bold mb-4">1</div>
-                <h3 className="text-xl font-bold mb-3 text-teal-800 font-inter">Upload Your Resume</h3>
-                <p className="text-slate-600">
-                  Our AI analyzes your experience, skills, and achievements to understand your career profile.
-                </p>
-              </div>
               
-              <div className="bg-white p-6 rounded-xl shadow-card hover:shadow-card-hover border border-slate-200 transition-all duration-300 h-full relative">
-                <div className="w-12 h-12 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-xl font-bold mb-4">2</div>
-                <h3 className="text-xl font-bold mb-3 text-teal-800 font-inter">Set Your Preferences</h3>
-                <p className="text-slate-600">
-                  Tell us about your dream roles, industries, and goals to get personalized recommendations.
-                </p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-xl shadow-card hover:shadow-card-hover border border-slate-200 transition-all duration-300 h-full relative">
-                <div className="w-12 h-12 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-xl font-bold mb-4">3</div>
-                <h3 className="text-xl font-bold mb-3 text-teal-800 font-inter">Follow Your Roadmap</h3>
-                <p className="text-slate-600">
-                  Get a customized career development plan with actionable milestones to achieve your goals.
-                </p>
+              <div className="lg:pl-8">
+                <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-slate-900">Career Progress</h3>
+                      <span className="text-sm text-slate-500">Level 7</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-3">
+                      <div className="bg-teal-700 h-3 rounded-full" style={{width: '75%'}}></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-teal-700">23</div>
+                        <div className="text-sm text-slate-500">Skills Unlocked</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-teal-700">87%</div>
+                        <div className="text-sm text-slate-500">Goals Complete</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Contact Us Section */}
-        <section id="contact" className="py-16 relative">
-          <div className="absolute bottom-10 right-10 opacity-20">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-48 w-48 text-teal-300" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="container mx-auto px-4 relative z-1">
-            <h2 className="text-3xl font-bold text-center mb-10 text-teal-900 font-inter">Contact Us</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="flex items-center">
-                <div>
-                  <h3 className="text-2xl font-bold mb-4 text-teal-800 font-inter">Get In Touch</h3>
-                  <p className="text-slate-600 mb-4">
-                    Have questions about how PivotAI can help your career or recruitment needs? Our team is here to help. Fill out the form and we'll get back to you within 24 hours.
-                  </p>
+        {/* Social Proof Section */}
+        <section className="bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p className="text-center text-sm text-slate-500 mb-8">Trusted by professionals at</p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center">
+              {['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple'].map((company) => (
+                <div key={company} className="text-center">
+                  <div className="text-2xl font-bold text-slate-400 grayscale opacity-60 hover:opacity-100 transition-opacity">
+                    {company}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="bg-white rounded-xl p-6 shadow-card border border-slate-200">
-                <ContactForm />
-              </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="bg-slate-50 py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+                Everything you need to advance your career
+              </h2>
+              <p className="text-xl text-slate-600">
+                Transform professional development from overwhelming to organized with our comprehensive platform.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: Target,
+                  color: 'text-teal-600',
+                  title: 'Goal-Oriented System',
+                  description: 'Set and track career objectives with our structured approach to professional growth.'
+                },
+                {
+                  icon: TrendingUp,
+                  color: 'text-blue-500',
+                  title: 'Skill Development Paths',
+                  description: 'Visual skill trees that guide your learning journey across Technology, Business, and Creative domains.'
+                },
+                {
+                  icon: Users,
+                  color: 'text-violet-500',
+                  title: 'Professional Network',
+                  description: 'Connect with mentors, join industry groups, and build relationships that advance your career.'
+                },
+                {
+                  icon: Briefcase,
+                  color: 'text-emerald-500',
+                  title: 'Job Opportunity Matching',
+                  description: 'Discover positions that match your skill level and career goals with intelligent recommendations.'
+                },
+                {
+                  icon: FileText,
+                  color: 'text-indigo-500',
+                  title: 'Resume Optimization',
+                  description: 'Build and optimize your resume with templates and feedback tailored to your target roles.'
+                },
+                {
+                  icon: Award,
+                  color: 'text-orange-500',
+                  title: 'Achievement Tracking',
+                  description: 'Earn credentials and track your professional milestones with our comprehensive progress system.'
+                }
+              ].map((feature, index) => (
+                <div key={index} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-200">
+                  <feature.icon className={`h-8 w-8 ${feature.color} mb-4`} />
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                  <p className="text-slate-600">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works Section */}
+        <section id="how-it-works" className="bg-white py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+                Your career journey, simplified
+              </h2>
+              <p className="text-xl text-slate-600">
+                From assessment to achievement in three clear steps.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-12">
+              {[
+                {
+                  number: '01',
+                  title: 'Assess Your Starting Point',
+                  description: 'Complete our comprehensive career assessment to understand your current skills, strengths, and growth areas.'
+                },
+                {
+                  number: '02',
+                  title: 'Choose Your Path',
+                  description: 'Select from Technology, Business, or Creative career paths with personalized objectives and milestones.'
+                },
+                {
+                  number: '03',
+                  title: 'Level Up Continuously',
+                  description: 'Complete tasks, build skills, and track progress as you advance toward your career goals.'
+                }
+              ].map((step, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-4xl font-bold text-teal-700 mb-4">{step.number}</div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">{step.title}</h3>
+                  <p className="text-slate-600">{step.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="bg-slate-50 py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 text-center mb-12">
+              Success stories from career professionals
+            </h2>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                {
+                  quote: "PivotAI helped me transition from marketing to product management in 8 months. The structured approach made all the difference.",
+                  author: "Sarah Chen",
+                  role: "Senior Product Manager",
+                  company: "TechFlow"
+                },
+                {
+                  quote: "The networking features connected me with mentors who guided my career shift into data science. Invaluable platform.",
+                  author: "Marcus Rodriguez",
+                  role: "Data Scientist",
+                  company: "DataVis Corp"
+                },
+                {
+                  quote: "Love the gamified approach to professional development. Finally, career growth feels manageable and motivating.",
+                  author: "Jessica Park",
+                  role: "UX Designer",
+                  company: "DesignStudio"
+                }
+              ].map((testimonial, index) => (
+                <div key={index} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-slate-600 mb-6">"{testimonial.quote}"</p>
+                  <div>
+                    <div className="font-semibold text-slate-900">{testimonial.author}</div>
+                    <div className="text-slate-500">{testimonial.role} at {testimonial.company}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section id="pricing" className="bg-white py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+                Simple, transparent pricing
+              </h2>
+              <p className="text-xl text-slate-600">
+                Choose the plan that fits your career goals.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {[
+                {
+                  name: 'Starter',
+                  price: 'Free',
+                  description: 'Perfect for exploring your career options',
+                  features: [
+                    'Basic career assessment',
+                    '3 skill development paths',
+                    'Community access',
+                    'Progress tracking'
+                  ],
+                  cta: 'Get Started',
+                  ctaStyle: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300',
+                  popular: false
+                },
+                {
+                  name: 'Professional',
+                  price: '$19/month',
+                  description: 'For serious career advancement',
+                  features: [
+                    'Complete career assessment',
+                    'All skill development paths',
+                    '1-on-1 mentor matching',
+                    'Advanced analytics',
+                    'Resume optimization tools',
+                    'Job opportunity alerts'
+                  ],
+                  cta: 'Start Free Trial',
+                  ctaStyle: 'bg-teal-700 hover:bg-teal-800 text-white',
+                  popular: true
+                },
+                {
+                  name: 'Enterprise',
+                  price: 'Custom',
+                  description: 'For teams and organizations',
+                  features: [
+                    'Everything in Professional',
+                    'Team management tools',
+                    'Custom career paths',
+                    'Advanced reporting',
+                    'Dedicated support',
+                    'API access'
+                  ],
+                  cta: 'Contact Sales',
+                  ctaStyle: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300',
+                  popular: false
+                }
+              ].map((tier, index) => (
+                <div key={index} className={`bg-white p-8 rounded-xl shadow-sm border-2 transition-colors ${tier.popular ? 'border-teal-200' : 'border-slate-200 hover:border-teal-200'} relative`}>
+                  {tier.popular && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-teal-700 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{tier.name}</h3>
+                    <div className="text-4xl font-bold text-slate-900 mb-2">{tier.price}</div>
+                    <p className="text-slate-600 mb-6">{tier.description}</p>
+                  </div>
+                  
+                  <ul className="space-y-4 mb-8">
+                    {tier.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center">
+                        <Check className="h-5 w-5 text-teal-700 mr-3" />
+                        <span className="text-slate-600">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Link 
+                    href="/auth/register"
+                    className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors text-center block ${tier.ctaStyle}`}
+                  >
+                    {tier.cta}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA Section */}
+        <section className="bg-gradient-to-r from-teal-700 to-teal-600 py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
+              Ready to transform your career?
+            </h2>
+            <p className="text-xl text-teal-100 mb-8">
+              Join thousands of professionals already advancing their careers with PivotAI Career Quest.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                href="/auth/register"
+                className="bg-white hover:bg-slate-50 text-teal-700 px-8 py-4 rounded-lg font-semibold text-lg inline-flex items-center justify-center transition-colors"
+              >
+                Start Your Free Journey
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+              <Link 
+                href="#contact"
+                className="border-2 border-white hover:bg-white hover:text-teal-700 text-white px-8 py-4 rounded-lg font-semibold text-lg inline-flex items-center justify-center transition-colors"
+              >
+                <Calendar className="mr-2 h-5 w-5" />
+                Schedule a Demo
+              </Link>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-gradient-to-r from-teal-900 to-teal-800 text-white py-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-xl font-bold text-white font-inter">PivotAI Career</h2>
-              <p className="mt-2 text-teal-100">AI-powered career development</p>
+      {/* Footer */}
+      <footer className="bg-slate-900 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-white font-semibold mb-4">Product</h3>
+              <ul className="space-y-2">
+                {['Features', 'Career Paths', 'Pricing', 'API Documentation'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                  </li>
+                ))}
+              </ul>
             </div>
             
-            <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-8">
-              <Link href="/auth/register" className="text-teal-100 hover:text-white transition-colors">
-                Get Started
-              </Link>
-              <Link href="/auth/login" className="text-teal-100 hover:text-white transition-colors">
-                Login
-              </Link>
-              <Link href="#" className="text-teal-100 hover:text-white transition-colors">
-                About Us
-              </Link>
-              <Link href="#contact" className="text-teal-100 hover:text-white transition-colors">
-                Contact
-              </Link>
-              <Link href="/privacy-policy" className="text-teal-100 hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Resources</h3>
+              <ul className="space-y-2">
+                {['Blog', 'Career Guides', 'Success Stories', 'Help Center'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <ul className="space-y-2">
+                {['About Us', 'Careers', 'Press', 'Contact'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2">
+                {['Privacy Policy', 'Terms of Service', 'Security', 'Compliance'].map((item) => (
+                  <li key={item}>
+                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
           
-          <div className="mt-8 pt-8 border-t border-teal-700/50 text-center text-sm">
-            <p className="text-teal-100">&copy; {new Date().getFullYear()} PivotAI. All rights reserved.</p>
+          <div className="flex justify-between items-center pt-8 border-t border-slate-800 mt-8">
+            <p className="text-slate-400">© 2025 PivotAI Career Quest. All rights reserved.</p>
+            <div className="flex space-x-6">
+              {['Twitter', 'LinkedIn', 'GitHub', 'YouTube'].map((social) => (
+                <a key={social} href="#" className="text-slate-400 hover:text-white transition-colors">
+                  {social}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </footer>
