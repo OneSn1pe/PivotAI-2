@@ -13,7 +13,8 @@ import {
   calculateWeeklyProgress,
   completeTask,
   deferTask,
-  DEFAULT_SCHEDULE_PREFERENCES 
+  DEFAULT_SCHEDULE_PREFERENCES,
+  generateWeeklySchedule
 } from '@/utils/taskScheduleUtils';
 
 // Helper function to set CORS headers
@@ -43,8 +44,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (type === 'weekly') {
-      // Get weekly progress
+      // Get weekly progress or generate new weekly schedule
       const weeklyData = await getWeeklyProgress(candidateId, date);
+      if (!weeklyData) {
+        const roadmap = await getCandidateRoadmap(candidateId);
+        if (!roadmap) {
+          return setCorsHeaders(NextResponse.json({ error: 'No roadmap found for candidate' }, { status: 404 }));
+        }
+        const resources = roadmap.milestones.flatMap(m => m.resources.map(r => r.url));
+        const newWeeklySchedule = await generateWeeklySchedule(candidateId, roadmap.milestones, resources);
+        // Save new weekly schedule to Firestore (similar to daily schedule logic)
+        // ...
+        return setCorsHeaders(NextResponse.json(newWeeklySchedule));
+      }
       return setCorsHeaders(NextResponse.json(weeklyData));
     } else {
       // Get daily schedule
@@ -65,7 +77,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const requestData = await request.json();
-    const { candidateId, date, preferences, regenerate = false } = requestData;
+    const { candidateId, date, preferences, regenerate = false, type = 'daily' } = requestData;
 
     if (!candidateId) {
       return setCorsHeaders(NextResponse.json({ error: 'candidateId is required' }, { status: 400 }));
@@ -84,6 +96,15 @@ export async function POST(request: NextRequest) {
       ...DEFAULT_SCHEDULE_PREFERENCES, 
       userId: candidateId 
     };
+
+    if (type === 'weekly') {
+      // Generate new weekly schedule
+      const resources = roadmap.milestones.flatMap(m => m.resources.map(r => r.url));
+      const newWeeklySchedule = await generateWeeklySchedule(candidateId, roadmap.milestones, resources);
+      // Save new weekly schedule to Firestore (similar to daily schedule logic)
+      // ...
+      return setCorsHeaders(NextResponse.json(newWeeklySchedule, { status: 201 }));
+    }
 
     // Check if schedule already exists for this date
     const existingSchedule = await getDailySchedule(candidateId, targetDate);

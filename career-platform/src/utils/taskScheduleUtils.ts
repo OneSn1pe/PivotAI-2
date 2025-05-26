@@ -10,6 +10,7 @@ import {
   ProfessionalField 
 } from '@/types/user';
 import { v4 as uuidv4 } from 'uuid';
+import OpenAI from 'openai';
 
 // Default schedule preferences
 export const DEFAULT_SCHEDULE_PREFERENCES: SchedulePreferences = {
@@ -48,6 +49,11 @@ export const DEFAULT_SCHEDULE_PREFERENCES: SchedulePreferences = {
     }
   }
 };
+
+// Initialize OpenAI API
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Generate daily tasks from milestones
 export const generateDailyTasksFromMilestones = (
@@ -499,4 +505,32 @@ export const getSuggestedNextTasks = (
     new Date(),
     DEFAULT_SCHEDULE_PREFERENCES
   );
+};
+
+// Generate weekly schedule using OpenAI
+export const generateWeeklySchedule = async (
+  candidateId: string,
+  milestones: Milestone[],
+  resources: string[]
+): Promise<DailySchedule[]> => {
+  try {
+    const prompt = `Generate a weekly schedule for the following milestones and resources: ${JSON.stringify(milestones)}. Resources: ${resources.join(', ')}`;
+    
+    const response = await openai.completions.create({
+      model: 'text-davinci-003',
+      prompt,
+      max_tokens: 1500,
+    });
+
+    const scheduleData = JSON.parse(response.choices[0].text || '[]');
+    return scheduleData.map((task: any) => ({
+      ...task,
+      id: uuidv4(),
+      candidateId,
+      completed: false,
+    }));
+  } catch (error) {
+    console.error('Error generating weekly schedule:', error);
+    throw new Error('Failed to generate weekly schedule');
+  }
 }; 
