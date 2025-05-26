@@ -7,6 +7,7 @@ import { UserRole } from '@/types/user';
 
 // Mark this file as server-only
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
