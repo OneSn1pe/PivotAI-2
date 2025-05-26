@@ -1,0 +1,565 @@
+{
+    "name": "PivotAI Career Quest Landing Page",
+    "description": "Stripe-inspired landing page design for PivotAI Career Quest platform",
+    "designPhilosophy": "Clean, professional, conversion-focused design that builds trust and clearly communicates value proposition",
+    
+    "layoutStructure": {
+      "navigation": {
+        "type": "sticky_header",
+        "background": "rgba(255, 255, 255, 0.95)",
+        "backdrop": "blur-sm",
+        "elements": {
+          "logo": {
+            "position": "left",
+            "style": "Clean wordmark with subtle teal accent",
+            "fontSize": "text-xl",
+            "fontWeight": "font-semibold"
+          },
+          "navigationItems": [
+            "Features",
+            "Career Paths", 
+            "Pricing",
+            "Resources"
+          ],
+          "ctaButton": {
+            "text": "Start Your Journey",
+            "style": "primary_button",
+            "background": "teal-700",
+            "hover": "teal-800"
+          }
+        },
+        "mobileMenu": {
+          "type": "slide_down",
+          "background": "white",
+          "border": "slate-200"
+        }
+      },
+      
+      "heroSection": {
+        "layout": "centered_content_with_visual",
+        "background": "gradient-to-br from-slate-50 to-teal-50",
+        "padding": "py-20 lg:py-32",
+        "content": {
+          "headline": {
+            "text": "Transform Your Career Growth Into a Structured Journey",
+            "fontSize": "text-5xl lg:text-6xl",
+            "fontWeight": "font-bold",
+            "color": "slate-900",
+            "lineHeight": "leading-tight"
+          },
+          "subheadline": {
+            "text": "Join thousands of professionals who've leveled up their careers with our goal-oriented platform. Track progress, unlock opportunities, and achieve your professional goals.",
+            "fontSize": "text-xl lg:text-2xl",
+            "color": "slate-600",
+            "maxWidth": "max-w-3xl",
+            "margin": "mt-6"
+          },
+          "ctaGroup": {
+            "layout": "flex gap-4 mt-10",
+            "primaryCta": {
+              "text": "Get Started Free",
+              "style": "bg-teal-700 hover:bg-teal-800 text-white px-8 py-4 rounded-lg font-semibold text-lg",
+              "icon": "arrow-right"
+            },
+            "secondaryCta": {
+              "text": "See How It Works",
+              "style": "bg-white hover:bg-slate-50 text-slate-700 px-8 py-4 rounded-lg font-semibold text-lg border border-slate-300",
+              "icon": "play-circle"
+            }
+          }
+        },
+        "visual": {
+          "type": "dashboard_preview",
+          "position": "right_side_lg:left_on_mobile",
+          "elements": {
+            "dashboardMockup": {
+              "background": "white",
+              "shadow": "shadow-2xl",
+              "border": "border border-slate-200",
+              "borderRadius": "rounded-xl",
+              "content": "Interactive career dashboard preview showing level progression, skill trees, and task completion"
+            }
+          }
+        }
+      },
+      
+      "socialProofSection": {
+        "background": "white",
+        "padding": "py-16",
+        "content": {
+          "label": {
+            "text": "Trusted by professionals at",
+            "fontSize": "text-sm",
+            "color": "slate-500",
+            "alignment": "text-center"
+          },
+          "logoGrid": {
+            "layout": "grid grid-cols-2 md:grid-cols-5 gap-8 items-center",
+            "logos": [
+              "Google", "Microsoft", "Amazon", "Meta", "Apple"
+            ],
+            "style": "grayscale opacity-60 hover:opacity-100 transition-opacity"
+          }
+        }
+      },
+      
+      "featuresSection": {
+        "background": "slate-50",
+        "padding": "py-20",
+        "content": {
+          "header": {
+            "headline": "Everything you need to advance your career",
+            "subheadline": "Transform professional development from overwhelming to organized with our comprehensive platform.",
+            "alignment": "text-center",
+            "maxWidth": "max-w-3xl mx-auto"
+          },
+          "featureGrid": {
+            "layout": "grid md:grid-cols-3 gap-8 mt-16",
+            "features": [
+              {
+                "icon": "target",
+                "iconColor": "teal-600",
+                "title": "Goal-Oriented System",
+                "description": "Set and track career objectives with our structured approach to professional growth.",
+                "visual": "Progress bar showing 75% completion"
+              },
+              {
+                "icon": "trending-up",
+                "iconColor": "blue-500", 
+                "title": "Skill Development Paths",
+                "description": "Visual skill trees that guide your learning journey across Technology, Business, and Creative domains.",
+                "visual": "Interconnected skill nodes"
+              },
+              {
+                "icon": "users",
+                "iconColor": "violet-500",
+                "title": "Professional Network",
+                "description": "Connect with mentors, join industry groups, and build relationships that advance your career.",
+                "visual": "Network connection diagram"
+              },
+              {
+                "icon": "briefcase",
+                "iconColor": "emerald-500",
+                "title": "Job Opportunity Matching",
+                "description": "Discover positions that match your skill level and career goals with intelligent recommendations.",
+                "visual": "Job card with match percentage"
+              },
+              {
+                "icon": "file-text",
+                "iconColor": "indigo-500",
+                "title": "Resume Optimization",
+                "description": "Build and optimize your resume with templates and feedback tailored to your target roles.",
+                "visual": "Resume builder interface"
+              },
+              {
+                "icon": "award",
+                "iconColor": "orange-500",
+                "title": "Achievement Tracking",
+                "description": "Earn credentials and track your professional milestones with our comprehensive progress system.",
+                "visual": "Achievement badges"
+              }
+            ]
+          }
+        }
+      },
+      
+      "howItWorksSection": {
+        "background": "white",
+        "padding": "py-20",
+        "content": {
+          "header": {
+            "headline": "Your career journey, simplified",
+            "subheadline": "From assessment to achievement in three clear steps.",
+            "alignment": "text-center"
+          },
+          "stepProcess": {
+            "layout": "grid md:grid-cols-3 gap-12 mt-16",
+            "steps": [
+              {
+                "number": "01",
+                "title": "Assess Your Starting Point",
+                "description": "Complete our comprehensive career assessment to understand your current skills, strengths, and growth areas.",
+                "visual": "Assessment interface mockup"
+              },
+              {
+                "number": "02", 
+                "title": "Choose Your Path",
+                "description": "Select from Technology, Business, or Creative career paths with personalized objectives and milestones.",
+                "visual": "Path selection interface"
+              },
+              {
+                "number": "03",
+                "title": "Level Up Continuously",
+                "description": "Complete tasks, build skills, and track progress as you advance toward your career goals.",
+                "visual": "Progress dashboard"
+              }
+            ]
+          }
+        }
+      },
+      
+      "testimonialsSection": {
+        "background": "slate-50",
+        "padding": "py-20",
+        "content": {
+          "header": {
+            "headline": "Success stories from career professionals",
+            "alignment": "text-center"
+          },
+          "testimonialGrid": {
+            "layout": "grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12",
+            "testimonials": [
+              {
+                "quote": "PivotAI helped me transition from marketing to product management in 8 months. The structured approach made all the difference.",
+                "author": "Sarah Chen",
+                "role": "Senior Product Manager",
+                "company": "TechFlow",
+                "avatar": "professional_headshot",
+                "rating": 5
+              },
+              {
+                "quote": "The networking features connected me with mentors who guided my career shift into data science. Invaluable platform.",
+                "author": "Marcus Rodriguez", 
+                "role": "Data Scientist",
+                "company": "DataVis Corp",
+                "avatar": "professional_headshot",
+                "rating": 5
+              },
+              {
+                "quote": "Love the gamified approach to professional development. Finally, career growth feels manageable and motivating.",
+                "author": "Jessica Park",
+                "role": "UX Designer", 
+                "company": "DesignStudio",
+                "avatar": "professional_headshot",
+                "rating": 5
+              }
+            ]
+          }
+        }
+      },
+      
+      "pricingSection": {
+        "background": "white",
+        "padding": "py-20",
+        "content": {
+          "header": {
+            "headline": "Simple, transparent pricing",
+            "subheadline": "Choose the plan that fits your career goals.",
+            "alignment": "text-center"
+          },
+          "pricingTiers": {
+            "layout": "grid md:grid-cols-3 gap-8 mt-12 max-w-5xl mx-auto",
+            "tiers": [
+              {
+                "name": "Starter",
+                "price": "Free",
+                "description": "Perfect for exploring your career options",
+                "features": [
+                  "Basic career assessment",
+                  "3 skill development paths",
+                  "Community access",
+                  "Progress tracking"
+                ],
+                "cta": "Get Started",
+                "ctaStyle": "secondary",
+                "popular": false
+              },
+              {
+                "name": "Professional", 
+                "price": "$19/month",
+                "description": "For serious career advancement",
+                "features": [
+                  "Complete career assessment",
+                  "All skill development paths", 
+                  "1-on-1 mentor matching",
+                  "Advanced analytics",
+                  "Resume optimization tools",
+                  "Job opportunity alerts"
+                ],
+                "cta": "Start Free Trial",
+                "ctaStyle": "primary",
+                "popular": true,
+                "badge": "Most Popular"
+              },
+              {
+                "name": "Enterprise",
+                "price": "Custom",
+                "description": "For teams and organizations",
+                "features": [
+                  "Everything in Professional",
+                  "Team management tools",
+                  "Custom career paths",
+                  "Advanced reporting",
+                  "Dedicated support",
+                  "API access"
+                ],
+                "cta": "Contact Sales",
+                "ctaStyle": "secondary", 
+                "popular": false
+              }
+            ]
+          }
+        }
+      },
+      
+      "finalCtaSection": {
+        "background": "gradient-to-r from-teal-700 to-teal-600",
+        "padding": "py-20",
+        "content": {
+          "headline": {
+            "text": "Ready to transform your career?",
+            "fontSize": "text-4xl lg:text-5xl",
+            "fontWeight": "font-bold", 
+            "color": "white",
+            "alignment": "text-center"
+          },
+          "subheadline": {
+            "text": "Join thousands of professionals already advancing their careers with PivotAI Career Quest.",
+            "fontSize": "text-xl",
+            "color": "teal-100",
+            "alignment": "text-center",
+            "margin": "mt-4"
+          },
+          "ctaGroup": {
+            "layout": "flex flex-col sm:flex-row gap-4 justify-center mt-8",
+            "primaryCta": {
+              "text": "Start Your Free Journey",
+              "style": "bg-white hover:bg-slate-50 text-teal-700 px-8 py-4 rounded-lg font-semibold text-lg",
+              "icon": "arrow-right"
+            },
+            "secondaryCta": {
+              "text": "Schedule a Demo",
+              "style": "border-2 border-white hover:bg-white hover:text-teal-700 text-white px-8 py-4 rounded-lg font-semibold text-lg",
+              "icon": "calendar"
+            }
+          }
+        }
+      },
+      
+      "footer": {
+        "background": "slate-900",
+        "padding": "py-16",
+        "content": {
+          "mainFooter": {
+            "layout": "grid md:grid-cols-4 gap-8",
+            "sections": [
+              {
+                "title": "Product",
+                "links": [
+                  "Features",
+                  "Career Paths",
+                  "Pricing",
+                  "API Documentation"
+                ]
+              },
+              {
+                "title": "Resources", 
+                "links": [
+                  "Blog",
+                  "Career Guides",
+                  "Success Stories",
+                  "Help Center"
+                ]
+              },
+              {
+                "title": "Company",
+                "links": [
+                  "About Us",
+                  "Careers",
+                  "Press",
+                  "Contact"
+                ]
+              },
+              {
+                "title": "Legal",
+                "links": [
+                  "Privacy Policy",
+                  "Terms of Service",
+                  "Security",
+                  "Compliance"
+                ]
+              }
+            ]
+          },
+          "bottomFooter": {
+            "layout": "flex justify-between items-center pt-8 border-t border-slate-800",
+            "copyright": "© 2025 PivotAI Career Quest. All rights reserved.",
+            "socialLinks": [
+              "Twitter",
+              "LinkedIn", 
+              "GitHub",
+              "YouTube"
+            ]
+          }
+        }
+      }
+    },
+    
+    "visualDesignSystem": {
+      "colorPalette": {
+        "primary": {
+          "teal700": "#0f766e",
+          "teal800": "#115e59",
+          "teal50": "#f0fdfa"
+        },
+        "neutral": {
+          "slate900": "#0f172a",
+          "slate700": "#334155", 
+          "slate600": "#475569",
+          "slate500": "#64748b",
+          "slate200": "#e2e8f0",
+          "slate100": "#f1f5f9",
+          "slate50": "#f8fafc"
+        },
+        "accent": {
+          "blue500": "#3b82f6",
+          "violet500": "#8b5cf6", 
+          "emerald500": "#10b981",
+          "indigo500": "#6366f1",
+          "orange500": "#f97316"
+        }
+      },
+      
+      "typography": {
+        "fontFamily": "'Inter', sans-serif",
+        "scales": {
+          "hero": "text-5xl lg:text-6xl font-bold leading-tight",
+          "h1": "text-4xl lg:text-5xl font-bold leading-tight",
+          "h2": "text-3xl lg:text-4xl font-bold leading-tight", 
+          "h3": "text-2xl lg:text-3xl font-bold leading-tight",
+          "subtitle": "text-xl lg:text-2xl text-slate-600",
+          "body": "text-base lg:text-lg text-slate-600",
+          "small": "text-sm text-slate-500"
+        }
+      },
+      
+      "spacing": {
+        "sectionPadding": "py-16 lg:py-20",
+        "containerPadding": "px-4 sm:px-6 lg:px-8",
+        "maxWidth": "max-w-7xl mx-auto"
+      },
+      
+      "components": {
+        "buttons": {
+          "primary": "bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded-lg font-semibold transition-colors",
+          "secondary": "bg-white hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-lg font-semibold border border-slate-300 transition-colors",
+          "outline": "border-2 border-current hover:bg-current hover:text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        },
+        
+        "cards": {
+          "feature": "bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-200",
+          "testimonial": "bg-white p-8 rounded-xl shadow-sm border border-slate-200",
+          "pricing": "bg-white p-8 rounded-xl shadow-sm border-2 hover:border-teal-200 transition-colors"
+        },
+        
+        "sections": {
+          "hero": "bg-gradient-to-br from-slate-50 to-teal-50",
+          "alternate": "bg-slate-50",
+          "primary": "bg-white",
+          "cta": "bg-gradient-to-r from-teal-700 to-teal-600",
+          "footer": "bg-slate-900"
+        }
+      }
+    },
+    
+    "interactionDesign": {
+      "animations": {
+        "fadeIn": "Subtle fade-in animations for sections on scroll",
+        "slideUp": "Gentle slide-up animations for cards and content blocks",
+        "hover": "Smooth hover transitions for interactive elements",
+        "buttonPress": "Subtle scale animation on button press"
+      },
+      
+      "microInteractions": {
+        "buttonHover": "Smooth color transition with subtle scale",
+        "cardHover": "Elevation change with shadow transition", 
+        "linkHover": "Underline animation from left to right",
+        "iconHover": "Gentle rotation or scale effect"
+      },
+      
+      "scrollBehavior": {
+        "stickyNav": "Navigation becomes sticky with backdrop blur",
+        "progressIndicator": "Subtle scroll progress indicator",
+        "parallax": "Minimal parallax effects for hero elements"
+      }
+    },
+    
+    "responsiveDesign": {
+      "breakpoints": {
+        "mobile": "320px - 768px",
+        "tablet": "768px - 1024px", 
+        "desktop": "1024px - 1440px",
+        "wide": "1440px+"
+      },
+      
+      "adaptations": {
+        "mobile": {
+          "navigation": "Hamburger menu with slide-down panel",
+          "hero": "Single column with stacked CTA buttons",
+          "features": "Single column grid",
+          "testimonials": "Horizontal scroll with cards"
+        },
+        "tablet": {
+          "navigation": "Condensed horizontal menu",
+          "hero": "Two column layout with visual on right", 
+          "features": "Two column grid",
+          "testimonials": "Two column grid"
+        },
+        "desktop": {
+          "navigation": "Full horizontal menu with all items visible",
+          "hero": "Side-by-side layout with generous spacing",
+          "features": "Three column grid",
+          "testimonials": "Three column grid"
+        }
+      }
+    },
+    
+    "conversionOptimization": {
+      "primaryGoal": "Sign up for free trial",
+      "secondaryGoals": [
+        "Schedule demo",
+        "Download resources",
+        "Join waitlist"
+      ],
+      
+      "ctaPlacement": [
+        "Navigation header (persistent)",
+        "Hero section (primary focus)",
+        "After features section",
+        "After testimonials",
+        "Final CTA section (conversion focused)",
+        "Footer (secondary)"
+      ],
+      
+      "trustSignals": [
+        "Customer logos (social proof)",
+        "User testimonials with photos and details",
+        "Security badges and compliance mentions",
+        "Usage statistics and success metrics",
+        "Free trial offer (reduces risk)"
+      ],
+      
+      "urgencyElements": [
+        "Limited time offers for premium features",
+        "Number of current users or success stories",
+        "Recent user activity indicators"
+      ]
+    },
+    
+    "technicalImplementation": {
+      "framework": "React with TypeScript",
+      "styling": "Tailwind CSS with custom component classes",
+      "animations": "Framer Motion for page transitions and scroll animations",
+      "performance": {
+        "imageOptimization": "Next.js Image component with WebP format",
+        "lazyLoading": "Intersection Observer for below-fold content",
+        "codesplitting": "Dynamic imports for non-critical components"
+      },
+      "accessibility": {
+        "semantic": "Proper heading hierarchy and landmark elements",
+        "keyboard": "Full keyboard navigation support",
+        "screenReader": "ARIA labels and descriptions for complex elements",
+        "contrast": "WCAG AA compliance for all text-background combinations"
+      }
+    }
+  }
