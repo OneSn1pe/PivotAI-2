@@ -43,12 +43,7 @@ export default function HomePage() {
               </h1>
             </div>
             
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-slate-600 hover:text-slate-900 transition-colors">Features</a>
-              <a href="#career-paths" className="text-slate-600 hover:text-slate-900 transition-colors">Career Paths</a>
-              <a href="#pricing" className="text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
-              <a href="#resources" className="text-slate-600 hover:text-slate-900 transition-colors">Resources</a>
-            </nav>
+
             
             <div className="flex items-center space-x-4">
               <Link 
