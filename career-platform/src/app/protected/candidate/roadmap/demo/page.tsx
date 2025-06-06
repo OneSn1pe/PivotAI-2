@@ -369,6 +369,290 @@ const sampleMilestones: Milestone[] = [
       'Implement common data structures from scratch',
       'Pass technical coding interviews'
     ]
+  },
+  // NEW: Career Progression Milestone - Entry Level Position
+  {
+    id: 'career-1',
+    professionalField: 'computer-science',
+    title: 'Secure Junior Frontend Developer Position',
+    description: 'Land an entry-level frontend development role to gain professional experience in React development and build foundation for career advancement. This position serves as a stepping stone toward more senior roles.',
+    category: 'career',
+    skills: ['Professional Development', 'Job Search', 'Interview Skills', 'Portfolio Building'],
+    timeframe: '3-4 months',
+    completed: false,
+    difficulty: 3,
+    priority: 'high',
+    estimatedHours: 80,
+    attributes: {
+      career: {
+        positionLevel: 'entry-level',
+        targetRole: 'Junior Frontend Developer',
+        experienceRequired: '0-1 years',
+        keyResponsibilities: [
+          'Build responsive user interfaces using React',
+          'Collaborate with design team to implement UI/UX',
+          'Write clean, maintainable JavaScript/TypeScript code',
+          'Participate in code reviews and agile development',
+          'Learn company coding standards and best practices'
+        ],
+        advancement_path: {
+          toRole: 'Frontend Developer',
+          timeInRole: '12-18 months',
+          promotionCriteria: [
+            'Master React ecosystem and modern JavaScript',
+            'Lead small feature implementations independently',
+            'Mentor new junior developers',
+            'Contribute to architectural decisions'
+          ]
+        },
+        industryExperience: {
+          sectors: ['Technology', 'Software Development', 'SaaS'],
+          domainKnowledge: ['Frontend development', 'User experience', 'Web technologies'],
+          clientTypes: ['B2B SaaS', 'Consumer applications', 'E-commerce']
+        },
+        skillRequirements: {
+          technical: ['React', 'JavaScript', 'HTML/CSS', 'Git', 'REST APIs'],
+          soft: ['Communication', 'Teamwork', 'Problem-solving', 'Adaptability'],
+          specialized: ['Responsive design', 'State management', 'Testing frameworks']
+        },
+        compensation: {
+          salaryRange: '$55k-75k',
+          equity: true,
+          benefits: ['Health insurance', 'PTO', 'Learning budget'],
+          growthPotential: 'Strong potential for 15-25% annual increases with proven performance'
+        },
+        applicationStrategy: {
+          whereToApply: ['Tech startups', 'Mid-size tech companies', 'Digital agencies', 'SaaS companies'],
+          networking: [
+            'Attend React meetups and frontend conferences',
+            'Connect with developers on LinkedIn and Twitter',
+            'Join Discord/Slack communities for React developers',
+            'Contribute to open source React projects'
+          ],
+          portfolioNeeds: [
+            '3-4 polished React applications',
+            'Clean, well-documented GitHub profile',
+            'Professional portfolio website',
+            'Mobile-responsive projects demonstrating skills'
+          ],
+          interviewPrep: [
+            'Practice React coding challenges',
+            'Review JavaScript fundamentals',
+            'Prepare to discuss portfolio projects in detail',
+            'Study common frontend system design questions'
+          ]
+        },
+        experienceBuilding: {
+          projectTypes: ['E-commerce sites', 'Dashboard applications', 'Portfolio websites', 'API integrations'],
+          certifications: ['React Developer Certification', 'JavaScript Algorithms and Data Structures'],
+          sideProjects: ['Personal blog with React', 'Weather app with API integration', 'To-do app with authentication'],
+          volunteering: ['Code for nonprofits', 'Teach coding workshops', 'Mentor bootcamp students']
+        },
+        successMetrics: [
+          'Successfully complete assigned features within deadlines',
+          'Receive positive peer feedback in code reviews',
+          'Build strong relationships with team members',
+          'Contribute to team productivity and morale'
+        ],
+        careerImpact: 'stepping-stone',
+        marketDemand: 'high',
+        competitionLevel: 'moderate'
+      }
+    },
+    resources: [
+      {
+        title: 'How to Land Your First Frontend Developer Job',
+        url: 'https://www.freecodecamp.org/news/how-to-land-your-first-developer-job/',
+        type: 'article',
+        estimatedTime: '30 minutes',
+        cost: 'free'
+      },
+      {
+        title: 'Frontend Interview Handbook',
+        url: 'https://frontendinterviewhandbook.com/',
+        type: 'documentation',
+        estimatedTime: '2 weeks',
+        cost: 'free'
+      },
+      {
+        title: 'Building a Developer Portfolio',
+        url: 'https://www.coursera.org/learn/portfolio-development',
+        type: 'course',
+        estimatedTime: '4 weeks',
+        cost: 'freemium'
+      }
+    ],
+    tasks: [
+      {
+        id: 'task-career-1',
+        description: 'Update resume highlighting React projects and technical skills',
+        completed: false
+      },
+      {
+        id: 'task-career-2',
+        description: 'Apply to 10 junior frontend developer positions',
+        completed: false
+      },
+      {
+        id: 'task-career-3',
+        description: 'Complete 5 technical interviews and gather feedback',
+        completed: false
+      },
+      {
+        id: 'task-career-4',
+        description: 'Network with 5 frontend developers in target companies',
+        completed: false
+      }
+    ],
+    successCriteria: [
+      'Receive multiple interview invitations',
+      'Successfully complete technical coding challenges',
+      'Secure job offer with competitive compensation',
+      'Start position with confidence in core skills'
+    ]
+  },
+  // NEW: Career Progression Milestone - Mid-Level Position  
+  {
+    id: 'career-2',
+    professionalField: 'computer-science',
+    title: 'Advance to Mid-Level Frontend Developer',
+    description: 'Progress from junior to mid-level frontend developer role, taking on more complex projects and beginning to mentor junior team members. This position builds expertise toward senior-level responsibilities.',
+    category: 'career',
+    skills: ['Technical Leadership', 'Mentoring', 'Architecture', 'Advanced React'],
+    timeframe: '18-24 months',
+    completed: false,
+    difficulty: 4,
+    priority: 'medium',
+    estimatedHours: 120,
+    attributes: {
+      career: {
+        positionLevel: 'mid-level',
+        targetRole: 'Frontend Developer',
+        experienceRequired: '2-3 years',
+        keyResponsibilities: [
+          'Lead frontend development for major features',
+          'Make architectural decisions for component libraries',
+          'Mentor junior developers and conduct code reviews',
+          'Collaborate with backend team on API design',
+          'Drive frontend best practices and standards'
+        ],
+        advancement_path: {
+          fromRole: 'Junior Frontend Developer',
+          toRole: 'Senior Frontend Developer',
+          timeInRole: '18-24 months',
+          promotionCriteria: [
+            'Lead complex, multi-month projects successfully',
+            'Demonstrate strong mentoring and leadership skills',
+            'Contribute to technical strategy and architecture',
+            'Build reputation as go-to expert for frontend challenges'
+          ]
+        },
+        industryExperience: {
+          sectors: ['Technology', 'FinTech', 'E-commerce', 'Enterprise Software'],
+          domainKnowledge: ['Scalable frontend architecture', 'Performance optimization', 'Team leadership'],
+          clientTypes: ['Enterprise clients', 'High-traffic applications', 'Complex business domains']
+        },
+        skillRequirements: {
+          technical: ['Advanced React', 'TypeScript', 'Performance optimization', 'Testing', 'CI/CD'],
+          soft: ['Leadership', 'Mentoring', 'Project management', 'Stakeholder communication'],
+          leadership: ['Code review leadership', 'Technical decision-making', 'Knowledge sharing'],
+          specialized: ['Micro-frontends', 'Advanced state management', 'Build optimization']
+        },
+        compensation: {
+          salaryRange: '$75k-100k',
+          equity: true,
+          benefits: ['Health insurance', 'PTO', 'Learning budget', 'Conference attendance'],
+          growthPotential: 'Clear path to senior level with 20-30% salary increases'
+        },
+        applicationStrategy: {
+          whereToApply: ['Established tech companies', 'Growing startups', 'Companies with complex frontends'],
+          networking: [
+            'Speak at frontend conferences and meetups',
+            'Write technical blog posts about React/frontend',
+            'Contribute to popular open source projects',
+            'Build relationships with senior developers'
+          ],
+          portfolioNeeds: [
+            'Complex applications demonstrating architectural skills',
+            'Open source contributions and leadership',
+            'Technical writing and documentation',
+            'Evidence of mentoring and team impact'
+          ],
+          interviewPrep: [
+            'Study system design for frontend applications',
+            'Prepare examples of leadership and mentoring',
+            'Practice explaining complex technical decisions',
+            'Review advanced React patterns and performance'
+          ]
+        },
+        experienceBuilding: {
+          projectTypes: ['Large-scale applications', 'Component libraries', 'Performance-critical apps'],
+          certifications: ['AWS Frontend Certification', 'Advanced React Patterns'],
+          sideProjects: ['Open source library maintenance', 'Technical blog', 'Conference speaking'],
+          mentorship: ['Mentor junior developers', 'Tech lead responsibilities', 'Interview training']
+        },
+        successMetrics: [
+          'Successfully lead projects with junior developers',
+          'Improve team productivity and code quality',
+          'Receive recognition for technical leadership',
+          'Build reputation in the frontend community'
+        ],
+        careerImpact: 'specialization',
+        marketDemand: 'high',
+        competitionLevel: 'moderate'
+      }
+    },
+          resources: [
+        {
+          title: 'The Frontend Lead\'s Handbook',
+          url: 'https://frontendleads.com/',
+          type: 'book',
+          estimatedTime: '3 weeks',
+          cost: 'paid'
+        },
+        {
+          title: 'Advanced React Patterns',
+          url: 'https://kentcdodds.com/courses/advanced-react-patterns',
+          type: 'course',
+          estimatedTime: '6 weeks',
+          cost: 'paid'
+        },
+        {
+          title: 'Frontend System Design Interview',
+          url: 'https://frontendinterview.com/system-design',
+          type: 'course',
+          estimatedTime: '4 weeks',
+          cost: 'freemium'
+        }
+      ],
+      tasks: [
+        {
+          id: 'task-career-5',
+          description: 'Lead a complex feature development from start to finish',
+          completed: false
+        },
+        {
+          id: 'task-career-6',
+          description: 'Mentor 2 junior developers and track their progress',
+          completed: false
+        },
+        {
+          id: 'task-career-7',
+          description: 'Present technical solutions to stakeholders',
+          completed: false
+        },
+        {
+          id: 'task-career-8',
+          description: 'Contribute to open source project with 1000+ stars',
+          completed: false
+        }
+      ],
+      successCriteria: [
+        'Successfully deliver complex projects on time',
+        'Receive positive feedback from mentored developers',
+        'Get promoted to senior level within target timeframe',
+        'Build strong professional network and reputation'
+      ]
   }
 ];
 

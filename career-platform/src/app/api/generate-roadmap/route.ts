@@ -164,6 +164,8 @@ export async function POST(request: NextRequest) {
               role: "user",
               content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
 
+IMPORTANT: Include both SKILL DEVELOPMENT milestones and CAREER PROGRESSION milestones. Career progression milestones should focus on intermediate positions that build relevant work experience toward the target role.
+
 Return a structured JSON roadmap with these components:
 {
   "milestones": [
@@ -171,7 +173,7 @@ Return a structured JSON roadmap with these components:
       "id": "${uuidv4()}",
       "title": "Milestone name",
       "description": "Detailed description with actionable steps",
-      "category": "technical|fundamental|niche|soft",
+      "category": "technical|fundamental|niche|soft|career",
       "subcategory": "Optional specific classification",
       "skills": ["skill1", "skill2"],
       "timeframe": "1-3 months",
@@ -181,12 +183,35 @@ Return a structured JSON roadmap with these components:
       "estimatedHours": 40,
       "successCriteria": ["criterion1", "criterion2"],
       "attributes": {
-        "technical": {
-          "technologies": ["React", "Node.js"],
-          "projectType": "fullstack",
-          "complexityLevel": "intermediate",
-          "deliverables": [{"type": "deployed-app", "description": "Working application"}],
-          "learningPath": "self-directed"
+        "career": {
+          "positionLevel": "entry-level|junior|mid-level|senior|lead|principal|executive",
+          "targetRole": "Specific job title",
+          "experienceRequired": "1-2 years",
+          "keyResponsibilities": ["responsibility1", "responsibility2"],
+          "advancement_path": {
+            "toRole": "Next career step",
+            "timeInRole": "12-18 months",
+            "promotionCriteria": ["criteria1", "criteria2"]
+          },
+          "skillRequirements": {
+            "technical": ["skill1", "skill2"],
+            "soft": ["skill1", "skill2"]
+          },
+          "compensation": {
+            "salaryRange": "$60k-80k",
+            "growthPotential": "Strong upward trajectory"
+          },
+          "applicationStrategy": {
+            "whereToApply": ["Company types or specific companies"],
+            "networking": ["strategy1", "strategy2"],
+            "portfolioNeeds": ["requirement1", "requirement2"]
+          },
+          "experienceBuilding": {
+            "projectTypes": ["type1", "type2"],
+            "certifications": ["cert1", "cert2"]
+          },
+          "careerImpact": "stepping-stone|destination|specialization|leadership-track",
+          "marketDemand": "high|medium|low"
         }
       },
       "resources": [
@@ -216,13 +241,40 @@ Return a structured JSON roadmap with these components:
   "successMetrics": ["metric1", ...]
 }
 
-Prioritize high-impact skills and experiences that specifically align with the target companies' known requirements for the positions. Focus on achievable milestones within the 1-2 year timeframe.
-
-Use the following guidance for milestone categories:
+MILESTONE CATEGORIES:
 - "technical": Programming, software development, frameworks, databases, APIs, coding projects
-- "fundamental": Problem-solving, system design, architecture, debugging, testing, core CS concepts
+- "fundamental": Problem-solving, system design, architecture, debugging, testing, core concepts
 - "niche": Specialized technologies like blockchain, AI/ML, AR/VR, IoT, emerging technologies
 - "soft": Communication, leadership, teamwork, emotional intelligence, time management, networking
+- "career": INTERMEDIATE POSITIONS and work experience opportunities (NEW FOCUS AREA)
+
+CAREER PROGRESSION STRATEGY:
+For each target company/position, identify 2-3 intermediate positions that would build relevant experience:
+
+Example Career Progression Path for "Google - Senior Software Engineer":
+1. Junior Software Developer (6-12 months experience building)
+2. Software Developer (1-2 years gaining mid-level experience) 
+3. Senior Software Developer (2-3 years developing leadership skills)
+4. Target: Senior Software Engineer at Google
+
+For career milestones, focus on:
+- Realistic stepping stone positions 
+- Required experience and responsibilities for each role
+- Skills needed to excel in that position
+- How to find and apply for these roles
+- Networking strategies specific to each career level
+- Portfolio and project requirements
+- Advancement criteria to move to the next level
+
+Include career milestones that cover:
+- Entry-level positions for gaining initial experience
+- Mid-level roles for developing expertise
+- Leadership opportunities for building management skills
+- Industry-specific experience building
+- Company culture preparation
+- Interview and application strategies for each level
+
+Balance the roadmap with both skill development AND career progression milestones.
 
 For technical milestones, include detailed attributes like:
 - technologies: specific tools/frameworks
@@ -837,6 +889,204 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalFi
         "Solve problems efficiently with optimal time complexity",
         "Explain algorithmic trade-offs clearly",
         "Pass technical coding interviews"
+      ]
+    },
+    {
+      id: uuidv4(),
+      professionalField,
+      title: "Develop Effective Presentation Skills",
+      description: "Develop skills to effectively communicate and present information",
+      category: "soft" as const,
+      subcategory: "leadership-communication",
+      skills: ["Communication", "Leadership", "Presentation Skills"],
+      timeframe: "2-4 months",
+      completed: false,
+      difficulty: 3 as const,
+      priority: "high" as const,
+      estimatedHours: 40,
+      attributes: {
+        soft: {
+          skillCategory: "leadership",
+          developmentMethod: "practice-based",
+          applicationScenarios: ["Public speaking", "Meeting presentations", "Client interactions"],
+          roleRelevance: "team-lead",
+          assessmentDifficulty: "somewhat-subjective",
+          measurementMethods: ["360-feedback", "peer-review"],
+          behavioralMarkers: [
+            {
+              indicator: "Leads meetings effectively",
+              frequency: "weekly"
+            },
+            {
+              indicator: "Provides clear presentations",
+              frequency: "daily"
+            }
+          ],
+          developmentTimeframe: "months",
+          improvementPattern: "continuous"
+        }
+      },
+      resources: [
+        {
+          title: "Presentation Skills Course",
+          url: "https://www.coursera.org/learn/presentation-skills",
+          type: "course",
+          estimatedTime: "6 weeks",
+          cost: "freemium"
+        },
+        {
+          title: "Leadership and Presentation Skills",
+          url: "https://www.linkedin.com/learning/leadership-and-presentation-skills",
+          type: "course",
+          estimatedTime: "4 weeks",
+          cost: "paid"
+        },
+        {
+          title: "Toastmasters International",
+          url: "https://www.toastmasters.org/",
+          type: "course",
+          estimatedTime: "12 weeks",
+          cost: "paid"
+        }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Complete presentation skills course",
+          completed: false
+        },
+        {
+          id: "task-2",
+          description: "Practice public speaking",
+          completed: false
+        },
+        {
+          id: "task-3",
+          description: "Lead a team presentation",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Develop effective presentation skills",
+        "Build professional network",
+        "Complete leadership assessment"
+      ]
+    },
+    // NEW: Career Progression Milestone
+    {
+      id: uuidv4(),
+      professionalField,
+      title: "Secure Junior Developer Position",
+      description: "Land an entry-level software development role to gain professional experience and build a foundation for career advancement",
+      category: "career" as const,
+      subcategory: "entry-level-position",
+      skills: ["Professional Development", "Job Search", "Interview Skills", "Portfolio Building"],
+      timeframe: "2-4 months",
+      completed: false,
+      difficulty: 3 as const,
+      priority: "high" as const,
+      estimatedHours: 60,
+      attributes: {
+        career: {
+          positionLevel: "entry-level",
+          targetRole: "Junior Software Developer",
+          experienceRequired: "0-1 years",
+          keyResponsibilities: [
+            "Write and maintain clean, efficient code",
+            "Collaborate with team members on projects", 
+            "Participate in code reviews",
+            "Learn company technologies and processes"
+          ],
+          advancement_path: {
+            toRole: "Software Developer",
+            timeInRole: "12-18 months",
+            promotionCriteria: [
+              "Demonstrate proficiency in core technologies",
+              "Complete projects independently",
+              "Show ability to mentor newer team members"
+            ]
+          },
+          skillRequirements: {
+            technical: ["JavaScript", "React", "Git", "Basic algorithms"],
+            soft: ["Communication", "Teamwork", "Problem-solving", "Time management"]
+          },
+          compensation: {
+            salaryRange: "$50k-70k",
+            growthPotential: "Strong potential for rapid advancement with demonstrated skills"
+          },
+          applicationStrategy: {
+            whereToApply: ["Tech startups", "Mid-size companies", "Junior-friendly organizations"],
+            networking: [
+              "Attend local developer meetups",
+              "Connect with developers on LinkedIn",
+              "Participate in coding communities"
+            ],
+            portfolioNeeds: [
+              "2-3 well-documented projects",
+              "Clean GitHub profile",
+              "Professional website/portfolio"
+            ],
+            interviewPrep: [
+              "Practice coding problems on LeetCode",
+              "Review common behavioral interview questions",
+              "Prepare project presentations"
+            ]
+          },
+          experienceBuilding: {
+            projectTypes: ["Web applications", "API integrations", "Open source contributions"],
+            certifications: ["JavaScript fundamentals", "React certification"]
+          },
+          industryExperience: {
+            sectors: ["Technology", "Software Development"],
+            domainKnowledge: ["Web development", "Frontend technologies", "Version control"]
+          },
+          successMetrics: [
+            "Successfully complete assigned tasks",
+            "Receive positive performance feedback",
+            "Build professional relationships"
+          ],
+          careerImpact: "stepping-stone",
+          marketDemand: "high",
+          competitionLevel: "moderate"
+        }
+      },
+      resources: [
+        {
+          title: "How to Land Your First Developer Job",
+          url: "https://example.com/first-dev-job",
+          type: "article",
+          estimatedTime: "1 hour",
+          cost: "free"
+        },
+        {
+          title: "Junior Developer Interview Preparation",
+          url: "https://example.com/interview-prep",
+          type: "course",
+          estimatedTime: "2 weeks",
+          cost: "freemium"
+        }
+      ],
+      tasks: [
+        {
+          id: "task-1",
+          description: "Update resume with technical projects",
+          completed: false
+        },
+        {
+          id: "task-2", 
+          description: "Apply to 5 junior developer positions",
+          completed: false
+        },
+        {
+          id: "task-3",
+          description: "Practice technical interview questions",
+          completed: false
+        }
+      ],
+      successCriteria: [
+        "Receive interview invitations",
+        "Successfully complete technical interviews",
+        "Secure job offer for junior developer role"
       ]
     }
   ];

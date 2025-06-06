@@ -7,11 +7,11 @@ export enum UserRole {
   export type ProfessionalField = 'computer-science' | 'engineering' | 'medicine' | 'business' | 'law';
 
   // Field-specific category types
-  export type CSCategories = 'technical' | 'fundamental' | 'niche' | 'soft';
-  export type EngineeringCategories = 'design' | 'analysis' | 'implementation' | 'safety' | 'regulatory';
-  export type MedicineCategories = 'clinical' | 'research' | 'patient-care' | 'diagnostic' | 'compliance';
-  export type BusinessCategories = 'strategy' | 'operations' | 'finance' | 'leadership' | 'market-analysis';
-  export type LawCategories = 'research' | 'litigation' | 'advisory' | 'compliance' | 'negotiation';
+  export type CSCategories = 'technical' | 'fundamental' | 'niche' | 'soft' | 'career';
+  export type EngineeringCategories = 'design' | 'analysis' | 'implementation' | 'safety' | 'regulatory' | 'career';
+  export type MedicineCategories = 'clinical' | 'research' | 'patient-care' | 'diagnostic' | 'compliance' | 'career';
+  export type BusinessCategories = 'strategy' | 'operations' | 'finance' | 'leadership' | 'market-analysis' | 'career';
+  export type LawCategories = 'research' | 'litigation' | 'advisory' | 'compliance' | 'negotiation' | 'career';
 
   export type MilestoneCategory = string; // Simplified to allow any category string
   export type SpecificMilestoneCategory = CSCategories | EngineeringCategories | MedicineCategories | BusinessCategories | LawCategories;
@@ -216,6 +216,54 @@ export enum UserRole {
     specializations: string[];             // Niche legal expertise
   }
 
+  // Career progression attributes - NEW
+  export interface CareerAttributes {
+    positionLevel: 'entry-level' | 'junior' | 'mid-level' | 'senior' | 'lead' | 'principal' | 'executive';
+    targetRole: string;                    // The intermediate position title
+    experienceRequired: string;            // "1-2 years", "2-3 years", etc.
+    keyResponsibilities: string[];         // Main duties in this role
+    advancement_path: {
+      fromRole?: string;                   // Previous role in progression
+      toRole: string;                     // Next role in progression  
+      timeInRole: string;                 // Typical duration in this position
+      promotionCriteria: string[];        // What's needed to advance
+    };
+    industryExperience: {
+      sectors: string[];                  // Relevant industry sectors
+      domainKnowledge: string[];          // Business domain expertise needed
+      clientTypes?: string[];             // Types of clients/customers
+    };
+    skillRequirements: {
+      technical: string[];                // Technical skills for this role
+      soft: string[];                     // Soft skills for this role
+      leadership?: string[];              // Leadership skills if applicable
+      specialized?: string[];             // Role-specific specialized skills
+    };
+    compensation: {
+      salaryRange?: string;               // Expected salary range
+      equity?: boolean;                   // Equity compensation available
+      benefits?: string[];                // Common benefits
+      growthPotential?: string;           // Career growth potential
+    };
+    applicationStrategy: {
+      whereToApply: string[];             // Company types or specific companies
+      networking: string[];               // Networking strategies
+      portfolioNeeds: string[];           // Portfolio requirements
+      interviewPrep: string[];            // Interview preparation focus areas
+    };
+    experienceBuilding: {
+      projectTypes: string[];             // Types of projects to work on
+      certifications?: string[];          // Relevant certifications
+      sideProjects?: string[];            // Recommended side projects
+      volunteering?: string[];            // Volunteer opportunities
+      mentorship?: string[];              // Mentoring opportunities
+    };
+    successMetrics: string[];             // How to measure success in this role
+    careerImpact: 'stepping-stone' | 'destination' | 'specialization' | 'leadership-track';
+    marketDemand: 'high' | 'medium' | 'low';
+    competitionLevel: 'low' | 'moderate' | 'high' | 'very-high';
+  }
+
   // Fundamental milestone attributes
   export interface FundamentalAttributes {
     competencyArea: 'problem-solving' | 'analytical-thinking' | 'research' | 'documentation' | 'testing' | 'debugging';
@@ -273,6 +321,8 @@ export enum UserRole {
     business?: BusinessAttributes;
     // Law
     law?: LawAttributes;
+    // Career Progression - NEW
+    career?: CareerAttributes;
     // Legacy support
     technical?: CSAttributes;
     fundamental?: FundamentalAttributes;

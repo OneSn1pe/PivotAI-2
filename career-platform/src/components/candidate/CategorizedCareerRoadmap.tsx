@@ -9,7 +9,7 @@ interface CategorizedCareerRoadmapProps {
 }
 
 // Define supported categories for this component
-type SupportedCategory = 'technical' | 'fundamental' | 'niche' | 'soft';
+type SupportedCategory = 'technical' | 'fundamental' | 'niche' | 'soft' | 'career';
 
 const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({ 
   roadmap, 
@@ -66,6 +66,15 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
       borderColor: 'border-orange-200',
       textColor: 'text-orange-800',
       description: 'Communication, leadership, and interpersonal skills'
+    },
+    career: {
+      name: 'Career Path',
+      icon: '📈',
+      color: 'emerald',
+      bgColor: 'bg-emerald-50',
+      borderColor: 'border-emerald-200',
+      textColor: 'text-emerald-800',
+      description: 'Intermediate positions and career progression opportunities'
     }
   };
 
@@ -184,7 +193,8 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
       technical: { total: 0, completed: 0 },
       fundamental: { total: 0, completed: 0 },
       niche: { total: 0, completed: 0 },
-      soft: { total: 0, completed: 0 }
+      soft: { total: 0, completed: 0 },
+      career: { total: 0, completed: 0 }
     };
 
     Object.entries(categorizedMilestones).forEach(([category, milestones]) => {
@@ -367,6 +377,93 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
                       <div className="space-y-1">
                         <p><strong>Skill Category:</strong> {milestone.attributes.soft.skillCategory}</p>
                         <p><strong>Development Method:</strong> {milestone.attributes.soft.developmentMethod}</p>
+                      </div>
+                    )}
+                    {milestone.attributes.career && (
+                      <div className="space-y-2">
+                        <div>
+                          <p><strong>Target Role:</strong> {milestone.attributes.career.targetRole}</p>
+                          <p><strong>Position Level:</strong> {milestone.attributes.career.positionLevel}</p>
+                          <p><strong>Experience Required:</strong> {milestone.attributes.career.experienceRequired}</p>
+                        </div>
+                        
+                        {milestone.attributes.career.keyResponsibilities && milestone.attributes.career.keyResponsibilities.length > 0 && (
+                          <div>
+                            <p className="font-semibold">Key Responsibilities:</p>
+                            <ul className="list-disc list-inside ml-2">
+                              {milestone.attributes.career.keyResponsibilities.map((resp, idx) => (
+                                <li key={idx}>{resp}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {milestone.attributes.career.advancement_path && (
+                          <div>
+                            <p className="font-semibold">Career Advancement:</p>
+                            <p><strong>Next Role:</strong> {milestone.attributes.career.advancement_path.toRole}</p>
+                            <p><strong>Time in Role:</strong> {milestone.attributes.career.advancement_path.timeInRole}</p>
+                            {milestone.attributes.career.advancement_path.promotionCriteria && (
+                              <div>
+                                <p className="font-medium">Promotion Criteria:</p>
+                                <ul className="list-disc list-inside ml-2">
+                                  {milestone.attributes.career.advancement_path.promotionCriteria.map((criteria, idx) => (
+                                    <li key={idx}>{criteria}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {milestone.attributes.career.compensation && (
+                          <div>
+                            <p className="font-semibold">Compensation:</p>
+                            {milestone.attributes.career.compensation.salaryRange && (
+                              <p><strong>Salary Range:</strong> {milestone.attributes.career.compensation.salaryRange}</p>
+                            )}
+                            {milestone.attributes.career.compensation.growthPotential && (
+                              <p><strong>Growth Potential:</strong> {milestone.attributes.career.compensation.growthPotential}</p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {milestone.attributes.career.applicationStrategy && (
+                          <div>
+                            <p className="font-semibold">Application Strategy:</p>
+                            {milestone.attributes.career.applicationStrategy.whereToApply && milestone.attributes.career.applicationStrategy.whereToApply.length > 0 && (
+                              <p><strong>Where to Apply:</strong> {milestone.attributes.career.applicationStrategy.whereToApply.join(', ')}</p>
+                            )}
+                            {milestone.attributes.career.applicationStrategy.networking && milestone.attributes.career.applicationStrategy.networking.length > 0 && (
+                              <div>
+                                <p className="font-medium">Networking:</p>
+                                <ul className="list-disc list-inside ml-2">
+                                  {milestone.attributes.career.applicationStrategy.networking.map((strategy, idx) => (
+                                    <li key={idx}>{strategy}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="flex gap-4 text-xs">
+                          <span className={`px-2 py-1 rounded ${
+                            milestone.attributes.career.marketDemand === 'high' ? 'bg-green-100 text-green-800' :
+                            milestone.attributes.career.marketDemand === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            Market Demand: {milestone.attributes.career.marketDemand}
+                          </span>
+                          <span className={`px-2 py-1 rounded ${
+                            milestone.attributes.career.careerImpact === 'stepping-stone' ? 'bg-blue-100 text-blue-800' :
+                            milestone.attributes.career.careerImpact === 'destination' ? 'bg-purple-100 text-purple-800' :
+                            milestone.attributes.career.careerImpact === 'leadership-track' ? 'bg-indigo-100 text-indigo-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {milestone.attributes.career.careerImpact}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
