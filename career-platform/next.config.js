@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable experimental optimizations
+  experimental: {
+    optimizeCss: true,
+    optimizeServerReact: true,
+  },
+  
   // Transpile necessary dependencies if needed
   transpilePackages: [],
   
@@ -12,15 +18,17 @@ const nextConfig = {
   // Output standalone build for better portability
   output: 'standalone',
   
-  // Disable type checking in builds for speed
+  // Enable proper type checking and linting
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   
-  // Disable ESLint in production builds 
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
+  
+  // Enable compression
+  compress: true,
   
   // Configure image optimization
   images: {
@@ -39,7 +47,7 @@ const nextConfig = {
   },
   
   // Custom webpack configuration
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Add polyfill for encoding
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -47,6 +55,27 @@ const nextConfig = {
       path: false,
       os: false,
     };
+    
+    // Optimize client-side bundles
+    if (!isServer) {
+      // Ensure server-only packages don't get bundled
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@google-cloud/storage': false,
+        'firebase-admin': false,
+      };
+    }
+    
+    // Bundle analyzer in development
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'server',
+          openAnalyzer: true,
+        })
+      );
+    }
     
     return config;
   },
