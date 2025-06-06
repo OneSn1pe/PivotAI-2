@@ -2,7 +2,7 @@
 const nextConfig = {
   // Enable experimental optimizations
   experimental: {
-    optimizeCss: true,
+    // optimizeCss: true, // Disabled due to Vercel build issues with critters module
     optimizeServerReact: true,
   },
   
@@ -48,12 +48,13 @@ const nextConfig = {
   
   // Custom webpack configuration
   webpack: (config, { isServer }) => {
-    // Add polyfill for encoding
+    // Add polyfill for encoding and handle problematic modules
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       path: false,
       os: false,
+      critters: false, // Handle critters module issue
     };
     
     // Optimize client-side bundles
