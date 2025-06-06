@@ -8,18 +8,29 @@ interface CategorizedCareerRoadmapProps {
   isEditable?: boolean;
 }
 
+// Define supported categories for this component
+type SupportedCategory = 'technical' | 'fundamental' | 'niche' | 'soft';
+
 const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({ 
   roadmap, 
   onMilestoneToggle,
   isEditable = false
 }) => {
   const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({});
-  const [selectedCategory, setSelectedCategory] = useState<MilestoneCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<SupportedCategory | 'all'>('all');
   const [localToggling, setLocalToggling] = useState<Record<string, boolean>>({});
   const [sanitizedRoadmap, setSanitizedRoadmap] = useState<RoadmapType | null>(null);
 
   // Category configurations
-  const categoryConfig = {
+  const categoryConfig: Record<SupportedCategory, {
+    name: string;
+    icon: string;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    textColor: string;
+    description: string;
+  }> = {
     technical: {
       name: 'Technical',
       icon: '💻',
@@ -56,6 +67,16 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
       textColor: 'text-orange-800',
       description: 'Communication, leadership, and interpersonal skills'
     }
+  };
+
+  // Helper function to safely get category config
+  const getCategoryConfig = (category: string) => {
+    return categoryConfig[category as SupportedCategory] || categoryConfig.technical;
+  };
+
+  // Helper function to check if category is supported
+  const isSupportedCategory = (category: string): category is SupportedCategory => {
+    return category in categoryConfig;
   };
 
   // Sanitize and migrate roadmap data
@@ -133,23 +154,16 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
   // Group milestones by category
   const categorizedMilestones = React.useMemo(() => {
     if (!sanitizedRoadmap?.milestones) {
-      return {
-        technical: [],
-        fundamental: [],
-        niche: [],
-        soft: []
-      } as Record<MilestoneCategory, Milestone[]>;
+      return {};
     }
 
-    const grouped: Record<MilestoneCategory, Milestone[]> = {
-      technical: [],
-      fundamental: [],
-      niche: [],
-      soft: []
-    };
+    const grouped: Record<string, Milestone[]> = {};
 
     sanitizedRoadmap.milestones.forEach(milestone => {
       const category = milestone.category || categorizeMilestone(milestone);
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
       grouped[category].push(milestone);
     });
 
@@ -166,7 +180,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
 
   // Get category stats
   const getCategoryStats = () => {
-    const stats: Record<MilestoneCategory, { total: number; completed: number }> = {
+    const stats: Record<SupportedCategory, { total: number; completed: number }> = {
       technical: { total: 0, completed: 0 },
       fundamental: { total: 0, completed: 0 },
       niche: { total: 0, completed: 0 },
@@ -174,10 +188,12 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
     };
 
     Object.entries(categorizedMilestones).forEach(([category, milestones]) => {
-      stats[category as MilestoneCategory] = {
-        total: milestones.length,
-        completed: milestones.filter((m: Milestone) => m.completed).length
-      };
+      if (isSupportedCategory(category)) {
+        stats[category] = {
+          total: milestones.length,
+          completed: milestones.filter((m: Milestone) => m.completed).length
+        };
+      }
     });
 
     return stats;
@@ -186,7 +202,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
   const renderMilestoneCard = (milestone: Milestone, index: number) => {
     const isExpanded = expandedMilestones[milestone.id] || false;
     const category = milestone.category || categorizeMilestone(milestone);
-    const config = categoryConfig[category];
+    const config = getCategoryConfig(category);
 
     return (
       <div 
@@ -428,7 +444,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
         {Object.entries(categoryConfig).map(([category, config]) => (
           <button
             key={category}
-            onClick={() => setSelectedCategory(category as MilestoneCategory)}
+            onClick={() => setSelectedCategory(category as SupportedCategory)}
             className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
               selectedCategory === category
                 ? `${config.bgColor} ${config.textColor} border-2 ${config.borderColor}`
@@ -438,20 +454,23 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
             <span>{config.icon}</span>
             <span>{config.name}</span>
             <span className="bg-white px-2 py-0.5 rounded-full text-xs">
-              {stats[category as MilestoneCategory].completed}/{stats[category as MilestoneCategory].total}
+              {stats[category as SupportedCategory]?.completed || 0}/{stats[category as SupportedCategory]?.total || 0}
             </span>
           </button>
         ))}
       </div>
 
       {/* Category description */}
-      {selectedCategory !== 'all' && (
-        <div className={`p-4 rounded-lg ${categoryConfig[selectedCategory].bgColor} ${categoryConfig[selectedCategory].borderColor} border`}>
-          <p className={`text-sm ${categoryConfig[selectedCategory].textColor}`}>
-            {categoryConfig[selectedCategory].description}
-          </p>
-        </div>
-      )}
+      {selectedCategory !== 'all' && (() => {
+        const config = getCategoryConfig(selectedCategory);
+        return (
+          <div className={`p-4 rounded-lg ${config.bgColor} ${config.borderColor} border`}>
+            <p className={`text-sm ${config.textColor}`}>
+              {config.description}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Milestones grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -467,7 +486,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
           <p className="text-slate-500">
             {selectedCategory === 'all' 
               ? 'No milestones have been created yet.' 
-              : `No ${categoryConfig[selectedCategory as MilestoneCategory]?.name.toLowerCase()} milestones found.`
+              : `No ${getCategoryConfig(selectedCategory).name.toLowerCase()} milestones found.`
             }
           </p>
         </div>

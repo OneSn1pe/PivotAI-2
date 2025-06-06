@@ -13,7 +13,8 @@ export enum UserRole {
   export type BusinessCategories = 'strategy' | 'operations' | 'finance' | 'leadership' | 'market-analysis';
   export type LawCategories = 'research' | 'litigation' | 'advisory' | 'compliance' | 'negotiation';
 
-  export type MilestoneCategory = CSCategories | EngineeringCategories | MedicineCategories | BusinessCategories | LawCategories;
+  export type MilestoneCategory = string; // Simplified to allow any category string
+  export type SpecificMilestoneCategory = CSCategories | EngineeringCategories | MedicineCategories | BusinessCategories | LawCategories;
 
   // Professional competency areas (replacing RPG attributes)
   export interface ProfessionalCompetencies {
@@ -349,7 +350,11 @@ export enum UserRole {
     resources: {
       title: string;
       url: string;
-      type: 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification';
+      type: 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification' 
+            | 'cad-tutorial' | 'simulation-software' | 'standards-document' | 'technical-drawing'
+            | 'clinical-guideline' | 'medical-journal' | 'cme-course' | 'case-study' | 'medical-database'
+            | 'market-report' | 'financial-model' | 'business-plan-template'
+            | 'case-law' | 'statute' | 'legal-brief' | 'bar-exam-prep' | 'legal-database';
       usageGuide?: string;
       estimatedTime?: string;
       cost?: 'free' | 'paid' | 'freemium';

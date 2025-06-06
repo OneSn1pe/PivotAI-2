@@ -60,6 +60,7 @@ export const migrateRoadmapMilestones = (milestones: any[]): Milestone[] => {
         id: `fallback-${index}`,
         title: 'Milestone (Error)',
         description: 'This milestone could not be processed properly',
+        professionalField: 'computer-science',
         category: 'fundamental' as MilestoneCategory,
         skills: [],
         timeframe: 'Unknown',
@@ -78,7 +79,7 @@ export const migrateRoadmapMilestones = (milestones: any[]): Milestone[] => {
  * Get milestone statistics by category
  */
 export const getMilestoneStats = (milestones: Milestone[]) => {
-  const stats = {
+  const stats: Record<string, { total: number; completed: number }> = {
     technical: { total: 0, completed: 0 },
     fundamental: { total: 0, completed: 0 },
     niche: { total: 0, completed: 0 },
@@ -87,6 +88,9 @@ export const getMilestoneStats = (milestones: Milestone[]) => {
 
   milestones.forEach(milestone => {
     const category = milestone.category || categorizeMilestone(milestone);
+    if (!stats[category]) {
+      stats[category] = { total: 0, completed: 0 };
+    }
     stats[category].total++;
     if (milestone.completed) {
       stats[category].completed++;

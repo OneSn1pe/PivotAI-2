@@ -61,7 +61,7 @@ export default function ProfilePage() {
     loadPreferences();
   }, [candidateProfile]);
 
-  const handleCompanyChange = (index: number, field: keyof TargetCompany, value: string) => {
+  const handleCompanyChange = (index: number, field: 'name' | 'position', value: string) => {
     const updatedCompanies = [...targetCompanies];
     updatedCompanies[index][field] = value;
     setTargetCompanies(updatedCompanies);
