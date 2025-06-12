@@ -140,7 +140,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
               createdAt: safeTimestampToDate(milestone.createdAt) || new Date()
             };
 
-            processedMilestone = migrateLegacyMilestone(legacyMilestone);
+            processedMilestone = migrateLegacyMilestone(legacyMilestone as any);
           }
 
           return processedMilestone;
@@ -197,7 +197,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
       career: { total: 0, completed: 0 }
     };
 
-    Object.entries(categorizedMilestones).forEach(([category, milestones]) => {
+    Object.entries(categorizedMilestones || {}).forEach(([category, milestones]) => {
       if (isSupportedCategory(category)) {
         stats[category] = {
           total: milestones.length,
@@ -538,7 +538,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
         >
           All ({sanitizedRoadmap.milestones.length})
         </button>
-        {Object.entries(categoryConfig).map(([category, config]) => (
+        {Object.entries(categoryConfig || {}).map(([category, config]) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category as SupportedCategory)}

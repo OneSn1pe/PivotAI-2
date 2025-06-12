@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { CharacterAttributes, CharacterClass, CharacterProgress, calculateLevel, calculateNextLevelXp } from '@/types/game';
+import { CharacterAttributes, CharacterClass, CharacterProgress, calculateLevel } from '@/types/game';
 import { useAuth } from './AuthContext';
 
 interface GameContextType {
   characterProgress: CharacterProgress;
   updateCharacterClass: (characterClass: CharacterClass) => void;
   updateAttributes: (attributes: Partial<CharacterAttributes>) => void;
-  addExperience: (xp: number) => Promise<{
+  addMilestoneCompletion: () => Promise<{
     leveledUp: boolean;
     previousLevel: number;
     newLevel: number;
@@ -27,8 +27,6 @@ const defaultAttributes: CharacterAttributes = {
 
 const defaultCharacterProgress: CharacterProgress = {
   level: 1,
-  xp: 0,
-  nextLevelXp: 100,
   characterClass: 'Tech Wizard',
   attributes: defaultAttributes
 };
@@ -98,14 +96,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
   
-  const addExperience = async (xp: number) => {
+  const addMilestoneCompletion = async () => {
     // Store current state for comparison
     const previousLevel = characterProgress.level;
     const previousAttributes = { ...characterProgress.attributes };
     
-    // Update experience
-    const newXp = characterProgress.xp + xp;
-    const newLevel = calculateLevel(newXp);
+    // Calculate new level based on milestone completion
+    // This would normally come from the user's actual completed milestone count
+    const completedMilestones = previousLevel * 5; // Placeholder calculation
+    const newLevel = calculateLevel(completedMilestones + 1);
     const leveledUp = newLevel > previousLevel;
     
     // Calculate attribute increases if leveled up
@@ -153,9 +152,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Update state
     setCharacterProgress(prev => ({
       ...prev,
-      xp: newXp,
       level: newLevel,
-      nextLevelXp: calculateNextLevelXp(newLevel),
       attributes: newAttributes
     }));
     
@@ -172,7 +169,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     characterProgress,
     updateCharacterClass,
     updateAttributes,
-    addExperience,
+    addMilestoneCompletion,
     isLoading
   };
   

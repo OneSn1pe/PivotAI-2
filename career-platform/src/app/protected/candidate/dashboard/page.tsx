@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { getDocs, collection, query, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CareerRoadmap, CandidateProfile, Milestone, categorizeMilestone, migrateLegacyMilestone } from '@/types/user';
+import { CareerRoadmap, CandidateProfile, Milestone, categorizeMilestone, migrateLegacyMilestone, UserProgress, Achievement } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
@@ -14,6 +14,11 @@ import ObjectiveCard from '@/components/ui/ObjectiveCard';
 import TaskManager from '@/components/candidate/TaskManager';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SetupChecklist from '@/components/candidate/SetupChecklist';
+import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
+import { StreakWidget } from '@/components/gamification/StreakSystem';
+import { AchievementShowcase } from '@/components/gamification/AchievementBadges';
+import { LevelUpAnimation } from '@/components/animations/LevelUpAnimation';
+import { QuickShareButton } from '@/components/social/AchievementShare';
 
 // Define an extended milestone interface to handle tasks property
 interface MilestoneWithTasks {
@@ -41,11 +46,98 @@ export default function CandidateDashboard() {
   
   // Convert roadmap milestones to objectives
   const [objectives, setObjectives] = useState<Array<any>>([]);
+  
+  // Leveling system state
+  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState(0);
+  const [streakData, setStreakData] = useState({
+    currentStreak: 5,
+    longestStreak: 12,
+    lastActivity: new Date(),
+    streakMultiplier: 1.2,
+    nextMilestone: 7,
+    weeklyGoal: 7,
+    weeklyProgress: 4
+  });
+  const [multiplierData, setMultiplierData] = useState({
+    currentMultiplier: 1.2,
+    activeMultipliers: [
+      {
+        id: 'daily_streak',
+        name: 'Daily Streak Bonus',
+        multiplier: 1.2,
+        description: '5-day learning streak',
+        icon: 'Fire' as any,
+        color: 'border-orange-300 bg-orange-50',
+        isActive: true
+      }
+    ]
+  });
 
   useEffect(() => {
     fetchRoadmap();
     validateResumeUrl();
+    loadUserProgress();
   }, [candidateProfile]);
+
+  // Handle level up notifications
+  useEffect(() => {
+    if (userProgress?.currentLevel && userProgress.currentLevel > newLevel) {
+      setNewLevel(userProgress.currentLevel);
+      setShowLevelUp(true);
+    }
+  }, [userProgress?.currentLevel]);
+
+  const loadUserProgress = async () => {
+    if (!userProfile) return;
+    
+    try {
+      // Mock data for development - replace with actual Firebase calls
+      const mockProgress: UserProgress = {
+        userId: userProfile.uid,
+        currentLevel: 3,
+        maxUnlockedLevel: 3,
+        completedMilestones: ['milestone-1', 'milestone-2'],
+        completedMicroMilestones: ['micro-1', 'micro-2', 'micro-3'],
+        achievements: [],
+        streakDays: 5,
+        lastActiveDate: new Date(),
+        skillProficiencies: {
+          'JavaScript': 75,
+          'React': 60,
+          'Node.js': 45
+        }
+      };
+      
+      const mockAchievements: Achievement[] = [
+        {
+          id: 'first_milestone',
+          title: 'First Steps',
+          description: 'Complete your first career milestone',
+          icon: '🎯',
+          category: 'progress',
+          unlockedAt: new Date(Date.now() - 86400000),
+          rarity: 'common'
+        },
+        {
+          id: 'streak_5',
+          title: 'Consistency Keeper',
+          description: 'Maintain a 5-day learning streak',
+          icon: '🔥',
+          category: 'streak',
+          unlockedAt: new Date(),
+          rarity: 'uncommon'
+        }
+      ];
+      
+      setUserProgress(mockProgress);
+      setAchievements(mockAchievements);
+    } catch (error) {
+      console.error('Error loading user progress:', error);
+    }
+  };
 
   const validateResumeUrl = async () => {
     if (!candidateProfile?.resumeUrl) return;
@@ -121,7 +213,7 @@ export default function CandidateDashboard() {
           createdAt: milestone.createdAt || new Date()
         };
 
-        processedMilestone = migrateLegacyMilestone(legacyMilestone);
+        processedMilestone = migrateLegacyMilestone(legacyMilestone as any);
       }
 
       // Get the milestone category
@@ -230,15 +322,35 @@ export default function CandidateDashboard() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Welcome Section */}
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Level Up Animation */}
+      <LevelUpAnimation
+        isVisible={showLevelUp}
+        newLevel={newLevel}
+        onComplete={() => setShowLevelUp(false)}
+      />
+
+      {/* Welcome Section with Level Display */}
       <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-            <h1 className="text-3xl font-bold text-slate-800 font-inter">Welcome, {candidateProfile?.displayName || 'Professional'}</h1>
-            <p className="text-slate-600 mt-2">
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-3xl font-bold text-slate-800 font-inter">Welcome, {candidateProfile?.displayName || 'Professional'}</h1>
+              {userProgress && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
+                  <span className="text-2xl">⭐</span>
+                  <span className="font-bold text-blue-700">Level {userProgress.currentLevel}</span>
+                </div>
+              )}
+            </div>
+            <p className="text-slate-600">
               Your career development hub. Track progress, complete objectives, and advance professionally.
             </p>
+            {userProgress && (
+              <div className="mt-2 text-sm text-gray-600">
+                <span className="font-semibold">{userProgress.completedMilestones.length} milestones completed</span>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center space-x-3">
@@ -270,6 +382,37 @@ export default function CandidateDashboard() {
       
       {/* Setup Checklist */}
       <SetupChecklist candidateProfile={candidateProfile} roadmap={roadmap} />
+      
+      {/* Progress Dashboard */}
+      {userProgress && achievements && (
+        <ProgressDashboard 
+          userProgress={userProgress} 
+          achievements={achievements}
+          className="mb-6"
+        />
+      )}
+      
+      {/* Gamification Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <StreakWidget streakData={streakData} />
+        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+          <h3 className="font-semibold text-gray-800 mb-2">Progress Tracking</h3>
+          <p className="text-sm text-gray-600">Your learning progress is tracked through milestone completion and streak maintenance.</p>
+        </div>
+        <div className="space-y-4">
+          <AchievementShowcase achievements={achievements} />
+          {achievements.length > 0 && userProgress && (
+            <div className="text-center">
+              <QuickShareButton 
+                achievement={achievements[0]} 
+                userProgress={userProgress}
+                className="w-full"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column - Professional Info */}

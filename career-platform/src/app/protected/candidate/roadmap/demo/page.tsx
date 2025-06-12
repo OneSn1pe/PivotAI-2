@@ -18,6 +18,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 4,
     priority: 'high',
     estimatedHours: 120,
+    level: 1,
     attributes: {
       technical: {
         technologies: ['React', 'Node.js', 'PostgreSQL', 'Express.js', 'Redux'],
@@ -81,6 +82,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 5,
     priority: 'critical',
     estimatedHours: 80,
+    level: 2,
     attributes: {
       fundamental: {
         competencyArea: 'problem-solving',
@@ -142,6 +144,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 5,
     priority: 'medium',
     estimatedHours: 150,
+    level: 3,
     attributes: {
       niche: {
         specializationDomain: 'blockchain',
@@ -206,6 +209,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 3,
     priority: 'high',
     estimatedHours: 60,
+    level: 1,
     attributes: {
       soft: {
         skillCategory: 'leadership',
@@ -273,6 +277,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 3,
     priority: 'medium',
     estimatedHours: 80,
+    level: 2,
     attributes: {
       technical: {
         technologies: ['React', 'TypeScript', 'Redux Toolkit', 'React Query', 'Jest'],
@@ -329,6 +334,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 4,
     priority: 'high',
     estimatedHours: 100,
+    level: 2,
     attributes: {
       fundamental: {
         competencyArea: 'analytical-thinking',
@@ -383,6 +389,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 3,
     priority: 'high',
     estimatedHours: 80,
+    level: 1,
     attributes: {
       career: {
         positionLevel: 'entry-level',
@@ -524,6 +531,7 @@ const sampleMilestones: Milestone[] = [
     difficulty: 4,
     priority: 'medium',
     estimatedHours: 120,
+    level: 3,
     attributes: {
       career: {
         positionLevel: 'mid-level',

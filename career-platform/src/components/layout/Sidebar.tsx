@@ -17,7 +17,14 @@ export default function Sidebar() {
     { href: '/protected/candidate/dashboard', label: 'Dashboard', icon: 'home' },
     { href: '/protected/candidate/profile', label: 'Profile & Preferences', icon: 'user' },
     { href: '/protected/candidate/roadmap', label: 'Career Roadmap', icon: 'map' },
+    { href: '/protected/candidate/analytics', label: 'Analytics & Insights', icon: 'chart' },
+    { href: '/protected/candidate/social', label: 'Community', icon: 'users' },
   ];
+
+  // Add debug link in development
+  const debugLinks = process.env.NODE_ENV === 'development' ? [
+    { href: '/protected/candidate/debug/milestone-tester', label: '🧪 Debug: Milestone Tester', icon: 'debug' },
+  ] : [];
 
   const handleLogout = async () => {
     if (isLoggingOut) return; // Prevent multiple clicks
@@ -71,6 +78,29 @@ export default function Sidebar() {
               </li>
             ))}
           </ul>
+          
+          {/* Debug Links (Development Only) */}
+          {debugLinks.length > 0 && (
+            <>
+              <div className="mt-6 mb-4 text-orange-300 text-sm font-medium px-4">DEBUG TOOLS</div>
+              <ul className="space-y-2">
+                {debugLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link 
+                      href={link.href}
+                      className={`flex items-center px-6 py-3 rounded-lg transition-colors ${
+                        pathname === link.href 
+                          ? 'bg-orange-700 text-white font-medium' 
+                          : 'hover:bg-orange-600 text-orange-100'
+                      }`}
+                    >
+                      <span>{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </nav>
         
         <div className="mb-8 px-6">

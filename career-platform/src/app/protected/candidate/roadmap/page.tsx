@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/config/firebase';
-import { CareerRoadmap, Milestone, CandidateProfile } from '@/types/user';
+import { CareerRoadmap, Milestone, CandidateProfile, UserProgress } from '@/types/user';
 import { useRouter } from 'next/navigation';
 import CategorizedCareerRoadmap from '@/components/candidate/CategorizedCareerRoadmap';
+import { LevelNavigator } from '@/components/navigation/LevelNavigator';
+import { SkillTreeView } from '@/components/roadmap/SkillTreeView';
+import { LeveledMilestoneCard } from '@/components/candidate/LeveledMilestoneCard';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -14,6 +17,9 @@ export default function CareerPathPage() {
   const router = useRouter();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedLevel, setSelectedLevel] = useState(1);
+  const [viewMode, setViewMode] = useState<'cards' | 'tree'>('cards');
+  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
 
   // Add CSS to ensure navbar matches exactly
   useEffect(() => {
@@ -110,7 +116,32 @@ export default function CareerPathPage() {
     }
     
     fetchRoadmap();
+    loadUserProgress();
   }, [userProfile]);
+
+  const loadUserProgress = async () => {
+    if (!userProfile) return;
+    
+    try {
+      // Mock data for development - replace with actual Firebase calls
+      const mockProgress: UserProgress = {
+        userId: userProfile.uid,
+        currentLevel: 1,
+        maxUnlockedLevel: 1,
+        completedMilestones: [],
+        completedMicroMilestones: [],
+        achievements: [],
+        streakDays: 0,
+        lastActiveDate: new Date(),
+        skillProficiencies: {}
+      };
+      
+      setUserProgress(mockProgress);
+      setSelectedLevel(mockProgress.currentLevel);
+    } catch (error) {
+      console.error('Error loading user progress:', error);
+    }
+  };
 
   const handleToggleMilestone = async (milestoneId: string, completed: boolean) => {
     if (!roadmap) return;
@@ -139,6 +170,46 @@ export default function CareerPathPage() {
       console.error('Error updating milestone:', error);
       return Promise.reject(error);
     }
+  };
+
+  const handleMilestoneComplete = async (milestoneId: string) => {
+    await handleToggleMilestone(milestoneId, true);
+    // TODO: Award XP and check for level up
+  };
+
+  const handleMicroMilestoneComplete = async (microId: string) => {
+    // TODO: Mark micro-milestone as complete and award XP
+    console.log('Micro-milestone completed:', microId);
+  };
+
+  const generateLevelData = (milestones: Milestone[], progress: UserProgress) => {
+    const levels = Array.from(new Set(milestones.map(m => m.level || 1))).sort((a, b) => a - b);
+    
+    return levels.map(level => {
+      const levelMilestones = milestones.filter(m => (m.level || 1) === level);
+      const completedCount = levelMilestones.filter(m => progress.completedMilestones.includes(m.id)).length;
+      
+      return {
+        level,
+        isActive: level === selectedLevel,
+        isUnlocked: level <= progress.currentLevel + 1,
+        isCompleted: completedCount === levelMilestones.length,
+        milestoneCount: levelMilestones.length,
+        completedCount,
+        title: getLevelTitle(level)
+      };
+    });
+  };
+
+  const getLevelTitle = (level: number) => {
+    const titles = {
+      1: 'Foundation',
+      2: 'Building Skills',
+      3: 'Advanced Development',
+      4: 'Specialization',
+      5: 'Expert Level'
+    };
+    return titles[level as keyof typeof titles] || `Level ${level}`;
   };
 
   if (loading) {
@@ -189,43 +260,121 @@ export default function CareerPathPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-4xl font-bold text-slate-800 font-inter">Your Career Path</h1>
-        <button
-          onClick={() => router.push('/protected/candidate/roadmap/generator')}
-          className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
-        >
-          Generate New Path
-        </button>
+        <div>
+          <h1 className="text-4xl font-bold text-slate-800 font-inter">Your Career Path</h1>
+          {userProgress && (
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
+                <span className="text-xl">⭐</span>
+                <span className="font-bold text-blue-700">Level {userProgress.currentLevel}</span>
+              </div>
+              <div className="text-sm text-gray-600">
+                {userProgress.completedMilestones.length} milestones completed
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-gray-200 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                viewMode === 'cards' ? 'bg-white text-gray-900 shadow' : 'text-gray-600'
+              }`}
+            >
+              Cards
+            </button>
+            <button
+              onClick={() => setViewMode('tree')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-all ${
+                viewMode === 'tree' ? 'bg-white text-gray-900 shadow' : 'text-gray-600'
+              }`}
+            >
+              Skill Tree
+            </button>
+          </div>
+          <button
+            onClick={() => router.push('/protected/candidate/roadmap/generator')}
+            className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+          >
+            Generate New Path
+          </button>
+        </div>
       </div>
       
-      {roadmap && (
+      {roadmap && userProgress && (
         <div>
-          <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 mb-8">
-            <h2 className="text-xl font-bold mb-4 text-slate-800 font-inter">Your Progress</h2>
-            <div className="flex items-center">
-              <div className="w-full bg-slate-100 rounded-full h-4 mr-4 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-teal-600 to-teal-500 h-4 rounded-full"
-                  style={{ 
-                    width: `${Math.round(
-                      (roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100
-                    )}%` 
-                  }}
-                ></div>
-              </div>
-              <span className="text-teal-700 font-semibold whitespace-nowrap">
-                {roadmap.milestones.filter(m => m.completed).length} of {roadmap.milestones.length} completed
-              </span>
-            </div>
-          </div>
-          
-          <CategorizedCareerRoadmap 
-            roadmap={roadmap} 
-            isEditable={true}
-            onMilestoneToggle={handleToggleMilestone}
+          {/* Level Navigation */}
+          <LevelNavigator
+            currentLevel={selectedLevel}
+            maxUnlockedLevel={userProgress.currentLevel + 1}
+            levelData={generateLevelData(roadmap.milestones, userProgress)}
+            onLevelSelect={setSelectedLevel}
+            className="mb-8"
           />
+          
+          {viewMode === 'tree' ? (
+            /* Skill Tree View */
+            <SkillTreeView 
+              milestones={roadmap.milestones}
+              userProgress={userProgress}
+              onMilestoneSelect={(milestone) => {
+                setSelectedLevel(milestone.level || 1);
+                setViewMode('cards');
+              }}
+            />
+          ) : (
+            /* Level-based Milestone Cards */
+            <div>
+              <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 mb-8">
+                <h2 className="text-xl font-bold mb-4 text-slate-800 font-inter">
+                  Level {selectedLevel} - {getLevelTitle(selectedLevel)}
+                </h2>
+                <div className="flex items-center">
+                  <div className="w-full bg-slate-100 rounded-full h-4 mr-4 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-teal-600 to-teal-500 h-4 rounded-full"
+                      style={{ 
+                        width: `${Math.round(
+                          (roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length / 
+                           roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length || 1) * 100
+                        )}%` 
+                      }}
+                    ></div>
+                  </div>
+                  <span className="text-teal-700 font-semibold whitespace-nowrap">
+                    {roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length} of{' '}
+                    {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length} completed
+                  </span>
+                </div>
+              </div>
+              
+              {/* Level Milestones */}
+              <div className="space-y-6">
+                {roadmap.milestones
+                  .filter(milestone => (milestone.level || 1) === selectedLevel)
+                  .map(milestone => (
+                    <LeveledMilestoneCard
+                      key={milestone.id}
+                      milestone={milestone}
+                      userProgress={userProgress}
+                      onComplete={handleMilestoneComplete}
+                      onMicroComplete={handleMicroMilestoneComplete}
+                      isLocked={(milestone.level || 1) > userProgress.currentLevel}
+                    />
+                  ))}
+              </div>
+              
+              {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length === 0 && (
+                <div className="text-center py-12 bg-white rounded-lg shadow-card border border-slate-200">
+                  <h3 className="text-lg font-medium text-slate-800 mb-2">No milestones at this level</h3>
+                  <p className="text-slate-600">Complete previous levels to unlock new content.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

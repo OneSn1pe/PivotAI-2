@@ -1,8 +1,13 @@
 'use client';
 
 import React from 'react';
+import { DebugMenu } from '@/components/debug/DebugMenu';
 
 export default function ClientLayout() {
-  // No debug components in production
-  return null;
+  return (
+    <>
+      {/* Debug Menu - Only shows in development */}
+      <DebugMenu />
+    </>
+  );
 } 

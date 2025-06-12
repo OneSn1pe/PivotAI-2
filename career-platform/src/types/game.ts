@@ -15,8 +15,6 @@ export interface CharacterAttributes {
 
 export interface CharacterProgress {
   level: number;
-  xp: number;
-  nextLevelXp: number;
   characterClass: CharacterClass;
   attributes: CharacterAttributes;
 }
@@ -32,7 +30,6 @@ export interface QuestObjective {
 }
 
 export interface QuestReward {
-  xp: number;
   coins?: number;
   items?: Array<{
     id: string;
@@ -97,7 +94,6 @@ export const milestoneToQuest = (
     difficulty: Math.min(5, Math.max(1, Math.ceil(index / 2) + 1)) as QuestDifficulty,
     status: milestone.completed ? 'completed' : 'available',
     rewards: {
-      xp: 25,
       coins: 10
     },
     objectives: milestone.tasks ? milestone.tasks.map((task, taskIndex) => ({
@@ -108,13 +104,8 @@ export const milestoneToQuest = (
   };
 };
 
-// Calculate level based on XP
-export const calculateLevel = (xp: number): number => {
-  // Simple level calculation: 1 level per 100 XP
-  return Math.max(1, Math.floor(xp / 100) + 1);
-};
-
-// Calculate XP needed for next level
-export const calculateNextLevelXp = (level: number): number => {
-  return level * 100;
+// Calculate level based on completed milestones
+export const calculateLevel = (completedMilestones: number): number => {
+  // Simple level calculation: 1 level per 5 completed milestones
+  return Math.max(1, Math.floor(completedMilestones / 5) + 1);
 }; 

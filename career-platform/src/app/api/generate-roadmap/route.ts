@@ -20,11 +20,11 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY is not defined');
 }
 
-// Initialize OpenAI with proper timeout settings
+// Initialize OpenAI with extended timeout settings
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 120000, // 2 minute timeout
-  maxRetries: 2,  // Retry twice on transient errors
+  timeout: 300000, // 5 minute timeout (increased from 2 minutes)
+  maxRetries: 3,   // Retry 3 times on transient errors (increased from 2)
 });
 
 // Helper function to truncate large objects for API calls
@@ -53,8 +53,8 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs
       // Create a timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error('Operation timed out after 2 minutes'));
-        }, 120000); // 2 minute client-side timeout
+          reject(new Error('Operation timed out after 5 minutes'));
+        }, 300000); // 5 minute client-side timeout
       });
       
       // Race the function against the timeout
@@ -66,7 +66,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs
       lastError = error;
       
       // Check if it's a timeout error from our client-side timeout
-      if (error.message === 'Operation timed out after 2 minutes') {
+      if (error.message === 'Operation timed out after 5 minutes') {
         debug.error('Client-side timeout reached:', error.message);
         throw error; // Don't retry on client-side timeouts
       }
@@ -162,9 +162,15 @@ export async function POST(request: NextRequest) {
             },
             {
               role: "user",
-              content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
+              content: `Create a personalized LEVELED career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
 
-IMPORTANT: Include both SKILL DEVELOPMENT milestones and CAREER PROGRESSION milestones. Career progression milestones should focus on intermediate positions that build relevant work experience toward the target role.
+IMPORTANT: This roadmap uses a PROGRESSIVE LEVELING SYSTEM where milestones are organized into levels that build upon each other. Include both SKILL DEVELOPMENT milestones and CAREER PROGRESSION milestones with appropriate level assignments.
+
+LEVELING SYSTEM REQUIREMENTS:
+- Assign each milestone an appropriate LEVEL (1-10) based on difficulty and prerequisites
+- Lower level milestones (1-3) should focus on fundamentals and entry-level skills
+- Mid level milestones (4-6) should build practical application and specialization
+- Higher level milestones (7-10) should emphasize leadership, expertise, and advanced skills
 
 Return a structured JSON roadmap with these components:
 {
@@ -181,6 +187,7 @@ Return a structured JSON roadmap with these components:
       "difficulty": 1-5,
       "priority": "low|medium|high|critical",
       "estimatedHours": 40,
+      "level": 2,
       "successCriteria": ["criterion1", "criterion2"],
       "attributes": {
         "career": {
@@ -216,11 +223,12 @@ Return a structured JSON roadmap with these components:
       },
       "resources": [
         {
-          "title": "Resource name",
-          "url": "resource_url",
-          "type": "course|book|project|article|documentation|certification",
+          "title": "Actual resource title (e.g., 'React - The Complete Guide' on Udemy)",
+          "url": "https://actual-url.com (MUST be a real, working URL)",
+          "type": "course|book|project|article|documentation|certification|video|tutorial|tool",
           "estimatedTime": "2 weeks",
-          "cost": "free|paid|freemium"
+          "cost": "free|paid|freemium",
+          "description": "Brief description of what this resource covers"
         }
       ],
       "tasks": [
@@ -307,15 +315,45 @@ Candidate's current profile:
 Guidelines:
 - Create exactly 6 milestones (2 technical, 2 fundamental, 1 niche, 1 soft)
 - Each milestone needs a unique ID
+- LEVEL ASSIGNMENT: Distribute milestones across levels 1-6 with logical progression
+  * Level 1-2: Foundation skills, basic concepts
+  * Level 3-4: Applied skills, intermediate projects
+  * Level 5-6: Advanced skills, leadership, specialization
 - Include exactly 3 specific resources per milestone
 - Add 1-3 tasks per milestone for progress tracking
 - Include success criteria for each milestone
 - Estimate hours required (20-100 hours per milestone)
 - Set appropriate difficulty (1-5) and priority levels
+- Ensure level progression feels rewarding and logical
 - Resources should be high-quality, free or low-cost, and directly relevant
 - Prefer official documentation and well-known learning platforms
-- CRITICAL: All resources must be real, verified, and from reputable sources - verify URLs exist and are accessible
-- Return ONLY valid JSON with no additional text or formatting`
+- CRITICAL: All resources must be real, verified, and from reputable sources
+- Return ONLY valid JSON with no additional text or formatting
+
+RESOURCE GENERATION REQUIREMENTS:
+1. ONLY provide REAL, WORKING URLs to actual online resources
+2. Each resource URL must be:
+   - A real website that exists (e.g., https://www.coursera.org/learn/react-basics)
+   - From reputable sources like:
+     * Coursera, Udemy, edX, Pluralsight, LinkedIn Learning
+     * Official documentation (React.dev, Angular.io, etc.)
+     * GitHub repositories with learning materials
+     * YouTube channels (freeCodeCamp, Traversy Media, etc.)
+     * Books on O'Reilly, Amazon, or publisher sites
+     * MDN Web Docs, W3Schools, Stack Overflow Documentation
+     * Medium articles, Dev.to posts (with actual article URLs)
+3. Resource examples by type:
+   - course: "https://www.coursera.org/learn/machine-learning"
+   - documentation: "https://react.dev/learn"
+   - video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+   - book: "https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882"
+   - project: "https://github.com/florinpop17/app-ideas"
+   - article: "https://medium.com/@author/article-title-12345"
+   - tutorial: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/"
+4. Include a mix of resource types for each milestone
+5. Prioritize free resources, but include paid options when they offer significant value
+6. Ensure URLs are properly formatted and complete (not shortened or relative)
+7. Add descriptive titles that match the actual resource`
             }
           ],
           temperature: 0.2, // Lower temperature for more consistent output
@@ -368,13 +406,19 @@ Guidelines:
         throw new Error('Invalid milestones structure in response');
       }
       
-      // Ensure each milestone has a unique ID
+      // Ensure each milestone has a unique ID and add required fields
       milestones = parsedResponse.milestones.map((milestone: any) => ({
         ...milestone,
         id: milestone.id || uuidv4(),
         completed: false, // Always start with uncompleted milestones for new roadmap
-        professionalField
+        professionalField,
+        // Ensure level is present (fallback if AI didn't provide it)
+        level: milestone.level || 1
       }));
+      
+      // Validate level progression
+      milestones = milestones.sort((a: any, b: any) => a.level - b.level);
+      debug.log('Milestones sorted by level:', milestones.map((m: any) => `${m.title} (Level ${m.level})`));
       
       // Extract additional analysis components if available
       candidateGapAnalysis = parsedResponse.candidateGapAnalysis;
@@ -437,7 +481,8 @@ Guidelines:
         ...roadmap,
         _debug: {
           processingTime: Math.round(totalDuration),
-          openaiTime: Math.round(openaiDuration)
+          openaiTime: Math.round(openaiDuration),
+          milestonesCount: milestones.length
         }
       });
     } catch (firestoreError) {
@@ -467,9 +512,19 @@ Guidelines:
   }
 }
 
+// Helper function to add level to milestone
+function enhanceMilestoneWithLevel(milestone: any, index: number): Milestone {
+  const level = Math.min(index + 1, 6); // Simple level assignment based on order
+  
+  return {
+    ...milestone,
+    level
+  };
+}
+
 // Helper function to create fallback milestones when OpenAI fails
 function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalField: ProfessionalField = 'computer-science'): Milestone[] {
-  return [
+  const baseMilestones = [
     {
       id: uuidv4(),
       professionalField,
@@ -499,25 +554,28 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalFi
       },
       resources: [
         {
-          title: "Online Learning Platform",
-          url: "https://www.coursera.org",
+          title: "JavaScript Algorithms and Data Structures",
+          url: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",
           type: "course",
           estimatedTime: "4 weeks",
-          cost: "freemium"
+          cost: "free",
+          description: "Interactive coding challenges covering fundamental JavaScript concepts"
         },
         {
-          title: "Skill Assessment Tool",
-          url: "https://www.linkedin.com/learning",
-          type: "course",
-          estimatedTime: "2 weeks",
-          cost: "paid"
+          title: "The Odin Project - Full Stack JavaScript",
+          url: "https://www.theodinproject.com/paths/full-stack-javascript",
+          type: "tutorial",
+          estimatedTime: "3 months",
+          cost: "free",
+          description: "Comprehensive curriculum for learning full-stack web development"
         },
         {
-          title: "Practice Projects Repository",
-          url: "https://github.com/tuvtran/project-based-learning",
+          title: "Build 30 JavaScript Projects in 30 Days",
+          url: "https://javascript30.com/",
           type: "project",
-          estimatedTime: "6 weeks",
-          cost: "free"
+          estimatedTime: "30 days",
+          cost: "free",
+          description: "Hands-on JavaScript projects to build practical skills"
         }
       ],
       tasks: [
@@ -566,25 +624,28 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalFi
       },
       resources: [
         {
-          title: "System Design Primer",
+          title: "System Design Primer - Complete Guide",
           url: "https://github.com/donnemartin/system-design-primer",
           type: "documentation",
           estimatedTime: "6 weeks",
-          cost: "free"
+          cost: "free",
+          description: "Learn how to design large-scale systems with examples from real companies"
         },
         {
           title: "Designing Data-Intensive Applications",
-          url: "https://dataintensive.net",
+          url: "https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/",
           type: "book",
           estimatedTime: "8 weeks",
-          cost: "paid"
+          cost: "paid",
+          description: "The big ideas behind reliable, scalable, and maintainable systems"
         },
         {
-          title: "High Scalability Blog",
-          url: "http://highscalability.com/",
-          type: "article",
+          title: "Grokking System Design Interview",
+          url: "https://www.educative.io/courses/grokking-the-system-design-interview",
+          type: "course",
           estimatedTime: "4 weeks",
-          cost: "free"
+          cost: "paid",
+          description: "Learn system design through practical examples and case studies"
         }
       ],
       tasks: [
@@ -712,25 +773,28 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalFi
       },
       resources: [
         {
-          title: "Effective Communication Skills",
-          url: "https://www.coursera.org/learn/communication-skills",
-          type: "course",
-          estimatedTime: "6 weeks",
-          cost: "freemium"
-        },
-        {
-          title: "Leadership Fundamentals",
-          url: "https://www.linkedin.com/learning/leadership-fundamentals",
+          title: "Improving Communication Skills",
+          url: "https://www.coursera.org/learn/wharton-communication-skills",
           type: "course",
           estimatedTime: "4 weeks",
-          cost: "paid"
+          cost: "free",
+          description: "University of Pennsylvania course on business communication"
         },
         {
-          title: "Toastmasters International",
-          url: "https://www.toastmasters.org/",
-          type: "course",
-          estimatedTime: "12 weeks",
-          cost: "paid"
+          title: "How to Speak by Patrick Winston",
+          url: "https://www.youtube.com/watch?v=Unzc731iCUY",
+          type: "video",
+          estimatedTime: "1 hour",
+          cost: "free",
+          description: "MIT lecture on effective speaking and presentation skills"
+        },
+        {
+          title: "Crucial Conversations: Tools for Talking When Stakes Are High",
+          url: "https://www.amazon.com/Crucial-Conversations-Talking-Stakes-Second/dp/1260474186",
+          type: "book",
+          estimatedTime: "2 weeks",
+          cost: "paid",
+          description: "Master the art of dialogue in high-stakes situations"
         }
       ],
       tasks: [
@@ -1090,6 +1154,9 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalFi
       ]
     }
   ];
+
+  // Enhance all milestones with level assignments
+  return baseMilestones.map((milestone, index) => enhanceMilestoneWithLevel(milestone, index));
 }
 
 // Helper function to create a complete fallback roadmap

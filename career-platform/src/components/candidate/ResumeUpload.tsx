@@ -350,7 +350,7 @@ export default function ResumeUpload() {
           debug.log('Resume analysis complete:', validatedAnalysis);
           
           // Log any missing fields for debugging
-          const missingFields = Object.entries(validatedAnalysis)
+          const missingFields = Object.entries(validatedAnalysis || {})
             .filter(([_, value]) => Array.isArray(value) && value.length === 0)
             .map(([key]) => key);
             

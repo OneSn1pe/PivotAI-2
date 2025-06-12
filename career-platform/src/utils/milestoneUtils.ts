@@ -67,6 +67,8 @@ export const migrateRoadmapMilestones = (milestones: any[]): Milestone[] => {
         completed: false,
         difficulty: 1,
         priority: 'low',
+        estimatedHours: 20,
+        level: 1,
         attributes: {},
         resources: [],
         successCriteria: ['Contact support for assistance'],

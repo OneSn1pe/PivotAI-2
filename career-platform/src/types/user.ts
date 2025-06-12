@@ -330,6 +330,86 @@ export enum UserRole {
     soft?: SoftAttributes;
   }
 
+  // Leveling system types
+  export type MicroMilestoneType = 'learning' | 'building' | 'practicing' | 'connecting' | 'achieving';
+  export type VerificationMethod = 'self-report' | 'portfolio' | 'assessment' | 'peer-review';
+  export type AchievementCategory = 'progress' | 'skill' | 'streak' | 'special';
+
+  export interface MicroMilestone {
+    id: string;
+    title: string;
+    description: string;
+    type: MicroMilestoneType;
+    category: MilestoneCategory;
+    estimatedTime: string; // "1-2 weeks", "3-5 days"
+    difficulty: 1 | 2 | 3; // Within-level difficulty
+    completed: boolean;
+    completedAt?: Date;
+    
+    // Progress tracking
+    tasks: MilestoneTask[];
+    resources: Resource[];
+    successCriteria: string[];
+    
+    // Validation
+    verificationMethod: VerificationMethod;
+    evidence?: string; // User-submitted proof
+    
+    // Relationships
+    prerequisites: string[]; // Required micro-milestone IDs
+    unlocks: string[]; // Micro-milestones this enables
+    contributes: string; // Level capstone this supports
+  }
+
+  export interface Achievement {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    unlockedAt: Date;
+    category: AchievementCategory;
+    rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+    requirements?: string;
+  }
+
+  export interface UnlockCondition {
+    type: 'level_completion' | 'category_balance' | 'skill_threshold' | 'time_gate';
+    requirement: {
+      levels?: string[]; // Required completed levels
+      categories?: { [key: string]: number }; // Min completions per category
+      skills?: { [key: string]: number }; // Skill proficiency thresholds
+      timeGate?: number; // Minimum days since previous completion
+    };
+  }
+
+  export interface UserProgress {
+    userId: string;
+    currentLevel: number;
+    maxUnlockedLevel: number;
+    completedMilestones: string[];
+    completedMicroMilestones: string[];
+    achievements: Achievement[];
+    streakDays: number;
+    lastActiveDate: Date;
+    weeklyGoal?: number;
+    skillProficiencies: { [skill: string]: number };
+  }
+
+  export interface Resource {
+    title: string;
+    url: string;
+    type: 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification' 
+          | 'tutorial' | 'tool' | 'podcast' | 'workshop' | 'webinar'
+          | 'cad-tutorial' | 'simulation-software' | 'standards-document' | 'technical-drawing'
+          | 'clinical-guideline' | 'medical-journal' | 'cme-course' | 'case-study' | 'medical-database'
+          | 'market-report' | 'financial-model' | 'business-plan-template'
+          | 'case-law' | 'statute' | 'legal-brief' | 'bar-exam-prep' | 'legal-database';
+    description?: string;
+    usageGuide?: string;
+    estimatedTime?: string;
+    cost?: 'free' | 'paid' | 'freemium';
+  }
+
   // Enhanced milestone interface with field support
   export interface Milestone {
     id: string;
@@ -347,31 +427,21 @@ export enum UserRole {
     createdAt?: Date;
     completedAt?: Date;
     
+    // Progress tracking fields
+    level: number;
+    microMilestones?: MicroMilestone[];
+    isCapstone?: boolean;
+    unlockedAt?: Date;
+    unlockConditions?: UnlockCondition[];
+    
     // Field and category-specific attributes
     attributes: MilestoneAttributes;
     
     // Enhanced resources with field-specific types
-    resources: {
-      title: string;
-      url: string;
-      type: 'article' | 'video' | 'course' | 'book' | 'documentation' | 'project' | 'certification' 
-            | 'cad-tutorial' | 'simulation-software' | 'standards-document' | 'technical-drawing'
-            | 'clinical-guideline' | 'medical-journal' | 'cme-course' | 'case-study' | 'medical-database'
-            | 'market-report' | 'financial-model' | 'business-plan-template'
-            | 'case-law' | 'statute' | 'legal-brief' | 'bar-exam-prep' | 'legal-database';
-      usageGuide?: string;
-      estimatedTime?: string;
-      cost?: 'free' | 'paid' | 'freemium';
-    }[];
+    resources: Resource[];
     
     // Progress tracking
-    tasks?: {
-      id: string;
-      description: string;
-      completed: boolean;
-      dueDate?: Date;
-      notes?: string;
-    }[];
+    tasks?: MilestoneTask[];
     
     // Assessment criteria
     successCriteria: string[];
@@ -478,13 +548,20 @@ export enum UserRole {
   // Helper function to convert legacy milestones to new format
   export const migrateLegacyMilestone = (legacy: LegacyMilestone, professionalField: ProfessionalField = 'computer-science'): Milestone => {
     const category = categorizeMilestone(legacy);
+    const difficulty = 3 as const; // Default difficulty
+    const priority = 'medium' as const; // Default priority
+    const estimatedHours = 40; // Default hours
+    
+    const level = 1; // Default level for legacy milestones
     
     return {
       ...legacy,
       professionalField,
       category,
-      difficulty: 3 as const, // Default difficulty
-      priority: 'medium' as const, // Default priority
+      difficulty,
+      priority,
+      estimatedHours,
+      level,
       attributes: {},
       successCriteria: ['Complete all learning resources', 'Apply skills in practical context'],
       competencyImpact: {
