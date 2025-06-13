@@ -385,9 +385,9 @@ export default function CareerPathPage() {
   if (!roadmap) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-6 text-gray-800">Career Path</h1>
+        <h1 className="text-3xl font-light mb-6 text-gray-900">Career Roadmap</h1>
         <div className="text-center py-12 bg-white rounded-lg">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">No Career Path Found</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-gray-900">No Roadmap Found</h2>
           <p className="text-gray-600 mb-6">
             You can generate a personalized career path based on your resume and professional goals.
           </p>
@@ -398,7 +398,7 @@ export default function CareerPathPage() {
                 onClick={() => router.push('/protected/candidate/roadmap/generator')}
                 className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
-                Generate Your Career Path
+                Generate Career Roadmap
               </button>
             </div>
           ) : (
@@ -423,13 +423,14 @@ export default function CareerPathPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-gray-800">Your Career Path</h1>
+          <h1 className="text-3xl font-light text-gray-900">Career Roadmap</h1>
+          <p className="text-sm text-gray-600 mt-1">Progress through levels to advance your career</p>
           {userProgress && (
-            <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
-                <span className="font-bold text-gray-900">Level {userProgress.currentLevel}</span>
+                <span className="font-medium text-gray-900">Level {userProgress.currentLevel}</span>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-500">
                 {userProgress.completedMilestones.length} milestones completed
               </div>
             </div>
@@ -456,7 +457,7 @@ export default function CareerPathPage() {
           </div>
           <button
             onClick={() => router.push('/protected/candidate/roadmap/generator')}
-            className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+            className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
             Generate New Path
           </button>
@@ -499,7 +500,7 @@ export default function CareerPathPage() {
                    roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length && (
                     <button
                       onClick={handleSkipLevel}
-                      className="px-4 py-2 text-sm font-medium text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                      className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
                       title="Skip this level and unlock the next one"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

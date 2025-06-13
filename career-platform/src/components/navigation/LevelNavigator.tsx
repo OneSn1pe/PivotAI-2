@@ -41,13 +41,6 @@ export function LevelNavigator({
 }: LevelNavigatorProps) {
   return (
     <div className={`level-navigator ${className}`}>
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Learning Path</h2>
-        <p className="text-gray-600">
-          Progress through levels to unlock advanced milestones and career opportunities
-        </p>
-      </div>
 
       {/* Level Track */}
       <div className="relative">

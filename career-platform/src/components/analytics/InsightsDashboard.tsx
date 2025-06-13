@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { UserProgress, Milestone } from '@/types/user';
 import { AnalyticsService, ProgressInsights, Recommendation } from '@/services/analyticsService';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface InsightsDashboardProps {
   userProgress: UserProgress;
@@ -86,10 +87,12 @@ export function InsightsDashboard({
   if (!insights) {
     return (
       <Card className={className}>
-        <CardContent className="p-6 text-center">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">No Insights Available</h3>
-          <p className="text-gray-600">Complete more activities to generate personalized insights.</p>
+        <CardContent className="p-6">
+          <EmptyState
+            illustration="NoData"
+            title="No Insights Available"
+            description="Complete more activities to generate personalized insights."
+          />
         </CardContent>
       </Card>
     );

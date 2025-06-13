@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { EmptyStateIllustrations, EmptyStateType } from './empty-state-illustrations';
 
 interface EmptyStateProps {
   title: string;
@@ -9,6 +10,7 @@ interface EmptyStateProps {
     onClick: () => void;
   };
   icon?: React.ReactNode;
+  illustration?: EmptyStateType;
   className?: string;
 }
 
@@ -17,16 +19,20 @@ export function EmptyState({
   description,
   action,
   icon,
+  illustration,
   className
 }: EmptyStateProps) {
+  const IllustrationComponent = illustration ? EmptyStateIllustrations[illustration] : null;
+  
   return (
     <div className={cn(
       "flex flex-col items-center justify-center py-12 px-6 text-center",
+      "animate-in fade-in-0 duration-500",
       className
     )}>
-      {icon && (
-        <div className="mb-4 text-gray-400">
-          {icon}
+      {(icon || IllustrationComponent) && (
+        <div className="mb-6 text-gray-400 animate-in zoom-in-50 duration-700 delay-200">
+          {icon || (IllustrationComponent && <IllustrationComponent />)}
         </div>
       )}
       

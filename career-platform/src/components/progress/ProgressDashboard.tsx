@@ -5,6 +5,7 @@ import { UserProgress, Achievement } from '@/types/user';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { calculateUserLevel, getStreakMultiplier } from '@/services/levelProgressService';
+import { ProgressRadialChart, StreakVisualizer, XPProgressBar } from './ProgressVisualizations';
 
 interface ProgressDashboardProps {
   userProgress: UserProgress;
@@ -27,18 +28,27 @@ export function ProgressDashboard({ userProgress, achievements, className = '' }
         <div className="text-xs sm:text-sm text-gray-500">{levelData.totalXP} XP earned</div>
       </div>
 
-      {/* Progress to Next Level */}
+      {/* Progress to Next Level - Enhanced */}
       <div className="max-w-2xl mx-auto">
-        <div className="mb-2 flex justify-between items-baseline">
-          <span className="text-sm text-gray-600">Progress to level {levelData.currentLevel + 1}</span>
-          <span className="text-sm font-medium text-gray-900">{levelData.progressPercent}%</span>
-        </div>
-        <Progress value={levelData.progressPercent} className="h-1" />
-        <div className="mt-2 flex justify-between text-xs text-gray-500">
-          <span>{levelData.currentLevelXP} / {levelData.xpForNextLevel} XP</span>
-          <span>{levelData.milestonesNeededForNext} milestones to next level</span>
+        <XPProgressBar 
+          currentXP={levelData.currentLevelXP} 
+          nextLevelXP={levelData.xpForNextLevel} 
+          level={levelData.currentLevel}
+        />
+        <div className="mt-2 text-center text-xs text-gray-500">
+          {levelData.milestonesNeededForNext} milestones to next level
         </div>
       </div>
+
+      {/* Radial Progress Charts */}
+      <Card className="border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">Overall Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProgressRadialChart userProgress={userProgress} />
+        </CardContent>
+      </Card>
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
@@ -93,6 +103,13 @@ export function ProgressDashboard({ userProgress, achievements, className = '' }
           </CardContent>
         </Card>
       </div>
+
+      {/* Streak Visualization */}
+      <Card className="border-gray-200">
+        <CardContent className="p-6">
+          <StreakVisualizer streakDays={userProgress.streakDays} />
+        </CardContent>
+      </Card>
 
       {/* Milestone Progress Breakdown */}
       <div className="border-t border-gray-200 pt-6 sm:pt-8">

@@ -34,7 +34,7 @@ export function LazyMilestoneList({
   if (milestones.length === 0) {
     return (
       <EmptyState
-        icon={<Target className="h-8 w-8" />}
+        illustration="NoProgress"
         title="No milestones yet"
         description="Milestones will appear here once they're added to your roadmap"
       />

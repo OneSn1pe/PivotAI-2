@@ -263,31 +263,6 @@ export default function CandidateDashboard() {
         </div>
       </div>
 
-      
-      {/* Skills Panel */}
-      <div className="bg-white p-6 rounded-lg">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Skill Inventory</h2>
-      
-        {candidateProfile?.resumeAnalysis?.skills && candidateProfile.resumeAnalysis.skills.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
-              <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
-                {skill}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-gray-500 text-sm">No skills found in your resume</p>
-            <button
-              onClick={() => router.push('/protected/candidate/profile')}
-              className="mt-2 text-gray-700 hover:text-gray-900 text-sm font-medium"
-            >
-              Upload or update your resume
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

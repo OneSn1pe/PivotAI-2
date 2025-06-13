@@ -340,17 +340,22 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
   };
   
   return (
-    <div className="bg-white rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4 text-gray-900">Manage Your Resume</h2>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-lg font-medium text-gray-900">Resume Management</h2>
+        <p className="text-sm text-gray-600 mt-1">Upload and analyze your professional experience</p>
+      </div>
       
       {candidateProfile?.resumeUrl && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-lg mb-2 text-gray-800">Current Resume</h3>
-          <p className="text-sm text-gray-600 mb-3">
-            {displayFileName ? (
-              <>File: <span className="font-medium">{displayFileName}</span> • </>
-            ) : null}
-            Last updated: {candidateProfile.updatedAt ? 
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-1">Current Resume</h3>
+              <p className="text-sm text-gray-600">
+                {displayFileName ? (
+                  <>{displayFileName} • </>
+                ) : null}
+                Updated {candidateProfile.updatedAt ? 
               (candidateProfile.updatedAt instanceof Date ? 
                 candidateProfile.updatedAt.toLocaleDateString() : 
                 // Handle Firebase Timestamp or string conversion
@@ -363,17 +368,19 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
                   })
               ) : 'Unknown'
             }
-          </p>
+              </p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
         </div>
       )}
       
       <div className="mb-6">
-        <h3 className="font-semibold text-lg mb-3 text-gray-800">Update Your Resume</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Upload a new resume to update your profile and get a fresh analysis of your skills and areas for improvement.
-        </p>
+        <h3 className="text-sm font-medium text-gray-900 mb-3">Upload New Resume</h3>
         
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
           <input
             type="file"
             onChange={handleFileChange}
@@ -388,104 +395,143 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
             <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="mt-2 text-sm text-gray-600">
-              {file ? file.name : 'Click to select a resume file'}
+            <p className="mt-3 text-sm text-gray-700">
+              {file ? file.name : 'Drop your resume here or click to browse'}
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              PDF, DOCX, or TXT (max 5MB)
+              Supports PDF, DOCX, or TXT • Max 5MB
             </p>
           </label>
         </div>
         
         {file && plainTextContent && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 mb-2">
-              {file.type === 'text/plain' ? 
-                'Text file ready to upload.' : 
-                `Your ${file.type === 'application/pdf' ? 'PDF' : 'DOCX'} has been converted to plaintext (${plainTextContent.length} characters).`}
-            </p>
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm text-gray-700">
+                  {file.type === 'text/plain' ? 
+                    'Text file ready' : 
+                    `${file.type === 'application/pdf' ? 'PDF' : 'DOCX'} processed (${plainTextContent.length} characters)`}
+                </span>
+              </div>
+              <button
+                onClick={() => {setFile(null); setPlainTextContent('');}}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <button
               onClick={handleUpload}
               disabled={uploading || analyzing}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading 
                 ? `Uploading... ${Math.round(progress)}%` 
                 : analyzing 
                   ? 'Analyzing Resume...' 
-                  : 'Update Resume'}
+                  : 'Upload & Analyze Resume'}
             </button>
           </div>
         )}
       </div>
       
       {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
-          {error}
+        <div className="mb-4 p-3 bg-red-50 rounded-lg border border-red-200 flex items-start gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm text-red-700">{error}</span>
         </div>
       )}
       
       {successMessage && (
-        <div className="mb-4 p-4 bg-gray-50 text-gray-700 rounded-lg">
-          {successMessage}
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm text-gray-700">{successMessage}</span>
         </div>
       )}
       
       {analysis && (
-        <div className="mt-6">
-          <h3 className="font-semibold text-lg mb-3 text-gray-800">Analysis Results</h3>
+        <div className="mt-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-sm font-medium text-gray-900 mb-4">Resume Analysis</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h4 className="font-medium text-gray-700 mb-2">Skills</h4>
+              <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Detected Skills</h4>
               {analysis.skills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {analysis.skills.map((skill, index) => (
-                    <span key={index} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                    <span key={index} className="bg-white text-gray-700 px-3 py-1.5 rounded-md text-xs border border-gray-200">
                       {skill}
                     </span>
                   ))}
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-gray-500 mb-3">
                     No specific skills were detected in your resume.
                   </p>
-                  <div className="p-3 bg-yellow-50 rounded-lg mb-3">
-                    <h5 className="text-sm font-medium text-yellow-800">Resume Tip:</h5>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      For better results, include a dedicated "Skills" section in your resume with explicitly listed skills (e.g., "Python", "React", "Project Management").
-                    </p>
+                  <div className="p-3 bg-white rounded-md border border-gray-200">
+                    <div className="flex items-start gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <h5 className="text-xs font-medium text-gray-700">Resume Tip</h5>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Include a dedicated "Skills" section with explicitly listed skills for better detection.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
             
-            <div>
-              <h4 className="font-medium text-gray-700 mb-2">Strengths</h4>
-              <ul className="list-disc pl-5 space-y-1">
-                {analysis.strengths.map((strength, index) => (
-                  <li key={index} className="text-gray-700">{strength}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-gray-700 mb-2">Areas for Improvement</h4>
-              <ul className="list-disc pl-5 space-y-1">
-                {analysis.weaknesses.map((weakness, index) => (
-                  <li key={index} className="text-gray-700">{weakness}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-medium text-gray-700 mb-2">Recommendations</h4>
-              <ul className="list-disc pl-5 space-y-1">
-                {analysis.recommendations.map((recommendation, index) => (
-                  <li key={index} className="text-gray-700">{recommendation}</li>
-                ))}
-              </ul>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Strengths</h4>
+                <ul className="space-y-1.5">
+                  {analysis.strengths.map((strength, index) => (
+                    <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                      <span className="text-gray-400 mt-1">•</span>
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Areas to Improve</h4>
+                <ul className="space-y-1.5">
+                  {analysis.weaknesses.map((weakness, index) => (
+                    <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                      <span className="text-gray-400 mt-1">•</span>
+                      <span>{weakness}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Recommendations</h4>
+                <ul className="space-y-1.5">
+                  {analysis.recommendations.map((recommendation, index) => (
+                    <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                      <span className="text-gray-400 mt-1">•</span>
+                      <span>{recommendation}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>

@@ -28,6 +28,7 @@ import {
   Hexagon
 } from 'lucide-react';
 import { Achievement } from '@/types/user';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface AchievementBadgesProps {
   achievements: Achievement[];
@@ -424,11 +425,11 @@ export function AchievementShowcase({
           ))}
         </div>
         {recentAchievements.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            <Lock className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-            <p>No achievements unlocked yet</p>
-            <p className="text-sm">Complete milestones to earn your first badge!</p>
-          </div>
+          <EmptyState
+            illustration="NoAchievements"
+            title="No achievements unlocked yet"
+            description="Complete milestones to earn your first badge!"
+          />
         )}
       </CardContent>
     </Card>

@@ -129,11 +129,17 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Your Profile</h1>
+        <div>
+          <h1 className="text-3xl font-light text-gray-900">Profile Settings</h1>
+          <p className="text-sm text-gray-600 mt-1">Manage your resume and career preferences</p>
+        </div>
         <button
           onClick={() => router.push('/protected/candidate/dashboard')}
-          className="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors flex items-center gap-2"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
           Back to Dashboard
         </button>
       </div>
@@ -142,14 +148,14 @@ export default function ProfilePage() {
       <LinkedInProfileImport />
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
         {tabs.map(tab => (
           <button
             key={tab.id}
-            className={`py-2 px-4 font-medium text-sm ${
+            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
               activeTab === tab.id
-                ? 'text-gray-900 border-b-2 border-gray-900'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -158,18 +164,24 @@ export default function ProfilePage() {
         ))}
       </div>
       
-      <div className="bg-white p-8 rounded-lg">
+      <div className="bg-white p-6 rounded-lg border border-gray-200">
         {activeTab === 'resume' && (
           <ResumeManager onUpdateComplete={() => router.refresh()} />
         )}
         
         {activeTab === 'target-companies' && (
           <>
-            <h2 className="text-xl font-semibold mb-6 text-gray-900">Set Your Target Companies</h2>
+            <div className="mb-6">
+              <h2 className="text-lg font-medium text-gray-900">Target Companies</h2>
+              <p className="text-sm text-gray-600 mt-1">Add up to 3 companies you're interested in</p>
+            </div>
             
             {saveSuccess && (
-              <div className="mb-6 p-4 rounded-lg bg-gray-50 text-gray-700">
-                Target companies saved successfully!
+              <div className="mb-6 p-3 rounded-lg bg-gray-50 border border-gray-200 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm text-gray-700">Target companies saved successfully</span>
               </div>
             )}
             
@@ -178,23 +190,25 @@ export default function ProfilePage() {
               <div className="relative">
                 <div className="space-y-4">
                   {targetCompanies.map((company, index) => (
-                    <div key={index} className="p-4 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-gray-700">Company #{index + 1}</span>
+                    <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-sm font-medium text-gray-700">Company {index + 1}</span>
                         {targetCompanies.length > 1 && (
                           <button 
                             type="button" 
                             onClick={() => removeCompany(index)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-gray-400 hover:text-gray-600 transition-colors"
                           >
-                            Remove
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                           </button>
                         )}
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label htmlFor={`company-name-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                          <label htmlFor={`company-name-${index}`} className="block text-xs font-medium text-gray-600 mb-1">
                             Company Name
                           </label>
                           <input 
@@ -202,13 +216,13 @@ export default function ProfilePage() {
                             id={`company-name-${index}`} 
                             value={company.name}
                             onChange={(e) => handleCompanyChange(index, 'name', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-colors"
                             placeholder="e.g., Google, Microsoft"
                           />
                         </div>
                         
                         <div>
-                          <label htmlFor={`company-position-${index}`} className="block text-sm font-medium text-slate-700 mb-1">
+                          <label htmlFor={`company-position-${index}`} className="block text-xs font-medium text-gray-600 mb-1">
                             Target Position
                           </label>
                           <input 
@@ -216,8 +230,8 @@ export default function ProfilePage() {
                             id={`company-position-${index}`}
                             value={company.position}
                             onChange={(e) => handleCompanyChange(index, 'position', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
-                            placeholder="e.g., Software Engineer, Product Manager"
+                            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 focus:border-gray-400 transition-colors"
+                            placeholder="e.g., Software Engineer"
                           />
                         </div>
                       </div>
@@ -229,26 +243,31 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={addCompany}
-                      className="w-full py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full py-2 px-4 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors text-sm"
                     >
-                      + Add Another Company
+                      <span className="flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Another Company
+                      </span>
                     </button>
                   )}
                   
                   {/* Show a message when maximum companies reached */}
                   {targetCompanies.length >= MAX_COMPANIES && (
-                    <div className="text-center py-2 text-gray-600 text-sm">
+                    <div className="text-center py-2 text-gray-500 text-xs">
                       Maximum of {MAX_COMPANIES} target companies reached
                     </div>
                   )}
                 </div>
               </div>
               
-              <div className="pt-6">
+              <div className="pt-4 border-t border-gray-100">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">

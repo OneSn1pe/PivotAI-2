@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { UserRole } from '@/types/user';
 import { useAuth } from '@/contexts/AuthContext';
+import { AnimatedInput } from '@/components/ui/animated-form';
 
 export default function LoginForm() {
   const { loginWithGoogle, loginWithLinkedIn } = useAuth();
@@ -127,41 +128,29 @@ export default function LoginForm() {
         </div>
       )}
       
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email address
-        </label>
-        <div className="mt-1">
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value.trim())}
-            className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-          />
-        </div>
-      </div>
+      <AnimatedInput
+        id="email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value.trim())}
+        label="Email address"
+        error={error && error.includes('email') ? error : undefined}
+      />
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Password
-        </label>
-        <div className="mt-1">
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
-          />
-        </div>
-      </div>
+      <AnimatedInput
+        id="password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        label="Password"
+        error={error && error.includes('password') ? error : undefined}
+      />
 
       <div>
         <button
