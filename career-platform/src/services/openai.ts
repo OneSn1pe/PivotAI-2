@@ -557,3 +557,49 @@ export async function deleteAllRoadmaps(candidateId: string): Promise<{ success:
     throw error;
   }
 }
+
+/**
+ * Generate next level for an existing roadmap
+ */
+export async function generateNextLevel(
+  roadmapId: string,
+  candidateId: string,
+  currentLevel: number
+): Promise<{
+  success: boolean;
+  level: number;
+  milestones: any[];
+  _debug?: any;
+}> {
+  log.debug('generateNextLevel called', { roadmapId, candidateId, currentLevel });
+  
+  try {
+    const baseUrl = getApiBaseUrl();
+    const apiUrl = `${baseUrl}/api/generate-next-level`;
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        roadmapId,
+        candidateId,
+        currentLevel
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to generate next level: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    log.debug('Next level generated successfully:', data);
+    
+    return data;
+  } catch (error) {
+    log.error('Error generating next level:', error);
+    throw error;
+  }
+}

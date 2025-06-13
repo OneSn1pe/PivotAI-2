@@ -10,6 +10,7 @@ import CategorizedCareerRoadmap from '@/components/candidate/CategorizedCareerRo
 import { LevelNavigator } from '@/components/navigation/LevelNavigator';
 import { SkillTreeView } from '@/components/roadmap/SkillTreeView';
 import { LeveledMilestoneCard } from '@/components/candidate/LeveledMilestoneCard';
+import { generateNextLevel } from '@/services/openai';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -20,6 +21,8 @@ export default function CareerPathPage() {
   const [selectedLevel, setSelectedLevel] = useState(1);
   const [viewMode, setViewMode] = useState<'cards' | 'tree'>('cards');
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+  const [generatingNextLevel, setGeneratingNextLevel] = useState(false);
+  const [roadmapId, setRoadmapId] = useState<string | null>(null);
 
   // Add CSS to ensure navbar matches exactly
   useEffect(() => {
@@ -102,9 +105,11 @@ export default function CareerPathPage() {
         const roadmapSnapshot = await getDocs(roadmapQuery);
         
         if (!roadmapSnapshot.empty) {
+          const roadmapDoc = roadmapSnapshot.docs[0];
+          setRoadmapId(roadmapDoc.id);
           setRoadmap({
-            ...roadmapSnapshot.docs[0].data() as CareerRoadmap,
-            id: roadmapSnapshot.docs[0].id,
+            ...roadmapDoc.data() as CareerRoadmap,
+            id: roadmapDoc.id,
           });
         }
         
@@ -210,6 +215,41 @@ export default function CareerPathPage() {
       5: 'Expert Level'
     };
     return titles[level as keyof typeof titles] || `Level ${level}`;
+  };
+
+  const handleGenerateNextLevel = async () => {
+    if (!roadmapId || !userProfile || !roadmap) return;
+    
+    setGeneratingNextLevel(true);
+    try {
+      const maxLevel = Math.max(...roadmap.milestones.map(m => m.level || 1));
+      const result = await generateNextLevel(roadmapId, userProfile.uid, maxLevel);
+      
+      if (result.success) {
+        // Refresh roadmap data
+        const roadmapQuery = query(
+          collection(db, 'roadmaps'),
+          where('candidateId', '==', userProfile.uid)
+        );
+        const roadmapSnapshot = await getDocs(roadmapQuery);
+        
+        if (!roadmapSnapshot.empty) {
+          const roadmapDoc = roadmapSnapshot.docs[0];
+          setRoadmap({
+            ...roadmapDoc.data() as CareerRoadmap,
+            id: roadmapDoc.id,
+          });
+        }
+        
+        // Switch to the new level
+        setSelectedLevel(result.level);
+      }
+    } catch (error) {
+      console.error('Error generating next level:', error);
+      alert('Failed to generate next level. Please try again.');
+    } finally {
+      setGeneratingNextLevel(false);
+    }
   };
 
   if (loading) {
@@ -371,6 +411,40 @@ export default function CareerPathPage() {
                 <div className="text-center py-12 bg-white rounded-lg shadow-card border border-slate-200">
                   <h3 className="text-lg font-medium text-slate-800 mb-2">No milestones at this level</h3>
                   <p className="text-slate-600">Complete previous levels to unlock new content.</p>
+                </div>
+              )}
+              
+              {/* Generate Next Level Button */}
+              {selectedLevel === Math.max(...roadmap.milestones.map(m => m.level || 1)) && (
+                <div className="mt-8 text-center p-6 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border border-teal-200">
+                  <h3 className="text-lg font-semibold text-teal-800 mb-3">Ready for the Next Challenge?</h3>
+                  <button
+                    onClick={handleGenerateNextLevel}
+                    disabled={generatingNextLevel}
+                    className={`px-8 py-4 rounded-lg font-medium text-white transition-all duration-300 ${
+                      generatingNextLevel 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {generatingNextLevel ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Generating Level {selectedLevel + 1}...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <span>🚀</span>
+                        Generate Level {selectedLevel + 1}
+                      </span>
+                    )}
+                  </button>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Ready for more challenges? Generate the next level of your career path!
+                  </p>
                 </div>
               )}
             </div>

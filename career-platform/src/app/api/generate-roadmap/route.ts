@@ -313,12 +313,12 @@ Candidate's current profile:
 - Weaknesses: ${JSON.stringify(truncatedAnalysis.weaknesses)}
 
 Guidelines:
-- Create exactly 6 milestones (2 technical, 2 fundamental, 1 niche, 1 soft)
+- Create exactly 3-5 milestones for LEVEL 1 ONLY (mix of technical, fundamental, and soft skills)
 - Each milestone needs a unique ID
-- LEVEL ASSIGNMENT: Distribute milestones across levels 1-6 with logical progression
-  * Level 1-2: Foundation skills, basic concepts
-  * Level 3-4: Applied skills, intermediate projects
-  * Level 5-6: Advanced skills, leadership, specialization
+- LEVEL ASSIGNMENT: All milestones should be Level 1 (foundation skills)
+  * Focus on fundamental concepts and basic skills
+  * Entry-level appropriate content
+  * Building blocks for future levels
 - Include exactly 3 specific resources per milestone
 - Add 1-3 tasks per milestone for progress tracking
 - Include success criteria for each milestone
@@ -412,8 +412,8 @@ RESOURCE GENERATION REQUIREMENTS:
         id: milestone.id || uuidv4(),
         completed: false, // Always start with uncompleted milestones for new roadmap
         professionalField,
-        // Ensure level is present (fallback if AI didn't provide it)
-        level: milestone.level || 1
+        // Ensure all milestones are Level 1
+        level: 1
       }));
       
       // Validate level progression
