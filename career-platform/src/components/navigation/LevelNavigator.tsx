@@ -54,7 +54,7 @@ export function LevelNavigator({
         {/* Progress Line */}
         <div className="absolute top-12 left-12 right-12 h-1 bg-gray-200 rounded-full">
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"
+            className="h-full bg-gray-900 rounded-full"
             initial={{ width: 0 }}
             animate={{ 
               width: `${Math.min((currentLevel / Math.max(levelData.length, 1)) * 100, 100)}%` 
@@ -78,18 +78,18 @@ export function LevelNavigator({
       </div>
 
       {/* Progress Summary */}
-      <Card className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50">
+      <Card className="mt-8 p-6 bg-gray-50 border-0">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-1">{currentLevel}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">{currentLevel}</div>
             <div className="text-sm text-gray-600">Current Level</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600 mb-1">{maxUnlockedLevel}</div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">{maxUnlockedLevel}</div>
             <div className="text-sm text-gray-600">Max Unlocked</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-1">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               {levelData.filter(l => l.isCompleted).length}
             </div>
             <div className="text-sm text-gray-600">Levels Completed</div>
@@ -119,14 +119,14 @@ function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
       className="relative"
     >
       <Card 
-        className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
+        className={`cursor-pointer transition-all duration-300 ${
           isSelected 
-            ? 'border-blue-500 shadow-lg bg-blue-50' 
+            ? 'bg-gray-100 shadow-md' 
             : isCompleted 
-              ? 'border-green-500 bg-green-50' 
+              ? 'bg-gray-50' 
               : isUnlocked 
-                ? 'border-gray-300 hover:border-blue-300' 
-                : 'border-gray-200 opacity-60'
+                ? 'hover:bg-gray-50' 
+                : 'opacity-60'
         }`}
         onClick={onClick}
       >
@@ -136,9 +136,9 @@ function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
             {/* Level Number */}
             <div className={`relative w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
               isCompleted 
-                ? 'bg-green-500 text-white' 
+                ? 'bg-gray-900 text-white' 
                 : isActive 
-                  ? 'bg-blue-500 text-white' 
+                  ? 'bg-gray-700 text-white' 
                   : isUnlocked 
                     ? 'bg-gray-200 text-gray-700' 
                     : 'bg-gray-100 text-gray-400'
@@ -154,7 +154,7 @@ function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
               {/* Active Indicator */}
               {isActive && (
                 <motion.div
-                  className="absolute -inset-1 rounded-full border-2 border-blue-400"
+                  className="absolute -inset-1 rounded-full ring-2 ring-gray-600"
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
@@ -194,7 +194,7 @@ function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <motion.div
                   className={`h-full rounded-full ${
-                    isCompleted ? 'bg-green-500' : isActive ? 'bg-blue-500' : 'bg-gray-300'
+                    isCompleted ? 'bg-gray-900' : isActive ? 'bg-gray-700' : 'bg-gray-300'
                   }`}
                   initial={{ width: 0 }}
                   animate={{ 

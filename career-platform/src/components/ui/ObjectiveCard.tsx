@@ -66,32 +66,32 @@ const ObjectiveCard: React.FC<ObjectiveProps> = ({
       case 'technical':
         bgColor = 'bg-teal-100';
         textColor = 'text-teal-800';
-        icon = '💻';
+        icon = '';
         label = 'TECHNICAL';
         break;
       case 'fundamental':
         bgColor = 'bg-blue-100';
         textColor = 'text-blue-800';
-        icon = '🏗️';
+        icon = '';
         label = 'FUNDAMENTAL';
         break;
       case 'niche':
         bgColor = 'bg-purple-100';
         textColor = 'text-purple-800';
-        icon = '🚀';
+        icon = '';
         label = 'NICHE';
         break;
       case 'soft':
         bgColor = 'bg-orange-100';
         textColor = 'text-orange-800';
-        icon = '🤝';
+        icon = '';
         label = 'SOFT SKILLS';
         break;
     }
 
     return (
       <span className={`px-2.5 py-1 text-xs font-medium ${bgColor} ${textColor} rounded-md flex items-center gap-1`}>
-        <span>{icon}</span>
+        {icon && <span>{icon}</span>}
         <span>{label}</span>
       </span>
     );

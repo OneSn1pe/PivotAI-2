@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
             id: 'first_milestone',
             title: 'First Steps',
             description: 'Complete your first career milestone',
-            icon: '🎯',
+            icon: '',
             category: 'progress',
             unlockedAt: new Date(Date.now() - 86400000),
             rarity: 'common'
@@ -71,7 +71,7 @@ export default function AnalyticsPage() {
             id: 'streak_5',
             title: 'Consistency Keeper',
             description: 'Maintain a 5-day learning streak',
-            icon: '🔥',
+            icon: '',
             category: 'streak',
             unlockedAt: new Date(),
             rarity: 'uncommon'

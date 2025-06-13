@@ -237,12 +237,12 @@ const CareerPath: React.FC<CareerPathProps> = ({
                           className="flex items-center text-teal-700 hover:text-teal-800 text-xs font-medium mb-1"
                         >
                           <span className="mr-1">
-                            {resource.type === 'article' && '📄'}
-                            {resource.type === 'video' && '🎥'}
-                            {resource.type === 'course' && '📚'}
-                            {resource.type === 'book' && '📖'}
-                            {resource.type === 'documentation' && '📋'}
-                            {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && '🔗'}
+                            {resource.type === 'article' && ''}
+                            {resource.type === 'video' && ''}
+                            {resource.type === 'course' && ''}
+                            {resource.type === 'book' && ''}
+                            {resource.type === 'documentation' && ''}
+                            {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && ''}
                           </span>
                           {resource.title}
                         </a>
@@ -353,12 +353,12 @@ const CareerPath: React.FC<CareerPathProps> = ({
                         className="flex items-center text-teal-700 hover:text-teal-800 text-xs truncate"
                       >
                         <span className="mr-1">
-                          {resource.type === 'article' && '📄'}
-                          {resource.type === 'video' && '🎥'}
-                          {resource.type === 'course' && '📚'}
-                          {resource.type === 'book' && '📖'}
-                          {resource.type === 'documentation' && '📋'}
-                          {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && '🔗'}
+                          {resource.type === 'article' && ''}
+                          {resource.type === 'video' && ''}
+                          {resource.type === 'course' && ''}
+                          {resource.type === 'book' && ''}
+                          {resource.type === 'documentation' && ''}
+                          {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && ''}
                         </span>
                         {resource.title}
                       </a>

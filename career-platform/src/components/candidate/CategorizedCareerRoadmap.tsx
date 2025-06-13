@@ -33,7 +33,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
   }> = {
     technical: {
       name: 'Technical',
-      icon: '💻',
+      icon: '',
       color: 'teal',
       bgColor: 'bg-teal-50',
       borderColor: 'border-teal-200',
@@ -42,7 +42,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
     },
     fundamental: {
       name: 'Fundamental',
-      icon: '🏗️',
+      icon: '',
       color: 'blue',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
@@ -51,7 +51,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
     },
     niche: {
       name: 'Niche',
-      icon: '🚀',
+      icon: '',
       color: 'purple',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
@@ -60,7 +60,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
     },
     soft: {
       name: 'Soft Skills',
-      icon: '🤝',
+      icon: '',
       color: 'orange',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
@@ -69,7 +69,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
     },
     career: {
       name: 'Career Path',
-      icon: '📈',
+      icon: '',
       color: 'emerald',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
@@ -235,7 +235,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
           >
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">{config.icon}</span>
+                {config.icon && <span className="text-lg">{config.icon}</span>}
                 <span className={`text-xs px-2 py-1 rounded-full ${config.bgColor} ${config.textColor} font-medium`}>
                   {config.name}
                 </span>
@@ -248,7 +248,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
             </div>
             <div className="flex items-center gap-2">
               {milestone.completed && (
-                <span className="text-emerald-600 text-xl">✓</span>
+                <span className="text-emerald-600 text-xl"></span>
               )}
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -548,7 +548,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <span>{config.icon}</span>
+            {config.icon && <span>{config.icon}</span>}
             <span>{config.name}</span>
             <span className="bg-white px-2 py-0.5 rounded-full text-xs">
               {stats[category as SupportedCategory]?.completed || 0}/{stats[category as SupportedCategory]?.total || 0}
@@ -578,7 +578,7 @@ const CategorizedCareerRoadmap: React.FC<CategorizedCareerRoadmapProps> = ({
 
       {filteredMilestones.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-4xl mb-4">📋</div>
+          <div className="text-4xl mb-4"></div>
           <h3 className="text-lg font-medium text-slate-700 mb-2">No milestones found</h3>
           <p className="text-slate-500">
             {selectedCategory === 'all' 

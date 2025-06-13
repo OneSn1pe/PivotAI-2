@@ -95,13 +95,13 @@ export default function RegisterForm() {
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="bg-red-50 rounded-lg p-4">
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
       
       <div>
-        <label htmlFor="display-name" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="display-name" className="block text-sm font-medium text-gray-700">
           Full Name
         </label>
         <div className="mt-1">
@@ -112,13 +112,13 @@ export default function RegisterForm() {
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
           />
         </div>
       </div>
       
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           Email address
         </label>
         <div className="mt-1">
@@ -130,13 +130,13 @@ export default function RegisterForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
           Password
         </label>
         <div className="mt-1">
@@ -148,7 +148,7 @@ export default function RegisterForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
           />
         </div>
       </div>
@@ -157,7 +157,7 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-button text-sm font-medium text-white bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
@@ -165,10 +165,10 @@ export default function RegisterForm() {
       
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-300"></div>
+          <div className="w-full border-t border-gray-200"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-slate-500">Or continue with</span>
+          <span className="px-2 bg-white text-gray-500">Or continue with</span>
         </div>
       </div>
       
@@ -177,7 +177,7 @@ export default function RegisterForm() {
           type="button"
           onClick={handleGoogleSignUp}
           disabled={googleLoading}
-          className="w-full flex justify-center items-center py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all"
+          className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-900 transition-colors"
         >
           {googleLoading ? (
             <span>Signing up...</span>
@@ -200,7 +200,7 @@ export default function RegisterForm() {
           type="button"
           onClick={handleLinkedInSignUp}
           disabled={linkedinLoading}
-          className="w-full flex justify-center items-center py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all"
+          className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-900 transition-colors"
         >
           {linkedinLoading ? (
             <span>Signing up...</span>

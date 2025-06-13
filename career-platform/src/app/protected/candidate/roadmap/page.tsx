@@ -26,30 +26,10 @@ export default function CareerPathPage() {
   const [generatingNextLevel, setGeneratingNextLevel] = useState(false);
   const [roadmapId, setRoadmapId] = useState<string | null>(null);
 
-  // Add CSS to ensure navbar matches exactly
   useEffect(() => {
-    // Add a style tag to ensure navbar displays exactly as in other pages
+    // Create style element for roadmap-specific navbar styles
     const style = document.createElement('style');
     style.textContent = `
-      /* Reset any potential custom styling */
-      nav {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        z-index: 50 !important;
-        width: 100% !important;
-        flex-direction: row !important;
-        height: auto !important;
-        background: linear-gradient(to right, var(--tw-gradient-stops)) !important;
-        --tw-gradient-from: #134e4a !important;
-        --tw-gradient-to: #0f766e !important;
-        --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-        --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -1px var(--tw-shadow-color) !important;
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;
-        --tw-shadow-color: rgba(15, 118, 110, 0.2) !important;
-      }
-
       /* Exact container structure */
       nav > div.max-w-7xl {
         max-width: 80rem !important;
@@ -405,10 +385,10 @@ export default function CareerPathPage() {
   if (!roadmap) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-6 text-slate-800 font-inter">Career Path</h1>
-        <div className="text-center py-12 bg-white rounded-lg shadow-card border border-slate-200">
-          <h2 className="text-2xl font-bold mb-4 text-slate-800 font-inter">No Career Path Found</h2>
-          <p className="text-slate-600 mb-6">
+        <h1 className="text-4xl font-bold mb-6 text-gray-800">Career Path</h1>
+        <div className="text-center py-12 bg-white rounded-lg">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">No Career Path Found</h2>
+          <p className="text-gray-600 mb-6">
             You can generate a personalized career path based on your resume and professional goals.
           </p>
           
@@ -416,19 +396,19 @@ export default function CareerPathPage() {
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => router.push('/protected/candidate/roadmap/generator')}
-                className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Generate Your Career Path
               </button>
             </div>
           ) : (
             <div>
-              <p className="text-amber-700 mb-4">
+              <p className="text-orange-600 mb-4">
                 Please upload your resume first to generate a career path.
               </p>
               <button
                 onClick={() => router.push('/protected/candidate/profile')}
-                className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Complete Your Profile
               </button>
@@ -443,12 +423,11 @@ export default function CareerPathPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-slate-800 font-inter">Your Career Path</h1>
+          <h1 className="text-4xl font-bold text-gray-800">Your Career Path</h1>
           {userProgress && (
             <div className="flex items-center gap-4 mt-2">
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
-                <span className="text-xl">⭐</span>
-                <span className="font-bold text-blue-700">Level {userProgress.currentLevel}</span>
+              <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
+                <span className="font-bold text-gray-900">Level {userProgress.currentLevel}</span>
               </div>
               <div className="text-sm text-gray-600">
                 {userProgress.completedMilestones.length} milestones completed
@@ -508,9 +487,9 @@ export default function CareerPathPage() {
           ) : (
             /* Level-based Milestone Cards */
             <div>
-              <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 mb-8">
+              <div className="bg-white p-6 rounded-lg mb-8">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-slate-800 font-inter">
+                  <h2 className="text-xl font-bold text-gray-800">
                     Level {selectedLevel} - {getLevelTitle(selectedLevel)}
                   </h2>
                   {/* Skip Level Button */}
@@ -531,9 +510,9 @@ export default function CareerPathPage() {
                   )}
                 </div>
                 <div className="flex items-center">
-                  <div className="w-full bg-slate-100 rounded-full h-4 mr-4 overflow-hidden">
+                  <div className="w-full bg-gray-200 rounded-full h-4 mr-4 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-teal-600 to-teal-500 h-4 rounded-full"
+                      className="bg-gray-900 h-4 rounded-full transition-all duration-300"
                       style={{ 
                         width: `${Math.round(
                           (roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length / 
@@ -542,7 +521,7 @@ export default function CareerPathPage() {
                       }}
                     ></div>
                   </div>
-                  <span className="text-teal-700 font-semibold whitespace-nowrap">
+                  <span className="text-gray-700 font-semibold whitespace-nowrap">
                     {roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length} of{' '}
                     {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length} completed
                   </span>
@@ -558,23 +537,23 @@ export default function CareerPathPage() {
               />
               
               {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length === 0 && (
-                <div className="text-center py-12 bg-white rounded-lg shadow-card border border-slate-200">
-                  <h3 className="text-lg font-medium text-slate-800 mb-2">No milestones at this level</h3>
-                  <p className="text-slate-600">Complete previous levels to unlock new content.</p>
+                <div className="text-center py-12 bg-white rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-800 mb-2">No milestones at this level</h3>
+                  <p className="text-gray-600">Complete previous levels to unlock new content.</p>
                 </div>
               )}
               
               {/* Generate Next Level Button */}
               {selectedLevel === Math.max(...roadmap.milestones.map(m => m.level || 1)) && (
-                <div className="mt-8 text-center p-6 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border border-teal-200">
-                  <h3 className="text-lg font-semibold text-teal-800 mb-3">Ready for the Next Challenge?</h3>
+                <div className="mt-8 text-center p-6 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Ready for the Next Challenge?</h3>
                   <button
                     onClick={handleGenerateNextLevel}
                     disabled={generatingNextLevel}
                     className={`px-8 py-4 rounded-lg font-medium text-white transition-all duration-300 ${
                       generatingNextLevel 
                         ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 shadow-lg hover:shadow-xl'
+                        : 'bg-gray-900 hover:bg-gray-800'
                     }`}
                   >
                     {generatingNextLevel ? (
@@ -587,7 +566,6 @@ export default function CareerPathPage() {
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        <span>🚀</span>
                         Generate Level {selectedLevel + 1}
                       </span>
                     )}

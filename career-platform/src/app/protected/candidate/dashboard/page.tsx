@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
 import ResumeManager from '@/components/candidate/ResumeManager';
-import ProfessionalAttributes from '@/components/candidate/ProfessionalAttributes';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SetupChecklist from '@/components/candidate/SetupChecklist';
 import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
@@ -89,7 +88,7 @@ export default function CandidateDashboard() {
           id: 'first_milestone',
           title: 'First Steps',
           description: 'Complete your first career milestone',
-          icon: '🎯',
+          icon: '',
           category: 'progress',
           unlockedAt: new Date(Date.now() - 86400000),
           rarity: 'common'
@@ -98,7 +97,7 @@ export default function CandidateDashboard() {
           id: 'streak_5',
           title: 'Consistency Keeper',
           description: 'Maintain a 5-day learning streak',
-          icon: '🔥',
+          icon: '',
           category: 'streak',
           unlockedAt: new Date(),
           rarity: 'uncommon'
@@ -195,38 +194,25 @@ export default function CandidateDashboard() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome Section with Level Display */}
-      <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
+      <div className="bg-white p-6 rounded-lg">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-            <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-3xl font-bold text-slate-800 font-inter">Welcome, {candidateProfile?.displayName || 'Professional'}</h1>
-              {userProgress && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
-                  <span className="text-2xl">⭐</span>
-                  <span className="font-bold text-blue-700">Level {userProgress.currentLevel}</span>
-                </div>
-              )}
-            </div>
-            <p className="text-slate-600">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome, {candidateProfile?.displayName || 'Professional'}</h1>
+            <p className="text-gray-600">
               Your career development hub. Track progress, complete objectives, and advance professionally.
             </p>
-            {userProgress && (
-              <div className="mt-2 text-sm text-gray-600">
-                <span className="font-semibold">{userProgress.completedMilestones.length} milestones completed</span>
-              </div>
-            )}
           </div>
           
           <div className="flex items-center space-x-3">
             <button
               onClick={() => router.push('/protected/candidate/profile')}
-              className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+              className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
               {displayFileName ? 'Update Resume' : 'Upload Resume'}
             </button>
             <button
               onClick={() => router.push('/protected/candidate/profile?tab=target-companies')}
-              className="bg-slate-100 hover:bg-slate-200 text-teal-700 border border-teal-300 px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
+              className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-lg font-medium transition-colors"
             >
               Target Companies
             </button>
@@ -235,11 +221,11 @@ export default function CandidateDashboard() {
         
         {/* Status information on resume */}
         {displayFileName && (
-          <div className="mt-4 flex items-center text-sm text-slate-600">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-teal-600" viewBox="0 0 20 20" fill="currentColor">
+          <div className="mt-4 flex items-center text-sm text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
             </svg>
-            <span>Resume: <span className="font-medium">{displayFileName}</span></span>
+            <span className="text-gray-500">Resume: <span className="text-gray-700">{displayFileName}</span></span>
           </div>
         )}
       </div>
@@ -259,7 +245,7 @@ export default function CandidateDashboard() {
       {/* Gamification Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <StreakWidget streakData={streakData} />
-        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="p-4 bg-white rounded-lg border border-gray-200">
           <h3 className="font-semibold text-gray-800 mb-2">Progress Tracking</h3>
           <p className="text-sm text-gray-600">Your learning progress is tracked through milestone completion and streak maintenance.</p>
         </div>
@@ -278,79 +264,29 @@ export default function CandidateDashboard() {
       </div>
 
       
-      <div className="grid grid-cols-1 gap-6">
-        {/* Professional Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Professional Attributes Panel */}
-          <ProfessionalAttributes resumeAnalysis={candidateProfile?.resumeAnalysis} />
-          
-          {/* Skills Panel */}
-          <div className="bg-white p-5 rounded-lg shadow-card border border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-800 font-inter mb-4">Skill Inventory</h2>
-          
-            {candidateProfile?.resumeAnalysis?.skills && candidateProfile.resumeAnalysis.skills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
-                  <span key={index} className="bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs border border-slate-200">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-slate-500 text-sm">No skills found in your resume</p>
-                <button
-                  onClick={() => router.push('/protected/candidate/profile')}
-                  className="mt-2 text-teal-700 hover:text-teal-800 text-sm font-medium"
-                >
-                  Upload or update your resume
-                </button>
-              </div>
-            )}
+      {/* Skills Panel */}
+      <div className="bg-white p-6 rounded-lg">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Skill Inventory</h2>
+      
+        {candidateProfile?.resumeAnalysis?.skills && candidateProfile.resumeAnalysis.skills.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {candidateProfile.resumeAnalysis.skills.map((skill, index) => (
+              <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs border border-gray-200">
+                {skill}
+              </span>
+            ))}
           </div>
-          
-          {/* Career Progress Panel */}
-          <div className="bg-white p-5 rounded-lg shadow-card border border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-800 font-inter mb-4">Career Progress</h2>
-            
-            {roadmap ? (
-              <div>
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-600">Milestone Progress</span>
-                    <span className="text-slate-700 font-medium">
-                      {roadmap.milestones.filter(m => m.completed).length} / {roadmap.milestones.length}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-teal-500 to-teal-400 h-2"
-                      style={{ width: `${(roadmap.milestones.filter(m => m.completed).length / roadmap.milestones.length) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => router.push('/protected/candidate/roadmap')}
-                  className="w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 rounded text-sm font-medium transition-all duration-300"
-                >
-                  View Full Career Path
-                </button>
-                </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-slate-500 text-sm mb-3">No career path created yet</p>
-                <button
-                  onClick={() => router.push('/protected/candidate/roadmap/generator')}
-                  className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded text-sm font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
-                >
-                  Create Career Path
-                </button>
-              </div>
-            )}
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-gray-500 text-sm">No skills found in your resume</p>
+            <button
+              onClick={() => router.push('/protected/candidate/profile')}
+              className="mt-2 text-gray-700 hover:text-gray-900 text-sm font-medium"
+            >
+              Upload or update your resume
+            </button>
           </div>
-        </div>
-
+        )}
       </div>
     </div>
   );

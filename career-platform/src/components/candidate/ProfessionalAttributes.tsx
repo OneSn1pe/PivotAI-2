@@ -102,73 +102,73 @@ const ProfessionalAttributes: React.FC<ProfessionalAttributesProps> = ({ resumeA
       <div className="flex justify-between mb-1">
         <div className="flex items-center">
           <span className={`w-3 h-3 rounded-full ${color} mr-2`}></span>
-          <h4 className="font-medium text-slate-700 font-inter">{name}</h4>
+          <h4 className="font-medium text-gray-700">{name}</h4>
         </div>
-        <span className="text-sm text-slate-600 font-medium">{value}/100</span>
+        <span className="text-sm text-gray-600 font-medium">{value}/100</span>
       </div>
-      <div className="relative h-3 bg-slate-100 rounded-full overflow-hidden">
+      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
         <div 
           className={`absolute top-0 left-0 h-full ${color} rounded-full`} 
           style={{ width: `${value}%` }}
         ></div>
       </div>
-      <p className="mt-1 text-xs text-slate-500">{description}</p>
+      <p className="mt-1 text-xs text-gray-500">{description}</p>
     </div>
   );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
-      <h3 className="text-xl font-bold mb-4 text-slate-800 font-inter">Professional Attributes</h3>
-      <p className="text-sm text-slate-500 mb-6">Based on your resume analysis</p>
+    <div className="bg-white p-6 rounded-lg">
+      <h3 className="text-xl font-bold mb-4 text-gray-800">Professional Attributes</h3>
+      <p className="text-sm text-gray-500 mb-6">Based on your resume analysis</p>
       
       <div className="space-y-6">
         {renderAttributeBar(
           "Knowledge", 
           attributes.knowledge, 
-          "bg-blue-500", 
+          "bg-gray-700", 
           "Learning capacity and specialized expertise"
         )}
         
         {renderAttributeBar(
           "Communication", 
           attributes.communication, 
-          "bg-violet-500", 
+          "bg-gray-600", 
           "Networking and interpersonal abilities"
         )}
         
         {renderAttributeBar(
           "Execution", 
           attributes.execution, 
-          "bg-red-500", 
+          "bg-gray-800", 
           "Project management and deadline adherence"
         )}
         
         {renderAttributeBar(
           "Adaptability", 
           attributes.adaptability, 
-          "bg-emerald-500", 
+          "bg-gray-700", 
           "Problem-solving and flexibility"
         )}
         
         {renderAttributeBar(
           "Strategy", 
           attributes.strategy, 
-          "bg-indigo-500", 
+          "bg-gray-600", 
           "Decision-making and long-term planning"
         )}
         
         {renderAttributeBar(
           "Balance", 
           attributes.balance, 
-          "bg-orange-500", 
+          "bg-gray-500", 
           "Work-life integration and wellbeing"
         )}
       </div>
       
       {!resumeAnalysis && (
-        <div className="text-center py-6 mt-4 bg-slate-50 rounded-lg border border-slate-200">
-          <p className="text-slate-600">Upload your resume to see your professional attributes</p>
-          <p className="text-sm text-slate-500 mt-2">These attributes help identify your strengths and areas for growth</p>
+        <div className="text-center py-6 mt-4 bg-gray-50 rounded-lg">
+          <p className="text-gray-600">Upload your resume to see your professional attributes</p>
+          <p className="text-sm text-gray-500 mt-2">These attributes help identify your strengths and areas for growth</p>
         </div>
       )}
     </div>

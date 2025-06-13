@@ -193,7 +193,7 @@ export function LeveledMilestoneCard({
                       rel="noopener noreferrer"
                       className="block text-xs text-accent hover:text-accent-dark transition-colors"
                     >
-                      {resource.title} →
+                      {resource.title}
                     </a>
                   ))}
                 </div>

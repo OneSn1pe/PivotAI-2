@@ -107,8 +107,8 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
     
     try {
       if (config.logLevel === 'verbose') {
-        console.log('🧪 Starting resume analysis test:', testId);
-        console.log('📄 Resume text length:', config.resumeText.length);
+        console.log('[TEST] Starting resume analysis test:', testId);
+        console.log('[INFO] Resume text length:', config.resumeText.length);
       }
       
       const analysis = await analyzeResume(config.resumeText);
@@ -124,7 +124,7 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
       setTestResults(prev => prev.map(r => r.id === testId ? updatedResult : r));
       
       if (config.logLevel !== 'minimal') {
-        console.log('✅ Resume analysis completed:', {
+        console.log('[SUCCESS] Resume analysis completed:', {
           duration: Math.round(duration),
           skills: analysis.skills?.length || 0,
           experience: analysis.experience?.length || 0
@@ -145,7 +145,7 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
       
       setTestResults(prev => prev.map(r => r.id === testId ? updatedResult : r));
       
-      console.error('❌ Resume analysis failed:', error);
+      console.error('[ERROR] Resume analysis failed:', error);
       throw error;
     } finally {
       if (currentTest === testId) {
@@ -162,7 +162,7 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
     let analysis = resumeAnalysis;
     if (!analysis) {
       if (config.logLevel !== 'minimal') {
-        console.log('🔄 Running resume analysis first...');
+        console.log('[INFO] Running resume analysis first...');
       }
       analysis = await runResumeAnalysisTest();
     }
@@ -185,9 +185,9 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
     
     try {
       if (config.logLevel === 'verbose') {
-        console.log('🗺️ Starting roadmap generation test:', testId);
-        console.log('🎯 Target companies:', config.targetCompanies);
-        console.log('📊 Analysis data:', {
+        console.log('[TEST] Starting roadmap generation test:', testId);
+        console.log('[INFO] Target companies:', config.targetCompanies);
+        console.log('[INFO] Analysis data:', {
           skills: analysis.skills?.length,
           experience: analysis.experience?.length,
           education: analysis.education?.length
@@ -212,7 +212,7 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
       setTestResults(prev => prev.map(r => r.id === testId ? updatedResult : r));
       
       if (config.logLevel !== 'minimal') {
-        console.log('✅ Roadmap generation completed:', {
+        console.log('[SUCCESS] Roadmap generation completed:', {
           duration: Math.round(duration),
           milestones: roadmap.milestones?.length || 0,
           milestonesCount: roadmap.milestones?.length || 0
@@ -233,7 +233,7 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
       
       setTestResults(prev => prev.map(r => r.id === testId ? updatedResult : r));
       
-      console.error('❌ Roadmap generation failed:', error);
+      console.error('[ERROR] Roadmap generation failed:', error);
       throw error;
     } finally {
       if (currentTest === testId) {
@@ -249,7 +249,7 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
     abortControllerRef.current = new AbortController();
     
     try {
-      console.log('🚀 Starting full milestone generation test suite');
+      console.log('[TEST] Starting full milestone generation test suite');
       
       // Step 1: Analyze resume
       const analysis = await runResumeAnalysisTest();
@@ -257,9 +257,9 @@ JavaScript, TypeScript, React, Node.js, Python, SQL, MongoDB, PostgreSQL, Docker
       // Step 2: Generate roadmap
       await runRoadmapGenerationTest(analysis);
       
-      console.log('🎉 Full test suite completed successfully');
+      console.log('[SUCCESS] Full test suite completed successfully');
     } catch (error) {
-      console.error('💥 Test suite failed:', error);
+      console.error('[ERROR] Test suite failed:', error);
     } finally {
       setIsRunning(false);
       abortControllerRef.current = null;

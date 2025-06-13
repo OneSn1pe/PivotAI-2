@@ -154,12 +154,12 @@ export default function RoadmapViewer({
                             className="text-blue-600 hover:underline text-sm flex items-center font-medium"
                           >
                             <span className="mr-2">
-                              {resource.type === 'article' && '📄'}
-                              {resource.type === 'video' && '🎥'}
-                              {resource.type === 'course' && '📚'}
-                              {resource.type === 'book' && '📖'}
-                              {resource.type === 'documentation' && '📋'}
-                              {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && '🔗'}
+                              {resource.type === 'article' && ''}
+                              {resource.type === 'video' && ''}
+                              {resource.type === 'course' && ''}
+                              {resource.type === 'book' && ''}
+                              {resource.type === 'documentation' && ''}
+                              {!['article', 'video', 'course', 'book', 'documentation'].includes(resource.type) && ''}
                             </span>
                             {resource.title} <span className="text-gray-500 ml-1">({resource.type})</span>
                           </a>

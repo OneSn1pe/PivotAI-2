@@ -25,7 +25,7 @@ const CompetencyBar: React.FC<CompetencyBarProps> = ({
     <div className="mb-6">
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center">
-          <span className="text-xl mr-3">{icon}</span>
+          {icon && <span className="text-xl mr-3">{icon}</span>}
           <div>
             <h4 className="font-semibold text-slate-800">{name}</h4>
             <p className="text-xs text-slate-500">{description}</p>
@@ -82,42 +82,42 @@ const ProfessionalCompetenciesComponent: React.FC<ProfessionalCompetenciesProps>
     {
       key: 'technical_expertise' as keyof ProfessionalCompetencies,
       name: 'Technical Expertise',
-      icon: '🔧',
+      icon: '',
       description: 'Domain-specific technical skills and knowledge',
       color: 'bg-blue-500'
     },
     {
       key: 'communication' as keyof ProfessionalCompetencies,
       name: 'Communication',
-      icon: '💬',
+      icon: '',
       description: 'Written and verbal communication effectiveness',
       color: 'bg-green-500'
     },
     {
       key: 'problem_solving' as keyof ProfessionalCompetencies,
       name: 'Problem Solving',
-      icon: '🧩',
+      icon: '',
       description: 'Analytical and creative problem-solving abilities',
       color: 'bg-purple-500'
     },
     {
       key: 'project_management' as keyof ProfessionalCompetencies,
       name: 'Project Management',
-      icon: '📋',
+      icon: '',
       description: 'Planning, organization, and execution skills',
       color: 'bg-orange-500'
     },
     {
       key: 'continuous_learning' as keyof ProfessionalCompetencies,
       name: 'Continuous Learning',
-      icon: '📚',
+      icon: '',
       description: 'Adaptation and skill development mindset',
       color: 'bg-teal-500'
     },
     {
       key: 'professional_ethics' as keyof ProfessionalCompetencies,
       name: 'Professional Ethics',
-      icon: '⚖️',
+      icon: '',
       description: 'Ethical decision-making and integrity',
       color: 'bg-indigo-500'
     }
@@ -131,21 +131,21 @@ const ProfessionalCompetenciesComponent: React.FC<ProfessionalCompetenciesProps>
           {
             key: 'design_thinking' as any,
             name: 'Design Thinking',
-            icon: '🎨',
+            icon: '',
             description: 'Creative design and innovation approach',
             color: 'bg-cyan-500'
           },
           {
             key: 'safety_awareness' as any,
             name: 'Safety Awareness',
-            icon: '🛡️',
+            icon: '',
             description: 'Risk assessment and safety protocols',
             color: 'bg-red-500'
           },
           {
             key: 'regulatory_knowledge' as any,
             name: 'Regulatory Knowledge',
-            icon: '📜',
+            icon: '',
             description: 'Standards and compliance understanding',
             color: 'bg-amber-500'
           }
@@ -155,21 +155,21 @@ const ProfessionalCompetenciesComponent: React.FC<ProfessionalCompetenciesProps>
           {
             key: 'clinical_judgment' as any,
             name: 'Clinical Judgment',
-            icon: '🩺',
+            icon: '',
             description: 'Medical decision-making abilities',
             color: 'bg-rose-500'
           },
           {
             key: 'patient_care' as any,
             name: 'Patient Care',
-            icon: '❤️',
+            icon: '',
             description: 'Empathy and bedside manner',
             color: 'bg-pink-500'
           },
           {
             key: 'evidence_based_practice' as any,
             name: 'Evidence-Based Practice',
-            icon: '🔬',
+            icon: '',
             description: 'Research and data-driven decisions',
             color: 'bg-violet-500'
           }
@@ -179,21 +179,21 @@ const ProfessionalCompetenciesComponent: React.FC<ProfessionalCompetenciesProps>
           {
             key: 'strategic_thinking' as any,
             name: 'Strategic Thinking',
-            icon: '🎯',
+            icon: '',
             description: 'Long-term planning and vision',
             color: 'bg-emerald-500'
           },
           {
             key: 'financial_acumen' as any,
             name: 'Financial Acumen',
-            icon: '💰',
+            icon: '',
             description: 'Financial analysis and planning skills',
             color: 'bg-yellow-500'
           },
           {
             key: 'market_insight' as any,
             name: 'Market Insight',
-            icon: '📈',
+            icon: '',
             description: 'Customer and market understanding',
             color: 'bg-lime-500'
           }
@@ -203,21 +203,21 @@ const ProfessionalCompetenciesComponent: React.FC<ProfessionalCompetenciesProps>
           {
             key: 'legal_reasoning' as any,
             name: 'Legal Reasoning',
-            icon: '⚖️',
+            icon: '',
             description: 'Analysis and argumentation skills',
             color: 'bg-slate-500'
           },
           {
             key: 'research_skills' as any,
             name: 'Research Skills',
-            icon: '🔍',
+            icon: '',
             description: 'Case law and precedent research',
             color: 'bg-gray-500'
           },
           {
             key: 'client_relations' as any,
             name: 'Client Relations',
-            icon: '🤝',
+            icon: '',
             description: 'Trust-building and communication',
             color: 'bg-sky-500'
           }

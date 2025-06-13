@@ -23,7 +23,7 @@ export default function Sidebar() {
 
   // Add debug link in development
   const debugLinks = process.env.NODE_ENV === 'development' ? [
-    { href: '/protected/candidate/debug/milestone-tester', label: '🧪 Debug: Milestone Tester', icon: 'debug' },
+    { href: '/protected/candidate/debug/milestone-tester', label: 'Debug: Milestone Tester', icon: 'debug' },
   ] : [];
 
   const handleLogout = async () => {

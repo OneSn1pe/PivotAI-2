@@ -40,7 +40,7 @@ const FieldCard: React.FC<FieldCardProps> = ({
       )}
       
       <div className="flex items-center mb-4">
-        <span className="text-4xl mr-4">{icon}</span>
+        {icon && <span className="text-4xl mr-4">{icon}</span>}
         <div>
           <h3 className="text-xl font-semibold text-slate-800">{title}</h3>
           <p className="text-sm text-slate-600 capitalize">{field.replace('-', ' ')}</p>
@@ -103,7 +103,7 @@ const ProfessionalFieldSelector: React.FC<ProfessionalFieldSelectorProps> = ({
     {
       field: 'computer-science',
       title: 'Computer Science & Technology',
-      icon: '💻',
+      icon: '',
       description: 'Build software solutions, develop algorithms, and create digital innovations that shape the future.',
       keyAreas: ['Software Development', 'Data Structures', 'Algorithms', 'System Design', 'Database Management'],
       careerPaths: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'Tech Lead', 'Solutions Architect']
@@ -111,7 +111,7 @@ const ProfessionalFieldSelector: React.FC<ProfessionalFieldSelectorProps> = ({
     {
       field: 'engineering',
       title: 'Engineering',
-      icon: '⚙️',
+      icon: '',
       description: 'Design, build, and optimize systems that solve real-world problems through applied science and innovation.',
       keyAreas: ['Design & Analysis', 'Safety Standards', 'Project Management', 'Regulatory Compliance', 'Quality Control'],
       careerPaths: ['Design Engineer', 'Project Engineer', 'Systems Engineer', 'Engineering Manager', 'Technical Consultant', 'Research Engineer']
@@ -119,7 +119,7 @@ const ProfessionalFieldSelector: React.FC<ProfessionalFieldSelectorProps> = ({
     {
       field: 'medicine',
       title: 'Medicine & Healthcare',
-      icon: '⚕️',
+      icon: '',
       description: 'Provide compassionate care, advance medical knowledge, and improve patient outcomes through clinical excellence.',
       keyAreas: ['Patient Care', 'Clinical Diagnosis', 'Medical Research', 'Evidence-Based Practice', 'Medical Ethics'],
       careerPaths: ['Physician', 'Surgeon', 'Medical Researcher', 'Healthcare Administrator', 'Clinical Specialist', 'Medical Consultant']
@@ -127,7 +127,7 @@ const ProfessionalFieldSelector: React.FC<ProfessionalFieldSelectorProps> = ({
     {
       field: 'business',
       title: 'Business & Management',
-      icon: '💼',
+      icon: '',
       description: 'Drive organizational success through strategic thinking, leadership, and innovative business solutions.',
       keyAreas: ['Strategic Planning', 'Financial Analysis', 'Operations Management', 'Market Research', 'Leadership'],
       careerPaths: ['Business Analyst', 'Management Consultant', 'Product Manager', 'Operations Manager', 'Executive', 'Entrepreneur']
@@ -135,7 +135,7 @@ const ProfessionalFieldSelector: React.FC<ProfessionalFieldSelectorProps> = ({
     {
       field: 'law',
       title: 'Law & Legal Services',
-      icon: '⚖️',
+      icon: '',
       description: 'Advocate for justice, provide legal counsel, and navigate complex regulatory frameworks to protect rights.',
       keyAreas: ['Legal Research', 'Case Analysis', 'Client Advocacy', 'Regulatory Compliance', 'Negotiation'],
       careerPaths: ['Attorney', 'Legal Counsel', 'Judge', 'Legal Consultant', 'Compliance Officer', 'Legal Researcher']

@@ -17,7 +17,7 @@ import {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       <Script id="structured-data" type="application/ld+json">
         {JSON.stringify({
           "@context": "https://schema.org",
@@ -34,29 +34,27 @@ export default function HomePage() {
       </Script>
       
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-slate-900">
-                PivotAI <span className="text-teal-700">Career Quest</span>
+              <h1 className="text-xl font-semibold text-gray-900">
+                PivotAI Career
               </h1>
             </div>
-            
-
             
             <div className="flex items-center space-x-4">
               <Link 
                 href="/auth/login"
-                className="text-slate-600 hover:text-slate-900 transition-colors"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
               >
                 Login
               </Link>
               <Link 
                 href="/auth/register"
-                className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-flex items-center"
               >
-                Start Your Journey
+                Get Started
               </Link>
             </div>
           </div>
@@ -65,52 +63,52 @@ export default function HomePage() {
 
       <main>
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-slate-50 to-teal-50 py-20 lg:py-32">
+        <section className="py-20 lg:py-32">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
-                  Transform Your Career Growth Into a Structured Journey
+                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+                  Transform Your Career Into a Structured Journey
                 </h1>
-                <p className="text-xl lg:text-2xl text-slate-600 mt-6 max-w-3xl">
-                  Join thousands of professionals who've leveled up their careers with our goal-oriented platform. Track progress, unlock opportunities, and achieve your professional goals.
+                <p className="text-lg lg:text-xl text-gray-600 mt-6 max-w-3xl">
+                  Join professionals who've advanced their careers with our goal-oriented platform. Track progress and achieve your professional goals.
                 </p>
                 <div className="flex gap-4 mt-10">
                   <Link 
                     href="/auth/register"
-                    className="bg-teal-700 hover:bg-teal-800 text-white px-8 py-4 rounded-lg font-semibold text-lg inline-flex items-center transition-colors"
+                    className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center transition-colors"
                   >
-                    Get Started Free
+                    Get Started
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                   <Link 
                     href="#how-it-works"
-                    className="bg-white hover:bg-slate-50 text-slate-700 px-8 py-4 rounded-lg font-semibold text-lg border border-slate-300 inline-flex items-center transition-colors"
+                    className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium border border-gray-300 inline-flex items-center transition-colors"
                   >
                     <PlayCircle className="mr-2 h-5 w-5" />
-                    See How It Works
+                    Learn More
                   </Link>
                 </div>
               </div>
               
               <div className="lg:pl-8">
-                <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-8">
+                <div className="bg-white rounded-lg p-8">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-slate-900">Career Progress</h3>
-                      <span className="text-sm text-slate-500">Level 7</span>
+                      <h3 className="font-semibold text-gray-900">Career Progress</h3>
+                      <span className="text-sm text-gray-500">Level 7</span>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-3">
-                      <div className="bg-teal-700 h-3 rounded-full" style={{width: '75%'}}></div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-gray-900 h-2 rounded-full" style={{width: '75%'}}></div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 pt-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-teal-700">23</div>
-                        <div className="text-sm text-slate-500">Skills Unlocked</div>
+                        <div className="text-2xl font-bold text-gray-900">23</div>
+                        <div className="text-sm text-gray-500">Skills Unlocked</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-teal-700">87%</div>
-                        <div className="text-sm text-slate-500">Goals Complete</div>
+                        <div className="text-2xl font-bold text-gray-900">87%</div>
+                        <div className="text-sm text-gray-500">Goals Complete</div>
                       </div>
                     </div>
                   </div>
@@ -123,11 +121,11 @@ export default function HomePage() {
         {/* Social Proof Section */}
         <section className="bg-white py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm text-slate-500 mb-8">Trusted by professionals at</p>
+            <p className="text-center text-sm text-gray-500 mb-8">Trusted by professionals at</p>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center">
               {['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple'].map((company) => (
                 <div key={company} className="text-center">
-                  <div className="text-2xl font-bold text-slate-400 grayscale opacity-60 hover:opacity-100 transition-opacity">
+                  <div className="text-xl font-medium text-gray-400">
                     {company}
                   </div>
                 </div>
@@ -137,14 +135,14 @@ export default function HomePage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="bg-slate-50 py-20">
+        <section id="features" className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                 Everything you need to advance your career
               </h2>
-              <p className="text-xl text-slate-600">
-                Transform professional development from overwhelming to organized with our comprehensive platform.
+              <p className="text-lg text-gray-600">
+                Transform professional development from overwhelming to organized.
               </p>
             </div>
             
@@ -152,45 +150,45 @@ export default function HomePage() {
               {[
                 {
                   icon: Target,
-                  color: 'text-teal-600',
+                  color: 'text-gray-600',
                   title: 'Goal-Oriented System',
                   description: 'Set and track career objectives with our structured approach to professional growth.'
                 },
                 {
                   icon: TrendingUp,
-                  color: 'text-blue-500',
+                  color: 'text-gray-600',
                   title: 'Skill Development Paths',
                   description: 'Visual skill trees that guide your learning journey across Technology, Business, and Creative domains.'
                 },
                 {
                   icon: Users,
-                  color: 'text-violet-500',
+                  color: 'text-gray-600',
                   title: 'Professional Network',
                   description: 'Connect with mentors, join industry groups, and build relationships that advance your career.'
                 },
                 {
                   icon: Briefcase,
-                  color: 'text-emerald-500',
+                  color: 'text-gray-600',
                   title: 'Job Opportunity Matching',
                   description: 'Discover positions that match your skill level and career goals with intelligent recommendations.'
                 },
                 {
                   icon: FileText,
-                  color: 'text-indigo-500',
+                  color: 'text-gray-600',
                   title: 'Resume Optimization',
                   description: 'Build and optimize your resume with templates and feedback tailored to your target roles.'
                 },
                 {
                   icon: Award,
-                  color: 'text-orange-500',
+                  color: 'text-gray-600',
                   title: 'Achievement Tracking',
                   description: 'Earn credentials and track your professional milestones with our comprehensive progress system.'
                 }
               ].map((feature, index) => (
-                <div key={index} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-slate-200">
-                  <feature.icon className={`h-8 w-8 ${feature.color} mb-4`} />
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                  <p className="text-slate-600">{feature.description}</p>
+                <div key={index} className="bg-white p-8 rounded-lg">
+                  <feature.icon className="h-8 w-8 text-gray-600 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
                 </div>
               ))}
             </div>
@@ -201,10 +199,10 @@ export default function HomePage() {
         <section id="how-it-works" className="bg-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                 Your career journey, simplified
               </h2>
-              <p className="text-xl text-slate-600">
+              <p className="text-lg text-gray-600">
                 From assessment to achievement in three clear steps.
               </p>
             </div>
@@ -228,9 +226,9 @@ export default function HomePage() {
                 }
               ].map((step, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-4xl font-bold text-teal-700 mb-4">{step.number}</div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">{step.title}</h3>
-                  <p className="text-slate-600">{step.description}</p>
+                  <div className="text-3xl font-bold text-gray-700 mb-4">{step.number}</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{step.title}</h3>
+                  <p className="text-gray-600">{step.description}</p>
                 </div>
               ))}
             </div>
@@ -238,10 +236,10 @@ export default function HomePage() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="bg-slate-50 py-20">
+        <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 text-center mb-12">
-              Success stories from career professionals
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-12">
+              Success stories from professionals
             </h2>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -265,16 +263,11 @@ export default function HomePage() {
                   company: "DesignStudio"
                 }
               ].map((testimonial, index) => (
-                <div key={index} className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                  <div className="flex mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <p className="text-slate-600 mb-6">"{testimonial.quote}"</p>
+                <div key={index} className="bg-white p-8 rounded-lg">
+                  <p className="text-gray-600 mb-6">"{testimonial.quote}"</p>
                   <div>
-                    <div className="font-semibold text-slate-900">{testimonial.author}</div>
-                    <div className="text-slate-500">{testimonial.role} at {testimonial.company}</div>
+                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                    <div className="text-gray-500">{testimonial.role} at {testimonial.company}</div>
                   </div>
                 </div>
               ))}
@@ -286,10 +279,10 @@ export default function HomePage() {
         <section id="pricing" className="bg-white py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
                 Simple, transparent pricing
               </h2>
-              <p className="text-xl text-slate-600">
+              <p className="text-lg text-gray-600">
                 Choose the plan that fits your career goals.
               </p>
             </div>
@@ -307,7 +300,7 @@ export default function HomePage() {
                     'Progress tracking'
                   ],
                   cta: 'Get Started',
-                  ctaStyle: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300',
+                  ctaStyle: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300',
                   popular: false
                 },
                 {
@@ -323,7 +316,7 @@ export default function HomePage() {
                     'Job opportunity alerts'
                   ],
                   cta: 'Start Free Trial',
-                  ctaStyle: 'bg-teal-700 hover:bg-teal-800 text-white',
+                  ctaStyle: 'bg-gray-900 hover:bg-gray-800 text-white',
                   popular: true
                 },
                 {
@@ -339,30 +332,30 @@ export default function HomePage() {
                     'API access'
                   ],
                   cta: 'Contact Sales',
-                  ctaStyle: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-300',
+                  ctaStyle: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300',
                   popular: false
                 }
               ].map((tier, index) => (
-                <div key={index} className={`bg-white p-8 rounded-xl shadow-sm border-2 transition-colors ${tier.popular ? 'border-teal-200' : 'border-slate-200 hover:border-teal-200'} relative`}>
+                <div key={index} className={`bg-white p-8 rounded-lg border ${tier.popular ? 'border-gray-900' : 'border-gray-200'} relative`}>
                   {tier.popular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-teal-700 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
                         Most Popular
                       </span>
                     </div>
                   )}
                   
                   <div className="text-center">
-                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{tier.name}</h3>
-                    <div className="text-4xl font-bold text-slate-900 mb-2">{tier.price}</div>
-                    <p className="text-slate-600 mb-6">{tier.description}</p>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
+                    <div className="text-4xl font-bold text-gray-900 mb-2">{tier.price}</div>
+                    <p className="text-gray-600 mb-6">{tier.description}</p>
                   </div>
                   
                   <ul className="space-y-4 mb-8">
                     {tier.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center">
-                        <Check className="h-5 w-5 text-teal-700 mr-3" />
-                        <span className="text-slate-600">{feature}</span>
+                        <Check className="h-5 w-5 text-gray-600 mr-3" />
+                        <span className="text-gray-600">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -380,29 +373,29 @@ export default function HomePage() {
         </section>
 
         {/* Final CTA Section */}
-        <section className="bg-gradient-to-r from-teal-700 to-teal-600 py-20">
+        <section className="bg-gray-900 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
               Ready to transform your career?
             </h2>
-            <p className="text-xl text-teal-100 mb-8">
-              Join thousands of professionals already advancing their careers with PivotAI Career Quest.
+            <p className="text-lg text-gray-300 mb-8">
+              Join professionals already advancing their careers with PivotAI.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 href="/auth/register"
-                className="bg-white hover:bg-slate-50 text-teal-700 px-8 py-4 rounded-lg font-semibold text-lg inline-flex items-center justify-center transition-colors"
+                className="bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-lg font-medium inline-flex items-center justify-center transition-colors"
               >
-                Start Your Free Journey
+                Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link 
                 href="#contact"
-                className="border-2 border-white hover:bg-white hover:text-teal-700 text-white px-8 py-4 rounded-lg font-semibold text-lg inline-flex items-center justify-center transition-colors"
+                className="border border-white hover:bg-white hover:text-gray-900 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center justify-center transition-colors"
               >
                 <Calendar className="mr-2 h-5 w-5" />
-                Schedule a Demo
+                Schedule Demo
               </Link>
             </div>
           </div>
@@ -410,59 +403,59 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 py-16">
+      <footer className="bg-white border-t border-gray-200 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-white font-semibold mb-4">Product</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">Product</h3>
               <ul className="space-y-2">
-                {['Features', 'Career Paths', 'Pricing', 'API Documentation'].map((item) => (
+                {['Features', 'Career Paths', 'Pricing', 'Documentation'].map((item) => (
                   <li key={item}>
-                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
                   </li>
                 ))}
               </ul>
             </div>
             
             <div>
-              <h3 className="text-white font-semibold mb-4">Resources</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">Resources</h3>
               <ul className="space-y-2">
                 {['Blog', 'Career Guides', 'Success Stories', 'Help Center'].map((item) => (
                   <li key={item}>
-                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
                   </li>
                 ))}
               </ul>
             </div>
             
             <div>
-              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">Company</h3>
               <ul className="space-y-2">
                 {['About Us', 'Careers', 'Press', 'Contact'].map((item) => (
                   <li key={item}>
-                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
                   </li>
                 ))}
               </ul>
             </div>
             
             <div>
-              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <h3 className="text-gray-900 font-semibold mb-4">Legal</h3>
               <ul className="space-y-2">
                 {['Privacy Policy', 'Terms of Service', 'Security', 'Compliance'].map((item) => (
                   <li key={item}>
-                    <a href="#" className="text-slate-400 hover:text-white transition-colors">{item}</a>
+                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
           
-          <div className="flex justify-between items-center pt-8 border-t border-slate-800 mt-8">
-            <p className="text-slate-400">© 2025 PivotAI Career Quest. All rights reserved.</p>
+          <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-8">
+            <p className="text-gray-600">© 2025 PivotAI Career. All rights reserved.</p>
             <div className="flex space-x-6">
               {['Twitter', 'LinkedIn', 'GitHub', 'YouTube'].map((social) => (
-                <a key={social} href="#" className="text-slate-400 hover:text-white transition-colors">
+                <a key={social} href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
                   {social}
                 </a>
               ))}

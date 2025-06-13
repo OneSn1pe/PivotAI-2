@@ -116,7 +116,7 @@ export default function ProfilePage() {
   if (!userProfile) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -129,10 +129,10 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Your Profile</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Your Profile</h1>
         <button
           onClick={() => router.push('/protected/candidate/dashboard')}
-          className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-medium py-2 px-4 rounded-lg shadow-md shadow-teal-500/30 transition-all"
+          className="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-lg transition-colors"
         >
           Back to Dashboard
         </button>
@@ -142,14 +142,14 @@ export default function ProfilePage() {
       <LinkedInProfileImport />
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-slate-200 mb-6">
+      <div className="flex border-b border-gray-200 mb-6">
         {tabs.map(tab => (
           <button
             key={tab.id}
             className={`py-2 px-4 font-medium text-sm ${
               activeTab === tab.id
-                ? 'text-teal-600 border-b-2 border-teal-500'
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'text-gray-900 border-b-2 border-gray-900'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -158,17 +158,17 @@ export default function ProfilePage() {
         ))}
       </div>
       
-      <div className="bg-white/80 backdrop-filter backdrop-blur-md p-8 rounded-xl shadow-xl shadow-teal-200/30 border border-slate-100 float-card">
+      <div className="bg-white p-8 rounded-lg">
         {activeTab === 'resume' && (
           <ResumeManager onUpdateComplete={() => router.refresh()} />
         )}
         
         {activeTab === 'target-companies' && (
           <>
-            <h2 className="text-xl font-semibold mb-6 text-slate-700">Set Your Target Companies</h2>
+            <h2 className="text-xl font-semibold mb-6 text-gray-900">Set Your Target Companies</h2>
             
             {saveSuccess && (
-              <div className="mb-6 p-4 rounded-lg bg-teal-50 text-teal-700 border border-teal-200">
+              <div className="mb-6 p-4 rounded-lg bg-gray-50 text-gray-700">
                 Target companies saved successfully!
               </div>
             )}
@@ -176,15 +176,11 @@ export default function ProfilePage() {
             <form className="space-y-8" onSubmit={handleSubmit}>
               {/* Target Companies */}
               <div className="relative">
-                <div className="absolute -top-4 -right-4">
-                  <div className="cloud-sm opacity-30"></div>
-                </div>
-                
                 <div className="space-y-4">
                   {targetCompanies.map((company, index) => (
-                    <div key={index} className="p-4 bg-white/90 rounded-lg border border-teal-100 shadow-sm">
+                    <div key={index} className="p-4 bg-gray-50 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-teal-700">Company #{index + 1}</span>
+                        <span className="font-medium text-gray-700">Company #{index + 1}</span>
                         {targetCompanies.length > 1 && (
                           <button 
                             type="button" 
@@ -206,7 +202,7 @@ export default function ProfilePage() {
                             id={`company-name-${index}`} 
                             value={company.name}
                             onChange={(e) => handleCompanyChange(index, 'name', e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-teal-500 focus:border-teal-500"
+                            className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                             placeholder="e.g., Google, Microsoft"
                           />
                         </div>
@@ -220,7 +216,7 @@ export default function ProfilePage() {
                             id={`company-position-${index}`}
                             value={company.position}
                             onChange={(e) => handleCompanyChange(index, 'position', e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-lg bg-white/70 backdrop-filter backdrop-blur-sm focus:ring-teal-500 focus:border-teal-500"
+                            className="w-full p-2 border border-gray-300 rounded-lg bg-white focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
                             placeholder="e.g., Software Engineer, Product Manager"
                           />
                         </div>
@@ -233,7 +229,7 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       onClick={addCompany}
-                      className="w-full py-2 px-4 border border-teal-300 rounded-lg text-teal-600 hover:bg-teal-50 transition-colors"
+                      className="w-full py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       + Add Another Company
                     </button>
@@ -241,7 +237,7 @@ export default function ProfilePage() {
                   
                   {/* Show a message when maximum companies reached */}
                   {targetCompanies.length >= MAX_COMPANIES && (
-                    <div className="text-center py-2 text-teal-600 text-sm">
+                    <div className="text-center py-2 text-gray-600 text-sm">
                       Maximum of {MAX_COMPANIES} target companies reached
                     </div>
                   )}
@@ -252,7 +248,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded-md shadow-button transition-all disabled:opacity-50"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">

@@ -8,11 +8,11 @@ import { TargetCompany, ProfessionalField } from '@/types/user';
 
 // Industry options with display names
 const INDUSTRY_OPTIONS: { value: ProfessionalField; label: string; icon: string }[] = [
-  { value: 'computer-science', label: 'Computer Science & Technology', icon: '💻' },
-  { value: 'engineering', label: 'Engineering', icon: '⚙️' },
-  { value: 'medicine', label: 'Medicine & Healthcare', icon: '⚕️' },
-  { value: 'business', label: 'Business & Management', icon: '💼' },
-  { value: 'law', label: 'Law & Legal Services', icon: '⚖️' },
+  { value: 'computer-science', label: 'Computer Science & Technology', icon: '' },
+  { value: 'engineering', label: 'Engineering', icon: '' },
+  { value: 'medicine', label: 'Medicine & Healthcare', icon: '' },
+  { value: 'business', label: 'Business & Management', icon: '' },
+  { value: 'law', label: 'Law & Legal Services', icon: '' },
 ];
 
 export default function TargetCompaniesForm() {
@@ -179,7 +179,7 @@ export default function TargetCompaniesForm() {
             >
               {INDUSTRY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.icon} {option.label}
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -217,7 +217,7 @@ export default function TargetCompaniesForm() {
                       <div>
                         <h4 className="text-lg font-semibold text-slate-800">{company.name}</h4>
                         <div className="flex items-center mt-1">
-                          <span className="text-sm text-slate-600 mr-2">{industryInfo.icon}</span>
+                          {industryInfo.icon && <span className="text-sm text-slate-600 mr-2">{industryInfo.icon}</span>}
                           <span className="text-sm font-medium text-slate-600">{industryInfo.label}</span>
                         </div>
                       </div>
@@ -272,7 +272,7 @@ export default function TargetCompaniesForm() {
         </div>
       ) : (
         <div className="text-center py-12 bg-slate-50 rounded-lg border border-slate-200">
-          <div className="text-6xl mb-4">🎯</div>
+          <div className="text-6xl mb-4"></div>
           <h3 className="text-lg font-semibold text-slate-800 mb-2">No target companies yet</h3>
           <p className="text-slate-600">Add your first target company above to get started with personalized career guidance.</p>
         </div>

@@ -103,23 +103,23 @@ export default function LinkedInProfileImport() {
   }
   
   return (
-    <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
-      <h3 className="text-lg font-semibold text-teal-800 mb-2">
+    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">
         LinkedIn Profile Detected
       </h3>
       
-      <p className="text-slate-700 mb-4">
+      <p className="text-gray-700 mb-4">
         We detected that you signed in with LinkedIn. Would you like to import your LinkedIn profile data as a resume for analysis?
       </p>
       
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="bg-red-50 rounded-lg p-3 mb-4">
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
       
       {success && (
-        <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-4">
+        <div className="bg-green-50 rounded-lg p-3 mb-4">
           <p className="text-green-700 text-sm">{success}</p>
         </div>
       )}
@@ -128,7 +128,7 @@ export default function LinkedInProfileImport() {
         <button
           onClick={importLinkedInProfile}
           disabled={loading}
-          className="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded font-medium shadow-button hover:shadow-button-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Importing...' : 'Import LinkedIn Profile'}
         </button>
@@ -140,7 +140,7 @@ export default function LinkedInProfileImport() {
             setShowImportOption(false);
           }}
           disabled={loading}
-          className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded font-medium hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Skip
         </button>

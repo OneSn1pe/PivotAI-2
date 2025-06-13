@@ -178,7 +178,7 @@ export default function SocialPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3">✅ Do's</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Do's</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>• Celebrate others' achievements</li>
                 <li>• Share helpful resources and tips</li>
@@ -188,7 +188,7 @@ export default function SocialPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3">❌ Don'ts</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Don'ts</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>• Share personal or sensitive information</li>
                 <li>• Spam or self-promote excessively</li>

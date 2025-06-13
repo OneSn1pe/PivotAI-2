@@ -82,26 +82,26 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
+    <div className="bg-white p-6 rounded-lg">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-800 font-inter flex items-center">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center">
           <span>Setup Progress</span>
           {isCompleted && (
-            <span className="ml-2 text-xs font-normal text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">
+            <span className="ml-2 text-xs font-normal text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full">
               Complete
             </span>
           )}
         </h2>
         
         <div className="flex items-center">
-          <span className="text-sm font-medium text-slate-700 mr-4">
+          <span className="text-sm font-medium text-gray-700 mr-4">
             {completedSteps}/{totalSteps} Complete
           </span>
           
           {isCompleted ? (
             <button 
               onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
               aria-label="Dismiss setup checklist"
               title="Hide this checklist permanently"
             >
@@ -112,7 +112,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
           ) : (
             <button 
               onClick={handleToggleMinimize}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
               aria-label={isMinimized ? "Expand setup checklist" : "Minimize setup checklist"}
             >
               {isMinimized ? (
@@ -130,29 +130,29 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
       </div>
       
       {/* Progress Bar - always visible */}
-      <div className="w-full bg-slate-100 rounded-full h-2.5 mb-2">
+      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
         <div 
-          className="bg-gradient-to-r from-teal-500 to-teal-400 h-2.5 rounded-full transition-all duration-500" 
+          className="bg-gray-900 h-2 rounded-full transition-all duration-500" 
           style={{ width: `${progressPercentage}%` }}
         ></div>
       </div>
       
       {/* Completion notice with dismiss option */}
       {isCompleted && (
-        <div className="bg-teal-50 p-4 rounded-lg border border-teal-200">
+        <div className="bg-gray-50 p-4 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="text-sm font-medium text-teal-800">Setup completed!</p>
-                <p className="text-xs text-teal-600">Your personalized career plan is ready.</p>
+                <p className="text-sm font-medium text-gray-800">Setup completed!</p>
+                <p className="text-xs text-gray-600">Your personalized career plan is ready.</p>
               </div>
             </div>
             <button
               onClick={handleDismiss}
-              className="text-teal-600 hover:text-teal-800 text-sm font-medium"
+              className="text-gray-600 hover:text-gray-800 text-sm font-medium"
             >
               Dismiss
             </button>
@@ -162,13 +162,13 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
       
       {/* Minimized summary - shown when minimized and not completed */}
       {isMinimized && !isCompleted && (
-        <div className="text-xs text-slate-500 flex justify-between">
+        <div className="text-xs text-gray-500 flex justify-between">
           <span>
             {completedSteps} of {totalSteps} setup steps completed
           </span>
           <button 
             onClick={() => setIsMinimized(false)}
-            className="text-teal-600 hover:text-teal-800 font-medium"
+            className="text-gray-600 hover:text-gray-800 font-medium"
           >
             Show details
           </button>
@@ -182,32 +182,32 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
           <div className="space-y-4 mt-4">
             {/* Resume Upload */}
             <div className="flex items-start">
-              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${resumeUploaded ? 'bg-teal-500' : 'bg-slate-200'}`}>
+              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${resumeUploaded ? 'bg-gray-900' : 'bg-gray-200'}`}>
                 {resumeUploaded ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 ) : (
-                  <span className="text-xs text-slate-500 font-bold">1</span>
+                  <span className="text-xs text-gray-500 font-bold">1</span>
                 )}
               </div>
               <div className="ml-3 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className={`text-sm font-medium ${resumeUploaded ? 'text-slate-700' : 'text-slate-600'}`}>
+                  <p className={`text-sm font-medium ${resumeUploaded ? 'text-gray-700' : 'text-gray-600'}`}>
                     Upload Your Resume
                   </p>
                   {resumeUploaded ? (
-                    <span className="text-xs text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-medium">Completed</span>
+                    <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full font-medium">Completed</span>
                   ) : (
                     <button
                       onClick={() => router.push('/protected/candidate/profile')}
-                      className="text-xs text-teal-700 hover:text-teal-800 font-medium"
+                      className="text-xs text-gray-700 hover:text-gray-800 font-medium"
                     >
-                      Do Now →
+                      Do Now
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {resumeUploaded 
                     ? `Resume "${candidateProfile?.resumeFileName}" uploaded successfully` 
                     : "Upload your resume to help us analyze your skills and experience"}
@@ -217,34 +217,34 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
             
             {/* Target Companies */}
             <div className="flex items-start">
-              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${hasTargetCompanies ? 'bg-teal-500' : resumeUploaded ? 'bg-slate-200' : 'bg-slate-100'}`}>
+              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${hasTargetCompanies ? 'bg-gray-900' : resumeUploaded ? 'bg-gray-200' : 'bg-gray-100'}`}>
                 {hasTargetCompanies ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 ) : (
-                  <span className={`text-xs ${resumeUploaded ? 'text-slate-500' : 'text-slate-300'} font-bold`}>2</span>
+                  <span className={`text-xs ${resumeUploaded ? 'text-gray-500' : 'text-gray-300'} font-bold`}>2</span>
                 )}
               </div>
               <div className="ml-3 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className={`text-sm font-medium ${hasTargetCompanies ? 'text-slate-700' : resumeUploaded ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <p className={`text-sm font-medium ${hasTargetCompanies ? 'text-gray-700' : resumeUploaded ? 'text-gray-600' : 'text-gray-400'}`}>
                     Select Target Companies
                   </p>
                   {hasTargetCompanies ? (
-                    <span className="text-xs text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-medium">Completed</span>
+                    <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full font-medium">Completed</span>
                   ) : resumeUploaded ? (
                     <button
                       onClick={() => router.push('/protected/candidate/profile?tab=target-companies')}
-                      className="text-xs text-teal-700 hover:text-teal-800 font-medium"
+                      className="text-xs text-gray-700 hover:text-gray-800 font-medium"
                     >
-                      Do Now →
+                      Do Now
                     </button>
                   ) : (
-                    <span className="text-xs text-slate-400">Complete previous step</span>
+                    <span className="text-xs text-gray-400">Complete previous step</span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {hasTargetCompanies
                     ? `${candidateProfile?.targetCompanies?.filter(company => company.name.trim() !== '').length} company targets selected`
                     : "Tell us which companies you're aiming for"}
@@ -254,34 +254,34 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({ candidateProfile, roadm
             
             {/* Roadmap Generation */}
             <div className="flex items-start">
-              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${roadmapGenerated ? 'bg-teal-500' : hasTargetCompanies ? 'bg-slate-200' : 'bg-slate-100'}`}>
+              <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${roadmapGenerated ? 'bg-gray-900' : hasTargetCompanies ? 'bg-gray-200' : 'bg-gray-100'}`}>
                 {roadmapGenerated ? (
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-white" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 ) : (
-                  <span className={`text-xs ${hasTargetCompanies ? 'text-slate-500' : 'text-slate-300'} font-bold`}>3</span>
+                  <span className={`text-xs ${hasTargetCompanies ? 'text-gray-500' : 'text-gray-300'} font-bold`}>3</span>
                 )}
               </div>
               <div className="ml-3 flex-1">
                 <div className="flex items-center justify-between">
-                  <p className={`text-sm font-medium ${roadmapGenerated ? 'text-slate-700' : hasTargetCompanies ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <p className={`text-sm font-medium ${roadmapGenerated ? 'text-gray-700' : hasTargetCompanies ? 'text-gray-600' : 'text-gray-400'}`}>
                     Generate Your Career Roadmap
                   </p>
                   {roadmapGenerated ? (
-                    <span className="text-xs text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full font-medium">Completed</span>
+                    <span className="text-xs text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full font-medium">Completed</span>
                   ) : hasTargetCompanies ? (
                     <button
                       onClick={() => router.push('/protected/candidate/roadmap/generator')}
-                      className="text-xs text-teal-700 hover:text-teal-800 font-medium"
+                      className="text-xs text-gray-700 hover:text-gray-800 font-medium"
                     >
-                      Do Now →
+                      Do Now
                     </button>
                   ) : (
-                    <span className="text-xs text-slate-400">Complete previous steps</span>
+                    <span className="text-xs text-gray-400">Complete previous steps</span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {roadmapGenerated
                     ? "Personalized career roadmap created"
                     : "Create a personalized path to achieve your career goals"}

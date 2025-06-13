@@ -367,7 +367,7 @@ function SkillNodeDetails({ node, onClose }: { node: SkillNode; onClose: () => v
               <div className="text-sm text-gray-600 font-normal">Level {node.level}</div>
             </div>
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={onClose}>✕</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
         </div>
       </CardHeader>
       <CardContent>

@@ -4,6 +4,7 @@
 
 html, body {
   height: 100%;
+  background-color: rgb(249 250 251); /* gray-50 */
 }
 
 
@@ -20,16 +21,16 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgb(249 250 251); /* gray-50 */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
+  background: rgb(209 213 219); /* gray-300 */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a3a3a3;
+  background: rgb(156 163 175); /* gray-400 */
 }
 
 /* Form elements consistency */

@@ -45,7 +45,7 @@ export function EmptyState({
           onClick={action.onClick}
           className="text-sm font-medium text-accent hover:text-accent-dark transition-colors"
         >
-          {action.label} →
+          {action.label}
         </button>
       )}
     </div>
