@@ -17,7 +17,6 @@ import SetupChecklist from '@/components/candidate/SetupChecklist';
 import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
 import { StreakWidget } from '@/components/gamification/StreakSystem';
 import { AchievementShowcase } from '@/components/gamification/AchievementBadges';
-import { LevelUpAnimation } from '@/components/animations/LevelUpAnimation';
 import { QuickShareButton } from '@/components/social/AchievementShare';
 
 // Define an extended milestone interface to handle tasks property
@@ -50,8 +49,6 @@ export default function CandidateDashboard() {
   // Leveling system state
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [showLevelUp, setShowLevelUp] = useState(false);
-  const [newLevel, setNewLevel] = useState(0);
   const [streakData, setStreakData] = useState({
     currentStreak: 5,
     longestStreak: 12,
@@ -81,14 +78,6 @@ export default function CandidateDashboard() {
     validateResumeUrl();
     loadUserProgress();
   }, [candidateProfile]);
-
-  // Handle level up notifications
-  useEffect(() => {
-    if (userProgress?.currentLevel && userProgress.currentLevel > newLevel) {
-      setNewLevel(userProgress.currentLevel);
-      setShowLevelUp(true);
-    }
-  }, [userProgress?.currentLevel]);
 
   const loadUserProgress = async () => {
     if (!userProfile) return;
@@ -323,13 +312,6 @@ export default function CandidateDashboard() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Level Up Animation */}
-      <LevelUpAnimation
-        isVisible={showLevelUp}
-        newLevel={newLevel}
-        onComplete={() => setShowLevelUp(false)}
-      />
-
       {/* Welcome Section with Level Display */}
       <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
