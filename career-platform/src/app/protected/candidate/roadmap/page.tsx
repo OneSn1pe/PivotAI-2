@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import CategorizedCareerRoadmap from '@/components/candidate/CategorizedCareerRoadmap';
 import { LevelNavigator } from '@/components/navigation/LevelNavigator';
 import { SkillTreeView } from '@/components/roadmap/SkillTreeView';
-import { LeveledMilestoneCard } from '@/components/candidate/LeveledMilestoneCard';
+import { LazyMilestoneList } from '@/components/candidate/LazyMilestoneList';
 import { generateNextLevel } from '@/services/openai';
 import { checkAndUnlockMilestones, isMilestoneUnlocked, getLockedMilestonesWithReasons } from '@/services/milestoneUnlockService';
 import { calculateUserLevel } from '@/services/levelProgressService';
@@ -550,31 +550,12 @@ export default function CareerPathPage() {
               </div>
               
               {/* Level Milestones */}
-              <div className="space-y-6">
-                {roadmap.milestones
-                  .filter(milestone => (milestone.level || 1) === selectedLevel)
-                  .map(milestone => {
-                    const isUnlocked = isMilestoneUnlocked(milestone, userProgress);
-                    const lockedMilestonesWithReasons = !isUnlocked 
-                      ? getLockedMilestonesWithReasons([milestone], userProgress)
-                      : [];
-                    const lockReason = lockedMilestonesWithReasons.length > 0 
-                      ? lockedMilestonesWithReasons[0].reason 
-                      : undefined;
-                    
-                    return (
-                      <LeveledMilestoneCard
-                        key={milestone.id}
-                        milestone={milestone}
-                        userProgress={userProgress}
-                        onComplete={handleMilestoneComplete}
-                        onMicroComplete={handleMicroMilestoneComplete}
-                        isLocked={!isUnlocked}
-                        lockReason={lockReason}
-                      />
-                    );
-                  })}
-              </div>
+              <LazyMilestoneList
+                milestones={roadmap.milestones.filter(m => (m.level || 1) === selectedLevel)}
+                userProgress={userProgress}
+                onMilestoneComplete={handleMilestoneComplete}
+                onMicroComplete={handleMicroMilestoneComplete}
+              />
               
               {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length === 0 && (
                 <div className="text-center py-12 bg-white rounded-lg shadow-card border border-slate-200">

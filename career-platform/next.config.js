@@ -6,6 +6,11 @@ const nextConfig = {
     optimizeServerReact: true,
   },
   
+  // Performance optimizations
+  swcMinify: true,
+  reactStrictMode: true,
+  poweredByHeader: false,
+  
   // Transpile necessary dependencies if needed
   transpilePackages: [],
   
@@ -37,6 +42,9 @@ const nextConfig = {
       'pivotai-7f6ef.firebasestorage.app'
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/webp'],
+    minimumCacheTTL: 60,
     remotePatterns: [
       {
         protocol: 'https',
@@ -92,6 +100,11 @@ const nextConfig = {
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT,OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
+          // Performance and security headers
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
     ];

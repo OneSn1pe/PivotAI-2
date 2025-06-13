@@ -1,23 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { UserProgress, Achievement } from '@/types/user';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Trophy, 
-  Zap, 
-  Target, 
-  Calendar, 
-  TrendingUp,
-  Star,
-  Flame,
-  Award,
-  RefreshCw
-} from 'lucide-react';
-import { calculateUserLevel, LevelProgressData, getLevelInfo, getStreakMultiplier } from '@/services/levelProgressService';
-import { useAuth } from '@/contexts/AuthContext';
+import { calculateUserLevel, getStreakMultiplier } from '@/services/levelProgressService';
 
 interface ProgressDashboardProps {
   userProgress: UserProgress;
@@ -26,195 +13,119 @@ interface ProgressDashboardProps {
 }
 
 export function ProgressDashboard({ userProgress, achievements, className = '' }: ProgressDashboardProps) {
-  // Calculate accurate level progress using the service
   const levelData = calculateUserLevel(userProgress);
   const streakMultiplier = getStreakMultiplier(userProgress.streakDays);
 
-  // Calculate statistics
-  const totalAchievements = achievements.length;
-  const recentAchievements = achievements
-    .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
-    .slice(0, 3);
-
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ${className}`}>
-      {/* Level Progress Card */}
-      <Card className="col-span-full lg:col-span-2">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500" />
-            Level Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Current Level Display */}
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-3xl font-bold text-blue-600">Level {levelData.currentLevel}</div>
-                <div className="text-sm text-gray-600">{levelData.levelTitle}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold">{levelData.totalXP}</div>
-                <div className="text-sm text-gray-600">Total XP</div>
-              </div>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Progress to Level {levelData.currentLevel + 1}</span>
-                <span>{levelData.progressPercent}%</span>
-              </div>
-              <Progress value={levelData.progressPercent} className="h-3" />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>{levelData.currentLevelXP} / {levelData.xpForNextLevel} XP</span>
-                <span>{levelData.milestonesNeededForNext} milestones needed</span>
-              </div>
-            </div>
+    <div className={`space-y-8 ${className}`}>
+      {/* Main Level Display - Hero Metric */}
+      <div className="text-center py-8 sm:py-12">
+        <div className="text-5xl sm:text-6xl font-semibold text-gray-900 mb-2">
+          {levelData.currentLevel}
+        </div>
+        <div className="text-base sm:text-lg text-gray-600 mb-1">{levelData.levelTitle}</div>
+        <div className="text-xs sm:text-sm text-gray-500">{levelData.totalXP} XP earned</div>
+      </div>
 
-            {/* Level Milestone */}
-            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-              <Trophy className="h-5 w-5 text-blue-500" />
-              <div>
-                <div className="font-medium text-blue-900">{levelData.nextLevelTitle}</div>
-                <div className="text-sm text-blue-700">
-                  {levelData.nextLevelDescription}
+      {/* Progress to Next Level */}
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-2 flex justify-between items-baseline">
+          <span className="text-sm text-gray-600">Progress to level {levelData.currentLevel + 1}</span>
+          <span className="text-sm font-medium text-gray-900">{levelData.progressPercent}%</span>
+        </div>
+        <Progress value={levelData.progressPercent} className="h-1" />
+        <div className="mt-2 flex justify-between text-xs text-gray-500">
+          <span>{levelData.currentLevelXP} / {levelData.xpForNextLevel} XP</span>
+          <span>{levelData.milestonesNeededForNext} milestones to next level</span>
+        </div>
+      </div>
+
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {/* Milestones */}
+        <Card className="border-gray-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="space-y-1">
+              <div className="text-2xl sm:text-3xl font-semibold text-gray-900">
+                {levelData.milestonesCompleted}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600">Milestones completed</div>
+              {levelData.microMilestonesCompleted > 0 && (
+                <div className="text-xs text-gray-500">
+                  +{levelData.microMilestonesCompleted} micro-milestones
                 </div>
-              </div>
+              )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Streak Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-orange-500" />
-            Daily Streak
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center space-y-3">
-            <div className="text-4xl font-bold text-orange-600">
-              {userProgress.streakDays}
+        {/* Streak */}
+        <Card className="border-gray-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="space-y-1">
+              <div className="text-2xl sm:text-3xl font-semibold text-gray-900">
+                {userProgress.streakDays}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600">Day streak</div>
+              {streakMultiplier > 1 && (
+                <div className="text-xs text-gray-500">
+                  {streakMultiplier}x XP multiplier
+                </div>
+              )}
             </div>
-            <div className="text-sm text-gray-600">
-              {userProgress.streakDays === 1 ? 'day' : 'days'} in a row
+          </CardContent>
+        </Card>
+
+        {/* Achievements */}
+        <Card className="border-gray-200">
+          <CardContent className="p-4 sm:p-6">
+            <div className="space-y-1">
+              <div className="text-2xl sm:text-3xl font-semibold text-gray-900">
+                {achievements.length}
+              </div>
+              <div className="text-xs sm:text-sm text-gray-600">Achievements earned</div>
+              {achievements.length > 0 && (
+                <div className="text-xs text-gray-500 truncate">
+                  Latest: {achievements[achievements.length - 1].title}
+                </div>
+              )}
             </div>
-            
-            {userProgress.streakDays > 0 && (
-              <div className="flex items-center justify-center gap-1">
-                <Zap className="h-4 w-4 text-yellow-500" />
-                <span className="text-sm text-yellow-600 font-medium">
-                  {streakMultiplier}x Progress Boost
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Milestone Progress Breakdown */}
+      <div className="border-t border-gray-200 pt-6 sm:pt-8">
+        <h3 className="text-xs sm:text-sm font-medium text-gray-900 mb-3 sm:mb-4">Milestone Progress</h3>
+        <div className="space-y-2 sm:space-y-3">
+          {[1, 5, 10, 25, 50].map(target => {
+            const completed = levelData.milestonesCompleted >= target;
+            return (
+              <div key={target} className="flex items-center gap-4">
+                <div className={`w-4 h-4 rounded-full border-2 ${
+                  completed ? 'bg-gray-900 border-gray-900' : 'border-gray-300'
+                }`} />
+                <span className={`text-sm ${completed ? 'text-gray-900' : 'text-gray-500'}`}>
+                  Complete {target} milestones
                 </span>
               </div>
-            )}
+            );
+          })}
+        </div>
+      </div>
 
-            {/* Streak Milestones */}
-            <div className="space-y-1">
-              {[3, 7, 30].map(milestone => (
-                <div 
-                  key={milestone}
-                  className={`flex items-center justify-between text-xs p-2 rounded ${
-                    userProgress.streakDays >= milestone 
-                      ? 'bg-orange-100 text-orange-800' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <span>{milestone} days</span>
-                  {userProgress.streakDays >= milestone ? (
-                    <Flame className="h-3 w-3" />
-                  ) : (
-                    <div className="w-3 h-3 border border-gray-400 rounded-full" />
-                  )}
-                </div>
-              ))}
+      {/* Next Level Preview */}
+      {levelData.currentLevel < 10 && (
+        <div className="border-t border-gray-200 pt-6 sm:pt-8">
+          <div className="max-w-2xl">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-900 mb-2">Next Level</h3>
+            <div className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">
+              Level {levelData.currentLevel + 1}: {levelData.nextLevelTitle}
             </div>
+            <p className="text-xs sm:text-sm text-gray-600">{levelData.nextLevelDescription}</p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Milestones Completed */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-green-500" />
-            Milestones
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center space-y-3">
-            <div className="text-4xl font-bold text-green-600">
-              {levelData.milestonesCompleted}
-            </div>
-            <div className="text-sm text-gray-600">Milestones</div>
-            <div className="text-sm text-gray-500">
-              +{levelData.microMilestonesCompleted} micro
-            </div>
-            
-            {/* Milestone Progress */}
-            <div className="space-y-2">
-              <div className="text-xs text-gray-500">Progress Milestones</div>
-              {[1, 5, 10, 25].map(milestone => (
-                <div 
-                  key={milestone}
-                  className={`flex items-center justify-between text-xs p-2 rounded ${
-                    userProgress.completedMilestones.length >= milestone 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <span>{milestone} milestones</span>
-                  {userProgress.completedMilestones.length >= milestone ? (
-                    <Target className="h-3 w-3" />
-                  ) : (
-                    <div className="w-3 h-3 border border-gray-400 rounded-full" />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Achievements Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-purple-500" />
-            Achievements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">{totalAchievements}</div>
-              <div className="text-sm text-gray-600">Unlocked</div>
-            </div>
-
-            {/* Recent Achievements */}
-            {recentAchievements.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-gray-700">Recent</div>
-                {recentAchievements.map(achievement => (
-                  <div key={achievement.id} className="flex items-center gap-2 p-2 bg-purple-50 rounded">
-                    <span className="text-lg">{achievement.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-purple-900 truncate">
-                        {achievement.title}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
+        </div>
+      )}
     </div>
   );
 }

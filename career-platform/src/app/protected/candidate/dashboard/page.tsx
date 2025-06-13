@@ -10,8 +10,6 @@ import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
 import ResumeManager from '@/components/candidate/ResumeManager';
 import ProfessionalAttributes from '@/components/candidate/ProfessionalAttributes';
-import ObjectiveCard from '@/components/ui/ObjectiveCard';
-import TaskManager from '@/components/candidate/TaskManager';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SetupChecklist from '@/components/candidate/SetupChecklist';
 import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
@@ -19,18 +17,6 @@ import { StreakWidget } from '@/components/gamification/StreakSystem';
 import { AchievementShowcase } from '@/components/gamification/AchievementBadges';
 import { QuickShareButton } from '@/components/social/AchievementShare';
 
-// Define an extended milestone interface to handle tasks property
-interface MilestoneWithTasks {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  tasks?: Array<{
-    id?: string;
-    description: string;
-    completed: boolean;
-  }>;
-}
 
 export default function CandidateDashboard() {
   const { userProfile } = useAuth();
@@ -43,8 +29,6 @@ export default function CandidateDashboard() {
   const [validatingUrl, setValidatingUrl] = useState(false);
   const [displayFileName, setDisplayFileName] = useState<string | null>(candidateProfile?.resumeFileName || null);
   
-  // Convert roadmap milestones to objectives
-  const [objectives, setObjectives] = useState<Array<any>>([]);
   
   // Leveling system state
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
@@ -165,9 +149,6 @@ export default function CandidateDashboard() {
         };
         
         setRoadmap(roadmapData);
-        
-        // Convert milestones to UI objectives
-        convertMilestonesToObjectives(roadmapData);
       }
     } catch (error) {
       console.error('Error fetching roadmap:', error);
@@ -176,106 +157,7 @@ export default function CandidateDashboard() {
     }
   };
 
-  const convertMilestonesToObjectives = (roadmapData: CareerRoadmap) => {
-    if (!roadmapData.milestones) return;
-    
-    const convertedObjectives = roadmapData.milestones.map((milestone, index) => {
-      // Process milestone to ensure it has proper categorization
-      let processedMilestone: Milestone;
-      
-      // Check if milestone has new categorization or needs migration
-      if ('category' in milestone && milestone.category) {
-        // Already has new format
-        processedMilestone = milestone as Milestone;
-      } else {
-        // Legacy format - migrate
-        const legacyMilestone = {
-          ...milestone,
-          id: milestone.id || `milestone-${index}`,
-          title: milestone.title || 'Untitled Milestone',
-          description: milestone.description || 'No description provided',
-          timeframe: milestone.timeframe || 'No timeframe specified',
-          completed: !!milestone.completed,
-          skills: Array.isArray(milestone.skills) ? milestone.skills : [],
-          resources: Array.isArray(milestone.resources) ? milestone.resources : [],
-          skillType: (milestone as any).skillType || 'technical',
-          createdAt: milestone.createdAt || new Date()
-        };
 
-        processedMilestone = migrateLegacyMilestone(legacyMilestone as any);
-      }
-
-      // Get the milestone category
-      const category = processedMilestone.category || categorizeMilestone(processedMilestone);
-      
-      // Create tasks from milestone resources and tasks
-      const tasks = [];
-      
-      // Add resource tasks
-      if (processedMilestone.resources?.length > 0) {
-        processedMilestone.resources.forEach((resource, idx) => {
-          tasks.push({
-            id: `resource-task-${processedMilestone.id}-${idx}`,
-            description: `Review ${resource.title}`,
-            completed: false,
-          });
-        });
-      }
-      
-             // Add milestone tasks if they exist
-       if (processedMilestone.tasks && processedMilestone.tasks.length > 0) {
-         tasks.push(...processedMilestone.tasks.map(task => ({
-           id: task.id,
-           description: task.description,
-           completed: task.completed,
-         })));
-       }
-      
-      // Add skills as tasks if needed and no other tasks exist
-      if (tasks.length === 0 && processedMilestone.skills && processedMilestone.skills.length > 0) {
-        tasks.push({
-          id: `skill-task-${processedMilestone.id}`,
-          description: `Develop skills in: ${processedMilestone.skills.join(', ')}`,
-          completed: false,
-        });
-      }
-      
-      return {
-        id: processedMilestone.id,
-        title: processedMilestone.title,
-        description: processedMilestone.description,
-        type: category, // Use the new four-category system
-        category: category, // Adding an explicit category property for clarity
-        status: processedMilestone.completed ? 'completed' : 'available',
-        priority: processedMilestone.priority || 'medium',
-        estimatedHours: processedMilestone.estimatedHours,
-        rewards: {
-          points: 100,
-          resources: processedMilestone.resources?.map(resource => ({
-            id: `resource-${resource.type}-${Math.random().toString(36).substring(2, 9)}`,
-            name: resource.title,
-            type: resource.type as any,
-          })) || [],
-        },
-        tasks,
-      };
-    });
-    
-    // Sort objectives by category priority: technical, fundamental, niche, soft
-    const categoryOrder = ['technical', 'fundamental', 'niche', 'soft'];
-    const sortedObjectives = convertedObjectives.sort((a, b) => {
-      const aIndex = categoryOrder.indexOf(a.type);
-      const bIndex = categoryOrder.indexOf(b.type);
-      return aIndex - bIndex;
-    });
-    
-    setObjectives(sortedObjectives);
-  };
-
-  const handleQuestClick = (objectiveId: string) => {
-    console.log(`Clicked on objective: ${objectiveId}`);
-    // Navigate to objective detail or open a modal
-  };
 
   const handleResumeUpdate = (fileName: string) => {
     setDisplayFileName(fileName);
@@ -396,9 +278,9 @@ export default function CandidateDashboard() {
       </div>
 
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column - Professional Info */}
-        <div className="md:col-span-1 space-y-6">
+      <div className="grid grid-cols-1 gap-6">
+        {/* Professional Info */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Professional Attributes Panel */}
           <ProfessionalAttributes resumeAnalysis={candidateProfile?.resumeAnalysis} />
           
@@ -469,29 +351,6 @@ export default function CandidateDashboard() {
           </div>
         </div>
 
-        {/* Right Column - Task Manager */}
-        <div className="md:col-span-2">
-          {objectives.length > 0 ? (
-            <TaskManager 
-              objectives={objectives}
-              onObjectiveClick={handleQuestClick}
-            />
-          ) : (
-            <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 text-center py-10">
-              <div className="text-5xl mb-4">🧭</div>
-              <h3 className="text-lg font-medium text-slate-800 mb-2">No Objectives Available</h3>
-              <p className="text-slate-600 mb-6">
-                Generate a career path to receive personalized professional objectives.
-              </p>
-              <button
-                onClick={() => router.push('/protected/candidate/roadmap/generator')}
-                className="bg-teal-700 hover:bg-teal-800 text-white px-6 py-3 rounded font-medium shadow-button hover:shadow-button-hover transition-all duration-300"
-              >
-                Generate Career Path
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
