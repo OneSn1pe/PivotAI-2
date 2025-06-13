@@ -207,16 +207,15 @@ export default function CareerPathPage() {
       completedMilestones: updatedCompletedMilestones
     };
     
+    // Get milestone level info
+    const milestoneLevel = milestone.level || 1;
+    const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === milestoneLevel);
+    const completedLevelMilestones = levelMilestones.filter(m => 
+      updatedCompletedMilestones.includes(m.id)
+    );
+    
     // Only check for level unlocks if marking as complete
     if (!isCurrentlyCompleted) {
-      const milestoneLevel = milestone.level || 1;
-      
-      // Check if all milestones for this level are completed
-      const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === milestoneLevel);
-      const completedLevelMilestones = levelMilestones.filter(m => 
-        updatedCompletedMilestones.includes(m.id)
-      );
-      
       if (completedLevelMilestones.length === levelMilestones.length && levelMilestones.length > 0) {
         // All milestones for this level completed - unlock next level
         const nextLevel = milestoneLevel + 1;
@@ -238,11 +237,12 @@ export default function CareerPathPage() {
           // Navigate to the new level
           setSelectedLevel(nextLevel);
         }
+      } else {
+        // Not all milestones completed, just update progress
+        setUserProgress(updatedUserProgress);
       }
-    }
-    
-    // Update local user progress state only if we didn't already update it with unlock
-    if (!isCurrentlyCompleted && completedLevelMilestones.length < levelMilestones.length) {
+    } else {
+      // Marking as incomplete, just update progress
       setUserProgress(updatedUserProgress);
     }
   };
