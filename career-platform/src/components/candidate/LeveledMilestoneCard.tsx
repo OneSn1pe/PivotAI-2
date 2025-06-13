@@ -30,6 +30,7 @@ interface LeveledMilestoneCardProps {
   onComplete?: (milestoneId: string) => void;
   onMicroComplete?: (microId: string) => void;
   isLocked?: boolean;
+  lockReason?: string;
   showMicroMilestones?: boolean;
 }
 
@@ -70,6 +71,7 @@ export function LeveledMilestoneCard({
   onComplete, 
   onMicroComplete,
   isLocked = false,
+  lockReason,
   showMicroMilestones = true
 }: LeveledMilestoneCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -101,7 +103,7 @@ export function LeveledMilestoneCard({
   const difficultyStars = Array.from({ length: 5 }, (_, i) => i < (milestone.difficulty || 3));
 
   const handleComplete = () => {
-    if (onComplete && canComplete) {
+    if (onComplete && (canComplete || isCompleted)) {
       onComplete(milestone.id);
     }
   };
@@ -116,6 +118,13 @@ export function LeveledMilestoneCard({
     <Card className={`milestone-card transition-all duration-300 hover:shadow-lg ${
       isLocked ? 'opacity-60' : ''
     } ${isCompleted ? 'border-green-500 bg-green-50' : priorityStyle}`}>
+      {/* Lock Overlay */}
+      {isLocked && lockReason && (
+        <div className="bg-gray-900 bg-opacity-90 text-white px-3 py-2 text-sm flex items-center gap-2 rounded-t-lg">
+          <Lock className="h-4 w-4" />
+          <span>{lockReason}</span>
+        </div>
+      )}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3 flex-1">
@@ -330,10 +339,10 @@ Level {milestone.level}
 
         <Button
           onClick={handleComplete}
-          disabled={!canComplete}
+          disabled={isLocked || (!canComplete && !isCompleted)}
           variant={isCompleted ? "outline" : "default"}
           size="sm"
-          className={isCompleted ? "text-green-600" : ""}
+          className={isCompleted ? "text-green-600 hover:text-red-600" : ""}
         >
           {isLocked ? (
             <>
@@ -342,13 +351,13 @@ Level {milestone.level}
             </>
           ) : isCompleted ? (
             <>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Completed
+              <Circle className="h-4 w-4 mr-2" />
+              Mark as Incomplete
             </>
           ) : canComplete ? (
             <>
-              <Play className="h-4 w-4 mr-2" />
-              Start Milestone
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Mark as Complete
             </>
           ) : (
             <>

@@ -11,6 +11,8 @@ import { LevelNavigator } from '@/components/navigation/LevelNavigator';
 import { SkillTreeView } from '@/components/roadmap/SkillTreeView';
 import { LeveledMilestoneCard } from '@/components/candidate/LeveledMilestoneCard';
 import { generateNextLevel } from '@/services/openai';
+import { checkAndUnlockMilestones, isMilestoneUnlocked, getLockedMilestonesWithReasons } from '@/services/milestoneUnlockService';
+import { calculateUserLevel } from '@/services/levelProgressService';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -121,19 +123,41 @@ export default function CareerPathPage() {
     }
     
     fetchRoadmap();
-    loadUserProgress();
   }, [userProfile]);
+  
+  // Load user progress when roadmap changes
+  useEffect(() => {
+    loadUserProgress();
+  }, [roadmap]);
 
   const loadUserProgress = async () => {
-    if (!userProfile) return;
+    if (!userProfile || !roadmap) return;
     
     try {
-      // Mock data for development - replace with actual Firebase calls
-      const mockProgress: UserProgress = {
+      // Create user progress based on completed milestones in the roadmap
+      const completedMilestoneIds = roadmap.milestones
+        .filter(m => m.completed)
+        .map(m => m.id);
+      
+      // Calculate max unlocked level based on completed milestones
+      let maxUnlockedLevel = 1;
+      const levels = Array.from(new Set(roadmap.milestones.map(m => m.level || 1))).sort((a, b) => a - b);
+      
+      for (const level of levels) {
+        const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === level);
+        const completedInLevel = levelMilestones.filter(m => m.completed).length;
+        
+        if (completedInLevel === levelMilestones.length && levelMilestones.length > 0) {
+          // All milestones in this level are completed, so next level should be unlocked
+          maxUnlockedLevel = Math.max(maxUnlockedLevel, level + 1);
+        }
+      }
+      
+      const userProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
-        maxUnlockedLevel: 1,
-        completedMilestones: [],
+        maxUnlockedLevel,
+        completedMilestones: completedMilestoneIds,
         completedMicroMilestones: [],
         achievements: [],
         streakDays: 0,
@@ -141,8 +165,8 @@ export default function CareerPathPage() {
         skillProficiencies: {}
       };
       
-      setUserProgress(mockProgress);
-      setSelectedLevel(mockProgress.currentLevel);
+      setUserProgress(userProgress);
+      setSelectedLevel(Math.min(selectedLevel || 1, maxUnlockedLevel));
     } catch (error) {
       console.error('Error loading user progress:', error);
     }
@@ -178,13 +202,123 @@ export default function CareerPathPage() {
   };
 
   const handleMilestoneComplete = async (milestoneId: string) => {
-    await handleToggleMilestone(milestoneId, true);
-    // TODO: Award XP and check for level up
+    if (!roadmap || !userProgress || !userProfile) return;
+    
+    // Find the milestone
+    const milestone = roadmap.milestones.find(m => m.id === milestoneId);
+    if (!milestone) return;
+    
+    // Toggle completion status
+    const isCurrentlyCompleted = milestone.completed;
+    await handleToggleMilestone(milestoneId, !isCurrentlyCompleted);
+    
+    // Update user progress
+    let updatedCompletedMilestones: string[];
+    if (!isCurrentlyCompleted) {
+      // Marking as complete
+      updatedCompletedMilestones = [...userProgress.completedMilestones, milestoneId];
+    } else {
+      // Marking as incomplete
+      updatedCompletedMilestones = userProgress.completedMilestones.filter(id => id !== milestoneId);
+    }
+    
+    const updatedUserProgress = {
+      ...userProgress,
+      completedMilestones: updatedCompletedMilestones
+    };
+    
+    // Only check for level unlocks if marking as complete
+    if (!isCurrentlyCompleted) {
+      const milestoneLevel = milestone.level || 1;
+      
+      // Check if all milestones for this level are completed
+      const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === milestoneLevel);
+      const completedLevelMilestones = levelMilestones.filter(m => 
+        updatedCompletedMilestones.includes(m.id)
+      );
+      
+      if (completedLevelMilestones.length === levelMilestones.length && levelMilestones.length > 0) {
+        // All milestones for this level completed - unlock next level
+        const nextLevel = milestoneLevel + 1;
+        const newMaxUnlockedLevel = Math.max(userProgress.maxUnlockedLevel || 1, nextLevel);
+        
+        // Update user progress with new max unlocked level
+        const progressWithUnlock = {
+          ...updatedUserProgress,
+          maxUnlockedLevel: newMaxUnlockedLevel
+        };
+        setUserProgress(progressWithUnlock);
+        
+        // Check if there are milestones in the next level
+        const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === nextLevel);
+        if (nextLevelMilestones.length > 0) {
+          // Show success message
+          alert(`Congratulations! You've unlocked Level ${nextLevel} with ${nextLevelMilestones.length} new milestones!`);
+          
+          // Navigate to the new level
+          setSelectedLevel(nextLevel);
+        }
+      }
+    }
+    
+    // Update local user progress state only if we didn't already update it with unlock
+    if (!isCurrentlyCompleted && completedLevelMilestones.length < levelMilestones.length) {
+      setUserProgress(updatedUserProgress);
+    }
   };
 
   const handleMicroMilestoneComplete = async (microId: string) => {
     // TODO: Mark micro-milestone as complete and award XP
     console.log('Micro-milestone completed:', microId);
+  };
+
+  const handleSkipLevel = async () => {
+    if (!roadmap || !userProgress || !userProfile) return;
+    
+    // Get incomplete milestones for current level
+    const currentLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === selectedLevel);
+    const incompleteMilestones = currentLevelMilestones.filter(m => !m.completed);
+    
+    if (incompleteMilestones.length === 0) {
+      alert('This level is already completed!');
+      return;
+    }
+    
+    // Show warning dialog
+    const warningMessage = `Are you sure you want to skip Level ${selectedLevel}?\n\n` +
+      `You have ${incompleteMilestones.length} incomplete milestone(s) in this level:\n` +
+      incompleteMilestones.map(m => `• ${m.title}`).join('\n') +
+      `\n\nSkipping will:\n` +
+      `• Unlock Level ${selectedLevel + 1} without completing these milestones\n` +
+      `• You may miss important skills and knowledge\n` +
+      `• You can return to complete these milestones later\n\n` +
+      `Continue?`;
+    
+    if (!confirm(warningMessage)) {
+      return;
+    }
+    
+    // Unlock the next level
+    const nextLevel = selectedLevel + 1;
+    const newMaxUnlockedLevel = Math.max(userProgress.maxUnlockedLevel || 1, nextLevel);
+    
+    // Update user progress
+    const updatedUserProgress = {
+      ...userProgress,
+      maxUnlockedLevel: newMaxUnlockedLevel,
+      // Track that this level was skipped (you might want to add a skippedLevels array to UserProgress type)
+    };
+    
+    setUserProgress(updatedUserProgress);
+    
+    // Check if there are milestones in the next level
+    const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === nextLevel);
+    if (nextLevelMilestones.length > 0) {
+      alert(`Level ${nextLevel} has been unlocked! You can return to Level ${selectedLevel} anytime to complete the skipped milestones.`);
+      setSelectedLevel(nextLevel);
+    } else {
+      alert('No milestones found in the next level. You may need to generate new content.');
+    }
   };
 
   const generateLevelData = (milestones: Milestone[], progress: UserProgress) => {
@@ -194,11 +328,17 @@ export default function CareerPathPage() {
       const levelMilestones = milestones.filter(m => (m.level || 1) === level);
       const completedCount = levelMilestones.filter(m => progress.completedMilestones.includes(m.id)).length;
       
+      // Check if this level was skipped (unlocked but not completed, and a higher level is unlocked)
+      const isSkipped = level < progress.maxUnlockedLevel && 
+                       completedCount < levelMilestones.length && 
+                       levelMilestones.length > 0;
+      
       return {
         level,
         isActive: level === selectedLevel,
-        isUnlocked: level <= progress.currentLevel + 1,
-        isCompleted: completedCount === levelMilestones.length,
+        isUnlocked: level <= progress.maxUnlockedLevel || level === 1,
+        isCompleted: completedCount === levelMilestones.length && completedCount > 0,
+        isSkipped,
         milestoneCount: levelMilestones.length,
         completedCount,
         title: getLevelTitle(level)
@@ -369,9 +509,27 @@ export default function CareerPathPage() {
             /* Level-based Milestone Cards */
             <div>
               <div className="bg-white p-6 rounded-lg shadow-card border border-slate-200 mb-8">
-                <h2 className="text-xl font-bold mb-4 text-slate-800 font-inter">
-                  Level {selectedLevel} - {getLevelTitle(selectedLevel)}
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-slate-800 font-inter">
+                    Level {selectedLevel} - {getLevelTitle(selectedLevel)}
+                  </h2>
+                  {/* Skip Level Button */}
+                  {selectedLevel < Math.max(...roadmap.milestones.map(m => m.level || 1)) && 
+                   selectedLevel <= (userProgress.maxUnlockedLevel || 1) &&
+                   roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length < 
+                   roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length && (
+                    <button
+                      onClick={handleSkipLevel}
+                      className="px-4 py-2 text-sm font-medium text-orange-700 bg-orange-100 hover:bg-orange-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                      title="Skip this level and unlock the next one"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                      </svg>
+                      Skip Level
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center">
                   <div className="w-full bg-slate-100 rounded-full h-4 mr-4 overflow-hidden">
                     <div
@@ -395,16 +553,27 @@ export default function CareerPathPage() {
               <div className="space-y-6">
                 {roadmap.milestones
                   .filter(milestone => (milestone.level || 1) === selectedLevel)
-                  .map(milestone => (
-                    <LeveledMilestoneCard
-                      key={milestone.id}
-                      milestone={milestone}
-                      userProgress={userProgress}
-                      onComplete={handleMilestoneComplete}
-                      onMicroComplete={handleMicroMilestoneComplete}
-                      isLocked={(milestone.level || 1) > userProgress.currentLevel}
-                    />
-                  ))}
+                  .map(milestone => {
+                    const isUnlocked = isMilestoneUnlocked(milestone, userProgress);
+                    const lockedMilestonesWithReasons = !isUnlocked 
+                      ? getLockedMilestonesWithReasons([milestone], userProgress)
+                      : [];
+                    const lockReason = lockedMilestonesWithReasons.length > 0 
+                      ? lockedMilestonesWithReasons[0].reason 
+                      : undefined;
+                    
+                    return (
+                      <LeveledMilestoneCard
+                        key={milestone.id}
+                        milestone={milestone}
+                        userProgress={userProgress}
+                        onComplete={handleMilestoneComplete}
+                        onMicroComplete={handleMicroMilestoneComplete}
+                        isLocked={!isUnlocked}
+                        lockReason={lockReason}
+                      />
+                    );
+                  })}
               </div>
               
               {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length === 0 && (
