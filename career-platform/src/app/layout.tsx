@@ -2,9 +2,12 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "../components/providers";
-import ClientLayout from "@/components/layout/ClientLayout";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-inter'
+});
 
 export const metadata: Metadata = {
   title: "PivotAI - Career Development Platform",
@@ -43,8 +46,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
+        {/* Critical inline CSS to prevent FOUC */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              body {
+                visibility: hidden;
+                opacity: 0;
+                background-color: rgb(249 250 251);
+                margin: 0;
+                font-family: ${inter.style.fontFamily}, -apple-system, BlinkMacSystemFont, sans-serif;
+              }
+              body.loaded {
+                visibility: visible;
+                opacity: 1;
+                transition: opacity 0.15s ease-in;
+              }
+            `,
+          }}
+        />
+        
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -57,11 +80,25 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://firebaseapp.com" />
         <link rel="dns-prefetch" href="https://www.gstatic.com" />
       </head>
-      <body className={`${inter.className} bg-gray-50`}>
+      <body className={`${inter.className} bg-gray-50 antialiased`}>
         <Providers>
           {children}
-          <ClientLayout />
         </Providers>
+        {/* Force CSS to load immediately on client */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Immediately show content once DOM is ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                  document.body.classList.add('loaded');
+                });
+              } else {
+                document.body.classList.add('loaded');
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
