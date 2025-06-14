@@ -1,26 +1,20 @@
 'use client';
 
 import { useEffect } from 'react';
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 
 export function WebVitals() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Log Web Vitals to console in development
-    if (process.env.NODE_ENV === 'development') {
-      onCLS(console.log);
-      onFID(console.log);
-      onFCP(console.log);
-      onLCP(console.log);
-      onTTFB(console.log);
-      onINP(console.log);
-    }
+    const logMetric = (metric: Metric) => {
+      // Log Web Vitals to console in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(metric);
+      }
 
-    // Send to analytics in production
-    if (process.env.NODE_ENV === 'production') {
-      const sendToAnalytics = (metric: any) => {
-        // Replace with your analytics endpoint
+      // Send to analytics in production
+      if (process.env.NODE_ENV === 'production') {
         const body = JSON.stringify({
           name: metric.name,
           value: metric.value,
@@ -39,17 +33,19 @@ export function WebVitals() {
             method: 'POST',
             keepalive: true,
             headers: { 'Content-Type': 'application/json' },
+          }).catch(() => {
+            // Silently fail - analytics shouldn't break the app
           });
         }
-      };
+      }
+    };
 
-      onCLS(sendToAnalytics);
-      onFID(sendToAnalytics);
-      onFCP(sendToAnalytics);
-      onLCP(sendToAnalytics);
-      onTTFB(sendToAnalytics);
-      onINP(sendToAnalytics);
-    }
+    // Register web vitals
+    onCLS(logMetric);
+    onFCP(logMetric);
+    onLCP(logMetric);
+    onTTFB(logMetric);
+    onINP(logMetric);
   }, []);
 
   return null;
