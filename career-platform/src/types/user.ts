@@ -385,10 +385,12 @@ export enum UserRole {
   export interface UserProgress {
     userId: string;
     currentLevel: number;
+    currentXP: number;
+    totalXP: number;
     maxUnlockedLevel: number;
     completedMilestones: string[];
     completedMicroMilestones: string[];
-    achievements: Achievement[];
+    achievements: string[];
     streakDays: number;
     lastActiveDate: Date;
     weeklyGoal?: number;
