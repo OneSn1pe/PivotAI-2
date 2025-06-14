@@ -33,6 +33,23 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
     
+    // User progress tracking
+    match /userProgress/{userId} {
+      allow read, write: if isOwner(userId) || isDevelopmentMode();
+    }
+    
+    // Achievements collection
+    match /achievements/{achievementId} {
+      // Users can read their own achievements
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || isDevelopmentMode());
+      // Only the system (via security rules) can create achievements
+      allow create: if request.auth != null && 
+        (request.resource.data.userId == request.auth.uid || isDevelopmentMode());
+      // Achievements cannot be updated or deleted once created
+      allow update, delete: if false;
+    }
+    
     // For development mode, uncomment this rule to allow all access (for testing)
     // match /{document=**} {
     //   allow read, write: if true;

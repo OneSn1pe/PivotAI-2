@@ -42,6 +42,8 @@ export default function AnalyticsPage() {
       const mockProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
+        currentXP: 0,
+        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],
@@ -54,29 +56,12 @@ export default function AnalyticsPage() {
       const mockProgressOLD: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
+        currentXP: 0,
+        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],
-        achievements: [
-          {
-            id: 'first_milestone',
-            title: 'First Steps',
-            description: 'Complete your first career milestone',
-            icon: '',
-            category: 'progress',
-            unlockedAt: new Date(Date.now() - 86400000),
-            rarity: 'common'
-          },
-          {
-            id: 'streak_5',
-            title: 'Consistency Keeper',
-            description: 'Maintain a 5-day learning streak',
-            icon: '',
-            category: 'streak',
-            unlockedAt: new Date(),
-            rarity: 'uncommon'
-          }
-        ],
+        achievements: ['first_milestone', 'streak_5'],
         streakDays: 0,
         lastActiveDate: new Date(),
         skillProficiencies: {}

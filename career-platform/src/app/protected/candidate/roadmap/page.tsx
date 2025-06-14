@@ -136,6 +136,8 @@ export default function CareerPathPage() {
       const userProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
+        currentXP: 0,
+        totalXP: 0,
         maxUnlockedLevel,
         completedMilestones: completedMilestoneIds,
         completedMicroMilestones: [],
