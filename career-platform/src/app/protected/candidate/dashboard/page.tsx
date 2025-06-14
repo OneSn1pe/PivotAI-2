@@ -12,9 +12,14 @@ import ResumeManager from '@/components/candidate/ResumeManager';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import SetupChecklist from '@/components/candidate/SetupChecklist';
 import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
-import { StreakWidget } from '@/components/gamification/StreakSystem';
+import { MinimalStreakWidget } from '@/components/dashboard/MinimalStreakWidget';
 import { AchievementShowcase } from '@/components/gamification/AchievementBadges';
 import { QuickShareButton } from '@/components/social/AchievementShare';
+import { ProgressTrackingService } from '@/services/progressTracking';
+import { ActivityTracker } from '@/components/dashboard/ActivityTracker';
+import { MilestoneTracker } from '@/components/dashboard/MilestoneTracker';
+import { LevelIndicator } from '@/components/dashboard/LevelIndicator';
+import { toast } from 'sonner';
 
 
 export default function CandidateDashboard() {
@@ -66,49 +71,63 @@ export default function CandidateDashboard() {
     if (!userProfile) return;
     
     try {
-      // Mock data for development - replace with actual Firebase calls
-      const mockProgress: UserProgress = {
-        userId: userProfile.uid,
-        currentLevel: 3,
-        maxUnlockedLevel: 3,
-        completedMilestones: ['milestone-1', 'milestone-2'],
-        completedMicroMilestones: ['micro-1', 'micro-2', 'micro-3'],
-        achievements: [],
-        streakDays: 5,
-        lastActiveDate: new Date(),
-        skillProficiencies: {
-          'JavaScript': 75,
-          'React': 60,
-          'Node.js': 45
-        }
-      };
+      // Load real user progress from Firebase
+      const progress = await ProgressTrackingService.getUserProgress(userProfile.uid);
+      setUserProgress(progress);
       
-      const mockAchievements: Achievement[] = [
-        {
-          id: 'first_milestone',
-          title: 'First Steps',
-          description: 'Complete your first career milestone',
-          icon: '',
-          category: 'progress',
-          unlockedAt: new Date(Date.now() - 86400000),
-          rarity: 'common'
-        },
-        {
-          id: 'streak_5',
-          title: 'Consistency Keeper',
-          description: 'Maintain a 5-day learning streak',
-          icon: '',
-          category: 'streak',
-          unlockedAt: new Date(),
-          rarity: 'uncommon'
-        }
-      ];
+      // Update daily activity (login streak)
+      const { streakDays, xpGained } = await ProgressTrackingService.updateDailyActivity(userProfile.uid);
       
-      setUserProgress(mockProgress);
-      setAchievements(mockAchievements);
+      // Load achievements
+      const userAchievements = await ProgressTrackingService.getUserAchievements(userProfile.uid);
+      setAchievements(userAchievements);
+      
+      // Get activity stats
+      const stats = await ProgressTrackingService.getActivityStats(userProfile.uid);
+      
+      // Calculate level progress
+      const levelProgress = ProgressTrackingService.calculateLevelProgress(progress);
+      
+      // Update streak data with real values
+      setStreakData({
+        currentStreak: progress.streakDays,
+        longestStreak: Math.max(progress.streakDays, 12), // You might want to track this separately
+        lastActivity: progress.lastActiveDate,
+        streakMultiplier: 1 + (progress.streakDays / 50), // 2% bonus per day, max 2x at 50 days
+        nextMilestone: getNextStreakMilestone(progress.streakDays),
+        weeklyGoal: 7,
+        weeklyProgress: Math.min(progress.streakDays, 7)
+      });
+      
+      // If XP was gained from daily login, show a toast
+      if (xpGained > 0) {
+        toast.success(`Daily login bonus: +${xpGained} XP!`);
+      }
     } catch (error) {
       console.error('Error loading user progress:', error);
+      
+      // Fallback to default values if Firebase fails
+      const defaultProgress: UserProgress = {
+        userId: userProfile.uid,
+        currentLevel: 1,
+        currentXP: 0,
+        totalXP: 0,
+        maxUnlockedLevel: 1,
+        completedMilestones: [],
+        completedMicroMilestones: [],
+        achievements: [],
+        streakDays: 0,
+        lastActiveDate: new Date(),
+        skillProficiencies: {}
+      };
+      setUserProgress(defaultProgress);
     }
+  };
+  
+  // Helper function to get next streak milestone
+  const getNextStreakMilestone = (currentStreak: number): number => {
+    const milestones = [3, 7, 14, 30, 50, 100];
+    return milestones.find(m => m > currentStreak) || currentStreak + 1;
   };
 
   const validateResumeUrl = async () => {
@@ -244,7 +263,7 @@ export default function CandidateDashboard() {
       
       {/* Gamification Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <StreakWidget streakData={streakData} />
+        <MinimalStreakWidget streakData={streakData} />
         <div className="p-4 bg-white rounded-lg border border-gray-200">
           <h3 className="font-semibold text-gray-800 mb-2">Progress Tracking</h3>
           <p className="text-sm text-gray-600">Your learning progress is tracked through milestone completion and streak maintenance.</p>
@@ -261,6 +280,29 @@ export default function CandidateDashboard() {
             </div>
           )}
         </div>
+      </div>
+      
+      {/* Level Indicator */}
+      {userProgress && (
+        <LevelIndicator userProgress={userProgress} className="mb-6" />
+      )}
+      
+      {/* Activity Tracker and Milestone Tracker */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {userProfile && (
+          <ActivityTracker userId={userProfile.uid} />
+        )}
+        {roadmap && userProgress && (
+          <MilestoneTracker
+            userId={userProfile?.uid || ''}
+            milestones={roadmap.milestones || []}
+            completedMilestones={userProgress.completedMilestones}
+            onMilestoneComplete={(milestoneId) => {
+              // Refresh user progress after milestone completion
+              loadUserProgress();
+            }}
+          />
+        )}
       </div>
 
     </div>

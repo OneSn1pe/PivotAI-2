@@ -20,8 +20,8 @@ const nextConfig = {
   // Customize base path if needed
   basePath: '',
   
-  // Output standalone build for better portability
-  output: 'standalone',
+  // Remove standalone output for Vercel compatibility
+  // output: 'standalone',
   
   // Enable proper type checking and linting
   typescript: {
@@ -89,21 +89,32 @@ const nextConfig = {
     return config;
   },
   
-  // Configure headers to allow CORS
+  // Configure headers properly
   async headers() {
     return [
       {
-        // Apply these headers to all routes
-        source: '/:path*',
+        // Apply CORS headers to API routes only
+        source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT,OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
-          // Performance and security headers
+        ],
+      },
+      {
+        // Security headers for HTML pages only (not static assets)
+        source: '/((?!_next/static|_next/image|favicon.ico).*)',
+        headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+      {
+        // Proper caching for static assets
+        source: '/_next/:path*',
+        headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },

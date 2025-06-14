@@ -37,6 +37,8 @@ export default function SocialPage() {
       const mockProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
+        currentXP: 0,
+        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],

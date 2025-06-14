@@ -297,7 +297,7 @@ export class AchievementEngine {
     } = {}
   ): Promise<Achievement[]> {
     const newAchievements: Achievement[] = [];
-    const existingAchievementIds = progress.achievements.map(a => a.id);
+    const existingAchievementIds = progress.achievements;
 
     // Get available achievements for the user's field
     const availableAchievements = this.getAvailableAchievements(
@@ -459,7 +459,7 @@ export class AchievementEngine {
     }
 
     // Check if user already has this achievement
-    if (progress.achievements.some(a => a.id === achievementId)) {
+    if (progress.achievements.includes(achievementId)) {
       return null;
     }
 
@@ -471,7 +471,8 @@ export class AchievementEngine {
    */
   static getAchievementProgress(
     progress: UserProgress,
-    professionalField: ProfessionalField
+    professionalField: ProfessionalField,
+    earnedAchievements: Achievement[] = []
   ): {
     earned: Achievement[];
     available: {
@@ -482,7 +483,7 @@ export class AchievementEngine {
     }[];
     hidden: number;
   } {
-    const existingIds = progress.achievements.map(a => a.id);
+    const existingIds = progress.achievements;
     const availableDefinitions = this.getAvailableAchievements(professionalField, existingIds);
     
     const available = availableDefinitions
@@ -501,7 +502,7 @@ export class AchievementEngine {
     const hiddenCount = availableDefinitions.filter(def => def.hidden).length;
 
     return {
-      earned: progress.achievements,
+      earned: earnedAchievements,
       available,
       hidden: hiddenCount
     };
