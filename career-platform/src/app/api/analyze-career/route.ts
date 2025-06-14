@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { log } from '@/lib/logger';
+
+// Debug helper
+const debug = {
+  log: (...args: any[]) => {
+    console.log('[API:analyze-career]', ...args);
+  },
+  error: (...args: any[]) => {
+    console.error('[API:analyze-career:ERROR]', ...args);
+  }
+};
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -8,7 +17,7 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: NextRequest) {
-  log.debug('[analyze-career] Received request');
+  debug.log('[analyze-career] Received request');
   
   try {
     const { prompt } = await req.json();
@@ -20,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    log.debug('[analyze-career] Calling OpenAI API');
+    debug.log('[analyze-career] Calling OpenAI API');
     
     const completion = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview",
@@ -72,14 +81,14 @@ export async function POST(req: NextRequest) {
       throw new Error('No response from OpenAI');
     }
 
-    log.debug('[analyze-career] Received response from OpenAI');
+    debug.log('[analyze-career] Received response from OpenAI');
     
     // Parse the JSON response
     let parsedResult;
     try {
       parsedResult = JSON.parse(result);
     } catch (parseError) {
-      log.error('[analyze-career] Failed to parse OpenAI response:', parseError);
+      debug.error('[analyze-career] Failed to parse OpenAI response:', parseError);
       // Return the raw result if parsing fails
       parsedResult = result;
     }
@@ -87,7 +96,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(parsedResult);
     
   } catch (error: any) {
-    log.error('[analyze-career] Error:', error);
+    debug.error('[analyze-career] Error:', error);
     
     return NextResponse.json(
       { 
