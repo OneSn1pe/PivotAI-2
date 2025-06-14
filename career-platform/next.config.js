@@ -2,16 +2,22 @@
 const nextConfig = {
   // Enable experimental optimizations
   experimental: {
-    // optimizeCss: true, // Disabled due to Vercel build issues with critters module
+    optimizeCss: false, // Disabled due to CSS loading issues
     optimizeServerReact: true,
     optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-*'],
-    typedRoutes: false, // Disable typed routes to avoid potential CSS loading issues
+    typedRoutes: false,
+    webpackBuildWorker: true, // Parallel builds
   },
   
   // Performance optimizations
   swcMinify: true,
   reactStrictMode: true,
   poweredByHeader: false,
+  
+  // Optimize CSS loading
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   
   // Transpile necessary dependencies if needed
   transpilePackages: [],
@@ -75,6 +81,43 @@ const nextConfig = {
         '@google-cloud/storage': false,
         'firebase-admin': false,
       };
+      
+      // Optimize chunk splitting for better CSS loading
+      config.optimization = {
+        ...config.optimization,
+        runtimeChunk: 'single',
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk for node_modules
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20,
+            },
+            // Common chunk for shared modules
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true,
+            },
+            // Separate CSS chunks
+            styles: {
+              name: 'styles',
+              type: 'css/mini-extract',
+              chunks: 'all',
+              enforce: true,
+              priority: 30,
+            },
+          },
+        },
+      };
     }
     
     // Bundle analyzer in development
@@ -118,6 +161,13 @@ const nextConfig = {
         source: '/_next/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
+      },
+      {
+        // Preload critical CSS
+        source: '/:path*',
+        headers: [
+          { key: 'Link', value: '</_next/static/css/app/layout.css>; rel=preload; as=style' },
         ],
       },
     ];
