@@ -4,6 +4,7 @@ const nextConfig = {
   experimental: {
     // optimizeCss: true, // Disabled due to Vercel build issues with critters module
     optimizeServerReact: true,
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-*'],
   },
   
   // Performance optimizations

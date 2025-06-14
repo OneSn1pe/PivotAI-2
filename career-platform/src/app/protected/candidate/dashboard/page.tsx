@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { getDocs, collection, query, where, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,18 +9,64 @@ import { CareerRoadmap, CandidateProfile, Milestone, categorizeMilestone, migrat
 import { useRouter } from 'next/navigation';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
-import ResumeManager from '@/components/candidate/ResumeManager';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import SetupChecklist from '@/components/candidate/SetupChecklist';
-import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
-import { MinimalStreakWidget } from '@/components/dashboard/MinimalStreakWidget';
-import { AchievementShowcase } from '@/components/gamification/AchievementBadges';
-import { QuickShareButton } from '@/components/social/AchievementShare';
-import { ProgressTrackingService } from '@/services/progressTracking';
-import { ActivityTracker } from '@/components/dashboard/ActivityTracker';
-import { MilestoneTracker } from '@/components/dashboard/MilestoneTracker';
-import { LevelIndicator } from '@/components/dashboard/LevelIndicator';
 import { toast } from 'sonner';
+
+// Lazy load heavy components
+const ResumeManager = dynamic(() => import('@/components/candidate/ResumeManager'), {
+  loading: () => <div className="h-20 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const SetupChecklist = dynamic(() => import('@/components/candidate/SetupChecklist'), {
+  loading: () => <div className="h-32 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const ProgressDashboard = dynamic(() => 
+  import('@/components/progress/ProgressDashboard').then(mod => ({ default: mod.ProgressDashboard })), {
+  loading: () => <div className="h-48 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const MinimalStreakWidget = dynamic(() => 
+  import('@/components/dashboard/MinimalStreakWidget').then(mod => ({ default: mod.MinimalStreakWidget })), {
+  loading: () => <div className="h-32 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const AchievementShowcase = dynamic(() => 
+  import('@/components/gamification/AchievementBadges').then(mod => ({ default: mod.AchievementShowcase })), {
+  loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const QuickShareButton = dynamic(() => 
+  import('@/components/social/AchievementShare').then(mod => ({ default: mod.QuickShareButton })), {
+  loading: () => <div className="h-10 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const ActivityTracker = dynamic(() => 
+  import('@/components/dashboard/ActivityTracker').then(mod => ({ default: mod.ActivityTracker })), {
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const MilestoneTracker = dynamic(() => 
+  import('@/components/dashboard/MilestoneTracker').then(mod => ({ default: mod.MilestoneTracker })), {
+  loading: () => <div className="h-64 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+const LevelIndicator = dynamic(() => 
+  import('@/components/dashboard/LevelIndicator').then(mod => ({ default: mod.LevelIndicator })), {
+  loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
+// Lazy load ProgressTrackingService
+const loadProgressTrackingService = () => import('@/services/progressTracking').then(mod => mod.ProgressTrackingService);
 
 
 export default function CandidateDashboard() {
@@ -71,6 +118,9 @@ export default function CandidateDashboard() {
     if (!userProfile) return;
     
     try {
+      // Dynamically import ProgressTrackingService
+      const ProgressTrackingService = await loadProgressTrackingService();
+      
       // Load real user progress from Firebase
       const progress = await ProgressTrackingService.getUserProgress(userProfile.uid);
       setUserProgress(progress);

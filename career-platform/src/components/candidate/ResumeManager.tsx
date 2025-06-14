@@ -8,11 +8,9 @@ import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
 import { ref, getDownloadURL, listAll, uploadBytes } from 'firebase/storage';
-// Import mammoth for DOCX processing
-import mammoth from 'mammoth';
-
-// Dynamically import PDF.js only on client side
+// Dynamically import heavy libraries only when needed
 let pdfjsLib: any = null;
+let mammoth: any = null;
 
 interface ResumeManagerProps {
   onUpdateComplete?: (fileName: string) => void;
@@ -185,9 +183,15 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         return plaintext;
       }
       
-      // For DOCX files, use mammoth to extract text
+      // For DOCX files, dynamically load and use mammoth to extract text
       if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
         console.log('Converting DOCX to plaintext');
+        
+        // Dynamically import mammoth only when needed
+        if (!mammoth) {
+          mammoth = await import('mammoth');
+        }
+        
         const arrayBuffer = await file.arrayBuffer();
         
         const result = await mammoth.extractRawText({ arrayBuffer });

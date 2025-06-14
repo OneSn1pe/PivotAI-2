@@ -44,6 +44,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to external domains for faster resource loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        <link rel="preconnect" href="https://identitytoolkit.googleapis.com" />
+        <link rel="preconnect" href="https://securetoken.googleapis.com" />
+        
+        {/* DNS prefetch for additional resources */}
+        <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firebaseapp.com" />
+        <link rel="dns-prefetch" href="https://www.gstatic.com" />
+      </head>
       <body className={`${inter.className} bg-gray-50`}>
         <Providers>
           {children}
