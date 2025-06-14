@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ResumeManager from '@/components/candidate/ResumeManager';
 import LinkedInProfileImport from '@/components/candidate/LinkedInProfileImport';
+import TargetJobDiagnostic from '@/components/candidate/TargetJobDiagnostic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -174,6 +175,11 @@ export default function ProfilePage() {
             <div className="mb-6">
               <h2 className="text-lg font-medium text-gray-900">Target Companies</h2>
               <p className="text-sm text-gray-600 mt-1">Add up to 3 companies you're interested in</p>
+            </div>
+
+            {/* Target Job Diagnostic Tool */}
+            <div className="mb-6">
+              <TargetJobDiagnostic />
             </div>
             
             {saveSuccess && (

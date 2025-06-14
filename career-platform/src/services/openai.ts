@@ -603,3 +603,36 @@ export async function generateNextLevel(
     throw error;
   }
 }
+
+/**
+ * Analyze career path and provide job recommendations
+ */
+export async function analyzeCareerPath(prompt: string): Promise<any> {
+  log.debug('analyzeCareerPath called');
+  
+  try {
+    const baseUrl = getApiBaseUrl();
+    const apiUrl = `${baseUrl}/api/analyze-career`;
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to analyze career path: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    log.debug('Career path analyzed successfully');
+    
+    return data;
+  } catch (error) {
+    log.error('Error analyzing career path:', error);
+    throw error;
+  }
+}
