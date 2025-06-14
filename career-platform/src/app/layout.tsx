@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "../components/providers";
+import { LoadingScreen } from "@/components/LoadingScreen";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -48,21 +49,51 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        {/* Critical inline CSS to prevent FOUC */}
+        {/* Initial loading screen styles - must be inline to show immediately */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-              body {
+              /* Hide main content initially */
+              #main-content {
                 visibility: hidden;
                 opacity: 0;
-                background-color: rgb(249 250 251);
-                margin: 0;
-                font-family: ${inter.style.fontFamily}, -apple-system, BlinkMacSystemFont, sans-serif;
               }
-              body.loaded {
+              #main-content.loaded {
                 visibility: visible;
                 opacity: 1;
-                transition: opacity 0.15s ease-in;
+                transition: opacity 0.3s ease-in;
+              }
+              
+              /* Loading screen that shows immediately */
+              #initial-loading {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #f9fafb;
+                z-index: 99999;
+              }
+              #initial-loading.hide {
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease-out;
+              }
+              
+              /* Spinner animation */
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+              .spinner {
+                width: 48px;
+                height: 48px;
+                border: 3px solid #e5e7eb;
+                border-top-color: #3b82f6;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
               }
             `,
           }}
@@ -81,21 +112,106 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.gstatic.com" />
       </head>
       <body className={`${inter.className} bg-gray-50 antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
-        {/* Force CSS to load immediately on client */}
+        {/* Initial loading screen - rendered immediately with inline styles */}
+        <div id="initial-loading">
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                marginBottom: '2rem',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              }}
+            >
+              Career Platform
+            </div>
+            <div className="spinner" />
+            <div
+              style={{
+                marginTop: '1.5rem',
+                fontSize: '1rem',
+                color: '#6b7280',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              }}
+            >
+              Loading...
+            </div>
+          </div>
+        </div>
+        
+        {/* Main content - hidden initially */}
+        <div id="main-content">
+          <Providers>
+            {children}
+          </Providers>
+        </div>
+        
+        {/* React-based loading screen for client-side navigation */}
+        <LoadingScreen />
+        
+        {/* Script to handle loading transition */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Immediately show content once DOM is ready
-              if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', function() {
-                  document.body.classList.add('loaded');
+              (function() {
+                var loadingScreen = document.getElementById('initial-loading');
+                var mainContent = document.getElementById('main-content');
+                var checkInterval;
+                var startTime = Date.now();
+                var minLoadTime = 500; // Minimum time to show loading screen
+                
+                function hideLoading() {
+                  var elapsed = Date.now() - startTime;
+                  var delay = Math.max(0, minLoadTime - elapsed);
+                  
+                  setTimeout(function() {
+                    loadingScreen.classList.add('hide');
+                    mainContent.classList.add('loaded');
+                    setTimeout(function() {
+                      loadingScreen.style.display = 'none';
+                    }, 300);
+                  }, delay);
+                }
+                
+                function checkReady() {
+                  // Check if all critical resources are loaded
+                  if (document.readyState === 'complete') {
+                    // Additional check for stylesheets
+                    var sheets = document.styleSheets;
+                    var allLoaded = true;
+                    
+                    for (var i = 0; i < sheets.length; i++) {
+                      try {
+                        var rules = sheets[i].cssRules || sheets[i].rules;
+                        if (!rules) allLoaded = false;
+                      } catch (e) {
+                        // External stylesheets might throw, but that's okay
+                      }
+                    }
+                    
+                    if (allLoaded) {
+                      clearInterval(checkInterval);
+                      hideLoading();
+                    }
+                  }
+                }
+                
+                // Start checking immediately
+                checkInterval = setInterval(checkReady, 50);
+                
+                // Fallback: hide after 3 seconds regardless
+                setTimeout(function() {
+                  clearInterval(checkInterval);
+                  hideLoading();
+                }, 3000);
+                
+                // Also listen for window load event
+                window.addEventListener('load', function() {
+                  clearInterval(checkInterval);
+                  hideLoading();
                 });
-              } else {
-                document.body.classList.add('loaded');
-              }
+              })();
             `,
           }}
         />
