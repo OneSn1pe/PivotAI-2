@@ -96,7 +96,7 @@ export default function TargetJobDiagnostic() {
 Resume Analysis:
 - Skills: ${candidateProfile.resumeAnalysis.skills.join(', ')}
 - Strengths: ${candidateProfile.resumeAnalysis.strengths.join('. ')}
-- Experience Level: ${candidateProfile.resumeAnalysis.experienceLevel || 'Not specified'}
+- Experience: ${candidateProfile.resumeAnalysis.experience.join(', ') || 'Not specified'}
 
 Job Preferences:
 - Work Type: ${preferences.workType}
