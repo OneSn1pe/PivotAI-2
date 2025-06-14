@@ -36,6 +36,11 @@ export default function DashboardRedirect() {
       console.log('[DashboardRedirect] Redirecting to recruiter dashboard');
       router.push('/protected/recruiter/dashboard');
       setRedirected(true);
+    } else {
+      console.log('[DashboardRedirect] Unknown role:', userProfile.role);
+      // Fallback to candidate dashboard for unknown roles
+      router.push('/protected/candidate/dashboard');
+      setRedirected(true);
     }
   }, [userProfile, loading, router, pathname, redirected]);
 
