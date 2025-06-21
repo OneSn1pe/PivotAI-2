@@ -12,7 +12,7 @@ interface LazyMilestoneListProps {
   milestones: Milestone[];
   userProgress: UserProgress;
   onMilestoneComplete: (milestoneId: string) => void;
-  onMicroComplete: (microId: string) => void;
+  onMicroComplete: (microId: string, parentMilestoneId: string) => void;
 }
 
 export function LazyMilestoneList({
@@ -69,7 +69,7 @@ function LazyLevelSection({
   milestones: Milestone[];
   userProgress: UserProgress;
   onMilestoneComplete: (milestoneId: string) => void;
-  onMicroComplete: (microId: string) => void;
+  onMicroComplete: (microId: string, parentMilestoneId: string) => void;
 }) {
   const { ref, isInView } = useInView({ threshold: 0.1, rootMargin: '100px' });
 

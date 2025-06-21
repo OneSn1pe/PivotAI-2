@@ -19,7 +19,7 @@ interface LeveledMilestoneCardProps {
   milestone: Milestone;
   userProgress?: UserProgress;
   onComplete?: (milestoneId: string) => void;
-  onMicroComplete?: (microId: string) => void;
+  onMicroComplete?: (microId: string, parentMilestoneId: string) => void;
   isLocked?: boolean;
   lockReason?: string;
   showMicroMilestones?: boolean;
@@ -62,7 +62,7 @@ export function LeveledMilestoneCard({
 
   const handleMicroComplete = (microId: string) => {
     if (onMicroComplete) {
-      onMicroComplete(microId);
+      onMicroComplete(microId, milestone.id);
     }
   };
 

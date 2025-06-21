@@ -20,7 +20,7 @@ export class ProgressTrackingService {
     const progress = await this.getUserProgress(userId);
     const oldLevel = progress.currentLevel;
     
-    // Calculate the highest level where ALL milestones are completed
+    // Calculate the highest level where ALL milestones AND micro-milestones are completed
     let highestCompletedLevel = 0;
     
     // Group milestones by level
@@ -36,11 +36,25 @@ export class ProgressTrackingService {
     
     for (const level of levels) {
       const levelMilestones = milestonesByLevel[level];
-      const allCompleted = levelMilestones.every((m: any) => 
+      
+      // Check if all regular milestones are completed
+      const allMilestonesCompleted = levelMilestones.every((m: any) => 
         progress.completedMilestones.includes(m.id)
       );
       
-      if (allCompleted && levelMilestones.length > 0) {
+      // Check if all micro-milestones are completed
+      const allMicroMilestonesCompleted = levelMilestones.every((m: any) => {
+        // If milestone has micro-milestones, check if they're all completed
+        if (m.microMilestones && m.microMilestones.length > 0) {
+          return m.microMilestones.every((micro: any) => 
+            progress.completedMicroMilestones.includes(micro.id)
+          );
+        }
+        // If no micro-milestones, consider them as completed
+        return true;
+      });
+      
+      if (allMilestonesCompleted && allMicroMilestonesCompleted && levelMilestones.length > 0) {
         highestCompletedLevel = level;
       } else {
         // Once we find an incomplete level, stop checking higher levels

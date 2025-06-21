@@ -270,58 +270,128 @@ export default function CareerPathPage() {
     }
   };
 
-  const handleMicroMilestoneComplete = async (microId: string) => {
-    // TODO: Mark micro-milestone as complete
-    console.log('Micro-milestone completed:', microId);
+  const handleMicroMilestoneComplete = async (microId: string, parentMilestoneId: string) => {
+    if (!roadmap || !userProgress || !userProfile) return;
+    
+    try {
+      // Find the parent milestone
+      const parentMilestone = roadmap.milestones.find(m => m.id === parentMilestoneId);
+      if (!parentMilestone || !parentMilestone.microMilestones) return;
+      
+      // Find the micro-milestone
+      const microMilestone = parentMilestone.microMilestones.find(micro => micro.id === microId);
+      if (!microMilestone) return;
+      
+      // Toggle completion status
+      const isCurrentlyCompleted = microMilestone.completed;
+      
+      // Update micro-milestone completion in the parent milestone
+      const updatedMicroMilestones = parentMilestone.microMilestones.map(micro => 
+        micro.id === microId ? { ...micro, completed: !isCurrentlyCompleted } : micro
+      );
+      
+      // Update the parent milestone with new micro-milestones
+      const updatedMilestones = roadmap.milestones.map(milestone => 
+        milestone.id === parentMilestoneId 
+          ? { ...milestone, microMilestones: updatedMicroMilestones } 
+          : milestone
+      );
+      
+      // Update the roadmap in state
+      setRoadmap({
+        ...roadmap,
+        milestones: updatedMilestones,
+        updatedAt: new Date(),
+      });
+      
+      // Update in Firestore
+      await updateDoc(doc(db, 'roadmaps', roadmap.id), {
+        milestones: updatedMilestones,
+        updatedAt: new Date(),
+      });
+      
+      // Update user progress
+      const result = await ProgressTrackingService.completeMilestone(
+        userProfile.uid,
+        microId,
+        true, // isMicro = true
+        parentMilestone.level
+      );
+      
+      // Reload user progress to get updated state
+      await loadUserProgress();
+      
+      // Check if we need to update levels based on micro-milestone completion
+      const { leveledUp, newLevel } = await ProgressTrackingService.updateUserLevel(
+        userProfile.uid,
+        roadmap.milestones
+      );
+      
+      if (leveledUp && newLevel) {
+        // Update local state with new level
+        const progressWithLevel = {
+          ...userProgress,
+          currentLevel: newLevel,
+          maxUnlockedLevel: Math.max(newLevel + 1, userProgress.maxUnlockedLevel || 1)
+        };
+        setUserProgress(progressWithLevel);
+        
+        // Show success message
+        alert(`Congratulations! You've reached Level ${newLevel}!`);
+        
+        // Navigate to the new level if appropriate
+        if (selectedLevel === newLevel - 1) {
+          setSelectedLevel(newLevel);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error updating micro-milestone:', error);
+      alert('Failed to update micro-milestone. Please try again.');
+    }
   };
 
   const handleSkipLevel = async () => {
+    // Skipping levels is no longer allowed with the new requirements
+    alert(
+      'Level skipping is no longer available.\n\n' +
+      'To unlock the next level, you must complete:\n' +
+      '• ALL regular milestones in the current level\n' +
+      '• ALL micro-milestones in the current level\n\n' +
+      'This ensures you have the necessary foundation before advancing.'
+    );
+    return;
+    
+    // The code below is kept but disabled for potential future use
+    /*
     if (!roadmap || !userProgress || !userProfile) return;
     
-    // Get incomplete milestones for current level
+    // Get incomplete milestones and micro-milestones for current level
     const currentLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === selectedLevel);
     const incompleteMilestones = currentLevelMilestones.filter(m => !m.completed);
     
-    if (incompleteMilestones.length === 0) {
+    // Count incomplete micro-milestones
+    let incompleteMicroMilestones = 0;
+    currentLevelMilestones.forEach(m => {
+      if (m.microMilestones) {
+        incompleteMicroMilestones += m.microMilestones.filter(micro => !micro.completed).length;
+      }
+    });
+    
+    if (incompleteMilestones.length === 0 && incompleteMicroMilestones === 0) {
       alert('This level is already completed!');
       return;
     }
     
     // Show warning dialog
-    const warningMessage = `Are you sure you want to skip Level ${selectedLevel}?\n\n` +
-      `You have ${incompleteMilestones.length} incomplete milestone(s) in this level:\n` +
-      incompleteMilestones.map(m => `• ${m.title}`).join('\n') +
-      `\n\nSkipping will:\n` +
-      `• Unlock Level ${selectedLevel + 1} without completing these milestones\n` +
-      `• You may miss important skills and knowledge\n` +
-      `• You can return to complete these milestones later\n\n` +
-      `Continue?`;
+    const warningMessage = `Level skipping is restricted.\n\n` +
+      `To unlock Level ${selectedLevel + 1}, you must complete:\n` +
+      `• ${incompleteMilestones.length} remaining milestone(s)\n` +
+      `• ${incompleteMicroMilestones} remaining micro-milestone(s)\n\n` +
+      `This ensures you have the necessary skills and knowledge before advancing.`;
     
-    if (!confirm(warningMessage)) {
-      return;
-    }
-    
-    // Unlock the next level
-    const nextLevel = selectedLevel + 1;
-    const newMaxUnlockedLevel = Math.max(userProgress.maxUnlockedLevel || 1, nextLevel);
-    
-    // Update user progress
-    const updatedUserProgress = {
-      ...userProgress,
-      maxUnlockedLevel: newMaxUnlockedLevel,
-      // Track that this level was skipped (you might want to add a skippedLevels array to UserProgress type)
-    };
-    
-    setUserProgress(updatedUserProgress);
-    
-    // Check if there are milestones in the next level
-    const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === nextLevel);
-    if (nextLevelMilestones.length > 0) {
-      alert(`Level ${nextLevel} has been unlocked! You can return to Level ${selectedLevel} anytime to complete the skipped milestones.`);
-      setSelectedLevel(nextLevel);
-    } else {
-      alert('No milestones found in the next level. You may need to generate new content.');
-    }
+    alert(warningMessage);
+    */
   };
 
   const generateLevelData = (milestones: Milestone[], progress: UserProgress) => {
@@ -329,21 +399,62 @@ export default function CareerPathPage() {
     
     return levels.map(level => {
       const levelMilestones = milestones.filter(m => (m.level || 1) === level);
-      const completedCount = levelMilestones.filter(m => progress.completedMilestones.includes(m.id)).length;
+      const completedMilestoneCount = levelMilestones.filter(m => progress.completedMilestones.includes(m.id)).length;
       
-      // Check if this level was skipped (unlocked but not completed, and a higher level is unlocked)
-      const isSkipped = level < progress.maxUnlockedLevel && 
-                       completedCount < levelMilestones.length && 
-                       levelMilestones.length > 0;
+      // Count micro-milestones
+      let totalMicroMilestones = 0;
+      let completedMicroMilestones = 0;
+      
+      levelMilestones.forEach(m => {
+        if (m.microMilestones && m.microMilestones.length > 0) {
+          totalMicroMilestones += m.microMilestones.length;
+          completedMicroMilestones += m.microMilestones.filter(micro => 
+            progress.completedMicroMilestones.includes(micro.id)
+          ).length;
+        }
+      });
+      
+      // A level is only completed if ALL milestones AND micro-milestones are done
+      const isCompleted = completedMilestoneCount === levelMilestones.length && 
+                         completedMicroMilestones === totalMicroMilestones &&
+                         levelMilestones.length > 0;
+      
+      // Check if level can be unlocked based on new rules
+      let canUnlock = level === 1; // Level 1 is always unlocked
+      if (level > 1) {
+        // Check if all previous levels are fully completed
+        canUnlock = true;
+        for (let prevLevel = 1; prevLevel < level; prevLevel++) {
+          const prevLevelMilestones = milestones.filter(m => (m.level || 1) === prevLevel);
+          const prevCompleted = prevLevelMilestones.every(m => 
+            progress.completedMilestones.includes(m.id)
+          );
+          const prevMicroCompleted = prevLevelMilestones.every(m => {
+            if (m.microMilestones && m.microMilestones.length > 0) {
+              return m.microMilestones.every(micro => 
+                progress.completedMicroMilestones.includes(micro.id)
+              );
+            }
+            return true;
+          });
+          
+          if (!prevCompleted || !prevMicroCompleted) {
+            canUnlock = false;
+            break;
+          }
+        }
+      }
       
       return {
         level,
         isActive: level === selectedLevel,
-        isUnlocked: level <= progress.maxUnlockedLevel || level === 1,
-        isCompleted: completedCount === levelMilestones.length && completedCount > 0,
-        isSkipped,
+        isUnlocked: canUnlock,
+        isCompleted,
+        isSkipped: false, // Skipping is no longer allowed
         milestoneCount: levelMilestones.length,
-        completedCount,
+        completedCount: completedMilestoneCount,
+        microMilestoneCount: totalMicroMilestones,
+        completedMicroCount: completedMicroMilestones,
         title: getLevelTitle(level)
       };
     });
