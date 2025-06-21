@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '@/config/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getAdminFirestore, handleFirebaseError } from '@/utils/api-firebase';
 import { Milestone, ProfessionalField } from '@/types/user';
 
 // Debug helper
@@ -38,25 +37,33 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Get Firebase Admin Firestore instance
+    let db;
+    try {
+      db = getAdminFirestore();
+    } catch (error) {
+      return handleFirebaseError(error);
+    }
+    
     // Get existing roadmap
-    const roadmapDoc = await getDoc(doc(db, 'roadmaps', roadmapId));
-    if (!roadmapDoc.exists()) {
+    const roadmapDoc = await db.collection('roadmaps').doc(roadmapId).get();
+    if (!roadmapDoc.exists) {
       return NextResponse.json(
         { error: 'Roadmap not found' },
         { status: 404 }
       );
     }
     
-    const roadmapData = roadmapDoc.data();
+    const roadmapData = roadmapDoc.data() || {};
     const existingMilestones = roadmapData.milestones || [];
     const targetCompanies = roadmapData.targetCompanies || [];
     const professionalField = roadmapData.professionalField || 'computer-science';
     const nextLevel = (currentLevel || existingMilestones.length) + 1;
     
     // Get candidate profile for context
-    const candidateDoc = await getDoc(doc(db, 'users', candidateId));
-    const candidateData = candidateDoc.exists() ? candidateDoc.data() : {};
-    const resumeAnalysis = candidateData.resumeAnalysis || {};
+    const candidateDoc = await db.collection('users').doc(candidateId).get();
+    const candidateData = candidateDoc.exists ? candidateDoc.data() : {};
+    const resumeAnalysis = candidateData?.resumeAnalysis || {};
     
     // Create prompt for next level generation
     const prompt = `You are an expert career counselor creating Level ${nextLevel} milestones for a candidate's career roadmap.
@@ -155,7 +162,7 @@ Return ONLY valid JSON in this format:
     }));
     
     // Update roadmap with new milestones
-    await updateDoc(doc(db, 'roadmaps', roadmapId), {
+    await db.collection('roadmaps').doc(roadmapId).update({
       milestones: [...existingMilestones, ...newMilestones],
       lastUpdated: new Date(),
       maxLevel: nextLevel
@@ -179,13 +186,7 @@ Return ONLY valid JSON in this format:
     const totalDuration = performance.now() - requestStartTime;
     debug.error(`Error generating next level after ${Math.round(totalDuration)}ms:`, error);
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to generate next level', 
-        details: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    // Use the centralized error handler
+    return handleFirebaseError(error);
   }
 }
