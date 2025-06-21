@@ -87,10 +87,10 @@ export default function WaitlistPage() {
       setSuccess(true);
       setEmail('');
       
-      // Show success message for 3 seconds then redirect
+      // Reset success state after 5 seconds to allow another signup
       setTimeout(() => {
-        router.push('/auth/login');
-      }, 3000);
+        setSuccess(false);
+      }, 5000);
       
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -99,29 +99,34 @@ export default function WaitlistPage() {
     }
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="transform scale-100 animate-fadeIn">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-light text-gray-900 mb-3">You're on the list!</h2>
-            <p className="text-gray-600 font-light">
-              We'll notify you as soon as PivotAI launches.
-            </p>
-            <p className="text-sm text-gray-400 mt-4">Redirecting to login...</p>
-          </div>
+  // Success message overlay
+  const SuccessMessage = () => (
+    <div className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center px-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform scale-100 animate-slideUp">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
         </div>
+        <h2 className="text-2xl font-light text-gray-900 mb-3 text-center">You're on the list!</h2>
+        <p className="text-gray-600 font-light text-center">
+          We'll notify you as soon as PivotAI launches. Thank you for your interest!
+        </p>
+        <button
+          onClick={() => setSuccess(false)}
+          className="mt-6 w-full bg-gray-900 hover:bg-gray-800 text-white font-light py-3 px-6 rounded-lg transition-colors"
+        >
+          Got it
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Success Message Overlay */}
+      {success && <SuccessMessage />}
+      
       {/* Navigation */}
       <nav 
         className="fixed top-0 left-0 right-0 z-[9999] bg-white/90 backdrop-blur-md transition-all duration-300 shadow-sm"
@@ -334,12 +339,27 @@ export default function WaitlistPage() {
           }
         }
         
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
         .animate-fadeUp {
           animation: fadeUp 0.8s ease-out forwards;
         }
         
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out;
+        }
+        
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
         }
         
         .scroll-animate {
