@@ -1,468 +1,347 @@
-import React from 'react';
-import Link from 'next/link';
-import Script from 'next/script';
-import { 
-  Target, 
-  TrendingUp, 
-  Users, 
-  Briefcase, 
-  FileText, 
-  Award,
-  ArrowRight,
-  PlayCircle,
-  Calendar,
-  Star,
-  Check
-} from 'lucide-react';
+'use client';
 
-export default function HomePage() {
-  return (
-    <div className="min-h-screen">
-      <Script id="structured-data" type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          "name": "PivotAI Career Quest - Career Development Platform",
-          "url": "https://pivotai.me/",
-          "description": "Transform your career growth into a structured journey with goal-oriented platform, skill development paths, and professional networking.",
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://pivotai.me/search?q={search_term_string}",
-            "query-input": "required name=search_term_string"
+import React, { useState, useEffect, useRef } from 'react';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/config/firebase';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+export default function WaitlistPage() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
+  const [scrollY, setScrollY] = useState(0);
+  const router = useRouter();
+  
+  // Refs for scroll animations
+  const heroRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Intersection Observer for fade-in animations
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-fadeUp');
           }
-        })}
-      </Script>
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const elements = document.querySelectorAll('.scroll-animate');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      // Validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      // Check if email already exists
+      const q = query(collection(db, 'waitlist'), where('email', '==', email.toLowerCase()));
+      const querySnapshot = await getDocs(q);
       
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                PivotAI Career
-              </h1>
+      if (!querySnapshot.empty) {
+        throw new Error('This email is already on the waitlist');
+      }
+
+      // Add to waitlist
+      await addDoc(collection(db, 'waitlist'), {
+        email: email.toLowerCase(),
+        createdAt: new Date(),
+        source: 'waitlist-page',
+        notified: false
+      });
+
+      setSuccess(true);
+      setEmail('');
+      
+      // Show success message for 3 seconds then redirect
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 3000);
+      
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="transform scale-100 animate-fadeIn">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/auth/login"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Login
-              </Link>
-              <Link 
-                href="/auth/register"
-                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-lg font-medium transition-colors inline-flex items-center"
-              >
-                Get Started
-              </Link>
-            </div>
+            <h2 className="text-2xl font-light text-gray-900 mb-3">You're on the list!</h2>
+            <p className="text-gray-600 font-light">
+              We'll notify you as soon as PivotAI launches.
+            </p>
+            <p className="text-sm text-gray-400 mt-4">Redirecting to login...</p>
           </div>
         </div>
-      </header>
+      </div>
+    );
+  }
 
-      <main>
-        {/* Hero Section */}
-        <section className="py-20 lg:py-32">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-                  Transform Your Career Into a Structured Journey
-                </h1>
-                <p className="text-lg lg:text-xl text-gray-600 mt-6 max-w-3xl">
-                  Join professionals who've advanced their careers with our goal-oriented platform. Track progress and achieve your professional goals.
-                </p>
-                <div className="flex gap-4 mt-10">
-                  <Link 
-                    href="/auth/register"
-                    className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center transition-colors"
-                  >
-                    Get Started
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                  <Link 
-                    href="#how-it-works"
-                    className="bg-white hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-medium border border-gray-300 inline-flex items-center transition-colors"
-                  >
-                    <PlayCircle className="mr-2 h-5 w-5" />
-                    Learn More
-                  </Link>
-                </div>
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav 
+        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm transition-all duration-300"
+        style={{
+          borderBottom: scrollY > 50 ? '1px solid rgba(0,0,0,0.08)' : '1px solid transparent'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <h1 className="text-xl font-light text-gray-900">PivotAI</h1>
+            <Link 
+              href="/auth/login" 
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-light"
+            >
+              Already have access?
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div 
+            className="absolute -top-1/2 -right-1/2 w-full h-full opacity-5"
+            style={{
+              transform: `translateY(${scrollY * 0.3}px)`,
+              background: 'radial-gradient(circle, #000 1px, transparent 1px)',
+              backgroundSize: '50px 50px'
+            }}
+          />
+        </div>
+
+        <div className="max-w-4xl w-full relative z-10">
+          <div 
+            ref={heroRef}
+            className="text-center scroll-animate opacity-0"
+            style={{
+              transform: `translateY(${scrollY * -0.2}px)`
+            }}
+          >
+            <div className="inline-flex items-center justify-center px-3 py-1 bg-gray-100 text-gray-900 rounded-full text-xs font-medium mb-8">
+              <span className="animate-pulse mr-2">•</span>
+              Coming Soon
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-6 leading-tight">
+              Your AI-Powered
+              <br />
+              <span className="font-normal">Career Navigator</span>
+            </h1>
+            
+            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+              Transform your career trajectory with personalized AI-driven roadmaps 
+              and gamified learning experiences.
+            </p>
+          </div>
+
+          {/* Email Form */}
+          <div 
+            ref={formRef}
+            className="max-w-md mx-auto scroll-animate opacity-0"
+            style={{
+              transform: `translateY(${scrollY * -0.1}px)`
+            }}
+          >
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-6 py-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all bg-white font-light"
+                  required
+                  disabled={loading}
+                />
+                {error && (
+                  <p className="absolute -bottom-6 left-0 text-sm text-red-600 font-light">{error}</p>
+                )}
               </div>
               
-              <div className="lg:pl-8">
-                <div className="bg-white rounded-lg p-8">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-900">Career Progress</h3>
-                      <span className="text-sm text-gray-500">Level 7</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gray-900 h-2 rounded-full" style={{width: '75%'}}></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 pt-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">23</div>
-                        <div className="text-sm text-gray-500">Skills Unlocked</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">87%</div>
-                        <div className="text-sm text-gray-500">Goals Complete</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-light py-4 px-8 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Joining waitlist...
+                  </span>
+                ) : (
+                  'Join the Waitlist'
+                )}
+              </button>
+            </form>
 
-        {/* Social Proof Section */}
-        <section className="bg-white py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-sm text-gray-500 mb-8">Trusted by professionals at</p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center">
-              {['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple'].map((company) => (
-                <div key={company} className="text-center">
-                  <div className="text-xl font-medium text-gray-400">
-                    {company}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Everything you need to advance your career
-              </h2>
-              <p className="text-lg text-gray-600">
-                Transform professional development from overwhelming to organized.
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: Target,
-                  color: 'text-gray-600',
-                  title: 'Goal-Oriented System',
-                  description: 'Set and track career objectives with our structured approach to professional growth.'
-                },
-                {
-                  icon: TrendingUp,
-                  color: 'text-gray-600',
-                  title: 'Skill Development Paths',
-                  description: 'Visual skill trees that guide your learning journey across Technology, Business, and Creative domains.'
-                },
-                {
-                  icon: Users,
-                  color: 'text-gray-600',
-                  title: 'Professional Network',
-                  description: 'Connect with mentors, join industry groups, and build relationships that advance your career.'
-                },
-                {
-                  icon: Briefcase,
-                  color: 'text-gray-600',
-                  title: 'Job Opportunity Matching',
-                  description: 'Discover positions that match your skill level and career goals with intelligent recommendations.'
-                },
-                {
-                  icon: FileText,
-                  color: 'text-gray-600',
-                  title: 'Resume Optimization',
-                  description: 'Build and optimize your resume with templates and feedback tailored to your target roles.'
-                },
-                {
-                  icon: Award,
-                  color: 'text-gray-600',
-                  title: 'Achievement Tracking',
-                  description: 'Earn credentials and track your professional milestones with our comprehensive progress system.'
-                }
-              ].map((feature, index) => (
-                <div key={index} className="bg-white p-8 rounded-lg">
-                  <feature.icon className="h-8 w-8 text-gray-600 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works Section */}
-        <section id="how-it-works" className="bg-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Your career journey, simplified
-              </h2>
-              <p className="text-lg text-gray-600">
-                From assessment to achievement in three clear steps.
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-12">
-              {[
-                {
-                  number: '01',
-                  title: 'Assess Your Starting Point',
-                  description: 'Complete our comprehensive career assessment to understand your current skills, strengths, and growth areas.'
-                },
-                {
-                  number: '02',
-                  title: 'Choose Your Path',
-                  description: 'Select from Technology, Business, or Creative career paths with personalized objectives and milestones.'
-                },
-                {
-                  number: '03',
-                  title: 'Level Up Continuously',
-                  description: 'Complete tasks, build skills, and track progress as you advance toward your career goals.'
-                }
-              ].map((step, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-3xl font-bold text-gray-700 mb-4">{step.number}</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-4">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-12">
-              Success stories from professionals
-            </h2>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  quote: "PivotAI helped me transition from marketing to product management in 8 months. The structured approach made all the difference.",
-                  author: "Sarah Chen",
-                  role: "Senior Product Manager",
-                  company: "TechFlow"
-                },
-                {
-                  quote: "The networking features connected me with mentors who guided my career shift into data science. Invaluable platform.",
-                  author: "Marcus Rodriguez",
-                  role: "Data Scientist",
-                  company: "DataVis Corp"
-                },
-                {
-                  quote: "Love the gamified approach to professional development. Finally, career growth feels manageable and motivating.",
-                  author: "Jessica Park",
-                  role: "UX Designer",
-                  company: "DesignStudio"
-                }
-              ].map((testimonial, index) => (
-                <div key={index} className="bg-white p-8 rounded-lg">
-                  <p className="text-gray-600 mb-6">"{testimonial.quote}"</p>
-                  <div>
-                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
-                    <div className="text-gray-500">{testimonial.role} at {testimonial.company}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section id="pricing" className="bg-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Simple, transparent pricing
-              </h2>
-              <p className="text-lg text-gray-600">
-                Choose the plan that fits your career goals.
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {[
-                {
-                  name: 'Starter',
-                  price: 'Free',
-                  description: 'Perfect for exploring your career options',
-                  features: [
-                    'Basic career assessment',
-                    '3 skill development paths',
-                    'Community access',
-                    'Progress tracking'
-                  ],
-                  cta: 'Get Started',
-                  ctaStyle: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300',
-                  popular: false
-                },
-                {
-                  name: 'Professional',
-                  price: '$19/month',
-                  description: 'For serious career advancement',
-                  features: [
-                    'Complete career assessment',
-                    'All skill development paths',
-                    '1-on-1 mentor matching',
-                    'Advanced analytics',
-                    'Resume optimization tools',
-                    'Job opportunity alerts'
-                  ],
-                  cta: 'Start Free Trial',
-                  ctaStyle: 'bg-gray-900 hover:bg-gray-800 text-white',
-                  popular: true
-                },
-                {
-                  name: 'Enterprise',
-                  price: 'Custom',
-                  description: 'For teams and organizations',
-                  features: [
-                    'Everything in Professional',
-                    'Team management tools',
-                    'Custom career paths',
-                    'Advanced reporting',
-                    'Dedicated support',
-                    'API access'
-                  ],
-                  cta: 'Contact Sales',
-                  ctaStyle: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300',
-                  popular: false
-                }
-              ].map((tier, index) => (
-                <div key={index} className={`bg-white p-8 rounded-lg border ${tier.popular ? 'border-gray-900' : 'border-gray-200'} relative`}>
-                  {tier.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gray-900 text-white px-4 py-1 rounded-full text-sm font-medium">
-                        Most Popular
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
-                    <div className="text-4xl font-bold text-gray-900 mb-2">{tier.price}</div>
-                    <p className="text-gray-600 mb-6">{tier.description}</p>
-                  </div>
-                  
-                  <ul className="space-y-4 mb-8">
-                    {tier.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center">
-                        <Check className="h-5 w-5 text-gray-600 mr-3" />
-                        <span className="text-gray-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Link 
-                    href="/auth/register"
-                    className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors text-center block ${tier.ctaStyle}`}
-                  >
-                    {tier.cta}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        <section className="bg-gray-900 py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4">
-              Ready to transform your career?
-            </h2>
-            <p className="text-lg text-gray-300 mb-8">
-              Join professionals already advancing their careers with PivotAI.
+            <p className="text-center text-sm text-gray-500 mt-6 font-light">
+              Be among the first to experience the future of career development.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                href="/auth/register"
-                className="bg-white hover:bg-gray-100 text-gray-900 px-6 py-3 rounded-lg font-medium inline-flex items-center justify-center transition-colors"
-              >
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-              <Link 
-                href="#contact"
-                className="border border-white hover:bg-white hover:text-gray-900 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center justify-center transition-colors"
-              >
-                <Calendar className="mr-2 h-5 w-5" />
-                Schedule Demo
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-gray-900 font-semibold mb-4">Product</h3>
-              <ul className="space-y-2">
-                {['Features', 'Career Paths', 'Pricing', 'Documentation'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-gray-900 font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2">
-                {['Blog', 'Career Guides', 'Success Stories', 'Help Center'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-gray-900 font-semibold mb-4">Company</h3>
-              <ul className="space-y-2">
-                {['About Us', 'Careers', 'Press', 'Contact'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-gray-900 font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                {['Privacy Policy', 'Terms of Service', 'Security', 'Compliance'].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">{item}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          
-          <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-8">
-            <p className="text-gray-600">© 2025 PivotAI Career. All rights reserved.</p>
-            <div className="flex space-x-6">
-              {['Twitter', 'LinkedIn', 'GitHub', 'YouTube'].map((social) => (
-                <a key={social} href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  {social}
-                </a>
-              ))}
-            </div>
           </div>
         </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-light text-center text-gray-900 mb-16 scroll-animate opacity-0">
+            Redefining Career Development
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "AI Resume Analysis",
+                description: "Extract insights from your professional experience with advanced AI",
+                icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              },
+              {
+                title: "Leveled Roadmaps",
+                description: "Progress through 10 meticulously designed career levels",
+                icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              },
+              {
+                title: "Gamified Learning",
+                description: "Unlock achievements and track progress with engaging mechanics",
+                icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+              }
+            ].map((feature, index) => (
+              <div 
+                key={index}
+                className="scroll-animate opacity-0 text-center"
+                style={{
+                  animationDelay: `${index * 100}ms`
+                }}
+              >
+                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
+                  </svg>
+                </div>
+                <h3 className="font-medium text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-600 font-light leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-24 px-4 bg-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { number: "10", label: "Career Levels" },
+              { number: "100+", label: "Milestones" },
+              { number: "5", label: "Professional Fields" },
+              { number: "∞", label: "Possibilities" }
+            ].map((stat, index) => (
+              <div 
+                key={index}
+                className="scroll-animate opacity-0"
+                style={{
+                  animationDelay: `${index * 100}ms`
+                }}
+              >
+                <div className="text-3xl md:text-4xl font-light text-gray-900 mb-2">{stat.number}</div>
+                <div className="text-sm text-gray-600 font-light">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-4 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm text-gray-500 font-light">
+            © 2024 PivotAI. Transforming careers with intelligence.
+          </p>
+        </div>
       </footer>
+
+      {/* Add animation styles */}
+      <style jsx>{`
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        .animate-fadeUp {
+          animation: fadeUp 0.8s ease-out forwards;
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+        
+        .scroll-animate {
+          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
