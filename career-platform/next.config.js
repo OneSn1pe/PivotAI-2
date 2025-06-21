@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental optimizations
+  // Disable experimental optimizations that may cause chunk loading issues
   experimental: {
     // optimizeCss: true, // Disabled due to Vercel build issues with critters module
-    optimizeServerReact: true,
-    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-*'],
+    // optimizeServerReact: true, // Disabled to prevent chunk loading issues
+    // optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-*'], // Disabled to prevent chunk loading issues
   },
   
   // Performance optimizations
@@ -15,8 +15,8 @@ const nextConfig = {
   // Transpile necessary dependencies if needed
   transpilePackages: [],
   
-  // Asset prefix for CDN support
-  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || undefined,
+  // Asset prefix for CDN support - disabled to prevent chunk loading issues
+  // assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || undefined,
   
   // Customize base path if needed
   basePath: '',
@@ -64,6 +64,7 @@ const nextConfig = {
       path: false,
       os: false,
       critters: false, // Handle critters module issue
+      encoding: false, // Add encoding fallback
     };
     
     // Optimize client-side bundles
@@ -105,7 +106,7 @@ const nextConfig = {
       },
       {
         // Security headers for HTML pages only (not static assets)
-        source: '/((?!_next/static|_next/image|favicon.ico).*)',
+        source: '/((?!_next/static|_next/image|favicon.ico|.*\.js|.*\.css).*)',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
