@@ -29,11 +29,6 @@ const ProgressDashboard = dynamic(() =>
   ssr: false
 });
 
-const MinimalStreakWidget = dynamic(() => 
-  import('@/components/dashboard/MinimalStreakWidget').then(mod => ({ default: mod.MinimalStreakWidget })), {
-  loading: () => <div className="h-32 bg-gray-100 animate-pulse rounded-lg" />,
-  ssr: false
-});
 
 const AchievementShowcase = dynamic(() => 
   import('@/components/gamification/AchievementBadges').then(mod => ({ default: mod.AchievementShowcase })), {
@@ -59,11 +54,6 @@ const MilestoneTracker = dynamic(() =>
   ssr: false
 });
 
-const LevelIndicator = dynamic(() => 
-  import('@/components/dashboard/LevelIndicator').then(mod => ({ default: mod.LevelIndicator })), {
-  loading: () => <div className="h-24 bg-gray-100 animate-pulse rounded-lg" />,
-  ssr: false
-});
 
 // Lazy load ProgressTrackingService
 const loadProgressTrackingService = () => import('@/services/progressTracking').then(mod => mod.ProgressTrackingService);
@@ -84,28 +74,6 @@ export default function CandidateDashboard() {
   // Leveling system state
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [streakData, setStreakData] = useState({
-    currentStreak: 5,
-    longestStreak: 12,
-    lastActivity: new Date(),
-    nextMilestone: 7,
-    weeklyGoal: 7,
-    weeklyProgress: 4
-  });
-  const [multiplierData, setMultiplierData] = useState({
-    currentMultiplier: 1.0,
-    activeMultipliers: [
-      {
-        id: 'daily_streak',
-        name: 'Daily Streak Bonus',
-        multiplier: 1.2,
-        description: '5-day learning streak',
-        icon: 'Fire' as any,
-        color: 'border-orange-300 bg-orange-50',
-        isActive: true
-      }
-    ]
-  });
 
   useEffect(() => {
     fetchRoadmap();
@@ -135,15 +103,6 @@ export default function CandidateDashboard() {
       const stats = await ProgressTrackingService.getActivityStats(userProfile.uid);
       
       
-      // Update streak data with real values
-      setStreakData({
-        currentStreak: progress.streakDays,
-        longestStreak: Math.max(progress.streakDays, 12), // You might want to track this separately
-        lastActivity: progress.lastActiveDate,
-        nextMilestone: getNextStreakMilestone(progress.streakDays),
-        weeklyGoal: 7,
-        weeklyProgress: Math.min(progress.streakDays, 7)
-      });
       
       // Show daily login toast
       if (streakDays > 0) {
@@ -166,12 +125,6 @@ export default function CandidateDashboard() {
       };
       setUserProgress(defaultProgress);
     }
-  };
-  
-  // Helper function to get next streak milestone
-  const getNextStreakMilestone = (currentStreak: number): number => {
-    const milestones = [3, 7, 14, 30, 50, 100];
-    return milestones.find(m => m > currentStreak) || currentStreak + 1;
   };
 
   const validateResumeUrl = async () => {
@@ -297,7 +250,7 @@ export default function CandidateDashboard() {
       {/* Setup Checklist */}
       <SetupChecklist candidateProfile={candidateProfile} roadmap={roadmap} />
       
-      {/* Progress Dashboard */}
+      {/* Progress Dashboard - Primary progress display */}
       {userProgress && achievements && (
         <ProgressDashboard 
           userProgress={userProgress} 
@@ -306,37 +259,28 @@ export default function CandidateDashboard() {
         />
       )}
       
-      {/* Gamification Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <MinimalStreakWidget streakData={streakData} />
-        <div className="p-4 bg-white rounded-lg border border-gray-200">
-          <h3 className="font-semibold text-gray-800 mb-2">Progress Tracking</h3>
-          <p className="text-sm text-gray-600">Your learning progress is tracked through milestone completion and streak maintenance.</p>
-        </div>
-        <div className="space-y-4">
-          <AchievementShowcase achievements={achievements} />
+      {/* Achievement Showcase with Share Button */}
+      <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-800">Recent Achievements</h3>
           {achievements.length > 0 && userProgress && (
-            <div className="text-center">
-              <QuickShareButton 
-                achievement={achievements[0]} 
-                userProgress={userProgress}
-                className="w-full"
-              />
-            </div>
+            <QuickShareButton 
+              achievement={achievements[0]} 
+              userProgress={userProgress}
+              className=""
+            />
           )}
         </div>
+        <AchievementShowcase achievements={achievements} />
       </div>
       
-      {/* Level Indicator */}
-      {userProgress && (
-        <LevelIndicator userProgress={userProgress} className="mb-6" />
-      )}
-      
-      {/* Activity Tracker and Milestone Tracker */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* Primary Activity and Milestone Tracking */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Activity Tracker - Time-based statistics */}
         {userProfile && (
           <ActivityTracker userId={userProfile.uid} />
         )}
+        {/* Milestone Tracker - Interactive milestone management */}
         {roadmap && userProgress && (
           <MilestoneTracker
             userId={userProfile?.uid || ''}
