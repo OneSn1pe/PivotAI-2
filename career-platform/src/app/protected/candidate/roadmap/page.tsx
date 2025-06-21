@@ -13,6 +13,7 @@ import { LazyMilestoneList } from '@/components/candidate/LazyMilestoneList';
 import { generateNextLevel } from '@/services/openai';
 import { checkAndUnlockMilestones, isMilestoneUnlocked, getLockedMilestonesWithReasons } from '@/services/milestoneUnlockService';
 import { calculateUserLevel } from '@/services/levelProgressService';
+import { ProgressTrackingService } from '@/services/progressTracking';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -214,36 +215,58 @@ export default function CareerPathPage() {
       updatedCompletedMilestones.includes(m.id)
     );
     
-    // Only check for level unlocks if marking as complete
+    // Update user's level based on completed milestones
     if (!isCurrentlyCompleted) {
-      if (completedLevelMilestones.length === levelMilestones.length && levelMilestones.length > 0) {
-        // All milestones for this level completed - unlock next level
-        const nextLevel = milestoneLevel + 1;
-        const newMaxUnlockedLevel = Math.max(userProgress.maxUnlockedLevel || 1, nextLevel);
-        
-        // Update user progress with new max unlocked level
-        const progressWithUnlock = {
+      // Call ProgressTrackingService to update the user's level
+      const { leveledUp, newLevel } = await ProgressTrackingService.updateUserLevel(
+        userProfile.uid,
+        roadmap.milestones.map(m => ({
+          ...m,
+          id: m.id,
+          level: m.level || 1
+        }))
+      );
+      
+      if (leveledUp && newLevel) {
+        // Update local state with new level
+        const progressWithLevel = {
           ...updatedUserProgress,
-          maxUnlockedLevel: newMaxUnlockedLevel
+          currentLevel: newLevel,
+          maxUnlockedLevel: Math.max(newLevel + 1, userProgress.maxUnlockedLevel || 1)
         };
-        setUserProgress(progressWithUnlock);
+        setUserProgress(progressWithLevel);
         
         // Check if there are milestones in the next level
-        const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === nextLevel);
+        const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === newLevel + 1);
         if (nextLevelMilestones.length > 0) {
           // Show success message
-          alert(`Congratulations! You've unlocked Level ${nextLevel} with ${nextLevelMilestones.length} new milestones!`);
+          alert(`Congratulations! You've reached Level ${newLevel} and unlocked ${nextLevelMilestones.length} new milestones!`);
           
-          // Navigate to the new level
-          setSelectedLevel(nextLevel);
+          // Navigate to the new level if we just completed the current selected level
+          if (selectedLevel === newLevel - 1) {
+            setSelectedLevel(newLevel);
+          }
         }
       } else {
-        // Not all milestones completed, just update progress
+        // No level up, just update progress
         setUserProgress(updatedUserProgress);
       }
     } else {
-      // Marking as incomplete, just update progress
-      setUserProgress(updatedUserProgress);
+      // Marking as incomplete - also update level in case user is going back
+      const { newLevel } = await ProgressTrackingService.updateUserLevel(
+        userProfile.uid,
+        roadmap.milestones.map(m => ({
+          ...m,
+          id: m.id,
+          level: m.level || 1
+        }))
+      );
+      
+      const progressWithLevel = {
+        ...updatedUserProgress,
+        currentLevel: newLevel
+      };
+      setUserProgress(progressWithLevel);
     }
   };
 

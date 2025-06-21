@@ -104,8 +104,11 @@ export const milestoneToQuest = (
   };
 };
 
-// Calculate level based on completed milestones
+// Calculate level should not be based on milestone count
+// Levels are determined by completing ALL milestones within a level
+// This function is deprecated - use userProgress.currentLevel directly
 export const calculateLevel = (completedMilestones: number): number => {
-  // Simple level calculation: 1 level per 5 completed milestones
-  return Math.max(1, Math.floor(completedMilestones / 5) + 1);
+  console.warn('calculateLevel is deprecated. Levels should be determined by completing all milestones in a level, not by count.');
+  // Return 1 as default - actual level should come from UserProgress
+  return 1;
 }; 

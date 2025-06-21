@@ -32,10 +32,13 @@ export function MilestoneTracker({
       const result = await ProgressTrackingService.completeMilestone(
         userId,
         milestone.id,
-        false
+        false,
+        milestone.level
       );
 
-      if (result.achievement) {
+      if (result.leveledUp) {
+        toast.success(`Level up! You are now level ${result.newLevel}!`);
+      } else if (result.achievement) {
         toast.success(`Achievement unlocked: ${result.achievement.title}`);
       } else {
         toast.success('Milestone completed!');

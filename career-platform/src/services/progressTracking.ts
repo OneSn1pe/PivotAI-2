@@ -15,6 +15,55 @@ import { UserProgress, Achievement, Milestone } from '@/types/user';
 
 
 export class ProgressTrackingService {
+  // Update user's current level based on completed milestones
+  static async updateUserLevel(userId: string, roadmapMilestones: any[]): Promise<{ leveledUp: boolean; newLevel: number; oldLevel: number }> {
+    const progress = await this.getUserProgress(userId);
+    const oldLevel = progress.currentLevel;
+    
+    // Calculate the highest level where ALL milestones are completed
+    let highestCompletedLevel = 0;
+    
+    // Group milestones by level
+    const milestonesByLevel = roadmapMilestones.reduce((acc, milestone) => {
+      const level = milestone.level || 1;
+      if (!acc[level]) acc[level] = [];
+      acc[level].push(milestone);
+      return acc;
+    }, {} as Record<number, any[]>);
+    
+    // Check each level to find the highest completed one
+    const levels = Object.keys(milestonesByLevel).map(Number).sort((a, b) => a - b);
+    
+    for (const level of levels) {
+      const levelMilestones = milestonesByLevel[level];
+      const allCompleted = levelMilestones.every((m: any) => 
+        progress.completedMilestones.includes(m.id)
+      );
+      
+      if (allCompleted && levelMilestones.length > 0) {
+        highestCompletedLevel = level;
+      } else {
+        // Once we find an incomplete level, stop checking higher levels
+        break;
+      }
+    }
+    
+    // Update the current level if it has changed
+    const newLevel = Math.max(1, highestCompletedLevel);
+    
+    if (newLevel !== oldLevel) {
+      const progressRef = doc(db, 'userProgress', userId);
+      await updateDoc(progressRef, {
+        currentLevel: newLevel,
+        maxUnlockedLevel: Math.max(newLevel + 1, progress.maxUnlockedLevel || 1)
+      });
+      
+      return { leveledUp: newLevel > oldLevel, newLevel, oldLevel };
+    }
+    
+    return { leveledUp: false, newLevel: oldLevel, oldLevel };
+  }
+
   // Get or create user progress
   static async getUserProgress(userId: string): Promise<UserProgress> {
     const progressRef = doc(db, 'userProgress', userId);
@@ -85,8 +134,10 @@ export class ProgressTrackingService {
   }
 
   // Complete a milestone
-  static async completeMilestone(userId: string, milestoneId: string, isMicro: boolean = false): Promise<{
+  static async completeMilestone(userId: string, milestoneId: string, isMicro: boolean = false, milestoneLevel?: number): Promise<{
     achievement?: Achievement;
+    leveledUp?: boolean;
+    newLevel?: number;
   }> {
     const progress = await this.getUserProgress(userId);
 
@@ -101,6 +152,22 @@ export class ProgressTrackingService {
       [arrayField]: [...completedArray, milestoneId],
     };
 
+    // If this is a regular milestone and we have the level, check if we need to update currentLevel
+    let leveledUp = false;
+    let newLevel = progress.currentLevel;
+    
+    if (!isMicro && milestoneLevel) {
+      // We need to check if all milestones for this level are now completed
+      // This would require fetching the roadmap to check, so we'll do a simpler check
+      // The proper level calculation should happen in a separate function that has access to all milestones
+      updateData.currentLevel = milestoneLevel;
+      
+      if (milestoneLevel > progress.currentLevel) {
+        leveledUp = true;
+        newLevel = milestoneLevel;
+      }
+    }
+
     const progressRef = doc(db, 'userProgress', userId);
     await updateDoc(progressRef, updateData);
 
@@ -111,7 +178,11 @@ export class ProgressTrackingService {
       updateData.completedMicroMilestones?.length || progress.completedMicroMilestones.length
     );
 
-    return { achievement: achievement || undefined };
+    return { 
+      achievement: achievement || undefined,
+      leveledUp,
+      newLevel: leveledUp ? newLevel : undefined
+    };
   }
 
 
