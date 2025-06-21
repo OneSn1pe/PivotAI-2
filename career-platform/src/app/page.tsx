@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { db } from '@/config/firebase-lite';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function WaitlistPage() {
   const [email, setEmail] = useState('');
@@ -60,20 +59,30 @@ export default function WaitlistPage() {
       }
 
       // Check if email already exists
-      const q = query(collection(db, 'waitlist'), where('email', '==', email.toLowerCase()));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        throw new Error('This email is already on the waitlist');
+      try {
+        const q = query(collection(db, 'waitlist'), where('email', '==', email.toLowerCase()));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          throw new Error('This email is already on the waitlist');
+        }
+      } catch (queryError) {
+        console.error('Error checking existing email:', queryError);
+        // Continue anyway if we can't check for duplicates
       }
 
       // Add to waitlist
-      await addDoc(collection(db, 'waitlist'), {
-        email: email.toLowerCase(),
-        createdAt: new Date(),
-        source: 'waitlist-page',
-        notified: false
-      });
+      try {
+        await addDoc(collection(db, 'waitlist'), {
+          email: email.toLowerCase(),
+          createdAt: new Date(),
+          source: 'waitlist-page',
+          notified: false
+        });
+      } catch (addError) {
+        console.error('Error adding to waitlist:', addError);
+        throw new Error('Unable to add to waitlist. Please try again later.');
+      }
 
       setSuccess(true);
       setEmail('');
