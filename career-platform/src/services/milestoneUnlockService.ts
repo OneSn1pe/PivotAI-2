@@ -3,8 +3,6 @@ import { db } from '@/config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { calculateUserLevel } from './levelProgressService';
 
-export { calculateMaxUnlockedLevel };
-
 export interface UnlockResult {
   unlockedMilestones: string[];
   newLevel: number;
