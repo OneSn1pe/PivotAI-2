@@ -115,9 +115,10 @@ export default function WaitlistPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav 
-        className="fixed top-0 left-0 right-0 z-[9999] bg-white/80 backdrop-blur-sm transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-[9999] bg-white/90 backdrop-blur-md transition-all duration-300 shadow-sm"
         style={{
-          borderBottom: scrollY > 50 ? '1px solid rgba(0,0,0,0.08)' : '1px solid transparent'
+          borderBottom: scrollY > 50 ? '1px solid rgba(0,0,0,0.08)' : '1px solid transparent',
+          isolation: 'isolate'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -141,7 +142,7 @@ export default function WaitlistPage() {
           />
         </div>
 
-        <div className="max-w-4xl w-full relative z-10">
+        <div className="max-w-4xl w-full relative">
           <div 
             ref={heroRef}
             className="text-center scroll-animate opacity-0"
