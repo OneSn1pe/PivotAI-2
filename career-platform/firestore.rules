@@ -55,6 +55,18 @@ service cloud.firestore {
     //   allow read, write: if true;
     // }
     
+    // Waitlist collection - anyone can write, only authenticated users can read
+    match /waitlist/{entryId} {
+      // Allow anyone to create a waitlist entry
+      allow create: if true;
+      // Allow read access to check for existing emails (needed for duplicate check)
+      allow read: if true;
+      // Only admins can update or delete
+      allow update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
     // Contact form submissions - anyone can create, only admins can read
     // match /contact_submissions/{submissionId} {
     //   allow create: if true;
