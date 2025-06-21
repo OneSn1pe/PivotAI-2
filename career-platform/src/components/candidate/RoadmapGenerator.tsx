@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap as RoadmapType, Milestone } from '@/types/user';
 import { generateCareerRoadmap, deleteAllRoadmaps } from '@/services/openai';
-import CareerRoadmap from './CareerRoadmap';
+import CategorizedCareerRoadmap from './CategorizedCareerRoadmap';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -375,7 +375,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
       {/* Display the generated roadmap */}
       {generatedRoadmap && (
         <div className="bg-white rounded-lg shadow-lg p-6 border border-slate-200">
-          <CareerRoadmap 
+          <CategorizedCareerRoadmap 
             roadmap={generatedRoadmap} 
             isEditable={true}
             onMilestoneToggle={async (milestoneId: string, completed: boolean) => {
