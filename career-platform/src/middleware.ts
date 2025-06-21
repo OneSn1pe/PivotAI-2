@@ -15,6 +15,7 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = path === '/' || 
     path === '/auth/login' || 
     path === '/auth/register' ||
+    path === '/waitlist' ||
     path.startsWith('/_next') ||
     path.includes('/debug/');
     
@@ -117,6 +118,7 @@ export const config = {
     '/auth/:path*',
     '/protected/:path*',
     '/api/:path*',
-    '/debug/:path*'
+    '/debug/:path*',
+    '/waitlist'
   ]
 }; 
