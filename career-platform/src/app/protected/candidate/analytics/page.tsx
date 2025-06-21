@@ -18,7 +18,7 @@ import {
   RefreshCw,
   Info
 } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Loading } from '@/components/ui/loading';
 
 export default function AnalyticsPage() {
   const { userProfile } = useAuth();
@@ -42,8 +42,6 @@ export default function AnalyticsPage() {
       const mockProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
-        currentXP: 0,
-        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],
@@ -56,8 +54,6 @@ export default function AnalyticsPage() {
       const mockProgressOLD: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
-        currentXP: 0,
-        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],
@@ -189,8 +185,9 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <LoadingSpinner message="Loading analytics data" />
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <Loading size="lg" />
+        <p className="text-sm text-gray-600">Loading analytics data</p>
       </div>
     );
   }

@@ -312,7 +312,6 @@ interface AchievementUnlockAnimationProps {
     title: string;
     description: string;
     icon: string;
-    xpBonus?: number;
   };
   onComplete: () => void;
 }

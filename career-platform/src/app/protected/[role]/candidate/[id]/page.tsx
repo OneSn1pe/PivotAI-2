@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRoadmapAccess } from "@/hooks/useRoadmapAccess";
 import { UserRole } from "@/types/user";
 import RoadmapViewer from "@/components/roadmap/RoadmapViewer";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { Loading } from "@/components/ui/loading";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 
 export default function CandidateDetailPage() {
@@ -47,7 +47,12 @@ export default function CandidateDetailPage() {
   
   // Handle loading states
   if (authLoading || roadmapLoading) {
-    return <LoadingSpinner message="Loading roadmap..." />;
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <Loading size="lg" />
+        <p className="text-sm text-gray-600">Loading roadmap...</p>
+      </div>
+    );
   }
   
   // Handle access denied

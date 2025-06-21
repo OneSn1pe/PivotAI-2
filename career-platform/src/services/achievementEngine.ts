@@ -291,7 +291,6 @@ export class AchievementEngine {
     context: {
       milestonesCompleted?: Milestone[];
       microMilestonesCompleted?: MicroMilestone[];
-      newXP?: number;
       leveledUp?: boolean;
       professionalField?: ProfessionalField;
     } = {}
@@ -564,7 +563,6 @@ export class AchievementEngine {
     totalEarned: number;
     totalAvailable: number;
     completionRate: number;
-    totalXPBonus: number;
     rareAchievements: number;
     recentAchievements: Achievement[];
   } {
@@ -585,7 +583,6 @@ export class AchievementEngine {
       totalEarned,
       totalAvailable,
       completionRate: Math.round(completionRate),
-      totalXPBonus: 0, // Add the missing property
       rareAchievements,
       recentAchievements
     };

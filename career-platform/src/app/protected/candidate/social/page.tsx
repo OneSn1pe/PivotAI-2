@@ -17,7 +17,7 @@ import {
   Crown,
   Star
 } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Loading } from '@/components/ui/loading';
 
 export default function SocialPage() {
   const { userProfile } = useAuth();
@@ -37,8 +37,6 @@ export default function SocialPage() {
       const mockProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
-        currentXP: 0,
-        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],
@@ -58,8 +56,9 @@ export default function SocialPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <LoadingSpinner message="Loading social features" />
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <Loading size="lg" />
+        <p className="text-sm text-gray-600">Loading social features</p>
       </div>
     );
   }

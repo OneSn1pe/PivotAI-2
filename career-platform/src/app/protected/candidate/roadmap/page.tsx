@@ -136,8 +136,6 @@ export default function CareerPathPage() {
       const userProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
-        currentXP: 0,
-        totalXP: 0,
         maxUnlockedLevel,
         completedMilestones: completedMilestoneIds,
         completedMicroMilestones: [],
@@ -250,7 +248,7 @@ export default function CareerPathPage() {
   };
 
   const handleMicroMilestoneComplete = async (microId: string) => {
-    // TODO: Mark micro-milestone as complete and award XP
+    // TODO: Mark micro-milestone as complete
     console.log('Micro-milestone completed:', microId);
   };
 

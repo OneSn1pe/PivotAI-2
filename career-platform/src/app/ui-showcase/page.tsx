@@ -10,7 +10,7 @@ import {
   AnimatedRadio,
   AnimatedSelect 
 } from '@/components/ui/animated-form';
-import { CircularProgress, StreakVisualizer, XPProgressBar } from '@/components/progress/ProgressVisualizations';
+import { CircularProgress, StreakVisualizer } from '@/components/progress/ProgressVisualizations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function UIShowcase() {
@@ -247,16 +247,6 @@ export default function UIShowcase() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>XP Progress Bar</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <XPProgressBar currentXP={1250} nextLevelXP={2000} level={5} />
-                <XPProgressBar currentXP={450} nextLevelXP={1000} level={3} />
-                <XPProgressBar currentXP={2800} nextLevelXP={3000} level={8} />
-              </CardContent>
-            </Card>
 
             <Card className="md:col-span-2">
               <CardHeader>

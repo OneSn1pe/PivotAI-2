@@ -134,43 +134,6 @@ export function StreakVisualizer({ streakDays }: { streakDays: number }) {
   );
 }
 
-export function XPProgressBar({ 
-  currentXP, 
-  nextLevelXP, 
-  level 
-}: { 
-  currentXP: number; 
-  nextLevelXP: number; 
-  level: number;
-}) {
-  const [animatedWidth, setAnimatedWidth] = useState(0);
-  const percentage = (currentXP / nextLevelXP) * 100;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setAnimatedWidth(percentage), 100);
-    return () => clearTimeout(timer);
-  }, [percentage]);
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-baseline">
-        <span className="text-sm font-medium text-gray-900">Level {level}</span>
-        <span className="text-xs text-gray-600">{currentXP} / {nextLevelXP} XP</span>
-      </div>
-      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-        <div 
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-gray-700 to-gray-900 rounded-full transition-all duration-1000 ease-out"
-          style={{ width: `${animatedWidth}%` }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-medium text-white mix-blend-difference">
-            {Math.round(percentage)}%
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function MilestoneTimeline({ milestones }: { milestones: any[] }) {
   return (

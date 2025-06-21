@@ -9,7 +9,7 @@ import { CareerRoadmap, CandidateProfile, Milestone, categorizeMilestone, migrat
 import { useRouter } from 'next/navigation';
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { useFileDownload } from '@/hooks/useFileDownload';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Loading } from '@/components/ui/loading';
 import { toast } from 'sonner';
 
 // Lazy load heavy components
@@ -88,13 +88,12 @@ export default function CandidateDashboard() {
     currentStreak: 5,
     longestStreak: 12,
     lastActivity: new Date(),
-    streakMultiplier: 1.2,
     nextMilestone: 7,
     weeklyGoal: 7,
     weeklyProgress: 4
   });
   const [multiplierData, setMultiplierData] = useState({
-    currentMultiplier: 1.2,
+    currentMultiplier: 1.0,
     activeMultipliers: [
       {
         id: 'daily_streak',
@@ -126,7 +125,7 @@ export default function CandidateDashboard() {
       setUserProgress(progress);
       
       // Update daily activity (login streak)
-      const { streakDays, xpGained } = await ProgressTrackingService.updateDailyActivity(userProfile.uid);
+      const { streakDays } = await ProgressTrackingService.updateDailyActivity(userProfile.uid);
       
       // Load achievements
       const userAchievements = await ProgressTrackingService.getUserAchievements(userProfile.uid);
@@ -135,23 +134,20 @@ export default function CandidateDashboard() {
       // Get activity stats
       const stats = await ProgressTrackingService.getActivityStats(userProfile.uid);
       
-      // Calculate level progress
-      const levelProgress = ProgressTrackingService.calculateLevelProgress(progress);
       
       // Update streak data with real values
       setStreakData({
         currentStreak: progress.streakDays,
         longestStreak: Math.max(progress.streakDays, 12), // You might want to track this separately
         lastActivity: progress.lastActiveDate,
-        streakMultiplier: 1 + (progress.streakDays / 50), // 2% bonus per day, max 2x at 50 days
         nextMilestone: getNextStreakMilestone(progress.streakDays),
         weeklyGoal: 7,
         weeklyProgress: Math.min(progress.streakDays, 7)
       });
       
-      // If XP was gained from daily login, show a toast
-      if (xpGained > 0) {
-        toast.success(`Daily login bonus: +${xpGained} XP!`);
+      // Show daily login toast
+      if (streakDays > 0) {
+        toast.success(`Welcome back! ${streakDays} day streak!`);
       }
     } catch (error) {
       console.error('Error loading user progress:', error);
@@ -160,8 +156,6 @@ export default function CandidateDashboard() {
       const defaultProgress: UserProgress = {
         userId: userProfile.uid,
         currentLevel: 1,
-        currentXP: 0,
-        totalXP: 0,
         maxUnlockedLevel: 1,
         completedMilestones: [],
         completedMicroMilestones: [],
@@ -254,8 +248,9 @@ export default function CandidateDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <LoadingSpinner message="Loading data" />
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <Loading size="lg" />
+        <p className="text-sm text-gray-600">Loading data</p>
       </div>
     );
   }

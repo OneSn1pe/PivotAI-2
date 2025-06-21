@@ -6,7 +6,6 @@ interface StreakData {
   currentStreak: number;
   longestStreak: number;
   lastActivity: Date;
-  streakMultiplier: number;
   nextMilestone: number;
   weeklyGoal: number;
   weeklyProgress: number;
@@ -65,10 +64,6 @@ export function MinimalStreakWidget({ streakData, className = '' }: MinimalStrea
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Longest</span>
             <span className="text-gray-900 font-medium">{streakData.longestStreak} days</span>
-          </div>
-          <div className="flex justify-between text-sm mt-1">
-            <span className="text-gray-600">Multiplier</span>
-            <span className="text-gray-900 font-medium">{streakData.streakMultiplier.toFixed(1)}x</span>
           </div>
         </div>
       </div>

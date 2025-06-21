@@ -22,7 +22,6 @@ interface StreakData {
   currentStreak: number;
   longestStreak: number;
   lastActivity: Date;
-  streakMultiplier: number;
   nextMilestone: number;
   weeklyGoal: number;
   weeklyProgress: number;
@@ -147,17 +146,6 @@ export function StreakSystem({
               </div>
             </div>
 
-            {/* Multiplier */}
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-700 mb-2">
-                {streakData.streakMultiplier.toFixed(1)}x
-              </div>
-              <div className="text-sm text-gray-600 mb-2">Learning Boost</div>
-              <div className="flex items-center justify-center gap-1">
-                <Zap className="h-4 w-4 text-gray-600" />
-                <span className="text-sm text-gray-600">Active Bonus</span>
-              </div>
-            </div>
           </div>
 
           {/* Weekly Progress */}
@@ -356,7 +344,7 @@ export function StreakWidget({
           
           <div className="text-right">
             <Badge className="bg-gray-700 text-white text-xs">
-              {streakData.streakMultiplier.toFixed(1)}x Boost
+              Active Streak
             </Badge>
             <div className="text-xs text-gray-500 mt-1">
               Next: {streakData.nextMilestone} days

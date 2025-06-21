@@ -35,14 +35,10 @@ export function MilestoneTracker({
         false
       );
 
-      if (result.xpGained > 0) {
-        toast.success(`+${result.xpGained} XP earned`);
-        
-        if (result.leveledUp) {
-          setTimeout(() => {
-            toast.success(`Level ${result.newLevel} reached!`);
-          }, 500);
-        }
+      if (result.achievement) {
+        toast.success(`Achievement unlocked: ${result.achievement.title}`);
+      } else {
+        toast.success('Milestone completed!');
       }
 
       onMilestoneComplete?.(milestone.id);
@@ -158,7 +154,7 @@ export function MilestoneTracker({
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-500">
-                            +500 XP
+                            Complete to unlock
                           </span>
                           <button
                             onClick={(e) => {

@@ -4,8 +4,8 @@ import React from 'react';
 import { UserProgress, Achievement } from '@/types/user';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { calculateUserLevel, getStreakMultiplier } from '@/services/levelProgressService';
-import { ProgressRadialChart, StreakVisualizer, XPProgressBar } from './ProgressVisualizations';
+import { calculateUserLevel } from '@/services/levelProgressService';
+import { ProgressRadialChart, StreakVisualizer } from './ProgressVisualizations';
 
 interface ProgressDashboardProps {
   userProgress: UserProgress;
@@ -15,7 +15,6 @@ interface ProgressDashboardProps {
 
 export function ProgressDashboard({ userProgress, achievements, className = '' }: ProgressDashboardProps) {
   const levelData = calculateUserLevel(userProgress);
-  const streakMultiplier = getStreakMultiplier(userProgress.streakDays);
 
   return (
     <div className={`space-y-8 ${className}`}>
@@ -25,20 +24,9 @@ export function ProgressDashboard({ userProgress, achievements, className = '' }
           {levelData.currentLevel}
         </div>
         <div className="text-base sm:text-lg text-gray-600 mb-1">{levelData.levelTitle}</div>
-        <div className="text-xs sm:text-sm text-gray-500">{levelData.totalXP} XP earned</div>
+        <div className="text-xs sm:text-sm text-gray-500">{levelData.levelDescription}</div>
       </div>
 
-      {/* Progress to Next Level - Enhanced */}
-      <div className="max-w-2xl mx-auto">
-        <XPProgressBar 
-          currentXP={levelData.currentLevelXP} 
-          nextLevelXP={levelData.xpForNextLevel} 
-          level={levelData.currentLevel}
-        />
-        <div className="mt-2 text-center text-xs text-gray-500">
-          {levelData.milestonesNeededForNext} milestones to next level
-        </div>
-      </div>
 
       {/* Radial Progress Charts */}
       <Card className="border-gray-200">
@@ -77,11 +65,6 @@ export function ProgressDashboard({ userProgress, achievements, className = '' }
                 {userProgress.streakDays}
               </div>
               <div className="text-xs sm:text-sm text-gray-600">Day streak</div>
-              {streakMultiplier > 1 && (
-                <div className="text-xs text-gray-500">
-                  {streakMultiplier}x XP multiplier
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
