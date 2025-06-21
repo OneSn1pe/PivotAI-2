@@ -115,7 +115,7 @@ export default function WaitlistPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav 
-        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-[9999] bg-white/80 backdrop-blur-sm transition-all duration-300"
         style={{
           borderBottom: scrollY > 50 ? '1px solid rgba(0,0,0,0.08)' : '1px solid transparent'
         }}
@@ -123,12 +123,6 @@ export default function WaitlistPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-xl font-light text-gray-900">PivotAI</h1>
-            <Link 
-              href="/auth/login" 
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-light"
-            >
-              Already have access?
-            </Link>
           </div>
         </div>
       </nav>
