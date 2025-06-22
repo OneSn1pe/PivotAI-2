@@ -119,7 +119,7 @@ export function AchievementShare({
     ctx.fillText(achievement.title, 400, 150);
     
     ctx.font = '24px Arial';
-    ctx.fillText(`Level ${userProgress.currentLevel} Achievement`, 400, 200);
+    ctx.fillText(`Level ${userProgress.levelsUnlocked} Achievement`, 400, 200);
     
     ctx.font = '20px Arial';
     ctx.fillText(achievement.description, 400, 250);
