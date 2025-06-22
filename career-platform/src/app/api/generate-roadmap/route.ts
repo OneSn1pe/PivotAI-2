@@ -176,7 +176,7 @@ Return a structured JSON roadmap with these components:
 {
   "milestones": [
     {
-      "id": "${uuidv4()}",
+      "id": "unique-milestone-id",
       "title": "Milestone name",
       "description": "Detailed description with actionable steps",
       "category": "technical|fundamental|niche|soft|career",
@@ -407,14 +407,25 @@ RESOURCE GENERATION REQUIREMENTS:
       }
       
       // Ensure each milestone has a unique ID and add required fields
-      milestones = parsedResponse.milestones.map((milestone: any) => ({
-        ...milestone,
-        id: milestone.id || uuidv4(),
-        completed: false, // Always start with uncompleted milestones for new roadmap
-        professionalField,
-        // Ensure all milestones are Level 1
-        level: 1
-      }));
+      const idSet = new Set<string>();
+      milestones = parsedResponse.milestones.map((milestone: any) => {
+        // Generate a unique ID if missing or duplicate
+        let milestoneId = milestone.id;
+        if (!milestoneId || idSet.has(milestoneId)) {
+          milestoneId = uuidv4();
+          debug.log(`Generated new ID for milestone: ${milestone.title}`);
+        }
+        idSet.add(milestoneId);
+        
+        return {
+          ...milestone,
+          id: milestoneId,
+          completed: false, // Always start with uncompleted milestones for new roadmap
+          professionalField,
+          // Ensure all milestones are Level 1
+          level: 1
+        };
+      });
       
       // Validate level progression
       milestones = milestones.sort((a: any, b: any) => a.level - b.level);

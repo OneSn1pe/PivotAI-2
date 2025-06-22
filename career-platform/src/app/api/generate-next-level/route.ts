@@ -170,14 +170,26 @@ Return ONLY valid JSON in this format:
       throw new Error('Invalid response structure from AI - missing milestones array');
     }
     
-    // Process milestones
-    const newMilestones = parsedResponse.milestones.map((milestone: any) => ({
-      ...milestone,
-      id: milestone.id || uuidv4(),
-      level: nextLevel,
-      createdAt: new Date(),
-      professionalField: professionalField as ProfessionalField
-    }));
+    // Process milestones and ensure unique IDs
+    // First, collect all existing milestone IDs to avoid duplicates
+    const idSet = new Set<string>(existingMilestones.map((m: any) => m.id));
+    const newMilestones = parsedResponse.milestones.map((milestone: any) => {
+      // Generate a unique ID if missing or duplicate
+      let milestoneId = milestone.id;
+      if (!milestoneId || idSet.has(milestoneId)) {
+        milestoneId = uuidv4();
+        debug.log(`Generated new ID for milestone: ${milestone.title}`);
+      }
+      idSet.add(milestoneId);
+      
+      return {
+        ...milestone,
+        id: milestoneId,
+        level: nextLevel,
+        createdAt: new Date(),
+        professionalField: professionalField as ProfessionalField
+      };
+    });
     
     // Update roadmap with new milestones
     await db.collection('roadmaps').doc(roadmapId).update({
