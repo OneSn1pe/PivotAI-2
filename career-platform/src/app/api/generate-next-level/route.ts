@@ -143,13 +143,31 @@ Return ONLY valid JSON in this format:
 
     const responseText = completion.choices[0]?.message?.content || '';
     
-    // Parse response
+    // Log raw response for debugging
+    debug.log('Raw OpenAI response:', responseText.substring(0, 200) + '...');
+    
+    // Parse response - handle potential formatting issues
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(responseText);
+      // Clean up response text - remove any markdown code blocks if present
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      parsedResponse = JSON.parse(cleanedText);
     } catch (parseError) {
       debug.error('Failed to parse OpenAI response:', parseError);
+      debug.error('Response text:', responseText);
       throw new Error('Invalid response format from AI');
+    }
+    
+    // Validate response structure
+    if (!parsedResponse || !parsedResponse.milestones || !Array.isArray(parsedResponse.milestones)) {
+      debug.error('Invalid response structure:', parsedResponse);
+      throw new Error('Invalid response structure from AI - missing milestones array');
     }
     
     // Process milestones
@@ -182,11 +200,23 @@ Return ONLY valid JSON in this format:
       }
     });
     
-  } catch (error) {
+  } catch (error: any) {
     const totalDuration = performance.now() - requestStartTime;
     debug.error(`Error generating next level after ${Math.round(totalDuration)}ms:`, error);
     
-    // Use the centralized error handler
+    // Return more specific error information
+    if (error.message && error.message.includes('Invalid response')) {
+      return NextResponse.json(
+        {
+          error: 'Internal server error',
+          details: error.message,
+          timestamp: new Date().toISOString()
+        },
+        { status: 500 }
+      );
+    }
+    
+    // Use the centralized error handler for other errors
     return handleFirebaseError(error);
   }
 }
