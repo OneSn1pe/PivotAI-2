@@ -109,62 +109,37 @@ export default function CareerPathPage() {
     fetchRoadmap();
   }, [userProfile]);
   
-  // Load user progress when roadmap changes
+  // Load user progress when user profile is available
   useEffect(() => {
     loadUserProgress();
-  }, [roadmap]);
+  }, [userProfile]);
 
   const loadUserProgress = async () => {
-    if (!userProfile || !roadmap) return;
+    if (!userProfile) return;
     
     try {
-      // Create user progress based on completed milestones in the roadmap
-      const completedMilestoneIds = roadmap.milestones
-        .filter(m => m.completed)
-        .map(m => m.id);
+      // Load user progress from Firebase (single source of truth)
+      const progress = await ProgressTrackingService.getUserProgress(userProfile.uid);
+      setUserProgress(progress);
       
-      // Calculate current level based on completed milestones
-      let currentLevel = 1; // Level 1 is always unlocked
-      const levels = Array.from(new Set(roadmap.milestones.map(m => m.level || 1))).sort((a, b) => a - b);
-      
-      for (const level of levels) {
-        if (level === 1) continue; // Level 1 is already the default
-        
-        // Check if all previous levels are fully completed
-        let allPreviousLevelsComplete = true;
-        for (let prevLevel = 1; prevLevel < level; prevLevel++) {
-          const prevLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === prevLevel);
-          const allMilestonesComplete = prevLevelMilestones.every(m => m.completed);
-          
-          if (!allMilestonesComplete || prevLevelMilestones.length === 0) {
-            allPreviousLevelsComplete = false;
-            break;
-          }
-        }
-        
-        if (allPreviousLevelsComplete) {
-          currentLevel = level;
-        } else {
-          break; // Stop checking higher levels
-        }
-      }
-      
-      const userProgress: UserProgress = {
+      // Set selected level to current level or maintain selection if valid
+      const maxUnlockedLevel = progress.levelsUnlocked + 1;
+      setSelectedLevel(Math.min(selectedLevel || progress.levelsUnlocked, maxUnlockedLevel));
+    } catch (error) {
+      console.error('Error loading user progress:', error);
+      // Fallback to default progress if Firebase fails
+      const defaultProgress: UserProgress = {
         userId: userProfile.uid,
-        levelsUnlocked: currentLevel,
-        completedMilestones: completedMilestoneIds,
+        levelsUnlocked: 1,
+        completedMilestones: [],
         completedMicroMilestones: [],
         achievements: [],
         streakDays: 0,
         lastActiveDate: new Date(),
         skillProficiencies: {}
       };
-      
-      setUserProgress(userProgress);
-      const maxUnlockedLevel = currentLevel + 1;
-      setSelectedLevel(Math.min(selectedLevel || 1, maxUnlockedLevel));
-    } catch (error) {
-      console.error('Error loading user progress:', error);
+      setUserProgress(defaultProgress);
+      setSelectedLevel(1);
     }
   };
 
@@ -204,35 +179,21 @@ export default function CareerPathPage() {
     const milestone = roadmap.milestones.find(m => m.id === milestoneId);
     if (!milestone) return;
     
-    // Toggle completion status
+    // Toggle completion status in Firestore
     const isCurrentlyCompleted = milestone.completed;
     await handleToggleMilestone(milestoneId, !isCurrentlyCompleted);
     
-    // Update user progress
-    let updatedCompletedMilestones: string[];
+    // Update progress through ProgressTrackingService
     if (!isCurrentlyCompleted) {
       // Marking as complete
-      updatedCompletedMilestones = [...userProgress.completedMilestones, milestoneId];
-    } else {
-      // Marking as incomplete
-      updatedCompletedMilestones = userProgress.completedMilestones.filter(id => id !== milestoneId);
-    }
-    
-    const updatedUserProgress = {
-      ...userProgress,
-      completedMilestones: updatedCompletedMilestones
-    };
-    
-    // Get milestone level info
-    const milestoneLevel = milestone.level || 1;
-    const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === milestoneLevel);
-    const completedLevelMilestones = levelMilestones.filter(m => 
-      updatedCompletedMilestones.includes(m.id)
-    );
-    
-    // Update user's level based on completed milestones
-    if (!isCurrentlyCompleted) {
-      // Call ProgressTrackingService to update the user's level
+      const result = await ProgressTrackingService.completeMilestone(
+        userProfile.uid,
+        milestoneId,
+        false, // not a micro milestone
+        milestone.level
+      );
+      
+      // Update user level and check for level up
       const { leveledUp, newLevel } = await ProgressTrackingService.updateUserLevel(
         userProfile.uid,
         roadmap.milestones.map(m => ({
@@ -242,14 +203,10 @@ export default function CareerPathPage() {
         }))
       );
       
+      // Reload user progress from Firebase to get latest state
+      await loadUserProgress();
+      
       if (leveledUp && newLevel) {
-        // Update local state with new level
-        const progressWithLevel = {
-          ...updatedUserProgress,
-          levelsUnlocked: newLevel
-        };
-        setUserProgress(progressWithLevel);
-        
         // Check if there are milestones in the next level
         const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === newLevel + 1);
         if (nextLevelMilestones.length > 0) {
@@ -262,13 +219,17 @@ export default function CareerPathPage() {
             setSelectedLevel(newLevel);
           }
         }
-      } else {
-        // No level up, just update progress
-        setUserProgress(updatedUserProgress);
       }
     } else {
-      // Marking as incomplete - also update level in case user is going back
-      const { newLevel } = await ProgressTrackingService.updateUserLevel(
+      // Marking as incomplete - remove from completed milestones
+      await ProgressTrackingService.uncompleteMilestone(
+        userProfile.uid,
+        milestoneId,
+        false // not a micro milestone
+      );
+      
+      // Update user level after uncompleting
+      await ProgressTrackingService.updateUserLevel(
         userProfile.uid,
         roadmap.milestones.map(m => ({
           ...m,
@@ -277,7 +238,7 @@ export default function CareerPathPage() {
         }))
       );
       
-      // Reload user progress to get updated levelsUnlocked
+      // Reload user progress to get updated state
       await loadUserProgress();
     }
   };
@@ -322,16 +283,23 @@ export default function CareerPathPage() {
         updatedAt: new Date(),
       });
       
-      // Update user progress
-      const result = await ProgressTrackingService.completeMilestone(
-        userProfile.uid,
-        microId,
-        true, // isMicro = true
-        parentMilestone.level
-      );
-      
-      // Reload user progress to get updated state
-      await loadUserProgress();
+      // Update user progress through ProgressTrackingService
+      if (!isCurrentlyCompleted) {
+        // Marking as complete
+        const result = await ProgressTrackingService.completeMilestone(
+          userProfile.uid,
+          microId,
+          true, // isMicro = true
+          parentMilestone.level
+        );
+      } else {
+        // Marking as incomplete
+        await ProgressTrackingService.uncompleteMilestone(
+          userProfile.uid,
+          microId,
+          true // isMicro = true
+        );
+      }
       
       // Check if we need to update levels based on micro-milestone completion
       const { leveledUp, newLevel } = await ProgressTrackingService.updateUserLevel(
@@ -339,10 +307,10 @@ export default function CareerPathPage() {
         roadmap.milestones
       );
       
+      // Reload user progress from Firebase to get latest state
+      await loadUserProgress();
+      
       if (leveledUp && newLevel) {
-        // Reload user progress to get updated levelsUnlocked
-        await loadUserProgress();
-        
         // Show level up animation
         setNewLevelAchieved(newLevel);
         setShowLevelUpAnimation(true);
@@ -427,36 +395,13 @@ export default function CareerPathPage() {
                          completedMicroMilestones === totalMicroMilestones &&
                          levelMilestones.length > 0;
       
-      // Check if level can be unlocked based on new rules
-      let canUnlock = level === 1; // Level 1 is always unlocked
-      if (level > 1) {
-        // Check if all previous levels are fully completed
-        canUnlock = true;
-        for (let prevLevel = 1; prevLevel < level; prevLevel++) {
-          const prevLevelMilestones = milestones.filter(m => (m.level || 1) === prevLevel);
-          const prevCompleted = prevLevelMilestones.every(m => 
-            progress.completedMilestones.includes(m.id)
-          );
-          const prevMicroCompleted = prevLevelMilestones.every(m => {
-            if (m.microMilestones && m.microMilestones.length > 0) {
-              return m.microMilestones.every(micro => 
-                progress.completedMicroMilestones.includes(micro.id)
-              );
-            }
-            return true;
-          });
-          
-          if (!prevCompleted || !prevMicroCompleted) {
-            canUnlock = false;
-            break;
-          }
-        }
-      }
+      // Use the levelsUnlocked from userProgress to determine what's unlocked
+      const isUnlocked = level <= progress.levelsUnlocked;
       
       return {
         level,
         isActive: level === selectedLevel,
-        isUnlocked: canUnlock,
+        isUnlocked,
         isCompleted,
         isSkipped: false, // Skipping is no longer allowed
         milestoneCount: levelMilestones.length,

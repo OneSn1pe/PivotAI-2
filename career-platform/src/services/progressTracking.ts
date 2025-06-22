@@ -176,8 +176,6 @@ export class ProgressTrackingService {
   // Complete a milestone
   static async completeMilestone(userId: string, milestoneId: string, isMicro: boolean = false, milestoneLevel?: number): Promise<{
     achievement?: Achievement;
-    leveledUp?: boolean;
-    newLevel?: number;
   }> {
     const progress = await this.getUserProgress(userId);
 
@@ -192,23 +190,8 @@ export class ProgressTrackingService {
       [arrayField]: [...completedArray, milestoneId],
     };
 
-    // If this is a regular milestone and we have the level, check if we need to update levelsUnlocked
-    let leveledUp = false;
-    const currentLevel = progress.levelsUnlocked || 1;
-    let newLevel = currentLevel;
-    
-    if (!isMicro && milestoneLevel) {
-      // We need to check if all milestones for this level are now completed
-      // This would require fetching the roadmap to check, so we'll do a simpler check
-      // The proper level calculation should happen in a separate function that has access to all milestones
-      
-      if (milestoneLevel > currentLevel) {
-        // Update to the new level
-        updateData.levelsUnlocked = milestoneLevel;
-        leveledUp = true;
-        newLevel = milestoneLevel;
-      }
-    }
+    // Note: Level updates should ONLY happen through updateUserLevel method
+    // This ensures proper validation that all milestones in previous levels are complete
 
     const progressRef = doc(db, 'userProgress', userId);
     await updateDoc(progressRef, updateData);
@@ -221,12 +204,28 @@ export class ProgressTrackingService {
     );
 
     return { 
-      achievement: achievement || undefined,
-      leveledUp,
-      newLevel: leveledUp ? newLevel : undefined
+      achievement: achievement || undefined
     };
   }
 
+  // Uncomplete a milestone
+  static async uncompleteMilestone(userId: string, milestoneId: string, isMicro: boolean = false): Promise<void> {
+    const progress = await this.getUserProgress(userId);
+
+    const arrayField = isMicro ? 'completedMicroMilestones' : 'completedMilestones';
+    const completedArray = isMicro ? progress.completedMicroMilestones : progress.completedMilestones;
+
+    if (!completedArray.includes(milestoneId)) {
+      return; // Already not completed
+    }
+
+    const updateData: any = {
+      [arrayField]: completedArray.filter(id => id !== milestoneId),
+    };
+
+    const progressRef = doc(db, 'userProgress', userId);
+    await updateDoc(progressRef, updateData);
+  }
 
   // Check and award streak achievements
   private static async checkStreakAchievements(userId: string, streakDays: number): Promise<Achievement | null> {
