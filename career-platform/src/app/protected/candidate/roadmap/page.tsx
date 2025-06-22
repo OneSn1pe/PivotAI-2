@@ -632,18 +632,34 @@ export default function CareerPathPage() {
               )}
               
               {/* Generate Next Level Button */}
-              {selectedLevel === Math.max(...roadmap.milestones.map(m => m.level || 1)) && (
-                <div className="mt-8 text-center p-6 bg-gray-50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Ready for the Next Challenge?</h3>
-                  <button
-                    onClick={handleGenerateNextLevel}
-                    disabled={generatingNextLevel}
-                    className={`px-8 py-4 rounded-lg font-medium text-white transition-all duration-300 ${
-                      generatingNextLevel 
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-gray-900 hover:bg-gray-800'
-                    }`}
-                  >
+              {(() => {
+                const maxLevel = Math.max(...roadmap.milestones.map(m => m.level || 1));
+                const isViewingMaxLevel = selectedLevel === maxLevel;
+                const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === selectedLevel);
+                const allMilestonesCompleted = levelMilestones.every(m => m.completed);
+                const allMicroMilestonesCompleted = levelMilestones.every(m => {
+                  if (m.microMilestones && m.microMilestones.length > 0) {
+                    return m.microMilestones.every(micro => micro.completed);
+                  }
+                  return true;
+                });
+                const levelFullyCompleted = allMilestonesCompleted && allMicroMilestonesCompleted && levelMilestones.length > 0;
+                const canGenerateNextLevel = isViewingMaxLevel && levelFullyCompleted && userProgress && userProgress.levelsUnlocked >= selectedLevel;
+                
+                if (!canGenerateNextLevel) return null;
+                
+                return (
+                  <div className="mt-8 text-center p-6 bg-gray-50 rounded-lg">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Ready for the Next Challenge?</h3>
+                    <button
+                      onClick={handleGenerateNextLevel}
+                      disabled={generatingNextLevel}
+                      className={`px-8 py-4 rounded-lg font-medium text-white transition-all duration-300 ${
+                        generatingNextLevel 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-900 hover:bg-gray-800'
+                      }`}
+                    >
                     {generatingNextLevel ? (
                       <span className="flex items-center gap-2">
                         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -662,7 +678,8 @@ export default function CareerPathPage() {
                     Ready for more challenges? Generate the next level of your career path!
                   </p>
                 </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>

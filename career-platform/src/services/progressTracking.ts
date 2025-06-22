@@ -63,9 +63,11 @@ export class ProgressTrackingService {
       }
     }
     
-    // Update the level if we have completed a higher level
+    // The next unlocked level is one higher than the highest completed level
+    // This allows users to see and work on the next level's milestones
+    const nextUnlockedLevel = highestCompletedLevel + 1;
     const currentLevel = progress.levelsUnlocked || 1;
-    const newLevel = Math.max(currentLevel, highestCompletedLevel);
+    const newLevel = Math.max(currentLevel, nextUnlockedLevel);
     
     if (newLevel !== oldLevel) {
       const progressRef = doc(db, 'userProgress', userId);
