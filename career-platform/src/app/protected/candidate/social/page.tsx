@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserProgress, CandidateProfile } from '@/types/user';
+import { ProgressTrackingService } from '@/services/progressTracking';
 import { SocialEngagement } from '@/components/social/SocialEngagement';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,8 +37,7 @@ export default function SocialPage() {
       // Mock data for development - replace with actual Firebase calls
       const mockProgress: UserProgress = {
         userId: userProfile.uid,
-        currentLevel: 1,
-        maxUnlockedLevel: 1,
+        levelsUnlocked: [1],
         completedMilestones: [],
         completedMicroMilestones: [],
         achievements: [],
@@ -96,7 +96,7 @@ export default function SocialPage() {
             </div>
             <div>
               <div className="text-xl">{candidateProfile?.displayName || 'User'}</div>
-              <div className="text-sm text-gray-600">Level {userProgress.currentLevel}</div>
+              <div className="text-sm text-gray-600">Level {ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked)}</div>
             </div>
           </CardTitle>
         </CardHeader>

@@ -41,8 +41,7 @@ export default function AnalyticsPage() {
       // Mock data for development - replace with actual Firebase calls
       const mockProgress: UserProgress = {
         userId: userProfile.uid,
-        currentLevel: 1,
-        maxUnlockedLevel: 1,
+        levelsUnlocked: [1],
         completedMilestones: [],
         completedMicroMilestones: [],
         achievements: [],
@@ -53,8 +52,7 @@ export default function AnalyticsPage() {
 
       const mockProgressOLD: UserProgress = {
         userId: userProfile.uid,
-        currentLevel: 1,
-        maxUnlockedLevel: 1,
+        levelsUnlocked: [1],
         completedMilestones: [],
         completedMicroMilestones: [],
         achievements: ['first_milestone', 'streak_5'],

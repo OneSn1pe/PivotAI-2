@@ -120,24 +120,35 @@ export default function CareerPathPage() {
         .filter(m => m.completed)
         .map(m => m.id);
       
-      // Calculate max unlocked level based on completed milestones
-      let maxUnlockedLevel = 1;
+      // Calculate unlocked levels based on completed milestones
+      const levelsUnlocked: number[] = [1]; // Level 1 is always unlocked
       const levels = Array.from(new Set(roadmap.milestones.map(m => m.level || 1))).sort((a, b) => a - b);
       
       for (const level of levels) {
-        const levelMilestones = roadmap.milestones.filter(m => (m.level || 1) === level);
-        const completedInLevel = levelMilestones.filter(m => m.completed).length;
+        if (level === 1) continue; // Level 1 is already in the array
         
-        if (completedInLevel === levelMilestones.length && levelMilestones.length > 0) {
-          // All milestones in this level are completed, so next level should be unlocked
-          maxUnlockedLevel = Math.max(maxUnlockedLevel, level + 1);
+        // Check if all previous levels are fully completed
+        let allPreviousLevelsComplete = true;
+        for (let prevLevel = 1; prevLevel < level; prevLevel++) {
+          const prevLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === prevLevel);
+          const allMilestonesComplete = prevLevelMilestones.every(m => m.completed);
+          
+          if (!allMilestonesComplete || prevLevelMilestones.length === 0) {
+            allPreviousLevelsComplete = false;
+            break;
+          }
+        }
+        
+        if (allPreviousLevelsComplete) {
+          levelsUnlocked.push(level);
+        } else {
+          break; // Stop checking higher levels
         }
       }
       
       const userProgress: UserProgress = {
         userId: userProfile.uid,
-        currentLevel: 1,
-        maxUnlockedLevel,
+        levelsUnlocked,
         completedMilestones: completedMilestoneIds,
         completedMicroMilestones: [],
         achievements: [],
@@ -147,6 +158,7 @@ export default function CareerPathPage() {
       };
       
       setUserProgress(userProgress);
+      const maxUnlockedLevel = Math.max(...levelsUnlocked) + 1;
       setSelectedLevel(Math.min(selectedLevel || 1, maxUnlockedLevel));
     } catch (error) {
       console.error('Error loading user progress:', error);
@@ -229,10 +241,14 @@ export default function CareerPathPage() {
       
       if (leveledUp && newLevel) {
         // Update local state with new level
+        const newLevelsUnlocked = [...(userProgress.levelsUnlocked || [1])];
+        if (!newLevelsUnlocked.includes(newLevel)) {
+          newLevelsUnlocked.push(newLevel);
+          newLevelsUnlocked.sort((a, b) => a - b);
+        }
         const progressWithLevel = {
           ...updatedUserProgress,
-          currentLevel: newLevel,
-          maxUnlockedLevel: Math.max(newLevel + 1, userProgress.maxUnlockedLevel || 1)
+          levelsUnlocked: newLevelsUnlocked
         };
         setUserProgress(progressWithLevel);
         
@@ -262,11 +278,8 @@ export default function CareerPathPage() {
         }))
       );
       
-      const progressWithLevel = {
-        ...updatedUserProgress,
-        currentLevel: newLevel
-      };
-      setUserProgress(progressWithLevel);
+      // Reload user progress to get updated levelsUnlocked
+      await loadUserProgress();
     }
   };
 
@@ -328,13 +341,8 @@ export default function CareerPathPage() {
       );
       
       if (leveledUp && newLevel) {
-        // Update local state with new level
-        const progressWithLevel = {
-          ...userProgress,
-          currentLevel: newLevel,
-          maxUnlockedLevel: Math.max(newLevel + 1, userProgress.maxUnlockedLevel || 1)
-        };
-        setUserProgress(progressWithLevel);
+        // Reload user progress to get updated levelsUnlocked
+        await loadUserProgress();
         
         // Show success message
         alert(`Congratulations! You've reached Level ${newLevel}!`);
@@ -562,7 +570,7 @@ export default function CareerPathPage() {
           {userProgress && (
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
-                <span className="font-medium text-gray-900">Level {userProgress.currentLevel}</span>
+                <span className="font-medium text-gray-900">Level {ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked)}</span>
               </div>
               <div className="text-sm text-gray-500">
                 {userProgress.completedMilestones.length} milestones completed
@@ -603,7 +611,7 @@ export default function CareerPathPage() {
           {/* Level Navigation */}
           <LevelNavigator
             currentLevel={selectedLevel}
-            maxUnlockedLevel={userProgress.currentLevel + 1}
+            maxUnlockedLevel={ProgressTrackingService.getMaxUnlockedLevel(userProgress.levelsUnlocked)}
             levelData={generateLevelData(roadmap.milestones, userProgress)}
             onLevelSelect={setSelectedLevel}
             className="mb-8"
@@ -629,7 +637,7 @@ export default function CareerPathPage() {
                   </h2>
                   {/* Skip Level Button */}
                   {selectedLevel < Math.max(...roadmap.milestones.map(m => m.level || 1)) && 
-                   selectedLevel <= (userProgress.maxUnlockedLevel || 1) &&
+                   userProgress.levelsUnlocked.includes(selectedLevel) &&
                    roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length < 
                    roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length && (
                     <button

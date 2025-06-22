@@ -15,10 +15,23 @@ import { UserProgress, Achievement, Milestone } from '@/types/user';
 
 
 export class ProgressTrackingService {
+  // Helper function to get current level from levelsUnlocked array
+  static getCurrentLevel(levelsUnlocked: number[]): number {
+    if (!levelsUnlocked || levelsUnlocked.length === 0) {
+      return 1;
+    }
+    return Math.max(...levelsUnlocked);
+  }
+
+  // Helper function to get max unlocked level (highest level + 1)
+  static getMaxUnlockedLevel(levelsUnlocked: number[]): number {
+    const currentLevel = this.getCurrentLevel(levelsUnlocked);
+    return currentLevel + 1;
+  }
   // Update user's current level based on completed milestones
   static async updateUserLevel(userId: string, roadmapMilestones: any[]): Promise<{ leveledUp: boolean; newLevel: number; oldLevel: number }> {
     const progress = await this.getUserProgress(userId);
-    const oldLevel = progress.currentLevel;
+    const oldLevel = this.getCurrentLevel(progress.levelsUnlocked);
     
     // Calculate the highest level where ALL milestones AND micro-milestones are completed
     let highestCompletedLevel = 0;
@@ -62,14 +75,26 @@ export class ProgressTrackingService {
       }
     }
     
-    // Update the current level if it has changed
-    const newLevel = Math.max(1, highestCompletedLevel);
+    // Update the levels unlocked if we have completed a new level
+    const currentLevelsUnlocked = progress.levelsUnlocked || [1];
+    const newLevelsUnlocked = [...currentLevelsUnlocked];
     
-    if (newLevel !== oldLevel) {
+    // Add newly completed levels to the array
+    for (let level = 1; level <= highestCompletedLevel; level++) {
+      if (!newLevelsUnlocked.includes(level)) {
+        newLevelsUnlocked.push(level);
+      }
+    }
+    
+    // Sort the array to keep it in order
+    newLevelsUnlocked.sort((a, b) => a - b);
+    
+    const newLevel = this.getCurrentLevel(newLevelsUnlocked);
+    
+    if (newLevel !== oldLevel || newLevelsUnlocked.length !== currentLevelsUnlocked.length) {
       const progressRef = doc(db, 'userProgress', userId);
       await updateDoc(progressRef, {
-        currentLevel: newLevel,
-        maxUnlockedLevel: Math.max(newLevel + 1, progress.maxUnlockedLevel || 1)
+        levelsUnlocked: newLevelsUnlocked
       });
       
       return { leveledUp: newLevel > oldLevel, newLevel, oldLevel };
@@ -85,8 +110,28 @@ export class ProgressTrackingService {
 
     if (progressDoc.exists()) {
       const data = progressDoc.data();
+      
+      // Handle migration from old format
+      let levelsUnlocked = data.levelsUnlocked;
+      if (!levelsUnlocked && (data.currentLevel || data.maxUnlockedLevel)) {
+        // Migrate from old format: create levelsUnlocked array from currentLevel
+        levelsUnlocked = [];
+        const currentLevel = data.currentLevel || 1;
+        for (let i = 1; i <= currentLevel; i++) {
+          levelsUnlocked.push(i);
+        }
+        
+        // Update the document with new format
+        await updateDoc(progressRef, {
+          levelsUnlocked,
+          currentLevel: undefined,
+          maxUnlockedLevel: undefined
+        });
+      }
+      
       return {
         ...data,
+        levelsUnlocked: levelsUnlocked || [1],
         lastActiveDate: data.lastActiveDate?.toDate() || new Date(),
       } as UserProgress;
     }
@@ -94,8 +139,7 @@ export class ProgressTrackingService {
     // Create initial progress
     const initialProgress: UserProgress = {
       userId,
-      currentLevel: 1,
-      maxUnlockedLevel: 1,
+      levelsUnlocked: [1],
       completedMilestones: [],
       completedMicroMilestones: [],
       achievements: [],
@@ -166,17 +210,21 @@ export class ProgressTrackingService {
       [arrayField]: [...completedArray, milestoneId],
     };
 
-    // If this is a regular milestone and we have the level, check if we need to update currentLevel
+    // If this is a regular milestone and we have the level, check if we need to update levelsUnlocked
     let leveledUp = false;
-    let newLevel = progress.currentLevel;
+    const currentLevel = this.getCurrentLevel(progress.levelsUnlocked);
+    let newLevel = currentLevel;
     
     if (!isMicro && milestoneLevel) {
       // We need to check if all milestones for this level are now completed
       // This would require fetching the roadmap to check, so we'll do a simpler check
       // The proper level calculation should happen in a separate function that has access to all milestones
-      updateData.currentLevel = milestoneLevel;
+      const currentLevelsUnlocked = progress.levelsUnlocked || [1];
       
-      if (milestoneLevel > progress.currentLevel) {
+      if (milestoneLevel > currentLevel && !currentLevelsUnlocked.includes(milestoneLevel)) {
+        // Add the new level to levelsUnlocked array
+        const newLevelsUnlocked = [...currentLevelsUnlocked, milestoneLevel].sort((a, b) => a - b);
+        updateData.levelsUnlocked = newLevelsUnlocked;
         leveledUp = true;
         newLevel = milestoneLevel;
       }

@@ -9,6 +9,7 @@ export interface LevelProgressData {
   nextLevelTitle: string;
   nextLevelDescription: string;
   maxUnlockedLevel: number;
+  levelsUnlocked: number[];
 }
 
 
@@ -45,12 +46,13 @@ export function getLevelInfo(level: number): { title: string; description: strin
 
 /**
  * Calculate user's current level based on their progress
- * Level is determined by the highest level where ALL milestones are completed
+ * Level is determined by the highest level in the levelsUnlocked array
  */
 export function calculateUserLevel(userProgress: UserProgress): LevelProgressData {
-  // The current level is stored in userProgress based on completed level milestones
-  // This is calculated when milestones are completed, not derived from count
-  const currentLevel = Math.min(userProgress.currentLevel || 1, LEVEL_CONFIG.MAX_LEVEL);
+  // Get current level from levelsUnlocked array
+  const levelsUnlocked = userProgress.levelsUnlocked || [1];
+  const currentLevel = Math.min(Math.max(...levelsUnlocked), LEVEL_CONFIG.MAX_LEVEL);
+  const maxUnlockedLevel = currentLevel + 1;
   
   // Get level titles
   const { title: levelTitle, description: levelDescription } = getLevelInfo(currentLevel);
@@ -64,7 +66,8 @@ export function calculateUserLevel(userProgress: UserProgress): LevelProgressDat
     microMilestonesCompleted: userProgress.completedMicroMilestones?.length || 0,
     nextLevelTitle,
     nextLevelDescription,
-    maxUnlockedLevel: userProgress.maxUnlockedLevel || currentLevel,
+    maxUnlockedLevel,
+    levelsUnlocked,
   };
 }
 

@@ -384,8 +384,7 @@ export enum UserRole {
 
   export interface UserProgress {
     userId: string;
-    currentLevel: number;
-    maxUnlockedLevel: number;
+    levelsUnlocked: number[]; // Array of unlocked level numbers, e.g., [1, 2, 3]
     completedMilestones: string[];
     completedMicroMilestones: string[];
     achievements: string[];

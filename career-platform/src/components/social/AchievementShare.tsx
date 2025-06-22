@@ -19,6 +19,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Achievement, UserProgress } from '@/types/user';
+import { ProgressTrackingService } from '@/services/progressTracking';
 
 interface AchievementShareProps {
   achievement: Achievement;
@@ -36,9 +37,10 @@ export function AchievementShare({
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
 
+  const currentLevel = ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked || [1]);
   const shareData = {
     title: `I just earned the "${achievement.title}" achievement on PivotAI Career Quest!`,
-    text: `${achievement.description} - Level ${userProgress.currentLevel}`,
+    text: `${achievement.description} - Level ${currentLevel}`,
     url: `${typeof window !== 'undefined' ? window.location.origin : ''}/achievements/${achievement.id}`,
   };
 

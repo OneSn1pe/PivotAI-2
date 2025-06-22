@@ -2,6 +2,7 @@ import { Milestone, UserProgress } from '@/types/user';
 import { db } from '@/config/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { calculateUserLevel } from './levelProgressService';
+import { ProgressTrackingService } from './progressTracking';
 
 export interface UnlockResult {
   unlockedMilestones: string[];
@@ -10,13 +11,13 @@ export interface UnlockResult {
 }
 
 /**
- * Calculate the maximum unlocked level based on completed milestones and micro-milestones
+ * Calculate which levels should be unlocked based on completed milestones and micro-milestones
  * A level is only unlocked if ALL milestones AND micro-milestones from ALL previous levels are completed
  */
-export function calculateMaxUnlockedLevel(
+export function calculateUnlockedLevels(
   milestones: Milestone[],
   userProgress: UserProgress
-): number {
+): number[] {
   // Group milestones by level
   const milestonesByLevel: Map<number, Milestone[]> = new Map();
   milestones.forEach(milestone => {
@@ -31,11 +32,11 @@ export function calculateMaxUnlockedLevel(
   const levels = Array.from(milestonesByLevel.keys()).sort((a, b) => a - b);
   
   // Level 1 is always unlocked
-  let maxUnlockedLevel = 1;
+  const unlockedLevels: number[] = [1];
   
   // Check each level sequentially
   for (const level of levels) {
-    if (level <= maxUnlockedLevel) continue; // Skip already unlocked levels
+    if (level === 1) continue; // Level 1 is already unlocked
     
     // Check if all previous levels are fully completed
     let allPreviousLevelsComplete = true;
@@ -65,14 +66,26 @@ export function calculateMaxUnlockedLevel(
     }
     
     if (allPreviousLevelsComplete) {
-      maxUnlockedLevel = level;
+      unlockedLevels.push(level);
     } else {
       // Once we find a level that can't be unlocked, stop checking
       break;
     }
   }
   
-  return maxUnlockedLevel;
+  return unlockedLevels;
+}
+
+/**
+ * Calculate the maximum unlocked level based on completed milestones and micro-milestones
+ * A level is only unlocked if ALL milestones AND micro-milestones from ALL previous levels are completed
+ */
+export function calculateMaxUnlockedLevel(
+  milestones: Milestone[],
+  userProgress: UserProgress
+): number {
+  const unlockedLevels = calculateUnlockedLevels(milestones, userProgress);
+  return Math.max(...unlockedLevels);
 }
 
 /**
@@ -92,10 +105,11 @@ export function isMilestoneUnlocked(
   
   // Check level requirement
   const milestoneLevel = milestone.level || 1;
-  const maxUnlockedLevel = userProgress.maxUnlockedLevel || 1;
+  const levelsUnlocked = userProgress.levelsUnlocked || [1];
+  const maxUnlockedLevel = ProgressTrackingService.getMaxUnlockedLevel(levelsUnlocked);
   
-  // Level 1 is always unlocked, otherwise check against maxUnlockedLevel
-  if (milestoneLevel > maxUnlockedLevel && milestoneLevel !== 1) {
+  // Check if this milestone's level is unlocked
+  if (!levelsUnlocked.includes(milestoneLevel) && milestoneLevel > maxUnlockedLevel) {
     return false;
   }
   
@@ -159,7 +173,8 @@ function checkUnlockCondition(condition: any, userProgress: UserProgress): boole
         // This would require access to all milestones to check
         // For now, return true if user level is high enough
         const maxRequiredLevel = Math.max(...condition.requirement.levels);
-        return userProgress.currentLevel >= maxRequiredLevel;
+        const currentLevel = ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked || [1]);
+        return currentLevel >= maxRequiredLevel;
       }
       break;
       
@@ -263,9 +278,10 @@ export async function checkAndUnlockMilestones(
         message += ` ${incompleteMicroMilestones} micro-milestone(s) remaining.`;
       }
       
+      const currentLevel = ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked || [1]);
       return {
         unlockedMilestones: [],
-        newLevel: userProgress.currentLevel,
+        newLevel: currentLevel,
         message
       };
     }
@@ -275,12 +291,18 @@ export async function checkAndUnlockMilestones(
     const nextLevelMilestones = milestones.filter(m => (m.level || 1) === nextLevel);
     const unlockedMilestoneIds = nextLevelMilestones.map(m => m.id);
     
-    // Update user's max unlocked level
-    const newMaxUnlockedLevel = Math.max(userProgress.maxUnlockedLevel || 1, nextLevel);
+    // Update user's levelsUnlocked array
+    const currentLevelsUnlocked = userProgress.levelsUnlocked || [1];
+    const newLevelsUnlocked = [...currentLevelsUnlocked];
+    
+    if (!newLevelsUnlocked.includes(nextLevel)) {
+      newLevelsUnlocked.push(nextLevel);
+      newLevelsUnlocked.sort((a, b) => a - b);
+    }
     
     // Update user progress
     await updateDoc(doc(db, 'userProgress', userId), {
-      maxUnlockedLevel: newMaxUnlockedLevel,
+      levelsUnlocked: newLevelsUnlocked,
       updatedAt: new Date()
     });
     
@@ -313,7 +335,8 @@ export function getLockedMilestonesWithReasons(
   milestones: Milestone[],
   userProgress: UserProgress
 ): Array<{ milestone: Milestone; reason: string }> {
-  const maxUnlockedLevel = userProgress.maxUnlockedLevel || 1;
+  const levelsUnlocked = userProgress.levelsUnlocked || [1];
+  const maxUnlockedLevel = ProgressTrackingService.getMaxUnlockedLevel(levelsUnlocked);
   const lockedMilestones: Array<{ milestone: Milestone; reason: string }> = [];
   
   for (const milestone of milestones) {
@@ -358,7 +381,7 @@ export function getLockedMilestonesWithReasons(
       // If no reason found from level checks, check other conditions
       if (!reason) {
         // Check level requirement
-        if (milestoneLevel > maxUnlockedLevel && milestoneLevel !== 1) {
+        if (!levelsUnlocked.includes(milestoneLevel) && milestoneLevel !== 1) {
           reason = `Complete all milestones and micro-milestones in Level ${milestoneLevel - 1} to unlock`;
         }
         // Check prerequisites
