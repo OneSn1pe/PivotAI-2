@@ -559,7 +559,7 @@ function GoalsView({
               <div className="text-3xl font-bold text-blue-600 mb-2">
                 {daysUntilLevelUp} days
               </div>
-              <div className="text-sm text-blue-700">Until Level {userProgress.currentLevel + 1}</div>
+              <div className="text-sm text-blue-700">Until Level {(userProgress.levelsUnlocked || 1) + 1}</div>
               <div className="text-xs text-blue-600 mt-2">
                 Est. {goalPrediction.estimatedLevelUpDate.toLocaleDateString()}
               </div>
@@ -595,7 +595,7 @@ function GoalsView({
               </Badge>
             </div>
             <p className="text-sm text-purple-700">
-              To reach Level {userProgress.currentLevel + 1} within the predicted timeframe, 
+              To reach Level {(userProgress.levelsUnlocked || 1) + 1} within the predicted timeframe, 
               aim for {goalPrediction.requiredDailyMilestones} milestones per week.
             </p>
           </div>
