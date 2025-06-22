@@ -1,5 +1,4 @@
 import { Achievement, UserProgress, Milestone, MicroMilestone, AchievementCategory, ProfessionalField } from '@/types/user';
-import { ProgressTrackingService } from './progressTracking';
 
 export interface AchievementTrigger {
   type: 'milestone_count' | 'streak_days' | 'level_reached' | 'category_completion' | 'skill_mastery' | 'time_based' | 'special_event';
@@ -362,7 +361,7 @@ export class AchievementEngine {
         return this.compareValues(progress.streakDays, trigger.condition.value!, trigger.condition.comparison || 'gte');
 
       case 'level_reached':
-        const currentLevel = ProgressTrackingService.getCurrentLevel(progress.levelsUnlocked || [1]);
+        const currentLevel = progress.levelsUnlocked || 1;
         return this.compareValues(currentLevel, trigger.condition.value!, trigger.condition.comparison || 'gte');
 
       case 'category_completion':
@@ -536,9 +535,9 @@ export class AchievementEngine {
 
       case 'level_reached':
         return {
-          current: progress.currentLevel,
+          current: progress.levelsUnlocked || 1,
           target: trigger.condition.value!,
-          text: `Level ${progress.currentLevel}/${trigger.condition.value}`
+          text: `Level ${progress.levelsUnlocked || 1}/${trigger.condition.value}`
         };
 
       case 'category_completion':

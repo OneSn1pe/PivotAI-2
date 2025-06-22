@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { UserRole } from '@/types/user';
+import { UserRole, UserProgress } from '@/types/user';
+import { ProgressTrackingService } from '@/services/progressTracking';
 
 export default function Navbar() {
   const { userProfile, logout } = useAuth();
@@ -12,6 +13,24 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
+
+  useEffect(() => {
+    if (userProfile) {
+      loadUserProgress();
+    }
+  }, [userProfile]);
+
+  const loadUserProgress = async () => {
+    if (!userProfile) return;
+    
+    try {
+      const progress = await ProgressTrackingService.getUserProgress(userProfile.uid);
+      setUserProgress(progress);
+    } catch (error) {
+      console.error('Error loading user progress in navbar:', error);
+    }
+  };
 
   if (!userProfile) return null;
 
@@ -83,6 +102,14 @@ export default function Navbar() {
           
           {/* User Info and Logout */}
           <div className="hidden md:flex items-center space-x-6">
+            {userProgress && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                <span className="text-sm font-medium text-gray-900">Level {userProgress.levelsUnlocked}</span>
+              </div>
+            )}
             <span className="text-gray-600 text-sm">
               {userProfile.displayName}
             </span>
@@ -135,7 +162,7 @@ export default function Navbar() {
 
             {/* Mobile user info */}
             <div className="border-t border-gray-200 pt-4 mt-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3">
                 <span className="text-gray-600 text-sm">
                   {userProfile.displayName}
                 </span>
@@ -147,6 +174,14 @@ export default function Navbar() {
                   {isLoggingOut ? 'Logging out...' : 'Logout'}
                 </button>
               </div>
+              {userProgress && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full inline-flex">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-900">Level {userProgress.levelsUnlocked}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

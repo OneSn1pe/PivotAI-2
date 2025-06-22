@@ -34,19 +34,13 @@ export default function SocialPage() {
     if (!userProfile) return;
     
     try {
-      // Mock data for development - replace with actual Firebase calls
-      const mockProgress: UserProgress = {
-        userId: userProfile.uid,
-        levelsUnlocked: [1],
-        completedMilestones: [],
-        completedMicroMilestones: [],
-        achievements: [],
-        streakDays: 0,
-        lastActiveDate: new Date(),
-        skillProficiencies: {}
-      };
+      // Load actual user progress from Firebase
+      const actualProgress = await ProgressTrackingService.getUserProgress(userProfile.uid);
       
-      setUserProgress(mockProgress);
+      // Update daily activity (login streak)
+      await ProgressTrackingService.updateDailyActivity(userProfile.uid);
+      
+      setUserProgress(actualProgress);
       setLoading(false);
     } catch (error) {
       console.error('Error loading user progress:', error);
@@ -96,7 +90,7 @@ export default function SocialPage() {
             </div>
             <div>
               <div className="text-xl">{candidateProfile?.displayName || 'User'}</div>
-              <div className="text-sm text-gray-600">Level {ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked)}</div>
+              <div className="text-sm text-gray-600">Level {userProgress.levelsUnlocked}</div>
             </div>
           </CardTitle>
         </CardHeader>
@@ -104,7 +98,7 @@ export default function SocialPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-white rounded-lg">
               <Star className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">{userProgress.currentLevel}</div>
+              <div className="text-2xl font-bold text-gray-900">{userProgress.levelsUnlocked}</div>
               <div className="text-sm text-gray-600">Current Level</div>
             </div>
             

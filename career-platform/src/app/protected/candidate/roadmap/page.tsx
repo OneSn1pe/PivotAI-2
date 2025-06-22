@@ -10,6 +10,7 @@ import CategorizedCareerRoadmap from '@/components/candidate/CategorizedCareerRo
 import { LevelNavigator } from '@/components/navigation/LevelNavigator';
 import { SkillTreeView } from '@/components/roadmap/SkillTreeView';
 import { LazyMilestoneList } from '@/components/candidate/LazyMilestoneList';
+import { LevelUpAnimation } from '@/components/animations/LevelUpAnimation';
 import { generateNextLevel } from '@/services/openai';
 import { checkAndUnlockMilestones, isMilestoneUnlocked, getLockedMilestonesWithReasons } from '@/services/milestoneUnlockService';
 import { calculateUserLevel } from '@/services/levelProgressService';
@@ -26,6 +27,8 @@ export default function CareerPathPage() {
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [generatingNextLevel, setGeneratingNextLevel] = useState(false);
   const [roadmapId, setRoadmapId] = useState<string | null>(null);
+  const [showLevelUpAnimation, setShowLevelUpAnimation] = useState(false);
+  const [newLevelAchieved, setNewLevelAchieved] = useState<number>(0);
 
   useEffect(() => {
     // Create style element for roadmap-specific navbar styles
@@ -120,12 +123,12 @@ export default function CareerPathPage() {
         .filter(m => m.completed)
         .map(m => m.id);
       
-      // Calculate unlocked levels based on completed milestones
-      const levelsUnlocked: number[] = [1]; // Level 1 is always unlocked
+      // Calculate current level based on completed milestones
+      let currentLevel = 1; // Level 1 is always unlocked
       const levels = Array.from(new Set(roadmap.milestones.map(m => m.level || 1))).sort((a, b) => a - b);
       
       for (const level of levels) {
-        if (level === 1) continue; // Level 1 is already in the array
+        if (level === 1) continue; // Level 1 is already the default
         
         // Check if all previous levels are fully completed
         let allPreviousLevelsComplete = true;
@@ -140,7 +143,7 @@ export default function CareerPathPage() {
         }
         
         if (allPreviousLevelsComplete) {
-          levelsUnlocked.push(level);
+          currentLevel = level;
         } else {
           break; // Stop checking higher levels
         }
@@ -148,7 +151,7 @@ export default function CareerPathPage() {
       
       const userProgress: UserProgress = {
         userId: userProfile.uid,
-        levelsUnlocked,
+        levelsUnlocked: currentLevel,
         completedMilestones: completedMilestoneIds,
         completedMicroMilestones: [],
         achievements: [],
@@ -158,7 +161,7 @@ export default function CareerPathPage() {
       };
       
       setUserProgress(userProgress);
-      const maxUnlockedLevel = Math.max(...levelsUnlocked) + 1;
+      const maxUnlockedLevel = currentLevel + 1;
       setSelectedLevel(Math.min(selectedLevel || 1, maxUnlockedLevel));
     } catch (error) {
       console.error('Error loading user progress:', error);
@@ -241,22 +244,18 @@ export default function CareerPathPage() {
       
       if (leveledUp && newLevel) {
         // Update local state with new level
-        const newLevelsUnlocked = [...(userProgress.levelsUnlocked || [1])];
-        if (!newLevelsUnlocked.includes(newLevel)) {
-          newLevelsUnlocked.push(newLevel);
-          newLevelsUnlocked.sort((a, b) => a - b);
-        }
         const progressWithLevel = {
           ...updatedUserProgress,
-          levelsUnlocked: newLevelsUnlocked
+          levelsUnlocked: newLevel
         };
         setUserProgress(progressWithLevel);
         
         // Check if there are milestones in the next level
         const nextLevelMilestones = roadmap.milestones.filter(m => (m.level || 1) === newLevel + 1);
         if (nextLevelMilestones.length > 0) {
-          // Show success message
-          alert(`Congratulations! You've reached Level ${newLevel} and unlocked ${nextLevelMilestones.length} new milestones!`);
+          // Show level up animation
+          setNewLevelAchieved(newLevel);
+          setShowLevelUpAnimation(true);
           
           // Navigate to the new level if we just completed the current selected level
           if (selectedLevel === newLevel - 1) {
@@ -344,8 +343,9 @@ export default function CareerPathPage() {
         // Reload user progress to get updated levelsUnlocked
         await loadUserProgress();
         
-        // Show success message
-        alert(`Congratulations! You've reached Level ${newLevel}!`);
+        // Show level up animation
+        setNewLevelAchieved(newLevel);
+        setShowLevelUpAnimation(true);
         
         // Navigate to the new level if appropriate
         if (selectedLevel === newLevel - 1) {
@@ -570,7 +570,7 @@ export default function CareerPathPage() {
           {userProgress && (
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
-                <span className="font-medium text-gray-900">Level {ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked)}</span>
+                <span className="font-medium text-gray-900">Level {userProgress.levelsUnlocked}</span>
               </div>
               <div className="text-sm text-gray-500">
                 {userProgress.completedMilestones.length} milestones completed
@@ -611,7 +611,7 @@ export default function CareerPathPage() {
           {/* Level Navigation */}
           <LevelNavigator
             currentLevel={selectedLevel}
-            maxUnlockedLevel={ProgressTrackingService.getMaxUnlockedLevel(userProgress.levelsUnlocked)}
+            maxUnlockedLevel={userProgress.levelsUnlocked + 1}
             levelData={generateLevelData(roadmap.milestones, userProgress)}
             onLevelSelect={setSelectedLevel}
             className="mb-8"
@@ -637,7 +637,7 @@ export default function CareerPathPage() {
                   </h2>
                   {/* Skip Level Button */}
                   {selectedLevel < Math.max(...roadmap.milestones.map(m => m.level || 1)) && 
-                   userProgress.levelsUnlocked.includes(selectedLevel) &&
+                   selectedLevel <= userProgress.levelsUnlocked &&
                    roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length < 
                    roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length && (
                     <button
@@ -722,6 +722,13 @@ export default function CareerPathPage() {
           )}
         </div>
       )}
+
+      {/* Level Up Animation */}
+      <LevelUpAnimation
+        isVisible={showLevelUpAnimation}
+        newLevel={newLevelAchieved}
+        onComplete={() => setShowLevelUpAnimation(false)}
+      />
     </div>
   );
 }

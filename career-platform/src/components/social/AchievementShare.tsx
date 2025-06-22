@@ -19,7 +19,6 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Achievement, UserProgress } from '@/types/user';
-import { ProgressTrackingService } from '@/services/progressTracking';
 
 interface AchievementShareProps {
   achievement: Achievement;
@@ -37,7 +36,7 @@ export function AchievementShare({
   const [copied, setCopied] = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  const currentLevel = ProgressTrackingService.getCurrentLevel(userProgress.levelsUnlocked || [1]);
+  const currentLevel = userProgress.levelsUnlocked || 1;
   const shareData = {
     title: `I just earned the "${achievement.title}" achievement on PivotAI Career Quest!`,
     text: `${achievement.description} - Level ${currentLevel}`,
@@ -163,7 +162,7 @@ export function AchievementShare({
               <div className="text-6xl mb-4">{achievement.icon}</div>
               <h3 className="text-xl font-bold mb-2">{achievement.title}</h3>
               <Badge className="bg-white/20 text-white">
-                Level {userProgress.currentLevel} Achievement
+                Level {userProgress.levelsUnlocked} Achievement
               </Badge>
             </div>
 
@@ -175,7 +174,7 @@ export function AchievementShare({
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-3 bg-yellow-50 rounded-lg">
                   <Trophy className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-                  <div className="font-semibold text-yellow-700">Level {userProgress.currentLevel}</div>
+                  <div className="font-semibold text-yellow-700">Level {userProgress.levelsUnlocked}</div>
                   <div className="text-xs text-yellow-600">Current Level</div>
                 </div>
                 <div className="text-center p-3 bg-blue-50 rounded-lg">

@@ -19,6 +19,7 @@ import {
   Info
 } from 'lucide-react';
 import { Loading } from '@/components/ui/loading';
+import { ProgressTrackingService } from '@/services/progressTracking';
 
 export default function AnalyticsPage() {
   const { userProfile } = useAuth();
@@ -38,28 +39,17 @@ export default function AnalyticsPage() {
     try {
       setLoading(true);
       
-      // Mock data for development - replace with actual Firebase calls
-      const mockProgress: UserProgress = {
-        userId: userProfile.uid,
-        levelsUnlocked: [1],
-        completedMilestones: [],
-        completedMicroMilestones: [],
-        achievements: [],
-        streakDays: 0,
-        lastActiveDate: new Date(),
-        skillProficiencies: {}
-      };
-
-      const mockProgressOLD: UserProgress = {
-        userId: userProfile.uid,
-        levelsUnlocked: [1],
-        completedMilestones: [],
-        completedMicroMilestones: [],
-        achievements: ['first_milestone', 'streak_5'],
-        streakDays: 0,
-        lastActiveDate: new Date(),
-        skillProficiencies: {}
-      };
+      // Load actual user progress from Firebase
+      const actualProgress = await ProgressTrackingService.getUserProgress(userProfile.uid);
+      
+      // Update daily activity (login streak)
+      await ProgressTrackingService.updateDailyActivity(userProfile.uid);
+      
+      // Load achievements
+      const userAchievements = await ProgressTrackingService.getUserAchievements(userProfile.uid);
+      
+      // Get activity stats
+      const stats = await ProgressTrackingService.getActivityStats(userProfile.uid);
 
       const mockMilestones: Milestone[] = [
         {
@@ -157,7 +147,7 @@ export default function AnalyticsPage() {
         }
       ];
       
-      setUserProgress(mockProgress);
+      setUserProgress(actualProgress);
       setMilestones(mockMilestones);
       setLastUpdated(new Date());
     } catch (error) {
@@ -244,7 +234,7 @@ export default function AnalyticsPage() {
         <Card>
           <CardContent className="p-4 text-center">
             <TrendingUp className="h-6 w-6 text-green-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-900">{userProgress.currentLevel}</div>
+            <div className="text-2xl font-bold text-gray-900">{userProgress.levelsUnlocked}</div>
             <div className="text-sm text-gray-600">Current Level</div>
           </CardContent>
         </Card>
