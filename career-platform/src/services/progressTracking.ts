@@ -9,7 +9,8 @@ import {
   where, 
   getDocs,
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  deleteField 
 } from 'firebase/firestore';
 import { UserProgress, Achievement, Milestone } from '@/types/user';
 
@@ -103,11 +104,11 @@ export class ProgressTrackingService {
       if (!levelsUnlocked && (data.currentLevel || data.maxUnlockedLevel)) {
         levelsUnlocked = data.currentLevel || 1;
         
-        // Update the document with new format
+        // Update the document with new format and remove old fields
         await updateDoc(progressRef, {
           levelsUnlocked,
-          currentLevel: undefined,
-          maxUnlockedLevel: undefined
+          currentLevel: deleteField(),
+          maxUnlockedLevel: deleteField()
         });
       }
       
