@@ -512,16 +512,6 @@ export default function CareerPathPage() {
         <div>
           <h1 className="text-3xl font-light text-gray-900">Career Roadmap</h1>
           <p className="text-sm text-gray-600 mt-1">Progress through levels to advance your career</p>
-          {userProgress && (
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
-                <span className="font-medium text-gray-900">Level {userProgress.levelsUnlocked}</span>
-              </div>
-              <div className="text-sm text-gray-500">
-                {userProgress.completedMilestones.length} milestones completed
-              </div>
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex bg-gray-200 rounded-lg p-1">
@@ -553,15 +543,6 @@ export default function CareerPathPage() {
       
       {roadmap && userProgress && (
         <div>
-          {/* Level Navigation */}
-          <LevelNavigator
-            currentLevel={selectedLevel}
-            maxUnlockedLevel={userProgress.levelsUnlocked + 1}
-            levelData={generateLevelData(roadmap.milestones, userProgress)}
-            onLevelSelect={setSelectedLevel}
-            className="mb-8"
-          />
-          
           {viewMode === 'tree' ? (
             /* Skill Tree View */
             <SkillTreeView 
@@ -575,46 +556,6 @@ export default function CareerPathPage() {
           ) : (
             /* Level-based Milestone Cards */
             <div>
-              <div className="bg-white p-6 rounded-lg mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">
-                    Level {selectedLevel} - {getLevelTitle(selectedLevel)}
-                  </h2>
-                  {/* Skip Level Button */}
-                  {selectedLevel < Math.max(...roadmap.milestones.map(m => m.level || 1)) && 
-                   selectedLevel <= userProgress.levelsUnlocked &&
-                   roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length < 
-                   roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length && (
-                    <button
-                      onClick={handleSkipLevel}
-                      className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 flex items-center gap-2"
-                      title="Skip this level and unlock the next one"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                      </svg>
-                      Skip Level
-                    </button>
-                  )}
-                </div>
-                <div className="flex items-center">
-                  <div className="w-full bg-gray-200 rounded-full h-4 mr-4 overflow-hidden">
-                    <div
-                      className="bg-gray-900 h-4 rounded-full transition-all duration-300"
-                      style={{ 
-                        width: `${Math.round(
-                          (roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length / 
-                           roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length || 1) * 100
-                        )}%` 
-                      }}
-                    ></div>
-                  </div>
-                  <span className="text-gray-700 font-semibold whitespace-nowrap">
-                    {roadmap.milestones.filter(m => m.completed && (m.level || 1) === selectedLevel).length} of{' '}
-                    {roadmap.milestones.filter(m => (m.level || 1) === selectedLevel).length} completed
-                  </span>
-                </div>
-              </div>
               
               {/* Level Milestones */}
               <LazyMilestoneList
