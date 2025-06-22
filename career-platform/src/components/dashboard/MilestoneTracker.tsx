@@ -36,9 +36,7 @@ export function MilestoneTracker({
         milestone.level
       );
 
-      if (result.leveledUp) {
-        toast.success(`Level up! You are now level ${result.newLevel}!`);
-      } else if (result.achievement) {
+      if (result.achievement) {
         toast.success(`Achievement unlocked: ${result.achievement.title}`);
       } else {
         toast.success('Milestone completed!');
