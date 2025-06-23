@@ -53,5 +53,16 @@
       "source": "/api/:path*",
       "destination": "/api/:path*"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/generate-roadmap/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/generate-next-level/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/analyze-resume/route.ts": {
+      "maxDuration": 300
+    }
+  }
 }

@@ -162,15 +162,15 @@ export async function POST(request: NextRequest) {
             },
             {
               role: "user",
-              content: `Create a personalized LEVELED career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
+              content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
 
-IMPORTANT: This roadmap uses a PROGRESSIVE LEVELING SYSTEM where milestones are organized into levels that build upon each other. Include both SKILL DEVELOPMENT milestones and CAREER PROGRESSION milestones with appropriate level assignments.
+IMPORTANT: This is the INITIAL roadmap generation. You should ONLY create Level 1 milestones. The system uses progressive level generation where users unlock and generate subsequent levels after completing the current one.
 
-LEVELING SYSTEM REQUIREMENTS:
-- Assign each milestone an appropriate LEVEL (1-10) based on difficulty and prerequisites
-- Lower level milestones (1-3) should focus on fundamentals and entry-level skills
-- Mid level milestones (4-6) should build practical application and specialization
-- Higher level milestones (7-10) should emphasize leadership, expertise, and advanced skills
+LEVEL 1 REQUIREMENTS:
+- ALL milestones must be assigned level: 1
+- Focus on foundational and entry-level skills
+- Create a solid base for future progression
+- Mix of technical fundamentals, soft skills, and career basics
 
 Return a structured JSON roadmap with these components:
 {
@@ -187,7 +187,7 @@ Return a structured JSON roadmap with these components:
       "difficulty": 1-5,
       "priority": "low|medium|high|critical",
       "estimatedHours": 40,
-      "level": 2,
+      "level": 1,
       "successCriteria": ["criterion1", "criterion2"],
       "attributes": {
         "career": {
@@ -406,9 +406,48 @@ RESOURCE GENERATION REQUIREMENTS:
         throw new Error('Invalid milestones structure in response');
       }
       
+      // First, check if AI incorrectly generated multiple levels
+      const originalLevels = new Set(parsedResponse.milestones.map((m: any) => m.level || 1));
+      if (originalLevels.size > 1) {
+        debug.log(`WARNING: AI generated ${originalLevels.size} levels instead of just Level 1`);
+        debug.log(`Levels generated: ${Array.from(originalLevels).join(', ')}`);
+        debug.log(`Total milestones: ${parsedResponse.milestones.length}`);
+        
+        // Group milestones by level to understand the structure
+        const milestonesByLevel = parsedResponse.milestones.reduce((acc: any, m: any) => {
+          const level = m.level || 1;
+          if (!acc[level]) acc[level] = [];
+          acc[level].push(m.title);
+          return acc;
+        }, {});
+        
+        Object.entries(milestonesByLevel).forEach(([level, titles]: [string, any]) => {
+          debug.log(`Level ${level}: ${titles.length} milestone(s) - ${titles.join(', ')}`);
+        });
+        
+        // If we detect the "all levels with 1 milestone each" pattern, take only Level 1 milestones
+        if (Object.values(milestonesByLevel).every((titles: any) => titles.length === 1)) {
+          debug.log('Detected incorrect pattern: all levels with 1 milestone each. Using fallback milestones.');
+          throw new Error('Invalid milestone structure - all levels have only 1 milestone');
+        }
+      }
+      
+      // Filter to only Level 1 milestones if multiple levels were generated
+      let milestonesToProcess = parsedResponse.milestones;
+      if (originalLevels.size > 1) {
+        milestonesToProcess = parsedResponse.milestones.filter((m: any) => (m.level || 1) === 1);
+        debug.log(`Filtered to ${milestonesToProcess.length} Level 1 milestones`);
+        
+        // If no Level 1 milestones or too few, use all and force to Level 1
+        if (milestonesToProcess.length < 3) {
+          debug.log('Too few Level 1 milestones, using all milestones and forcing to Level 1');
+          milestonesToProcess = parsedResponse.milestones;
+        }
+      }
+      
       // Ensure each milestone has a unique ID and add required fields
       const idSet = new Set<string>();
-      milestones = parsedResponse.milestones.map((milestone: any) => {
+      milestones = milestonesToProcess.map((milestone: any) => {
         // Generate a unique ID if missing or duplicate
         let milestoneId = milestone.id;
         if (!milestoneId || idSet.has(milestoneId)) {
@@ -422,7 +461,7 @@ RESOURCE GENERATION REQUIREMENTS:
           id: milestoneId,
           completed: false, // Always start with uncompleted milestones for new roadmap
           professionalField,
-          // Ensure all milestones are Level 1
+          // Force all milestones to Level 1
           level: 1
         };
       });
@@ -525,7 +564,8 @@ RESOURCE GENERATION REQUIREMENTS:
 
 // Helper function to add level to milestone
 function enhanceMilestoneWithLevel(milestone: any, index: number): Milestone {
-  const level = Math.min(index + 1, 6); // Simple level assignment based on order
+  // Always assign level 1 for initial roadmap generation
+  const level = 1;
   
   return {
     ...milestone,
