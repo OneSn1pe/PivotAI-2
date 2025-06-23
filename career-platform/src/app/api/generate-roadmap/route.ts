@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
 import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
+import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
+import { generateRoadmapPrompt } from '@/prompts/roadmapPrompt';
 
 // Debug helper
 const debug = {
@@ -158,202 +160,15 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: `You are a career coach specializing in helping candidates prepare for roles at top companies.`
+              content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.CAREER_COACH
             },
             {
               role: "user",
-              content: `Create a personalized career roadmap for a candidate targeting positions at the following companies: ${companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', ')} within the next 1-2 years.
-
-IMPORTANT: This is the INITIAL roadmap generation. You should ONLY create Level 1 milestones. The system uses progressive level generation where users unlock and generate subsequent levels after completing the current one.
-
-LEVEL 1 REQUIREMENTS:
-- ALL milestones must be assigned level: 1
-- Focus on foundational and entry-level skills
-- Create a solid base for future progression
-- Mix of technical fundamentals, soft skills, and career basics
-
-Return a structured JSON roadmap with these components:
-{
-  "milestones": [
-    {
-      "id": "unique-milestone-id",
-      "title": "Milestone name",
-      "description": "Detailed description with actionable steps",
-      "category": "technical|fundamental|niche|soft|career",
-      "subcategory": "Optional specific classification",
-      "skills": ["skill1", "skill2"],
-      "timeframe": "1-3 months",
-      "completed": false,
-      "difficulty": 1-5,
-      "priority": "low|medium|high|critical",
-      "estimatedHours": 40,
-      "level": 1,
-      "successCriteria": ["criterion1", "criterion2"],
-      "attributes": {
-        "career": {
-          "positionLevel": "entry-level|junior|mid-level|senior|lead|principal|executive",
-          "targetRole": "Specific job title",
-          "experienceRequired": "1-2 years",
-          "keyResponsibilities": ["responsibility1", "responsibility2"],
-          "advancement_path": {
-            "toRole": "Next career step",
-            "timeInRole": "12-18 months",
-            "promotionCriteria": ["criteria1", "criteria2"]
-          },
-          "skillRequirements": {
-            "technical": ["skill1", "skill2"],
-            "soft": ["skill1", "skill2"]
-          },
-          "compensation": {
-            "salaryRange": "$60k-80k",
-            "growthPotential": "Strong upward trajectory"
-          },
-          "applicationStrategy": {
-            "whereToApply": ["Company types or specific companies"],
-            "networking": ["strategy1", "strategy2"],
-            "portfolioNeeds": ["requirement1", "requirement2"]
-          },
-          "experienceBuilding": {
-            "projectTypes": ["type1", "type2"],
-            "certifications": ["cert1", "cert2"]
-          },
-          "careerImpact": "stepping-stone|destination|specialization|leadership-track",
-          "marketDemand": "high|medium|low"
-        }
-      },
-      "resources": [
-        {
-          "title": "Actual resource title (e.g., 'React - The Complete Guide' on Udemy)",
-          "url": "https://actual-url.com (MUST be a real, working URL)",
-          "type": "course|book|project|article|documentation|certification|video|tutorial|tool",
-          "estimatedTime": "2 weeks",
-          "cost": "free|paid|freemium",
-          "description": "Brief description of what this resource covers"
-        }
-      ],
-      "tasks": [
-        {
-          "id": "task-1",
-          "description": "Complete tutorial",
-          "completed": false
-        }
-      ]
-    },
-    ...
-  ],
-  "candidateGapAnalysis": {
-    "currentStrengths": ["strength1", ...],
-    "criticalGaps": ["gap1", ...]
-  },
-  "targetRoleRequirements": ["requirement1", ...],
-  "successMetrics": ["metric1", ...]
-}
-
-MILESTONE CATEGORIES:
-- "technical": Programming, software development, frameworks, databases, APIs, coding projects
-- "fundamental": Problem-solving, system design, architecture, debugging, testing, core concepts
-- "niche": Specialized technologies like blockchain, AI/ML, AR/VR, IoT, emerging technologies
-- "soft": Communication, leadership, teamwork, emotional intelligence, time management, networking
-- "career": INTERMEDIATE POSITIONS and work experience opportunities (NEW FOCUS AREA)
-
-CAREER PROGRESSION STRATEGY:
-For each target company/position, identify 2-3 intermediate positions that would build relevant experience:
-
-Example Career Progression Path for "Google - Senior Software Engineer":
-1. Junior Software Developer (6-12 months experience building)
-2. Software Developer (1-2 years gaining mid-level experience) 
-3. Senior Software Developer (2-3 years developing leadership skills)
-4. Target: Senior Software Engineer at Google
-
-For career milestones, focus on:
-- Realistic stepping stone positions 
-- Required experience and responsibilities for each role
-- Skills needed to excel in that position
-- How to find and apply for these roles
-- Networking strategies specific to each career level
-- Portfolio and project requirements
-- Advancement criteria to move to the next level
-
-Include career milestones that cover:
-- Entry-level positions for gaining initial experience
-- Mid-level roles for developing expertise
-- Leadership opportunities for building management skills
-- Industry-specific experience building
-- Company culture preparation
-- Interview and application strategies for each level
-
-Balance the roadmap with both skill development AND career progression milestones.
-
-For technical milestones, include detailed attributes like:
-- technologies: specific tools/frameworks
-- projectType: frontend/backend/fullstack/mobile/devops/data/ai-ml
-- complexityLevel: beginner/intermediate/advanced/expert
-- deliverables: what they should build/create
-
-For fundamental milestones, focus on:
-- competencyArea: problem-solving/analytical-thinking/research/documentation
-- industryScope: universal/tech-specific/domain-specific
-- conceptualAreas: key concepts being learned
-
-For niche milestones, emphasize:
-- specializationDomain: the specific niche area
-- marketDemand: emerging/growing/stable
-- careerImpact: differentiator/requirement/cutting-edge
-
-For soft milestones, highlight:
-- skillCategory: communication/leadership/teamwork/etc
-- developmentMethod: practice-based/feedback-driven/mentorship
-- applicationScenarios: where these skills apply
-
-Candidate's current profile:
-- Skills: ${JSON.stringify(truncatedAnalysis.skills)}
-- Experience: ${JSON.stringify(truncatedAnalysis.experience)}
-- Education: ${JSON.stringify(truncatedAnalysis.education)}
-- Strengths: ${JSON.stringify(truncatedAnalysis.strengths)}
-- Weaknesses: ${JSON.stringify(truncatedAnalysis.weaknesses)}
-
-Guidelines:
-- Create exactly 3-5 milestones for LEVEL 1 ONLY (mix of technical, fundamental, and soft skills)
-- Each milestone needs a unique ID
-- LEVEL ASSIGNMENT: All milestones should be Level 1 (foundation skills)
-  * Focus on fundamental concepts and basic skills
-  * Entry-level appropriate content
-  * Building blocks for future levels
-- Include exactly 3 specific resources per milestone
-- Add 1-3 tasks per milestone for progress tracking
-- Include success criteria for each milestone
-- Estimate hours required (20-100 hours per milestone)
-- Set appropriate difficulty (1-5) and priority levels
-- Ensure level progression feels rewarding and logical
-- Resources should be high-quality, free or low-cost, and directly relevant
-- Prefer official documentation and well-known learning platforms
-- CRITICAL: All resources must be real, verified, and from reputable sources
-- Return ONLY valid JSON with no additional text or formatting
-
-RESOURCE GENERATION REQUIREMENTS:
-1. ONLY provide REAL, WORKING URLs to actual online resources
-2. Each resource URL must be:
-   - A real website that exists (e.g., https://www.coursera.org/learn/react-basics)
-   - From reputable sources like:
-     * Coursera, Udemy, edX, Pluralsight, LinkedIn Learning
-     * Official documentation (React.dev, Angular.io, etc.)
-     * GitHub repositories with learning materials
-     * YouTube channels (freeCodeCamp, Traversy Media, etc.)
-     * Books on O'Reilly, Amazon, or publisher sites
-     * MDN Web Docs, W3Schools, Stack Overflow Documentation
-     * Medium articles, Dev.to posts (with actual article URLs)
-3. Resource examples by type:
-   - course: "https://www.coursera.org/learn/machine-learning"
-   - documentation: "https://react.dev/learn"
-   - video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-   - book: "https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882"
-   - project: "https://github.com/florinpop17/app-ideas"
-   - article: "https://medium.com/@author/article-title-12345"
-   - tutorial: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/"
-4. Include a mix of resource types for each milestone
-5. Prioritize free resources, but include paid options when they offer significant value
-6. Ensure URLs are properly formatted and complete (not shortened or relative)
-7. Add descriptive titles that match the actual resource`
+              content: generateRoadmapPrompt(
+                companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', '),
+                truncatedAnalysis,
+                professionalField
+              )
             }
           ],
           temperature: 0.2, // Lower temperature for more consistent output

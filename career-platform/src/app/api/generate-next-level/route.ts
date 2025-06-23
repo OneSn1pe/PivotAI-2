@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { getAdminFirestore, handleFirebaseError } from '@/utils/api-firebase';
 import { Milestone, ProfessionalField } from '@/types/user';
+import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
 
 // Debug helper
 const debug = {
@@ -66,59 +67,41 @@ export async function POST(request: NextRequest) {
     const resumeAnalysis = candidateData?.resumeAnalysis || {};
     
     // Create prompt for next level generation
-    const prompt = `You are an expert career counselor creating Level ${nextLevel} milestones for a candidate's career roadmap.
+    const prompt = `Generate Level ${nextLevel} milestones building on previous progress.
 
-CANDIDATE PROFILE:
-${JSON.stringify(resumeAnalysis, null, 2)}
+Previous completions:
+${existingMilestones.filter((m: Milestone) => m.level < nextLevel).map((m: Milestone) => `- ${m.title}`).join('\n')}
 
-TARGET COMPANIES:
-${JSON.stringify(targetCompanies, null, 2)}
+Create 3-5 milestones that advance toward: ${targetCompanies.map((c: any) => c.name).join(', ')}
 
-PROFESSIONAL FIELD: ${professionalField}
-
-PREVIOUS LEVELS COMPLETED:
-${existingMilestones.filter((m: Milestone) => m.level < nextLevel).map((m: Milestone) => `Level ${m.level}: ${m.title}`).join('\n')}
-
-Generate 3-5 milestones for Level ${nextLevel} that:
-1. Build upon the skills from previous levels
-2. Progressively move the candidate closer to their target roles
-3. Include a mix of technical skills, career progression, and soft skills
-4. Are appropriately challenging for this level
-
-Return ONLY valid JSON in this format:
+Use this JSON structure (same as Level 1 but more advanced content):
 {
-  "milestones": [
-    {
-      "id": "unique-id",
-      "title": "Milestone Title",
-      "description": "Detailed description",
-      "professionalField": "${professionalField}",
-      "category": "technical|fundamental|niche|soft|career",
-      "subcategory": "specific-subcategory",
-      "skills": ["skill1", "skill2"],
-      "timeframe": "X weeks/months",
-      "completed": false,
-      "difficulty": 1-5,
-      "priority": "low|medium|high|critical",
-      "estimatedHours": 40,
-      "level": ${nextLevel},
-      "successCriteria": ["criterion1", "criterion2"],
-      "attributes": {
-        // Field-specific attributes based on category
-      },
-      "resources": [
-        {
-          "title": "Resource Title",
-          "url": "https://actual-url.com",
-          "type": "course|book|documentation|etc",
-          "estimatedTime": "2 weeks",
-          "cost": "free|paid|freemium",
-          "description": "Brief description"
-        }
-      ]
-    }
-  ]
-}`;
+  "milestones": [{
+    "id": "unique-id",
+    "title": "Milestone Title",
+    "description": "Description",
+    "category": "technical|fundamental|niche|soft|career",
+    "skills": ["skill1"],
+    "timeframe": "2-3 months",
+    "completed": false,
+    "difficulty": ${Math.min(nextLevel, 5)},
+    "priority": "medium|high",
+    "estimatedHours": ${40 + (nextLevel * 10)},
+    "level": ${nextLevel},
+    "successCriteria": ["criterion1"],
+    "professionalField": "${professionalField}",
+    "attributes": {},
+    "resources": [{
+      "title": "Resource name",
+      "url": "https://actual-url.com",
+      "type": "course|book|documentation",
+      "estimatedTime": "2 weeks",
+      "cost": "free|paid"
+    }]
+  }]
+}
+
+${PROMPT_CONSTANTS.JSON_FORMAT}`;
 
     // Call OpenAI
     const openaiStartTime = performance.now();
@@ -127,7 +110,7 @@ Return ONLY valid JSON in this format:
       messages: [
         {
           role: "system",
-          content: "You are an expert career counselor specializing in creating progressive, level-based career development roadmaps."
+          content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.CAREER_COACH
         },
         {
           role: "user",

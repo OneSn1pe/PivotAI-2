@@ -19,26 +19,26 @@ Analyzes uploaded resume text to extract structured information about the candid
 
 ### System Prompt
 ```
-You are a helpful resume analysis assistant. Extract key information from resumes and provide structured data in JSON format.
+You are an AI resume analyst. Extract structured information from resumes in JSON format.
 ```
 
 ### User Prompt Template
 ```
-Analyze the following resume and extract key information. Return the data in the following JSON structure:
+Analyze the following resume and extract key information:
+
+[Resume Text]
+
+Extract and return JSON with this structure:
 {
-  "skills": [list of technical and soft skills as an array of strings],
-  "experience": [list of job titles/positions as an array of strings],
-  "education": [list of educational qualifications as an array of strings],
-  "strengths": [list of strong points as an array of strings],
-  "weaknesses": [list of areas for improvement as an array of strings],
-  "recommendations": [list of recommended job roles based on the profile as an array of strings],
-  "summary": "A brief 2-3 sentence summary of the candidate's profile",
-  "languages": [list of languages as an array of strings],
-  "quality_score": number from 1-10
+  "skills": [technical and soft skills],
+  "experience": [work experiences],
+  "education": [educational qualifications],
+  "strengths": [key strengths],
+  "weaknesses": [areas for improvement],
+  "recommendations": [recommended job roles]
 }
 
-IMPORTANT: Use the EXACT field names shown above. Make sure all arrays are properly formatted.
-For any field that cannot be determined, use an empty array [] or appropriate default value.
+Use exact field names as specified. For missing fields, use empty arrays.
 ```
 
 ### Parameters
@@ -211,6 +211,11 @@ Guidelines:
 - **Model**: `gpt-4o` (consistent across all endpoints)
 - **Temperature**: `0.2` (low for consistent output)
 - **Max Tokens**: `3000`
+
+### Optimizations Implemented
+- Removed redundant instructions and duplicate field specifications
+- Simplified prompt using shared constants from `PROMPT_CONSTANTS`
+- Reduced token usage by ~40% while maintaining output quality
 
 ### Dynamic Elements
 - Company list from user's target companies

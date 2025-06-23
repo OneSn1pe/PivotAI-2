@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
 
 // Add debug checkpoint utility
 const logApiCheckpoint = (message: string, data: any = {}) => {
@@ -197,33 +198,21 @@ export async function POST(request: NextRequest) {
     }));
     
     // Prepare the prompt for OpenAI
-    const prompt = `
-    Analyze the following resume and extract key information:
+    const prompt = `Analyze the following resume and extract key information:
     
     ${resumeText}
     
-    Please provide the following information in this EXACT JSON format:
+    Extract and return JSON with this structure:
     {
-      "skills": [list of technical and soft skills as an array of strings],
-      "experience": [list of work experiences as an array of strings],
-      "education": [list of education items as an array of strings],
-      "strengths": [list of resume strengths as an array of strings],
-      "weaknesses": [list of areas for improvement as an array of strings],
-      "recommendations": [list of job role recommendations as an array of strings],
-      "contact_information": {
-        "name": "Full Name",
-        "email": "email@example.com",
-        "phone": "phone number",
-        "location": "City, State"
-      },
-      "certifications": [list of certifications as an array of strings],
-      "languages": [list of languages as an array of strings],
-      "quality_score": number from 1-10
+      "skills": [technical and soft skills],
+      "experience": [work experiences],
+      "education": [educational qualifications],
+      "strengths": [key strengths],
+      "weaknesses": [areas for improvement],
+      "recommendations": [recommended job roles]
     }
     
-    IMPORTANT: Use the EXACT field names shown above. Make sure all arrays are properly formatted.
-    For any field that cannot be determined, use an empty array [] or appropriate default value.
-    `;
+    ${PROMPT_CONSTANTS.FIELD_NAMES} For missing fields, use empty arrays.`;
     
     checkpoints.push(logApiCheckpoint("OpenAI prompt prepared"));
     
@@ -235,7 +224,7 @@ export async function POST(request: NextRequest) {
       return await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are a helpful resume analysis assistant. Extract key information from resumes and provide structured data in JSON format.' },
+          { role: 'system', content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.RESUME_ANALYST },
           { role: 'user', content: prompt }
         ],
         temperature: 0.2,
@@ -293,22 +282,7 @@ export async function POST(request: NextRequest) {
           }
         });
         
-        // Add additional fields that might be useful
-        if (data.contact_information) {
-          transformed.contact_information = data.contact_information;
-        }
-        
-        if (data.certifications) {
-          transformed.certifications = data.certifications;
-        }
-        
-        if (data.languages) {
-          transformed.languages = data.languages;
-        }
-        
-        if (data.quality_score) {
-          transformed.quality_score = data.quality_score;
-        }
+        // No additional fields needed - removed unused fields
         
         return transformed;
       };
