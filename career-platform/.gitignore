@@ -44,6 +44,7 @@ firebase-debug.log
 firebase-debug.*.log
 .firebase/
 service-account.json
+firebase-admin-key.json
 
 # Cache
 .cache/
