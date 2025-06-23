@@ -23,8 +23,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
   const [generatedRoadmap, setGeneratedRoadmap] = useState<RoadmapType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lastGenerationTime, setLastGenerationTime] = useState<Date | null>(null);
-  const [timeUntilNextGeneration, setTimeUntilNextGeneration] = useState<string | null>(null);
 
   // Load existing target companies and last generation time from user profile
   useEffect(() => {
@@ -43,19 +41,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
             console.log('Loaded target companies from profile:', userData.targetCompanies);
             setTargetCompanies(userData.targetCompanies);
           }
-          
-          // Load last roadmap generation time
-          if (userData.lastRoadmapGeneration) {
-            const lastGenTime = userData.lastRoadmapGeneration.toDate ? 
-              userData.lastRoadmapGeneration.toDate() : 
-              new Date(userData.lastRoadmapGeneration);
-            
-            setLastGenerationTime(lastGenTime);
-            console.log('Last roadmap generation time:', lastGenTime);
-            
-            // Calculate time remaining until next allowed generation
-            updateTimeRemaining(lastGenTime);
-          }
         } else {
           console.log('No user data found in profile');
         }
@@ -68,58 +53,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     
     loadUserData();
   }, [userProfile]);
-  
-  // Update the countdown timer every minute
-  useEffect(() => {
-    if (!lastGenerationTime) return;
-    
-    // Initial update
-    updateTimeRemaining(lastGenerationTime);
-    
-    // Set up interval for updates
-    const interval = setInterval(() => {
-      updateTimeRemaining(lastGenerationTime);
-    }, 60000); // Update every minute
-    
-    return () => clearInterval(interval);
-  }, [lastGenerationTime]);
-  
-  // Calculate and update time remaining until next generation is allowed
-  const updateTimeRemaining = (lastGenTime: Date) => {
-    // Calculate when next generation is allowed (1 hour after last generation)
-    const nextAllowedTime = new Date(lastGenTime.getTime() + 60 * 60 * 1000); // 1 hour in milliseconds
-    const now = new Date();
-    
-    // If current time is past the next allowed time, clear the restriction
-    if (now >= nextAllowedTime) {
-      setTimeUntilNextGeneration(null);
-      return;
-    }
-    
-    // Calculate time difference in minutes
-    const diffMs = nextAllowedTime.getTime() - now.getTime();
-    const diffMinutes = Math.ceil(diffMs / 60000);
-    
-    if (diffMinutes > 0) {
-      setTimeUntilNextGeneration(
-        diffMinutes === 1 ? 
-          '1 minute' : 
-          `${diffMinutes} minutes`
-      );
-    } else {
-      setTimeUntilNextGeneration(null);
-    }
-  };
-  
-  // Check if user can generate a new roadmap
-  const canGenerateRoadmap = (): boolean => {
-    if (!lastGenerationTime) return true;
-    
-    const now = new Date();
-    const nextAllowedTime = new Date(lastGenerationTime.getTime() + 60 * 60 * 1000); // 1 hour after last generation
-    
-    return now >= nextAllowedTime;
-  };
 
   // Add a new empty target company field
   const addTargetCompany = () => {
@@ -143,12 +76,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
 
   // Validate input before generating roadmap
   const validateInput = (): boolean => {
-    // Check if user is allowed to generate a roadmap (rate limiting)
-    if (!canGenerateRoadmap()) {
-      setError(`Please wait ${timeUntilNextGeneration} before generating another roadmap. Limited to 1 per hour.`);
-      return false;
-    }
-    
     // Check if we have resume analysis
     if (!resumeAnalysis) {
       setError('Please upload your resume first to generate a roadmap.');
@@ -193,20 +120,14 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
     setError(null);
     
     try {
-      // Update the last generation time in the user's profile and save target companies
-      const now = new Date();
+      // Save target companies to user profile
       try {
         await updateDoc(doc(db, 'users', userProfile.uid), {
           targetCompanies: validTargetCompanies,
-          lastRoadmapGeneration: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
         
-        // Update local state with the new generation time
-        setLastGenerationTime(now);
-        updateTimeRemaining(now);
-        
-        console.log('Successfully saved target companies and updated generation timestamp');
+        console.log('Successfully saved target companies');
       } catch (saveErr) {
         console.error('Error updating user profile:', saveErr);
         // Continue with roadmap generation even if saving fails
@@ -334,7 +255,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
             
             <button
               onClick={handleGenerateRoadmap}
-              disabled={generating || !!timeUntilNextGeneration}
+              disabled={generating}
               className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded shadow-button disabled:opacity-50 transition-all duration-300"
             >
               {generating ? (
@@ -345,9 +266,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                   </svg>
                   Generating Your Roadmap...
                 </span>
-              ) : timeUntilNextGeneration ? 
-                `Generation Limit Reached` : 
-                'Generate Career Roadmap'}
+              ) : 'Generate Career Roadmap'}
             </button>
             
             <p className="text-center text-slate-500 mt-2 text-sm">
@@ -364,7 +283,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Expected generation time: Under 1 minute
-                  {timeUntilNextGeneration && ` • Limited to 1 per hour`}
                 </span>
               )}
             </p>
