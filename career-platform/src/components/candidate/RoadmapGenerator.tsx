@@ -177,16 +177,6 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
               Enter the companies and positions you're targeting for your career path, and we'll generate a personalized roadmap based on your resume and goals.
             </p>
             
-            {timeUntilNextGeneration && (
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-md mb-6">
-                <p className="text-amber-700 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Roadmap generation is limited to once per hour. You can generate another roadmap in {timeUntilNextGeneration}.
-                </p>
-              </div>
-            )}
             
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-3 text-slate-800">Target Companies</h3>
