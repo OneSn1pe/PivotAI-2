@@ -123,7 +123,7 @@ Return ONLY valid JSON in this format:
     // Call OpenAI
     const openaiStartTime = performance.now();
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",

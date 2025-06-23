@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     debug.log('[analyze-career] Calling OpenAI API');
     
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",

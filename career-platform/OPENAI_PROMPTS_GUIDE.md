@@ -42,7 +42,7 @@ For any field that cannot be determined, use an empty array [] or appropriate de
 ```
 
 ### Parameters
-- **Model**: `gpt-4o`
+- **Model**: `gpt-4o` (consistent across all endpoints)
 - **Temperature**: `0.2` (low for consistent output)
 - **Max Tokens**: `1500`
 - **Response Format**: `{ type: 'json_object' }`
@@ -208,7 +208,7 @@ Guidelines:
 ```
 
 ### Parameters
-- **Model**: `gpt-4o`
+- **Model**: `gpt-4o` (consistent across all endpoints)
 - **Temperature**: `0.2` (low for consistent output)
 - **Max Tokens**: `3000`
 
