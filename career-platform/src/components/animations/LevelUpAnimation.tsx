@@ -45,10 +45,21 @@ export function LevelUpAnimation({
   }, [isVisible, newAchievements.length]);
 
   const getLevelMessage = (level: number) => {
-    if (level <= 3) return "Building your foundation!";
-    if (level <= 6) return "Developing your expertise!";
-    if (level <= 10) return "Mastering advanced skills!";
-    return "You're becoming an expert!";
+    // Generic progression messages not tied to specific level ranges
+    const messages = [
+      "Great progress! Keep going!",
+      "You're advancing your skills!",
+      "Excellent work on your journey!",
+      "Building momentum in your career!",
+      "Your dedication is paying off!",
+      "Reaching new heights!",
+      "Mastering new competencies!",
+      "You're on fire! Keep it up!",
+      "Amazing achievement unlocked!",
+      "Your expertise is growing!"
+    ];
+    // Use level as index with modulo to cycle through messages
+    return messages[(level - 1) % messages.length];
   };
   
   const levelMessage = getLevelMessage(newLevel);

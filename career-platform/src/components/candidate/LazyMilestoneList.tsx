@@ -73,9 +73,18 @@ function LazyLevelSection({
 }) {
   const { ref, isInView } = useInView({ threshold: 0.1, rootMargin: '100px' });
 
+  // Get level type from first milestone in level
+  const levelType = milestones.length > 0 && milestones[0].levelType 
+    ? milestones[0].levelType 
+    : null;
+  
+  const levelTitle = levelType 
+    ? `${levelType.charAt(0).toUpperCase() + levelType.slice(1)} Level (Level ${level})`
+    : `Level ${level}`;
+
   return (
     <div ref={ref as React.RefObject<HTMLDivElement>}>
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Level {level}</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{levelTitle}</h3>
       {isInView ? (
         <div className="grid gap-4">
           {milestones.map((milestone) => {

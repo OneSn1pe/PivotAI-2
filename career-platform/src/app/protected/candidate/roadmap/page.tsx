@@ -398,6 +398,11 @@ export default function CareerPathPage() {
       // Use the levelsUnlocked from userProgress to determine what's unlocked
       const isUnlocked = level <= progress.levelsUnlocked;
       
+      // Get level type from first milestone in level
+      const levelType = levelMilestones.length > 0 && levelMilestones[0].levelType 
+        ? levelMilestones[0].levelType 
+        : null;
+      
       return {
         level,
         isActive: level === selectedLevel,
@@ -408,20 +413,22 @@ export default function CareerPathPage() {
         completedCount: completedMilestoneCount,
         microMilestoneCount: totalMicroMilestones,
         completedMicroCount: completedMicroMilestones,
-        title: getLevelTitle(level)
+        title: getLevelTitle(level),
+        levelType
       };
     });
   };
 
   const getLevelTitle = (level: number) => {
-    const titles = {
-      1: 'Foundation',
-      2: 'Building Skills',
-      3: 'Advanced Development',
-      4: 'Specialization',
-      5: 'Expert Level'
-    };
-    return titles[level as keyof typeof titles] || `Level ${level}`;
+    // Find the first milestone for this level to get its type
+    const levelMilestones = roadmap?.milestones.filter(m => (m.level || 1) === level) || [];
+    if (levelMilestones.length > 0 && levelMilestones[0].levelType) {
+      const levelType = levelMilestones[0].levelType;
+      // Capitalize first letter
+      return levelType.charAt(0).toUpperCase() + levelType.slice(1) + ' Level';
+    }
+    // Fallback to generic level number
+    return `Level ${level}`;
   };
 
   const handleGenerateNextLevel = async () => {
