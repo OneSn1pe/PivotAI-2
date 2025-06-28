@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     
     // Analyze completion patterns
     const completedMilestones = existingMilestones.filter((m: Milestone) => 
-      userProgress.completedMilestones?.includes(m.id)
+      userProgress?.completedMilestones?.includes(m.id)
     );
     
     const recentCompletions = completedMilestones
