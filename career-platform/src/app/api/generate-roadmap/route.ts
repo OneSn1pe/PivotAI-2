@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/config/firebase';
-import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
 import { generateRoadmapPrompt } from '@/prompts/roadmapPrompt';
@@ -317,8 +317,40 @@ export async function POST(request: NextRequest) {
         
         await Promise.all(deletePromises);
       }
+      
+      // Reset user progress when generating a new roadmap
+      debug.log('Resetting user progress for new roadmap generation');
+      const userProgressRef = doc(db as Firestore, 'userProgress', candidateId);
+      const progressDoc = await getDoc(userProgressRef);
+      
+      if (progressDoc.exists()) {
+        // Update existing progress document - reset to initial state
+        await updateDoc(userProgressRef, {
+          levelsUnlocked: 1,
+          completedMilestones: [],
+          completedMicroMilestones: [],
+          // Keep achievements and streak data
+          updatedAt: new Date()
+        });
+        debug.log('User progress reset to initial state');
+      } else {
+        // Create initial progress document if it doesn't exist
+        await setDoc(userProgressRef, {
+          userId: candidateId,
+          levelsUnlocked: 1,
+          completedMilestones: [],
+          completedMicroMilestones: [],
+          achievements: [],
+          streakDays: 0,
+          lastActiveDate: new Date(),
+          skillProficiencies: {},
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        debug.log('Created initial user progress document');
+      }
     } catch (deleteError) {
-      debug.error('Error deleting existing roadmaps:', deleteError);
+      debug.error('Error deleting existing roadmaps or resetting progress:', deleteError);
       // Continue with creating new roadmap even if deletion fails
     }
     
