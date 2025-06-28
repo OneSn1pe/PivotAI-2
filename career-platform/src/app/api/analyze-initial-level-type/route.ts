@@ -171,15 +171,23 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
     const totalDuration = performance.now() - requestStartTime;
     debug.error(`Error analyzing initial level type after ${Math.round(totalDuration)}ms:`, error);
     
-    // Return a sensible default based on basic analysis
-    const hasExperience = request.body?.resumeAnalysis?.experience?.length > 0;
-    const hasSkills = request.body?.resumeAnalysis?.skills?.length > 5;
-    
+    // Return a sensible default
     let defaultType = 'skill';
-    if (hasSkills && !hasExperience) {
-      defaultType = 'project';
-    } else if (hasExperience && hasSkills) {
-      defaultType = 'position';
+    
+    // Try to parse request body if available to make a better default decision
+    try {
+      const body = await request.json();
+      const hasExperience = body?.resumeAnalysis?.experience?.length > 0;
+      const hasSkills = body?.resumeAnalysis?.skills?.length > 5;
+      
+      if (hasSkills && !hasExperience) {
+        defaultType = 'project';
+      } else if (hasExperience && hasSkills) {
+        defaultType = 'position';
+      }
+    } catch {
+      // If we can't parse the body, just use skill as default
+      defaultType = 'skill';
     }
     
     return NextResponse.json({
