@@ -82,38 +82,67 @@ export async function POST(request: NextRequest) {
         levelType: m.levelType || 'skill'
       }));
     
-    // Create prompt for level type determination
-    const prompt = `Analyze the user's progress and determine what type of level they need next.
+    // Count level types in recent completions
+    const levelTypeCounts = recentCompletions.reduce((acc: any, m: any) => {
+      acc[m.levelType] = (acc[m.levelType] || 0) + 1;
+      return acc;
+    }, {});
+    
+    // Analyze experience level from resume
+    const experienceYears = resumeAnalysis.experience?.length || 0;
+    const hasProjects = resumeAnalysis.experience?.some((exp: string) => 
+      exp.toLowerCase().includes('project') || 
+      exp.toLowerCase().includes('built') ||
+      exp.toLowerCase().includes('developed')
+    );
+    
+    // Check for critical gaps
+    const hasSkillGaps = resumeAnalysis.weaknesses?.length > 0;
+    const needsPortfolio = !hasProjects && currentLevel < 3;
+    const readyForCareerMove = currentLevel >= 5 || experienceYears >= 2;
+    
+    // Create enhanced prompt for level type determination
+    const prompt = `Analyze the user's resume and progress to determine the MOST CRITICAL level type they need next.
 
-User Profile:
-- Current Level: ${currentLevel}
-- Target Companies: ${targetCompanies.map((c: any) => c.name).join(', ')}
+Resume Analysis:
+- Skills: ${resumeAnalysis.skills?.join(', ') || 'None listed'}
+- Experience: ${resumeAnalysis.experience?.join('; ') || 'No experience listed'}
+- Strengths: ${resumeAnalysis.strengths?.join(', ') || 'None identified'}
+- Weaknesses/Gaps: ${resumeAnalysis.weaknesses?.join(', ') || 'None identified'}
+- Experience Years: ${experienceYears}
+- Has Portfolio Projects: ${hasProjects ? 'Yes' : 'No'}
+
+Current Status:
+- Level: ${currentLevel}
+- Target Companies: ${targetCompanies.map((c: any) => `${c.name} (${c.position})`).join(', ')}
 - Professional Field: ${professionalField}
-- Key Skills: ${resumeAnalysis.skills?.slice(0, 10).join(', ')}
-- Experience Level: ${resumeAnalysis.experience?.length || 0} roles
 
-Recent Completions:
-${recentCompletions.map((m: any) => `- ${m.title} (${m.levelType || 'skill'} focus)`).join('\n')}
+Recent Progress:
+${recentCompletions.length > 0 ? recentCompletions.map((m: any) => `- ${m.title} (${m.levelType} focus)`).join('\n') : '- No recent completions (new user)'}
+
+Level Type Distribution: ${JSON.stringify(levelTypeCounts)}
+
+CRITICAL DECISION FACTORS:
+1. If user has NO EXPERIENCE and weak skills → "skill" (build foundation)
+2. If user has skills but NO PORTFOLIO → "project" (need proof of ability)
+3. If user approaching job search or career transition → "position" (interview prep)
+4. If major skill gaps for target companies → "skill" (fill critical gaps)
+5. If too many consecutive same type → switch type (avoid monotony)
 
 Level Types:
-1. "skill" - Focus on learning new technical or soft skills
-2. "project" - Apply skills through hands-on projects and portfolio building
-3. "position" - Prepare for specific role transitions and career advancement
+- "skill": Learn new technical/soft skills (for knowledge gaps)
+- "project": Build portfolio and apply skills (for proof of ability)
+- "position": Career positioning and job prep (for role transitions)
 
-Based on their progress pattern and career goals, determine the most beneficial level type for Level ${nextLevel}.
-
-Consider:
-- Have they recently completed several skill-focused levels? (suggest project)
-- Are they approaching a career transition point? (suggest position)
-- Do they need to fill skill gaps? (suggest skill)
-- What will best prepare them for their target companies?
+Analyze the resume deeply. What is the SINGLE MOST CRITICAL thing blocking this user from their target companies?
 
 Return JSON:
 {
   "levelType": "skill" | "project" | "position",
-  "reasoning": "Brief explanation of why this type was chosen",
-  "focus": "Specific focus area for this level",
-  "expectedOutcome": "What the user will achieve"
+  "reasoning": "Explain the critical gap this addresses based on resume analysis",
+  "focus": "Specific area to address the gap",
+  "expectedOutcome": "How this moves them closer to target companies",
+  "criticalGap": "The main blocker identified from resume"
 }
 
 ${PROMPT_CONSTANTS.JSON_FORMAT}`;
@@ -125,7 +154,7 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
       messages: [
         {
           role: "system",
-          content: "You are an expert career coach specializing in personalized learning paths. Analyze user progress patterns to recommend the most effective next steps."
+          content: "You are an expert career coach who analyzes resumes to identify critical gaps preventing candidates from reaching their target roles. Focus on the MOST IMPORTANT blocker."
         },
         {
           role: "user",
@@ -166,11 +195,19 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
       reasoning: parsedResponse.reasoning,
       focus: parsedResponse.focus,
       expectedOutcome: parsedResponse.expectedOutcome,
+      criticalGap: parsedResponse.criticalGap,
       nextLevel,
       _debug: {
         processingTime: Math.round(totalDuration),
         openaiTime: Math.round(openaiDuration),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        resumeFactors: {
+          hasSkillGaps,
+          needsPortfolio,
+          readyForCareerMove,
+          experienceYears,
+          hasProjects
+        }
       }
     });
     

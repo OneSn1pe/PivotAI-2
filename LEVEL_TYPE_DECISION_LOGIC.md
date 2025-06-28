@@ -2,7 +2,7 @@
 
 ## Overview
 
-PivotAI uses an intelligent two-step process for generating new levels. The first step determines what **type** of level the user needs based on their progress patterns, and the second step generates content specific to that type. This document explains how the system decides between skill-focused, project-focused, or position-focused levels.
+PivotAI uses an intelligent two-step process for generating new levels. The first step determines what **type** of level the user needs based on their resume analysis and progress patterns, and the second step generates content specific to that type. This document explains how the system decides between skill-focused, project-focused, or position-focused levels.
 
 ## Level Types
 
@@ -31,7 +31,29 @@ PivotAI uses an intelligent two-step process for generating new levels. The firs
 
 The AI analyzes multiple factors to determine the optimal level type:
 
-### 1. **Recent Completion Patterns**
+### 1. **Resume Analysis (Most Critical)**
+
+The system deeply analyzes the user's resume to identify critical gaps:
+
+```typescript
+// Resume-based decision factors
+const resumeFactors = {
+  hasSkillGaps: weaknesses.length > 0,
+  needsPortfolio: !hasProjects && currentLevel < 3,
+  readyForCareerMove: currentLevel >= 5 || experienceYears >= 2,
+  experienceYears: experience.length,
+  hasProjects: experience.includes('project' || 'built' || 'developed')
+};
+```
+
+**Critical Decision Rules:**
+1. **No Experience + Weak Skills** → "skill" (build foundation)
+2. **Has Skills but No Portfolio** → "project" (need proof of ability)
+3. **Approaching Job Search** → "position" (interview prep)
+4. **Major Skill Gaps** → "skill" (fill critical gaps)
+5. **Too Many Same Type** → Switch type (avoid monotony)
+
+### 2. **Recent Completion Patterns**
 
 The system examines the last 2-3 levels completed:
 
@@ -84,55 +106,60 @@ Different companies require different preparation:
 
 ## AI Prompt Analysis
 
-The determination prompt provides context for intelligent decision-making:
+The determination prompt now includes comprehensive resume analysis:
 
 ```javascript
-const prompt = `Analyze the user's progress and determine what type of level they need next.
+const prompt = `Analyze the user's resume and progress to determine the MOST CRITICAL level type they need next.
 
-User Profile:
-- Current Level: ${currentLevel}
-- Target Companies: ${targetCompanies}
-- Key Skills: ${skills}
-- Experience Level: ${experience}
+Resume Analysis:
+- Skills: ${resumeAnalysis.skills?.join(', ') || 'None listed'}
+- Experience: ${resumeAnalysis.experience?.join('; ') || 'No experience listed'}
+- Strengths: ${resumeAnalysis.strengths?.join(', ') || 'None identified'}
+- Weaknesses/Gaps: ${resumeAnalysis.weaknesses?.join(', ') || 'None identified'}
+- Experience Years: ${experienceYears}
+- Has Portfolio Projects: ${hasProjects ? 'Yes' : 'No'}
 
-Recent Completions:
-${recentCompletions}
+CRITICAL DECISION FACTORS:
+1. If user has NO EXPERIENCE and weak skills → "skill" (build foundation)
+2. If user has skills but NO PORTFOLIO → "project" (need proof of ability)
+3. If user approaching job search or career transition → "position" (interview prep)
+4. If major skill gaps for target companies → "skill" (fill critical gaps)
 
-Consider:
-- Have they recently completed several skill-focused levels? (suggest project)
-- Are they approaching a career transition point? (suggest position)
-- Do they need to fill skill gaps? (suggest skill)
+Analyze the resume deeply. What is the SINGLE MOST CRITICAL thing blocking this user from their target companies?
 ```
 
 ## Decision Examples
 
-### Example 1: Skill Level Needed
+### Example 1: Skill Level Needed (Resume-Based)
 ```json
 {
   "levelType": "skill",
-  "reasoning": "User has completed 2 project levels recently but lacks advanced React patterns needed for target companies",
-  "focus": "Advanced React patterns and performance optimization",
-  "expectedOutcome": "Master complex React concepts required for senior roles"
+  "reasoning": "Resume shows no programming experience and lists 'lack of technical skills' as a weakness. Must build foundation before attempting projects.",
+  "focus": "JavaScript fundamentals and basic web development",
+  "expectedOutcome": "Gain essential programming skills to start building projects",
+  "criticalGap": "No programming experience or technical skills"
 }
 ```
 
-### Example 2: Project Level Needed
+### Example 2: Project Level Needed (Resume-Based)
 ```json
 {
   "levelType": "project",
-  "reasoning": "User has acquired Node.js and database skills in last 2 levels, time to integrate them",
-  "focus": "Full-stack application with authentication and real-time features",
-  "expectedOutcome": "Portfolio-ready application demonstrating backend expertise"
+  "reasoning": "Resume lists React, Node.js, and Python skills but shows no projects or portfolio. Skills without proof won't convince employers.",
+  "focus": "Full-stack web application showcasing all listed skills",
+  "expectedOutcome": "Create tangible proof of abilities for potential employers",
+  "criticalGap": "No portfolio or projects despite claiming technical skills"
 }
 ```
 
-### Example 3: Position Level Needed
+### Example 3: Position Level Needed (Resume-Based)
 ```json
 {
   "levelType": "position",
-  "reasoning": "User approaching Level 10 with strong technical skills, needs leadership development",
-  "focus": "Technical leadership and team collaboration",
-  "expectedOutcome": "Ready for tech lead interviews and responsibilities"
+  "reasoning": "Resume shows 5+ years experience but targeting senior roles at FAANG. Needs interview prep and positioning strategy.",
+  "focus": "FAANG interview preparation and personal branding",
+  "expectedOutcome": "Ready to pass technical interviews and negotiate senior positions",
+  "criticalGap": "Not prepared for rigorous FAANG interview process"
 }
 ```
 
@@ -196,6 +223,64 @@ Track success by level type:
 - Correlation with salary increases
 - User satisfaction ratings
 
+## Initial Level Type Determination
+
+For new users, PivotAI includes a separate analysis endpoint (`/api/analyze-initial-level-type`) that determines the most critical starting point based solely on resume analysis:
+
+### Resume Profile Categories
+
+1. **Beginner**: No experience, few skills → Start with "skill"
+2. **Intermediate**: Has skills but no portfolio → Start with "project"  
+3. **Experienced**: Strong background → Start with "position"
+4. **Career Changer**: Transitioning fields → Depends on transferable skills
+
+### Initial Analysis Example
+
+```json
+{
+  "levelType": "skill",
+  "reasoning": "Entry-level candidate with no technical experience needs foundational skills first",
+  "focus": "Core programming concepts and web development basics",
+  "expectedOutcome": "Build foundation for future project work",
+  "criticalGap": "Lack of any programming experience",
+  "resumeProfile": "beginner"
+}
+```
+
+## API Implementation
+
+### 1. For Initial Roadmap Generation
+```typescript
+// First, analyze what type of Level 1 is needed
+const levelTypeResponse = await fetch('/api/analyze-initial-level-type', {
+  body: JSON.stringify({ resumeAnalysis, targetCompanies })
+});
+
+// Then generate appropriate Level 1 content
+const roadmapResponse = await fetch('/api/generate-typed-level', {
+  body: JSON.stringify({ 
+    levelType: levelTypeResponse.levelType,
+    level: 1
+  })
+});
+```
+
+### 2. For Subsequent Levels
+```typescript
+// Determine next level type based on resume + progress
+const levelTypeResponse = await fetch('/api/determine-level-type', {
+  body: JSON.stringify({ roadmapId, candidateId, currentLevel })
+});
+
+// Generate typed content
+const nextLevelResponse = await fetch('/api/generate-typed-level', {
+  body: JSON.stringify({
+    levelType: levelTypeResponse.levelType,
+    level: currentLevel + 1
+  })
+});
+```
+
 ## Summary
 
-The level type decision system ensures users receive the right kind of challenge at the right time. By analyzing progress patterns, career goals, and market demands, PivotAI creates a personalized journey that balances learning, doing, and career advancement. This intelligent approach prevents both skill gaps and tutorial hell, keeping users engaged and progressing toward their career goals.
+The level type decision system ensures users receive the right kind of challenge at the right time. By deeply analyzing resumes to identify critical gaps, combined with progress patterns and career goals, PivotAI creates a personalized journey that addresses each user's most pressing needs. This resume-driven approach ensures that every user starts with what they need most - whether that's building skills, creating portfolio pieces, or positioning for career advancement.
