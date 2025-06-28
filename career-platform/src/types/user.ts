@@ -409,12 +409,63 @@ export enum UserRole {
     cost?: 'free' | 'paid' | 'freemium';
   }
 
+  // Level Type specific interfaces
+  export interface SkillLevelAttributes {
+    learningObjectives: string[];
+    theoreticalDepth: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    practiceType: 'guided' | 'self-directed' | 'mentored' | 'collaborative';
+    assessmentType: 'quiz' | 'exercise' | 'certification' | 'peer-review';
+    prerequisiteKnowledge?: string[];
+    outputSkills: string[]; // Skills gained after completion
+    knowledgeType: 'conceptual' | 'procedural' | 'practical' | 'theoretical';
+    retentionActivities?: string[]; // Activities to reinforce learning
+  }
+
+  export interface ProjectLevelAttributes {
+    projectScope: 'personal' | 'team' | 'open-source' | 'client';
+    deliverables: {
+      type: 'application' | 'library' | 'api' | 'website' | 'tool' | 'analysis';
+      description: string;
+      technologies: string[];
+      demonstratesSkills: string[];
+    }[];
+    complexity: 'simple' | 'moderate' | 'complex' | 'enterprise';
+    realWorldApplication: string;
+    portfolioValue: 'high' | 'medium' | 'low';
+    collaborationType?: 'solo' | 'pair' | 'team';
+    deployment: boolean;
+    userTesting: boolean;
+    documentationRequired: boolean;
+  }
+
+  export interface PositionLevelAttributes {
+    targetRole: string;
+    seniorityLevel: 'entry' | 'junior' | 'mid' | 'senior' | 'lead' | 'principal';
+    preparationAreas: {
+      technical?: string[];
+      behavioral?: string[];
+      leadership?: string[];
+      domain?: string[];
+    };
+    interviewComponents: ('coding' | 'system-design' | 'behavioral' | 'case-study' | 'presentation')[];
+    networkingGoals: string[];
+    personalBranding: {
+      linkedinOptimization: boolean;
+      portfolioUpdate: boolean;
+      resumeTailoring: boolean;
+      coverLetterTemplates: boolean;
+    };
+    negotiationPrep?: string[];
+    targetCompanies?: string[];
+    expectedSalaryRange?: string;
+  }
+
   // Enhanced milestone interface with field support
   export interface Milestone {
     id: string;
     title: string;
     description: string;
-    professionalField: ProfessionalField;        // NEW: Field this milestone belongs to
+    professionalField: ProfessionalField;
     category: MilestoneCategory;
     subcategory?: string;
     skills: string[];
@@ -429,12 +480,18 @@ export enum UserRole {
     // Progress tracking fields
     level: number;
     levelType?: 'skill' | 'project' | 'position';
+    
+    // Level type specific attributes
+    skillAttributes?: SkillLevelAttributes;
+    projectAttributes?: ProjectLevelAttributes;
+    positionAttributes?: PositionLevelAttributes;
+    
     microMilestones?: MicroMilestone[];
     isCapstone?: boolean;
     unlockedAt?: Date;
     unlockConditions?: UnlockCondition[];
     
-    // Field and category-specific attributes
+    // Field and category-specific attributes (legacy)
     attributes: MilestoneAttributes;
     
     // Enhanced resources with field-specific types
@@ -449,12 +506,12 @@ export enum UserRole {
     
     // Professional development tracking
     competencyImpact?: {
-      [key in keyof ProfessionalCompetencies]?: number;  // How much this milestone improves each competency (0-10)
+      [key in keyof ProfessionalCompetencies]?: number;
     };
     
     // Legacy support for backward compatibility
     skillType?: 'technical' | 'soft';
-    difficulty?: 1 | 2 | 3 | 4 | 5;  // Made optional for backward compatibility
+    difficulty?: 1 | 2 | 3 | 4 | 5;
   }
 
   // Legacy milestone interface for backward compatibility

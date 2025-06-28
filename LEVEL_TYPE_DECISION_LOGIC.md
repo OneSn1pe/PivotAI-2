@@ -67,35 +67,39 @@ const recentCompletions = completedMilestones
   }));
 ```
 
-**Decision Logic:**
-- If last 2+ levels were "skill" → Suggest "project" (time to apply)
-- If last level was "project" → Suggest "skill" or "position" 
-- If approaching levels 5, 10, 15 → Consider "position" (career milestones)
+**Decision Logic Based on Pattern:**
+- If last 2+ levels were "skill" → Suggest "project" (time to apply knowledge)
+- If last level was "project" → Suggest "skill" or "position" (learn new skills or prepare for roles)
+- Too many consecutive same type → Switch for variety and holistic development
 
-### 2. **Current Progress Level**
+### 3. **Level Type Distribution Strategy**
 
-Level ranges have natural progression patterns:
+Instead of level ranges, the system focuses on level type patterns:
 
-| Level Range | Typical Pattern | Reasoning |
-|-------------|----------------|-----------|
-| 1-3 | Mostly "skill" | Building foundations |
-| 4-6 | Mix of "skill" and "project" | Applying basics |
-| 7-9 | More "project", some "position" | Building expertise |
-| 10+ | Balance all three | Senior development |
+**Skill Levels** occur when:
+- Resume shows knowledge gaps
+- New technology needs to be learned
+- Weaknesses identified in recent assessments
+- Prerequisite for upcoming projects
 
-### 3. **Time Since Last Project**
+**Project Levels** occur when:
+- Skills learned need practical application
+- Portfolio is weak for target roles
+- Need to demonstrate competency
+- Integration of multiple skills required
 
-The system tracks practical application:
-- No project in last 3 levels → High priority for "project"
-- Recent project success → Can continue with "skill" advancement
-- Multiple projects completed → Ready for "position" growth
+**Position Levels** occur when:
+- Ready for career transition
+- Interview preparation needed
+- Networking and branding required
+- Salary negotiation upcoming
 
-### 4. **Career Timeline Considerations**
+### 4. **Experience-Based Recommendations**
 
-Based on experience level and target companies:
-- **Entry Level** (0-2 years): 70% skill, 25% project, 5% position
-- **Mid Level** (2-5 years): 40% skill, 40% project, 20% position
-- **Senior Level** (5+ years): 30% skill, 30% project, 40% position
+Based on resume analysis and career stage:
+- **No Experience**: Alternate skill → project → skill → project (build and prove)
+- **Some Experience**: Mix all three types based on gaps (skill for gaps, project for proof, position for advancement)
+- **Experienced**: Focus on position levels with strategic skill/project additions
 
 ### 5. **Target Company Alignment**
 

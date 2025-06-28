@@ -59,6 +59,16 @@ JSON Structure:
     "estimatedHours": ${40 + (level * 10)},
     "level": ${level},
     "successCriteria": ["Can explain X", "Understands Y", "Demonstrates Z"],
+    "skillAttributes": {
+      "learningObjectives": ["Master concept X", "Apply technique Y"],
+      "theoreticalDepth": "intermediate",
+      "practiceType": "guided",
+      "assessmentType": "exercise",
+      "prerequisiteKnowledge": ["Basic programming"],
+      "outputSkills": ["Advanced React", "State management"],
+      "knowledgeType": "practical",
+      "retentionActivities": ["Daily practice", "Code reviews"]
+    },
     "resources": [
       {
         "title": "Resource name",
@@ -109,6 +119,22 @@ JSON Structure:
     "estimatedHours": ${60 + (level * 15)},
     "level": ${level},
     "successCriteria": ["Deployed working application", "Documented architecture", "Passed tests"],
+    "projectAttributes": {
+      "projectScope": "personal",
+      "deliverables": [{
+        "type": "application",
+        "description": "Full-stack web app with authentication",
+        "technologies": ["React", "Node.js", "PostgreSQL"],
+        "demonstratesSkills": ["Frontend", "Backend", "Database design"]
+      }],
+      "complexity": "moderate",
+      "realWorldApplication": "E-commerce platform for small businesses",
+      "portfolioValue": "high",
+      "collaborationType": "solo",
+      "deployment": true,
+      "userTesting": true,
+      "documentationRequired": true
+    },
     "resources": [
       {
         "title": "Project guide or reference",
@@ -159,6 +185,27 @@ JSON Structure:
     "estimatedHours": ${80 + (level * 20)},
     "level": ${level},
     "successCriteria": ["Completed mock interviews", "Updated portfolio", "Expanded network"],
+    "positionAttributes": {
+      "targetRole": "Senior Software Engineer",
+      "seniorityLevel": "senior",
+      "preparationAreas": {
+        "technical": ["System design", "Architecture patterns"],
+        "behavioral": ["Leadership examples", "Conflict resolution"],
+        "leadership": ["Team management", "Mentoring"],
+        "domain": ["Industry knowledge", "Business acumen"]
+      },
+      "interviewComponents": ["coding", "system-design", "behavioral"],
+      "networkingGoals": ["Connect with 10 professionals", "Attend 2 industry events"],
+      "personalBranding": {
+        "linkedinOptimization": true,
+        "portfolioUpdate": true,
+        "resumeTailoring": true,
+        "coverLetterTemplates": true
+      },
+      "negotiationPrep": ["Research salary ranges", "Practice negotiation tactics"],
+      "targetCompanies": ${JSON.stringify(targetCompanies.map((c: any) => c.name))},
+      "expectedSalaryRange": "$120k-$180k"
+    },
     "resources": [
       {
         "title": "Career resource",
