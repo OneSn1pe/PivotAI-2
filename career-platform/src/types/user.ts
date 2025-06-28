@@ -428,6 +428,7 @@ export enum UserRole {
     
     // Progress tracking fields
     level: number;
+    levelType?: 'skill' | 'project' | 'position';
     microMilestones?: MicroMilestone[];
     isCapstone?: boolean;
     unlockedAt?: Date;
