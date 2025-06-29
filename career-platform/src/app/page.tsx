@@ -12,12 +12,14 @@ export default function WaitlistPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [scrollY, setScrollY] = useState(0);
+  const [counts, setCounts] = useState({ levels: 0, milestones: 0, fields: 0 });
   const router = useRouter();
   
   // Refs for scroll animations
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,7 +36,27 @@ export default function WaitlistPage() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('animate-fadeUp');
+            entry.target.classList.add('animate-blur-focus');
+            
+            // Trigger count-up animation for stats
+            if (entry.target.classList.contains('stat-number') && !entry.target.classList.contains('counted')) {
+              entry.target.classList.add('counted');
+              const target = entry.target;
+              const finalValue = parseInt(target.getAttribute('data-value') || '0');
+              const duration = 2000; // 2 seconds
+              const steps = 60;
+              const increment = finalValue / steps;
+              let current = 0;
+              
+              const timer = setInterval(() => {
+                current += increment;
+                if (current >= finalValue) {
+                  current = finalValue;
+                  clearInterval(timer);
+                }
+                target.textContent = current === Infinity ? '∞' : Math.floor(current).toString() + (finalValue > 99 ? '+' : '');
+              }, duration / steps);
+            }
           }
         });
       },
@@ -126,9 +148,15 @@ export default function WaitlistPage() {
   // Floating geometric shapes component
   const FloatingShapes = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Morphing blob */}
+      <div 
+        className="absolute top-1/4 right-1/4 w-96 h-96 morph-blob blur-3xl"
+        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      />
+      
       {/* Large floating triangle */}
       <div 
-        className="absolute top-20 right-10 w-32 h-32 opacity-10 animate-float"
+        className="absolute top-20 right-10 w-32 h-32 opacity-10 animate-float blend-overlay"
         style={{ transform: `translateY(${scrollY * 0.1}px)` }}
       >
         <svg viewBox="0 0 100 100" fill="currentColor" className="text-[var(--sky-soft)]">
@@ -138,7 +166,7 @@ export default function WaitlistPage() {
       
       {/* Floating circles */}
       <div 
-        className="absolute top-40 left-20 w-20 h-20 bg-[var(--blue-electric)] rounded-full opacity-5 animate-float-rotate"
+        className="absolute top-40 left-20 w-20 h-20 bg-[var(--blue-electric)] rounded-full opacity-5 animate-float-rotate blend-screen"
         style={{ transform: `translateY(${scrollY * 0.2}px)` }}
       />
       
@@ -149,9 +177,21 @@ export default function WaitlistPage() {
       
       {/* Grid pattern overlay */}
       <div 
-        className="absolute inset-0 pattern-grid opacity-[0.02]"
+        className="absolute inset-0 pattern-grid opacity-[0.02] blend-overlay"
         style={{ transform: `translateY(${scrollY * 0.05}px)` }}
       />
+    </div>
+  );
+
+  // Wave divider component
+  const WaveDivider = ({ color = 'var(--white-pearl)', flip = false }: { color?: string; flip?: boolean }) => (
+    <div className={`wave-divider ${flip ? 'rotate-180' : ''}`}>
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+        <path 
+          d="M0,30 C200,50 400,10 600,30 C800,50 1000,10 1200,30 L1200,60 L0,60 Z" 
+          fill={color}
+        />
+      </svg>
     </div>
   );
 
@@ -177,9 +217,17 @@ export default function WaitlistPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden gradient-hero">
+      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden gradient-hero noise-texture">
         {/* Floating shapes */}
         <FloatingShapes />
+
+        {/* AI-Powered Floating Badge */}
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 floating-badge px-4 py-2 rounded-full text-white text-xs font-medium flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          AI-Powered Platform
+        </div>
 
         <div className="max-w-4xl w-full relative z-10">
           <div 
@@ -261,6 +309,9 @@ export default function WaitlistPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
+        
+        {/* Wave divider at bottom */}
+        <WaveDivider />
       </section>
 
       {/* Features Section */}
@@ -318,13 +369,18 @@ export default function WaitlistPage() {
       <section className="py-24 px-4 bg-gradient-to-br from-[var(--sky-soft)] to-[var(--white-pearl)] relative overflow-hidden">
         <div className="absolute inset-0 gradient-mesh opacity-30" />
         
-        <div className="max-w-4xl mx-auto text-center relative z-10">
+        {/* Wave divider at top */}
+        <div className="absolute top-0 left-0 right-0">
+          <WaveDivider color="var(--white-pearl)" flip={true} />
+        </div>
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10" ref={statsRef}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { number: "10", label: "Career Levels" },
-              { number: "100+", label: "Milestones" },
+              { number: "100", label: "Milestones" },
               { number: "5", label: "Professional Fields" },
-              { number: "∞", label: "Possibilities" }
+              { number: "∞", label: "Possibilities", isInfinity: true }
             ].map((stat, index) => (
               <div 
                 key={index}
@@ -333,7 +389,12 @@ export default function WaitlistPage() {
                   animationDelay: `${index * 100}ms`
                 }}
               >
-                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">{stat.number}</div>
+                <div 
+                  className={`text-3xl md:text-4xl font-bold gradient-text mb-2 stat-number ${stat.isInfinity ? '' : 'count-up'}`}
+                  data-value={stat.isInfinity ? '0' : stat.number}
+                >
+                  {stat.isInfinity ? '∞' : '0'}
+                </div>
                 <div className="text-sm text-[var(--gray-warm)] font-medium">{stat.label}</div>
               </div>
             ))}
