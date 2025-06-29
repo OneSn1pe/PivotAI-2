@@ -102,20 +102,20 @@ export default function WaitlistPage() {
 
   // Success message overlay
   const SuccessMessage = () => (
-    <div className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center px-4 animate-fadeIn">
+    <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full transform scale-100 animate-slideUp">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-16 h-16 bg-gradient-to-br from-[var(--blue-electric)] to-[var(--navy-midnight)] rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-light text-gray-900 mb-3 text-center">You're on the list!</h2>
-        <p className="text-gray-600 font-light text-center">
+        <h2 className="text-2xl font-light text-[var(--navy-deep)] mb-3 text-center">You're on the list!</h2>
+        <p className="text-[var(--gray-warm)] font-light text-center">
           We'll notify you as soon as PivotAI launches. Thank you for your interest!
         </p>
         <button
           onClick={() => setSuccess(false)}
-          className="mt-6 w-full bg-gray-900 hover:bg-gray-800 text-white font-light py-3 px-6 rounded-lg transition-colors"
+          className="mt-6 w-full bg-[var(--navy-midnight)] hover:bg-[var(--navy-royal)] text-white font-light py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02]"
         >
           Got it
         </button>
@@ -123,41 +123,65 @@ export default function WaitlistPage() {
     </div>
   );
 
+  // Floating geometric shapes component
+  const FloatingShapes = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Large floating triangle */}
+      <div 
+        className="absolute top-20 right-10 w-32 h-32 opacity-10 animate-float"
+        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      >
+        <svg viewBox="0 0 100 100" fill="currentColor" className="text-[var(--sky-soft)]">
+          <polygon points="50,10 90,90 10,90" />
+        </svg>
+      </div>
+      
+      {/* Floating circles */}
+      <div 
+        className="absolute top-40 left-20 w-20 h-20 bg-[var(--blue-electric)] rounded-full opacity-5 animate-float-rotate"
+        style={{ transform: `translateY(${scrollY * 0.2}px)` }}
+      />
+      
+      <div 
+        className="absolute bottom-20 right-40 w-16 h-16 bg-[var(--gold-accent)] rounded-full opacity-10 animate-float"
+        style={{ transform: `translateY(${scrollY * -0.15}px)` }}
+      />
+      
+      {/* Grid pattern overlay */}
+      <div 
+        className="absolute inset-0 pattern-grid opacity-[0.02]"
+        style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+      />
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--white-pearl)]">
       {/* Success Message Overlay */}
       {success && <SuccessMessage />}
       
       {/* Navigation */}
       <nav 
-        className="fixed top-0 left-0 right-0 z-[9999] bg-white/90 backdrop-blur-md transition-all duration-300 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-[9999] bg-[var(--white-pearl)]/80 backdrop-blur-lg transition-all duration-300"
         style={{
-          borderBottom: scrollY > 50 ? '1px solid rgba(0,0,0,0.08)' : '1px solid transparent',
+          borderBottom: scrollY > 50 ? '1px solid rgba(10, 22, 40, 0.1)' : '1px solid transparent',
+          backgroundColor: scrollY > 50 ? 'rgba(250, 251, 252, 0.95)' : 'rgba(250, 251, 252, 0.8)',
           isolation: 'isolate'
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-light text-gray-900">PivotAI</h1>
+            <h1 className="text-xl font-semibold text-[var(--navy-deep)]">PivotAI</h1>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
-        {/* Background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div 
-            className="absolute -top-1/2 -right-1/2 w-full h-full opacity-5"
-            style={{
-              transform: `translateY(${scrollY * 0.3}px)`,
-              background: 'radial-gradient(circle, #000 1px, transparent 1px)',
-              backgroundSize: '50px 50px'
-            }}
-          />
-        </div>
+      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden gradient-hero">
+        {/* Floating shapes */}
+        <FloatingShapes />
 
-        <div className="max-w-4xl w-full relative">
+        <div className="max-w-4xl w-full relative z-10">
           <div 
             ref={heroRef}
             className="text-center scroll-animate opacity-0"
@@ -165,18 +189,18 @@ export default function WaitlistPage() {
               transform: `translateY(${scrollY * -0.2}px)`
             }}
           >
-            <div className="inline-flex items-center justify-center px-3 py-1 bg-gray-100 text-gray-900 rounded-full text-xs font-medium mb-8">
-              <span className="animate-pulse mr-2">•</span>
+            <div className="inline-flex items-center justify-center px-4 py-2 bg-[var(--white-pearl)]/10 backdrop-blur-sm text-[var(--white-pearl)] rounded-full text-xs font-medium mb-8 border border-[var(--white-pearl)]/20">
+              <span className="animate-pulse mr-2 text-[var(--gold-accent)]">•</span>
               Coming Soon
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-6 leading-tight">
+            <h1 className="text-5xl md:text-7xl font-light text-[var(--white-pearl)] mb-6 leading-tight">
               Your AI-Powered
               <br />
-              <span className="font-normal">Career Navigator</span>
+              <span className="font-semibold gradient-text bg-gradient-to-r from-[var(--white-pearl)] to-[var(--sky-soft)]">Career Navigator</span>
             </h1>
             
-            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+            <p className="text-lg text-[var(--sky-soft)] mb-12 max-w-2xl mx-auto font-light leading-relaxed">
               Transform your career trajectory with personalized AI-driven roadmaps 
               and gamified learning experiences.
             </p>
@@ -197,19 +221,19 @@ export default function WaitlistPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="w-full px-6 py-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-all bg-white font-light"
+                  className="w-full px-6 py-4 text-base border border-[var(--white-pearl)]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--blue-electric)] focus:border-transparent transition-all bg-[var(--white-pearl)]/10 backdrop-blur-sm text-[var(--white-pearl)] placeholder-[var(--sky-soft)]/60 font-light"
                   required
                   disabled={loading}
                 />
                 {error && (
-                  <p className="absolute -bottom-6 left-0 text-sm text-red-600 font-light">{error}</p>
+                  <p className="absolute -bottom-6 left-0 text-sm text-[var(--gold-accent)] font-light">{error}</p>
                 )}
               </div>
               
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-light py-4 px-8 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-[var(--blue-electric)] to-[var(--navy-midnight)] hover:from-[var(--navy-midnight)] hover:to-[var(--blue-electric)] text-white font-medium py-4 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] hover:shadow-lg hover:shadow-[var(--blue-electric)]/25"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -225,7 +249,7 @@ export default function WaitlistPage() {
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6 font-light">
+            <p className="text-center text-sm text-[var(--sky-soft)]/80 mt-6 font-light">
               Be among the first to experience the future of career development.
             </p>
           </div>
@@ -233,16 +257,18 @@ export default function WaitlistPage() {
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-[var(--white-pearl)]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-light text-center text-gray-900 mb-16 scroll-animate opacity-0">
+      <section className="py-24 px-4 bg-[var(--white-pearl)] relative overflow-hidden">
+        <div className="absolute inset-0 pattern-dots opacity-[0.02]" />
+        
+        <div className="max-w-6xl mx-auto relative z-10">
+          <h2 className="text-3xl font-light text-center text-[var(--navy-deep)] mb-16 scroll-animate opacity-0">
             Redefining Career Development
           </h2>
           
@@ -266,18 +292,22 @@ export default function WaitlistPage() {
             ].map((feature, index) => (
               <div 
                 key={index}
-                className="scroll-animate opacity-0 text-center"
+                className="scroll-animate opacity-0"
                 style={{
                   animationDelay: `${index * 100}ms`
                 }}
               >
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-4 shadow-sm">
-                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
-                  </svg>
+                <div className="gradient-card-border card-hover-3d">
+                  <div className="bg-white rounded-lg p-6 text-center h-full">
+                    <div className="w-14 h-14 bg-gradient-to-br from-[var(--navy-royal)] to-[var(--blue-electric)] rounded-xl flex items-center justify-center mx-auto mb-4 transform transition-transform duration-300 hover:rotate-12">
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
+                      </svg>
+                    </div>
+                    <h3 className="font-semibold text-[var(--navy-deep)] mb-2">{feature.title}</h3>
+                    <p className="text-sm text-[var(--gray-warm)] font-light leading-relaxed">{feature.description}</p>
+                  </div>
                 </div>
-                <h3 className="font-medium text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-600 font-light leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -285,8 +315,10 @@ export default function WaitlistPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-24 px-4 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="py-24 px-4 bg-gradient-to-br from-[var(--sky-soft)] to-[var(--white-pearl)] relative overflow-hidden">
+        <div className="absolute inset-0 gradient-mesh opacity-30" />
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { number: "10", label: "Career Levels" },
@@ -301,8 +333,8 @@ export default function WaitlistPage() {
                   animationDelay: `${index * 100}ms`
                 }}
               >
-                <div className="text-3xl md:text-4xl font-light text-gray-900 mb-2">{stat.number}</div>
-                <div className="text-sm text-gray-600 font-light">{stat.label}</div>
+                <div className="text-3xl md:text-4xl font-bold gradient-text mb-2">{stat.number}</div>
+                <div className="text-sm text-[var(--gray-warm)] font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -310,47 +342,55 @@ export default function WaitlistPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-24 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-light text-gray-900 mb-4 scroll-animate opacity-0">
+      <section className="py-24 px-4 bg-[var(--white-pearl)] relative overflow-hidden">
+        <div className="absolute inset-0 pattern-grid opacity-[0.01]" />
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-3xl font-light text-[var(--navy-deep)] mb-4 scroll-animate opacity-0">
             Our Team
           </h2>
-          <p className="text-lg text-gray-600 font-light mb-12 scroll-animate opacity-0">
+          <p className="text-lg text-[var(--gray-warm)] font-light mb-12 scroll-animate opacity-0">
             Built by talented individuals from world-class institutions
           </p>
           
           <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-16">
             <div className="scroll-animate opacity-0" style={{ animationDelay: '100ms' }}>
-              <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative">
-                <Image 
-                  src="/images/universities/georgia-tech-logo.png" 
-                  alt="Georgia Tech" 
-                  fill
-                  className="object-contain"
-                />
+              <div className="gradient-card-border">
+                <div className="w-48 h-48 bg-white rounded-lg p-8 flex items-center justify-center relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--navy-royal)] to-[var(--blue-electric)] opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+                  <Image 
+                    src="/images/universities/georgia-tech-logo.png" 
+                    alt="Georgia Tech" 
+                    fill
+                    className="object-contain group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
               </div>
-              <p className="mt-4 text-sm text-gray-600 font-light">Georgia Tech</p>
+              <p className="mt-4 text-sm text-[var(--gray-warm)] font-medium">Georgia Tech</p>
             </div>
             
             <div className="scroll-animate opacity-0" style={{ animationDelay: '200ms' }}>
-              <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative">
-                <Image 
-                  src="/images/universities/uwmadison.png" 
-                  alt="University of Wisconsin-Madison" 
-                  fill
-                  className="object-contain"
-                />
+              <div className="gradient-card-border">
+                <div className="w-48 h-48 bg-white rounded-lg p-8 flex items-center justify-center relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--navy-royal)] to-[var(--blue-electric)] opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+                  <Image 
+                    src="/images/universities/uwmadison.png" 
+                    alt="University of Wisconsin-Madison" 
+                    fill
+                    className="object-contain group-hover:scale-110 transition-transform duration-300"
+                  />
+                </div>
               </div>
-              <p className="mt-4 text-sm text-gray-600 font-light">University of Wisconsin-Madison</p>
+              <p className="mt-4 text-sm text-[var(--gray-warm)] font-medium">University of Wisconsin-Madison</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-gray-100">
+      <footer className="py-12 px-4 border-t border-[var(--navy-deep)]/10 bg-gradient-to-b from-[var(--white-pearl)] to-[var(--sky-soft)]">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-gray-500 font-light">
+          <p className="text-sm text-[var(--gray-warm)] font-light">
             © 2024 PivotAI. Transforming careers with intelligence.
           </p>
         </div>

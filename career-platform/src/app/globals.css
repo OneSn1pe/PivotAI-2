@@ -9,6 +9,16 @@
 /* Base styles for minimalist design */
 @layer base {
   :root {
+    /* Navy Blue Color Palette */
+    --navy-deep: #0A1628;
+    --navy-royal: #1E3A5F;
+    --navy-midnight: #2C5282;
+    --sky-soft: #E6F2FF;
+    --white-pearl: #FAFBFC;
+    --gray-warm: #64748B;
+    --blue-electric: #3B82F6;
+    --gold-accent: #F59E0B;
+    
     /* Typography scale */
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
@@ -37,6 +47,7 @@
     --radius-sm: 0.125rem;
     --radius-base: 0.5rem;
     --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
   }
   
   /* Remove all default margins */
@@ -303,4 +314,84 @@
   .btn-primary:hover {
     @apply bg-gray-900;
   }
+}
+
+/* Navy Blue Gradients */
+.gradient-hero {
+  background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy-royal) 100%);
+}
+
+.gradient-mesh {
+  background-image: 
+    radial-gradient(at 40% 20%, var(--navy-royal) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, var(--sky-soft) 0px, transparent 50%);
+}
+
+.gradient-card-border {
+  background: linear-gradient(135deg, var(--navy-midnight), var(--blue-electric));
+  padding: 1px;
+  border-radius: var(--radius-lg);
+}
+
+/* Geometric Pattern Classes */
+.pattern-dots {
+  background-image: radial-gradient(circle, var(--navy-royal) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.pattern-grid {
+  background-image: 
+    linear-gradient(var(--navy-royal) 1px, transparent 1px),
+    linear-gradient(90deg, var(--navy-royal) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Floating Animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes floatRotate {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(180deg); }
+  100% { transform: translateY(0px) rotate(360deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-rotate {
+  animation: floatRotate 8s ease-in-out infinite;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--navy-deep), var(--blue-electric));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow Effects */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+}
+
+/* Card Hover Effects */
+.card-hover-3d {
+  transition: all 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.card-hover-3d:hover {
+  transform: translateY(-5px) rotateX(5deg) rotateY(-5deg);
+  box-shadow: 
+    0 20px 40px rgba(10, 22, 40, 0.15),
+    0 10px 20px rgba(10, 22, 40, 0.1);
 }
