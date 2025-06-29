@@ -305,47 +305,126 @@ export default function WaitlistPage() {
 
       {/* Features Section */}
       <section className="py-24 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-light text-center text-gray-900 mb-16 scroll-animate opacity-0">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-light text-center text-gray-900 mb-4 scroll-animate opacity-0">
             Redefining Career Development
           </h2>
+          <p className="text-center text-gray-600 font-light mb-16 max-w-3xl mx-auto scroll-animate opacity-0">
+            PivotAI combines cutting-edge AI technology with proven career development strategies to accelerate your professional growth
+          </p>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                title: "AI Resume Analysis",
-                description: "Extract insights from your professional experience with advanced AI",
-                icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                title: "AI Coaching Agent",
+                description: "Get 24/7 personalized guidance from our intelligent coaching agent that adapts to your learning style and career goals through dynamic, conversational learning",
+                icon: "M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z",
+                color: "bg-blue-50 text-blue-600"
               },
               {
-                title: "Leveled Roadmaps",
-                description: "Progress through 10 meticulously designed career levels",
-                icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                title: "Smart Resume Analysis",
+                description: "Our AI analyzes your resume in seconds, identifying strengths, gaps, and opportunities. Get instant rewrites optimized for ATS systems and your target roles",
+                icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+                color: "bg-purple-50 text-purple-600"
               },
               {
-                title: "Gamified Learning",
-                description: "Unlock achievements and track progress with engaging mechanics",
-                icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                title: "Personalized Roadmaps",
+                description: "Receive custom career roadmaps tailored to your experience, skills, and aspirations. Progress through 10 levels with clear milestones and actionable steps",
+                icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
+                color: "bg-green-50 text-green-600"
+              },
+              {
+                title: "Recruiter Network",
+                description: "Gain exclusive exposure to our network of top recruiters and hiring managers. Your profile is automatically optimized for maximum visibility to relevant opportunities",
+                icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+                color: "bg-orange-50 text-orange-600"
               }
             ].map((feature, index) => (
               <div 
                 key={index}
-                className="scroll-animate opacity-0 text-center group"
+                className="scroll-animate opacity-0 group"
                 style={{
                   animationDelay: `${index * 100}ms`
                 }}
               >
-                <div className="card-hover-tilt">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center mx-auto mb-4 shadow-sm icon-hover-bounce group-hover:shadow-md transition-shadow">
-                    <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="h-full bg-white rounded-xl p-6 border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300 card-hover-tilt">
+                  <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4 icon-hover-bounce`}>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
                     </svg>
                   </div>
-                  <h3 className="font-medium text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">{feature.title}</h3>
+                  <h3 className="font-medium text-gray-900 mb-2 text-lg">{feature.title}</h3>
                   <p className="text-sm text-gray-600 font-light leading-relaxed">{feature.description}</p>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Additional Features Grid */}
+          <div className="mt-20">
+            <h3 className="text-2xl font-light text-center text-gray-900 mb-12 scroll-animate opacity-0">
+              Everything You Need to Succeed
+            </h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  title: "Dynamic Learning Paths",
+                  description: "AI-powered curriculum that adapts in real-time based on your progress and learning patterns",
+                  icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                },
+                {
+                  title: "Achievement System",
+                  description: "Unlock badges, earn certifications, and showcase your progress to potential employers",
+                  icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                },
+                {
+                  title: "Interview Preparation",
+                  description: "Practice with AI-powered mock interviews tailored to your target companies and roles",
+                  icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                }
+              ].map((feature, index) => (
+                <div 
+                  key={index}
+                  className="scroll-animate opacity-0 text-center"
+                  style={{
+                    animationDelay: `${index * 100 + 400}ms`
+                  }}
+                >
+                  <div className="p-6 bg-gray-50 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300 hover-lift h-full">
+                    <svg className="w-8 h-8 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
+                    </svg>
+                    <h4 className="font-medium text-gray-900 mb-2">{feature.title}</h4>
+                    <p className="text-sm text-gray-600 font-light">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Section */}
+      <section className="py-24 px-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-light mb-8 scroll-animate opacity-0">
+            Our Mission
+          </h2>
+          <p className="text-xl md:text-2xl font-light leading-relaxed mb-8 scroll-animate opacity-0" style={{ animationDelay: '100ms' }}>
+            Making job acquisition and hiring <span className="font-normal">meritocratic again</span>
+          </p>
+          <div className="space-y-6 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-300 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '200ms' }}>
+              The hiring landscape has become a maze of keywords, connections, and chance encounters. 
+              Talented individuals are overlooked while positions remain unfilled. We believe this is broken.
+            </p>
+            <p className="text-lg text-gray-300 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '300ms' }}>
+              PivotAI levels the playing field by showcasing what truly matters: your skills, potential, and dedication. 
+              Our AI-powered platform ensures that merit rises to the top, connecting the right talent with the right opportunities.
+            </p>
+            <p className="text-lg text-gray-300 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '400ms' }}>
+              Together, we're building a future where careers are shaped by capability, not circumstance.
+            </p>
           </div>
         </div>
       </section>
@@ -416,11 +495,116 @@ export default function WaitlistPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-gray-100">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-sm text-gray-500 font-light">
-            © 2024 <span className="text-hover-underline cursor-pointer hover:text-gray-700 transition-colors">PivotAI</span>. Transforming careers with intelligence.
-          </p>
+      <footer className="py-16 px-4 bg-gray-50 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto">
+          {/* Social Links Section */}
+          <div className="text-center mb-12">
+            <h3 className="text-lg font-medium text-gray-900 mb-6">Connect with PivotAI</h3>
+            <div className="flex justify-center items-center gap-6">
+              {/* LinkedIn */}
+              <a 
+                href="https://linkedin.com/company/pivotai" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group"
+                aria-label="Connect with PivotAI on LinkedIn"
+              >
+                <div className="w-12 h-12 bg-white rounded-lg border border-gray-200 flex items-center justify-center transition-all duration-300 hover:border-[#0077B5] hover:shadow-md hover-lift">
+                  <svg className="w-5 h-5 text-gray-600 group-hover:text-[#0077B5] transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </div>
+              </a>
+
+              {/* YouTube */}
+              <a 
+                href="https://youtube.com/@pivotai" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group"
+                aria-label="Subscribe to PivotAI on YouTube"
+              >
+                <div className="w-12 h-12 bg-white rounded-lg border border-gray-200 flex items-center justify-center transition-all duration-300 hover:border-[#FF0000] hover:shadow-md hover-lift">
+                  <svg className="w-5 h-5 text-gray-600 group-hover:text-[#FF0000] transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </div>
+              </a>
+
+              {/* Instagram */}
+              <a 
+                href="https://instagram.com/pivotai" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group"
+                aria-label="Follow PivotAI on Instagram"
+              >
+                <div className="w-12 h-12 bg-white rounded-lg border border-gray-200 flex items-center justify-center transition-all duration-300 hover:border-[#E4405F] hover:shadow-md hover-lift">
+                  <svg className="w-5 h-5 text-gray-600 group-hover:text-[#E4405F] transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.405a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
+                  </svg>
+                </div>
+              </a>
+
+              {/* X (Twitter) */}
+              <a 
+                href="https://x.com/pivotai" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group"
+                aria-label="Follow PivotAI on X"
+              >
+                <div className="w-12 h-12 bg-white rounded-lg border border-gray-200 flex items-center justify-center transition-all duration-300 hover:border-gray-900 hover:shadow-md hover-lift">
+                  <svg className="w-5 h-5 text-gray-600 group-hover:text-gray-900 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          {/* Footer Links */}
+          <div className="grid md:grid-cols-4 gap-8 mb-12">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Product</h4>
+              <ul className="space-y-2">
+                <li><a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a></li>
+                <li><a href="#roadmap" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Roadmap</a></li>
+                <li><a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Company</h4>
+              <ul className="space-y-2">
+                <li><a href="#about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">About Us</a></li>
+                <li><a href="#team" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Team</a></li>
+                <li><a href="#careers" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Careers</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Resources</h4>
+              <ul className="space-y-2">
+                <li><a href="#blog" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Blog</a></li>
+                <li><a href="#help" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Help Center</a></li>
+                <li><a href="#community" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Community</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li><a href="/privacy-policy" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Privacy Policy</a></li>
+                <li><a href="#terms" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Terms of Service</a></li>
+                <li><a href="#cookies" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Cookie Policy</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="pt-8 border-t border-gray-200 text-center">
+            <p className="text-sm text-gray-500 font-light">
+              © 2024 <span className="text-hover-underline cursor-pointer hover:text-gray-700 transition-colors">PivotAI</span>. Transforming careers with intelligence.
+            </p>
+          </div>
         </div>
       </footer>
 
