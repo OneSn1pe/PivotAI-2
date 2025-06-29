@@ -197,11 +197,6 @@ export default function WaitlistPage() {
               transform: `translateY(${scrollY * -0.2}px)`
             }}
           >
-            <div className="inline-flex items-center justify-center px-3 py-1 bg-gray-100 text-gray-900 rounded-full text-xs font-medium mb-8 hover-lift cursor-default">
-              <span className="animate-pulse mr-2">•</span>
-              Coming Soon
-            </div>
-            
             {/* Countdown Display */}
             <div className="mb-12 p-4 sm:p-6 bg-gradient-to-r from-[#1E293B] to-[#334155] rounded-2xl shadow-xl max-w-2xl mx-auto">
               <p className="text-white/80 text-sm font-light mb-4 text-center">Launching in</p>
@@ -495,10 +490,10 @@ export default function WaitlistPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 bg-gray-50 border-t border-gray-100">
+      <footer className="py-12 px-4 bg-gray-50 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           {/* Social Links Section */}
-          <div className="text-center mb-12">
+          <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-6">Connect with PivotAI</h3>
             <div className="flex justify-center items-center gap-6">
               {/* LinkedIn */}
@@ -563,44 +558,9 @@ export default function WaitlistPage() {
             </div>
           </div>
 
-          {/* Footer Links */}
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Product</h4>
-              <ul className="space-y-2">
-                <li><a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a></li>
-                <li><a href="#roadmap" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Roadmap</a></li>
-                <li><a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Company</h4>
-              <ul className="space-y-2">
-                <li><a href="#about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">About Us</a></li>
-                <li><a href="#team" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Team</a></li>
-                <li><a href="#careers" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Resources</h4>
-              <ul className="space-y-2">
-                <li><a href="#blog" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Blog</a></li>
-                <li><a href="#help" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Help Center</a></li>
-                <li><a href="#community" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Community</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-4">Legal</h4>
-              <ul className="space-y-2">
-                <li><a href="/privacy-policy" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Privacy Policy</a></li>
-                <li><a href="#terms" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Terms of Service</a></li>
-                <li><a href="#cookies" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Cookie Policy</a></li>
-              </ul>
-            </div>
-          </div>
 
           {/* Copyright */}
-          <div className="pt-8 border-t border-gray-200 text-center">
+          <div className="mt-8 pt-8 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-500 font-light">
               © 2024 <span className="text-hover-underline cursor-pointer hover:text-gray-700 transition-colors">PivotAI</span>. Transforming careers with intelligence.
             </p>
