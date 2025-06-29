@@ -304,3 +304,163 @@
     @apply bg-gray-900;
   }
 }
+
+/* Hover Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  0% { transform: translateX(-10px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes rotateIn {
+  0% { transform: rotate(-5deg) scale(0.95); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Hover Classes */
+.hover-float:hover {
+  animation: float 2s ease-in-out infinite;
+}
+
+.hover-scale {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.hover-rotate {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-rotate:hover {
+  transform: rotate(5deg) scale(1.1);
+}
+
+/* Button Hover Effects */
+.btn-hover-slide {
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s ease;
+}
+
+.btn-hover-slide::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  transition: left 0.3s ease;
+}
+
+.btn-hover-slide:hover::before {
+  left: 0;
+}
+
+/* Card Hover Effects */
+.card-hover-tilt {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.card-hover-tilt:hover {
+  transform: perspective(1000px) rotateX(-10deg) translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Text Hover Effects */
+.text-hover-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.text-hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.text-hover-underline:hover::after {
+  width: 100%;
+}
+
+/* Icon Hover Effects */
+.icon-hover-bounce {
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.icon-hover-bounce:hover {
+  transform: translateY(-3px) scale(1.1);
+}
+
+/* Shimmer Effect */
+.hover-shimmer {
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-position: -200% center;
+  transition: background-position 0.8s ease;
+}
+
+.hover-shimmer:hover {
+  animation: shimmer 0.8s ease;
+}
+
+/* 3D Button Effect */
+.btn-3d {
+  position: relative;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 20%);
+}
+
+.btn-3d:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 rgb(0 0 0 / 20%);
+}
+
+.btn-3d:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 0 rgb(0 0 0 / 20%);
+}
