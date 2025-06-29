@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase-lite';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function WaitlistPage() {
   const [email, setEmail] = useState('');
@@ -304,6 +305,44 @@ export default function WaitlistPage() {
                 <div className="text-sm text-gray-600 font-light">{stat.label}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="py-24 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-light text-gray-900 mb-4 scroll-animate opacity-0">
+            Our Team
+          </h2>
+          <p className="text-lg text-gray-600 font-light mb-12 scroll-animate opacity-0">
+            Built by talented individuals from world-class institutions
+          </p>
+          
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-16">
+            <div className="scroll-animate opacity-0" style={{ animationDelay: '100ms' }}>
+              <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative">
+                <Image 
+                  src="/images/universities/georgia-tech-logo.png" 
+                  alt="Georgia Tech" 
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <p className="mt-4 text-sm text-gray-600 font-light">Georgia Tech</p>
+            </div>
+            
+            <div className="scroll-animate opacity-0" style={{ animationDelay: '200ms' }}>
+              <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative">
+                <Image 
+                  src="/images/universities/uw-madison-logo.png" 
+                  alt="University of Wisconsin-Madison" 
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <p className="mt-4 text-sm text-gray-600 font-light">University of Wisconsin-Madison</p>
+            </div>
           </div>
         </div>
       </section>
