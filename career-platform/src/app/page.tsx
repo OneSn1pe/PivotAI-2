@@ -335,7 +335,7 @@ export default function WaitlistPage() {
             <div className="scroll-animate opacity-0" style={{ animationDelay: '200ms' }}>
               <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative">
                 <Image 
-                  src="/images/universities/uw-madison-logo.png" 
+                  src="/images/universities/uwmadison.png" 
                   alt="University of Wisconsin-Madison" 
                   fill
                   className="object-contain"
