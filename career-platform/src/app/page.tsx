@@ -12,6 +12,12 @@ export default function WaitlistPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [scrollY, setScrollY] = useState(0);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
   const router = useRouter();
   
   // Refs for scroll animations
@@ -26,6 +32,32 @@ export default function WaitlistPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Countdown timer for July 20th 12 PM EST
+    const targetDate = new Date('2025-07-20T12:00:00-04:00').getTime();
+    
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+      
+      if (distance > 0) {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        setTimeLeft({ days, hours, minutes, seconds });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+    
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -168,6 +200,38 @@ export default function WaitlistPage() {
             <div className="inline-flex items-center justify-center px-3 py-1 bg-gray-100 text-gray-900 rounded-full text-xs font-medium mb-8 hover-lift cursor-default">
               <span className="animate-pulse mr-2">•</span>
               Coming Soon
+            </div>
+            
+            {/* Countdown Display */}
+            <div className="mb-12 p-4 sm:p-6 bg-gradient-to-r from-[#1E293B] to-[#334155] rounded-2xl shadow-xl max-w-2xl mx-auto">
+              <p className="text-white/80 text-sm font-light mb-4 text-center">Launching in</p>
+              <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
+                <div className="text-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number">{timeLeft.days}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1">DAYS</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number">{String(timeLeft.hours).padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1">HOURS</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1">MINUTES</div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1">SECONDS</div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-white/60 text-xs text-center mt-4 font-light">July 20th, 2025 • 12:00 PM EST</p>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-6 leading-tight">
@@ -404,6 +468,26 @@ export default function WaitlistPage() {
           }
         }
         
+        @keyframes countdownPulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.05);
+            opacity: 0.9;
+          }
+        }
+        
+        @keyframes countdownFlip {
+          0% {
+            transform: perspective(400px) rotateX(0);
+          }
+          100% {
+            transform: perspective(400px) rotateX(-180deg);
+          }
+        }
+        
         .animate-fadeUp {
           animation: fadeUp 0.8s ease-out forwards;
         }
@@ -422,6 +506,10 @@ export default function WaitlistPage() {
         
         .scroll-animate {
           transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        
+        .countdown-number {
+          animation: countdownPulse 1s ease-in-out infinite;
         }
       `}</style>
     </div>
