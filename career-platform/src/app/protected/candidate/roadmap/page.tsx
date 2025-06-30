@@ -728,8 +728,10 @@ export default function CareerPathPage() {
           onClose={() => setShowCheckInModal(false)}
           onSubmit={async (feedback) => {
             try {
-              await feedbackService.submitLevelFeedback(userProfile.uid, feedback);
-              console.log('Feedback submitted successfully');
+              if (userProfile) {
+                await feedbackService.submitLevelFeedback(userProfile.uid, feedback);
+                console.log('Feedback submitted successfully');
+              }
             } catch (error) {
               console.error('Error submitting feedback:', error);
             }
