@@ -15,6 +15,9 @@ import { generateNextLevel } from '@/services/openai';
 import { checkAndUnlockMilestones, isMilestoneUnlocked, getLockedMilestonesWithReasons } from '@/services/milestoneUnlockService';
 import { calculateUserLevel } from '@/services/levelProgressService';
 import { ProgressTrackingService } from '@/services/progressTracking';
+import LevelCheckInModal from '@/components/feedback/LevelCheckInModal';
+import { feedbackService } from '@/services/feedbackService';
+import { LevelFeedback } from '@/types/user';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -29,6 +32,8 @@ export default function CareerPathPage() {
   const [roadmapId, setRoadmapId] = useState<string | null>(null);
   const [showLevelUpAnimation, setShowLevelUpAnimation] = useState(false);
   const [newLevelAchieved, setNewLevelAchieved] = useState<number>(0);
+  const [showCheckInModal, setShowCheckInModal] = useState(false);
+  const [completedLevel, setCompletedLevel] = useState<number>(0);
 
   useEffect(() => {
     // Create style element for roadmap-specific navbar styles
@@ -696,8 +701,42 @@ export default function CareerPathPage() {
       <LevelUpAnimation
         isVisible={showLevelUpAnimation}
         newLevel={newLevelAchieved}
-        onComplete={() => setShowLevelUpAnimation(false)}
+        onComplete={async () => {
+          setShowLevelUpAnimation(false);
+          // Show check-in modal after level up animation
+          if (newLevelAchieved > 1 && userProfile) {
+            const completedLvl = newLevelAchieved - 1;
+            // Check if user has already submitted feedback for this level
+            const hasSubmitted = await feedbackService.hasSubmittedFeedback(
+              userProfile.uid,
+              completedLvl
+            );
+            if (!hasSubmitted) {
+              setCompletedLevel(completedLvl);
+              setShowCheckInModal(true);
+            }
+          }
+        }}
       />
+
+      {/* Level Check-in Modal */}
+      {candidateProfile && (
+        <LevelCheckInModal
+          isOpen={showCheckInModal}
+          level={completedLevel}
+          professionalField={candidateProfile.professionalField || 'computer-science'}
+          onClose={() => setShowCheckInModal(false)}
+          onSubmit={async (feedback) => {
+            try {
+              await feedbackService.submitLevelFeedback(userProfile.uid, feedback);
+              console.log('Feedback submitted successfully');
+            } catch (error) {
+              console.error('Error submitting feedback:', error);
+            }
+            setShowCheckInModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -67,6 +67,20 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
+    // Level feedback collection - users can create and read their own feedback
+    match /levelFeedback/{feedbackId} {
+      // Users can create feedback for their own progress
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Users can read their own feedback
+      allow read: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || isDevelopmentMode());
+      
+      // Feedback cannot be updated or deleted once submitted
+      allow update, delete: if false;
+    }
+    
     // Contact form submissions - anyone can create, only admins can read
     // match /contact_submissions/{submissionId} {
     //   allow create: if true;

@@ -547,6 +547,46 @@ export enum UserRole {
     notes?: string;
   }
 
+  // Level Feedback Types
+  export interface LevelFeedback {
+    id: string;
+    userId: string;
+    level: number;
+    professionalField: ProfessionalField;
+    completedAt: Date;
+    createdAt: Date;
+    
+    // Feedback content
+    overallSatisfaction: 1 | 2 | 3 | 4 | 5; // 1-5 rating
+    contentRelevance: 1 | 2 | 3 | 4 | 5;
+    difficultyLevel: 'too-easy' | 'just-right' | 'too-hard';
+    timeInvestment: 'too-little' | 'appropriate' | 'too-much';
+    
+    // Open-ended feedback
+    mostValuable: string; // What was most valuable about this level?
+    improvements: string; // What could be improved?
+    additionalComments?: string;
+    
+    // Learning outcomes
+    skillsImproved: string[]; // Which skills did you improve?
+    confidenceLevel: 1 | 2 | 3 | 4 | 5; // How confident do you feel with the material?
+    readyForNext: boolean; // Do you feel ready for the next level?
+    
+    // Engagement metrics
+    favoriteActivities: string[]; // Which activities/milestones were most engaging?
+    challengingAreas: string[]; // What was most challenging?
+    
+    // Optional: Track if user wants to be contacted for more detailed feedback
+    openToFollowUp?: boolean;
+  }
+
+  export interface LevelCheckInModalState {
+    isOpen: boolean;
+    level: number;
+    onClose: () => void;
+    onSubmit: (feedback: Omit<LevelFeedback, 'id' | 'userId' | 'createdAt'>) => void;
+  }
+
   // Helper function to categorize milestones
   export const categorizeMilestone = (milestone: Partial<Milestone> | LegacyMilestone): MilestoneCategory => {
     const title = milestone.title?.toLowerCase() || '';
