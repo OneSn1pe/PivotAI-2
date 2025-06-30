@@ -198,13 +198,15 @@ export default function WaitlistPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2 hover-scale cursor-pointer">
-              <Image 
-                src="/favicon/favicon-32x32.png" 
-                alt="PivotAI Logo" 
-                width={28}
-                height={28}
-                className="hover:rotate-12 transition-transform duration-300"
-              />
+              <div className="relative">
+                <Image 
+                  src="/favicon/favicon-32x32.png" 
+                  alt="PivotAI Logo" 
+                  width={28}
+                  height={28}
+                  className="hover:rotate-12 transition-transform duration-300 brightness-0 invert"
+                />
+              </div>
               <h1 className="text-xl font-light text-[#1E293B] hover:text-[#2563EB] transition-colors">PivotAI</h1>
             </div>
           </div>
