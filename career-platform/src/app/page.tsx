@@ -188,7 +188,7 @@ export default function WaitlistPage() {
       
       {/* Navigation */}
       <nav 
-        className="fixed top-0 left-0 right-0 z-[9999] bg-white/80 backdrop-blur-md transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-[9999] bg-[#1E293B]/95 backdrop-blur-md transition-all duration-300"
         style={{
           borderBottom: scrollY > 50 ? '1px solid rgba(30, 41, 59, 0.08)' : '1px solid transparent',
           boxShadow: scrollY > 50 ? '0 1px 3px rgba(15, 23, 42, 0.08)' : 'none',
@@ -207,7 +207,7 @@ export default function WaitlistPage() {
                   className="hover:rotate-12 transition-transform duration-300 brightness-0 invert"
                 />
               </div>
-              <h1 className="text-xl font-light text-[#1E293B] hover:text-[#2563EB] transition-colors">PivotAI</h1>
+              <h1 className="text-xl font-light text-white hover:text-[#38BDF8] transition-colors">PivotAI</h1>
             </div>
           </div>
         </div>
