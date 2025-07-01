@@ -23,9 +23,13 @@ interface LevelNode {
   isActive: boolean;
   isUnlocked: boolean;
   isCompleted: boolean;
+  isSkipped?: boolean;
   milestoneCount: number;
+  completedCount?: number;
+  microMilestoneCount?: number;
+  completedMicroCount?: number;
   title: string;
-  levelType?: LevelType;
+  levelType?: LevelType | null;
 }
 
 interface LevelNavigatorProps {
@@ -107,7 +111,7 @@ interface LevelCardProps {
 
 function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
   const { level, isActive, isUnlocked, isCompleted, milestoneCount, title, levelType } = levelNode;
-  const displayLevelType = levelType || getNextLevelType(level);
+  const displayLevelType = levelType === null || levelType === undefined ? getNextLevelType(level) : levelType;
 
   return (
     <motion.div
