@@ -418,7 +418,7 @@ export default function CareerPathPage() {
         completedCount: completedMilestoneCount,
         microMilestoneCount: totalMicroMilestones,
         completedMicroCount: completedMicroMilestones,
-        title: getLevelTitle(level),
+        title: `Level ${level}${getLevelTitle(level) ? ` - ${getLevelTitle(level)}` : ''}`,
         levelType
       };
     });
@@ -430,10 +430,10 @@ export default function CareerPathPage() {
     if (levelMilestones.length > 0 && levelMilestones[0].levelType) {
       const levelType = levelMilestones[0].levelType;
       // Capitalize first letter
-      return levelType.charAt(0).toUpperCase() + levelType.slice(1) + ' Level';
+      return levelType.charAt(0).toUpperCase() + levelType.slice(1);
     }
-    // Fallback to generic level number
-    return `Level ${level}`;
+    // Fallback to empty string to avoid redundancy
+    return '';
   };
 
   const handleGenerateNextLevel = async () => {
@@ -590,7 +590,7 @@ export default function CareerPathPage() {
               <div className="bg-white p-6 rounded-lg mb-8">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold text-gray-800">
-                    Level {selectedLevel} - {getLevelTitle(selectedLevel)}
+                    Level {selectedLevel}{getLevelTitle(selectedLevel) && ` - ${getLevelTitle(selectedLevel)}`}
                   </h2>
                   {/* Skip Level Button */}
                   {selectedLevel < Math.max(...roadmap.milestones.map(m => m.level || 1)) && 
