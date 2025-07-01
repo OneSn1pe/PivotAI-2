@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Trophy, Zap, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { LevelType, getNextLevelType, LEVEL_TYPE_ICONS, LEVEL_TYPE_DESCRIPTIONS } from '@/types/levelTypes';
+import { LevelTypeIndicator } from '@/components/roadmap/LevelTypeIndicator';
+import { LEVEL_TYPE_FEATURES } from '@/config/levelTypeConfig';
 
 interface LevelUpAnimationProps {
   isVisible: boolean;
   newLevel: number;
+  levelType?: LevelType;
   newAchievements?: {
     id: string;
     title: string;
@@ -20,9 +24,11 @@ interface LevelUpAnimationProps {
 export function LevelUpAnimation({ 
   isVisible, 
   newLevel, 
+  levelType,
   newAchievements = [],
   onComplete 
 }: LevelUpAnimationProps) {
+  const displayLevelType = levelType || getNextLevelType(newLevel);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -176,6 +182,21 @@ export function LevelUpAnimation({
 
             {/* Content Area */}
             <div className="p-6 space-y-4">
+              {/* Level Type Display */}
+              {LEVEL_TYPE_FEATURES.showInUI && (
+                <motion.div
+                  className="flex justify-center"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 1.0, type: "spring" }}
+                >
+                  <LevelTypeIndicator 
+                    levelType={displayLevelType}
+                    showDescription={true}
+                    size="lg"
+                  />
+                </motion.div>
+              )}
 
               {/* Level Benefits */}
               <motion.div
@@ -188,21 +209,57 @@ export function LevelUpAnimation({
                   New Level Benefits
                 </h3>
                 <div className="grid grid-cols-1 gap-2">
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                    <Star className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm text-blue-800">
-                      Access to advanced milestones
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                    <Sparkles className="h-5 w-5 text-green-500" />
-                    <span className="text-sm text-green-800">
-                      Enhanced learning opportunities
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                    <Trophy className="h-5 w-5 text-purple-500" />
-                    <span className="text-sm text-purple-800">
+                  {displayLevelType === 'skill' && (
+                    <>
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                        <Star className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm text-blue-800">
+                          New skills and certifications to master
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm text-blue-800">
+                          Advanced learning resources unlocked
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {displayLevelType === 'project' && (
+                    <>
+                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <Star className="h-5 w-5 text-green-500" />
+                        <span className="text-sm text-green-800">
+                          Hands-on projects to build your portfolio
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-green-500" />
+                        <span className="text-sm text-green-800">
+                          Real-world applications of your skills
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {displayLevelType === 'position' && (
+                    <>
+                      <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                        <Star className="h-5 w-5 text-purple-500" />
+                        <span className="text-sm text-purple-800">
+                          Career advancement opportunities
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                        <Trophy className="h-5 w-5 text-purple-500" />
+                        <span className="text-sm text-purple-800">
+                          Interview preparation and networking
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <Trophy className="h-5 w-5 text-gray-500" />
+                    <span className="text-sm text-gray-800">
                       New achievement opportunities
                     </span>
                   </div>

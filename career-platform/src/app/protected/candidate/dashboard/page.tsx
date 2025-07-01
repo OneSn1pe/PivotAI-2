@@ -29,6 +29,12 @@ const ProgressDashboard = dynamic(() =>
   ssr: false
 });
 
+const LevelProgressionDisplay = dynamic(() => 
+  import('@/components/roadmap/LevelProgressionDisplay').then(mod => ({ default: mod.LevelProgressionDisplay })), {
+  loading: () => <div className="h-32 bg-gray-100 animate-pulse rounded-lg" />,
+  ssr: false
+});
+
 
 const AchievementShowcase = dynamic(() => 
   import('@/components/gamification/AchievementBadges').then(mod => ({ default: mod.AchievementShowcase })), {
@@ -264,11 +270,21 @@ export default function CandidateDashboard() {
       
       {/* Progress Dashboard - Primary progress display */}
       {userProgress && achievements && (
-        <ProgressDashboard 
-          userProgress={userProgress} 
-          achievements={achievements}
-          className="mb-6"
-        />
+        <>
+          <ProgressDashboard 
+            userProgress={userProgress} 
+            achievements={achievements}
+            className="mb-6"
+          />
+          
+          {/* Level Progression Display */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
+            <LevelProgressionDisplay 
+              currentLevel={userProgress.levelsUnlocked || 1}
+              maxDisplay={10}
+            />
+          </div>
+        </>
       )}
       
       {/* Achievement Showcase with Share Button */}

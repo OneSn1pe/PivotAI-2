@@ -14,6 +14,9 @@ import {
   Target,
   Zap
 } from 'lucide-react';
+import { LevelType, getNextLevelType } from '@/types/levelTypes';
+import { LevelTypeBadge } from '@/components/roadmap/LevelTypeIndicator';
+import { LEVEL_TYPE_FEATURES } from '@/config/levelTypeConfig';
 
 interface LevelNode {
   level: number;
@@ -22,6 +25,7 @@ interface LevelNode {
   isCompleted: boolean;
   milestoneCount: number;
   title: string;
+  levelType?: LevelType;
 }
 
 interface LevelNavigatorProps {
@@ -102,7 +106,8 @@ interface LevelCardProps {
 }
 
 function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
-  const { level, isActive, isUnlocked, isCompleted, milestoneCount, title } = levelNode;
+  const { level, isActive, isUnlocked, isCompleted, milestoneCount, title, levelType } = levelNode;
+  const displayLevelType = levelType || getNextLevelType(level);
 
   return (
     <motion.div
@@ -126,31 +131,38 @@ function LevelCard({ levelNode, isSelected, onClick, delay }: LevelCardProps) {
         {/* Level Header */}
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
-            {/* Level Number */}
-            <div className={`relative w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-              isCompleted 
-                ? 'bg-gray-900 text-white' 
-                : isActive 
-                  ? 'bg-gray-700 text-white' 
-                  : isUnlocked 
-                    ? 'bg-gray-200 text-gray-700' 
-                    : 'bg-gray-100 text-gray-400'
-            }`}>
-              {isCompleted ? (
-                <Check className="h-6 w-6" />
-              ) : !isUnlocked ? (
-                <Lock className="h-5 w-5" />
-              ) : (
-                level
-              )}
+            {/* Level Number with Type Badge */}
+            <div className="flex items-center gap-2">
+              <div className={`relative w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                isCompleted 
+                  ? 'bg-gray-900 text-white' 
+                  : isActive 
+                    ? 'bg-gray-700 text-white' 
+                    : isUnlocked 
+                      ? 'bg-gray-200 text-gray-700' 
+                      : 'bg-gray-100 text-gray-400'
+              }`}>
+                {isCompleted ? (
+                  <Check className="h-6 w-6" />
+                ) : !isUnlocked ? (
+                  <Lock className="h-5 w-5" />
+                ) : (
+                  level
+                )}
+                
+                {/* Active Indicator */}
+                {isActive && (
+                  <motion.div
+                    className="absolute -inset-1 rounded-full ring-2 ring-gray-600"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                )}
+              </div>
               
-              {/* Active Indicator */}
-              {isActive && (
-                <motion.div
-                  className="absolute -inset-1 rounded-full ring-2 ring-gray-600"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
+              {/* Level Type Badge */}
+              {LEVEL_TYPE_FEATURES.showInUI && isUnlocked && (
+                <LevelTypeBadge levelType={displayLevelType} />
               )}
             </div>
 

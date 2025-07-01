@@ -6,15 +6,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { calculateUserLevel } from '@/services/levelProgressService';
 import { ProgressRadialChart, StreakVisualizer } from './ProgressVisualizations';
+import { LevelType, getNextLevelType } from '@/types/levelTypes';
+import { LevelTypeIndicator } from '@/components/roadmap/LevelTypeIndicator';
+import { LEVEL_TYPE_FEATURES } from '@/config/levelTypeConfig';
 
 interface ProgressDashboardProps {
   userProgress: UserProgress;
   achievements: Achievement[];
+  currentLevelType?: LevelType;
   className?: string;
 }
 
-export function ProgressDashboard({ userProgress, achievements, className = '' }: ProgressDashboardProps) {
+export function ProgressDashboard({ userProgress, achievements, currentLevelType, className = '' }: ProgressDashboardProps) {
   const levelData = calculateUserLevel(userProgress);
+  const levelType = currentLevelType || getNextLevelType(levelData.currentLevel);
 
   return (
     <div className={`space-y-8 ${className}`}>
@@ -25,6 +30,15 @@ export function ProgressDashboard({ userProgress, achievements, className = '' }
         </div>
         <div className="text-base sm:text-lg text-gray-600 mb-1">{levelData.levelTitle}</div>
         <div className="text-xs sm:text-sm text-gray-500">{levelData.levelDescription}</div>
+        {LEVEL_TYPE_FEATURES.showInUI && (
+          <div className="mt-4 flex justify-center">
+            <LevelTypeIndicator 
+              levelType={levelType}
+              showDescription={true}
+              size="md"
+            />
+          </div>
+        )}
       </div>
 
 
