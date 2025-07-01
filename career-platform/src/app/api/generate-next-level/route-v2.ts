@@ -14,6 +14,9 @@ const debug = {
   },
   error: (...args: any[]) => {
     console.error('[API:generate-next-level-v2:ERROR]', ...args);
+  },
+  warn: (...args: any[]) => {
+    console.warn('[API:generate-next-level-v2:WARN]', ...args);
   }
 };
 
