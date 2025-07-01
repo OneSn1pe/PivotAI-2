@@ -19,6 +19,7 @@ import LevelCheckInModal from '@/components/feedback/LevelCheckInModal';
 import { feedbackService } from '@/services/feedbackService';
 import { LevelFeedback } from '@/types/user';
 import { LevelTypeIndicator } from '@/components/roadmap/LevelTypeIndicator';
+import { DEFAULT_LEVEL_PROGRESSION_PATTERN } from '@/types/levelTypes';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -443,7 +444,9 @@ export default function CareerPathPage() {
     if (levelMilestones.length > 0 && levelMilestones[0].levelType) {
       return levelMilestones[0].levelType;
     }
-    return null;
+    // Fallback to default progression pattern
+    const patternIndex = (level - 1) % DEFAULT_LEVEL_PROGRESSION_PATTERN.length;
+    return DEFAULT_LEVEL_PROGRESSION_PATTERN[patternIndex];
   };
 
   const handleGenerateNextLevel = async () => {
@@ -581,7 +584,7 @@ export default function CareerPathPage() {
             <div className="flex flex-wrap gap-2">
               {Array.from(new Set(roadmap.milestones.map(m => m.level || 1))).sort((a, b) => a - b).map(level => {
                 const levelType = getLevelType(level);
-                if (!levelType) return null;
+                // Show all levels, even without levelType
                 return (
                   <div 
                     key={level}
@@ -595,11 +598,13 @@ export default function CareerPathPage() {
                     onClick={() => level <= (userProgress?.levelsUnlocked || 1) && setSelectedLevel(level)}
                   >
                     <span className="font-medium">L{level}</span>
-                    <span className="text-lg">
-                      {levelType === 'skill' && '📚'}
-                      {levelType === 'project' && '🛠️'}
-                      {levelType === 'position' && '🎯'}
-                    </span>
+                    {levelType && (
+                      <span className="text-lg">
+                        {levelType === 'skill' && '📚'}
+                        {levelType === 'project' && '🛠️'}
+                        {levelType === 'position' && '🎯'}
+                      </span>
+                    )}
                   </div>
                 );
               })}
