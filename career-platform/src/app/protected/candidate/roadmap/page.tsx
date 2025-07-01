@@ -99,11 +99,25 @@ export default function CareerPathPage() {
         
         if (!roadmapSnapshot.empty) {
           const roadmapDoc = roadmapSnapshot.docs[0];
+          const roadmapData = roadmapDoc.data() as CareerRoadmap;
           setRoadmapId(roadmapDoc.id);
           setRoadmap({
-            ...roadmapDoc.data() as CareerRoadmap,
+            ...roadmapData,
             id: roadmapDoc.id,
           });
+          
+          // Log if roadmap has milestones without level types
+          const milestonesWithoutTypes = roadmapData.milestones.filter(m => !m.levelType);
+          if (milestonesWithoutTypes.length > 0) {
+            console.warn('[Crackd Analytics] Roadmap loaded with milestones missing level types:', {
+              roadmapId: roadmapDoc.id,
+              totalMilestones: roadmapData.milestones.length,
+              milestonesWithoutTypes: milestonesWithoutTypes.length,
+              userId: userProfile?.uid,
+              createdAt: roadmapData.createdAt,
+              timestamp: new Date().toISOString()
+            });
+          }
         }
         
         setLoading(false);
@@ -446,7 +460,19 @@ export default function CareerPathPage() {
     }
     // Fallback to default progression pattern
     const patternIndex = (level - 1) % DEFAULT_LEVEL_PROGRESSION_PATTERN.length;
-    return DEFAULT_LEVEL_PROGRESSION_PATTERN[patternIndex];
+    const fallbackType = DEFAULT_LEVEL_PROGRESSION_PATTERN[patternIndex];
+    
+    // Log fallback occurrence
+    console.warn('[Crackd Analytics] Level type fallback used:', {
+      level,
+      milestoneCount: levelMilestones.length,
+      fallbackType,
+      roadmapId: roadmap?.id,
+      userId: userProfile?.uid,
+      timestamp: new Date().toISOString()
+    });
+    
+    return fallbackType;
   };
 
   const handleGenerateNextLevel = async () => {

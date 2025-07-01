@@ -42,18 +42,32 @@ async function determineInitialLevelType(
     exp.toLowerCase().includes('developed')
   );
   
+  let levelType: LevelType;
+  
   // Beginners start with skills
   if (experienceYears < 2 || !hasProjects) {
-    return 'skill';
+    levelType = 'skill';
   }
-  
   // Mid-level might benefit from projects
-  if (experienceYears < 5) {
-    return 'project';
+  else if (experienceYears < 5) {
+    levelType = 'project';
+  }
+  // Senior level might focus on position advancement
+  else {
+    levelType = 'position';
   }
   
-  // Senior level might focus on position advancement
-  return 'position';
+  // Log level type determination
+  console.log('[Crackd Analytics] Initial level type determined (v2 fallback):', {
+    method: 'heuristic',
+    experienceYears,
+    hasProjects,
+    determinedType: levelType,
+    targetCompanies: targetCompanies.map(tc => tc.name),
+    timestamp: new Date().toISOString()
+  });
+  
+  return levelType;
 }
 
 // Helper to store level structure in new format

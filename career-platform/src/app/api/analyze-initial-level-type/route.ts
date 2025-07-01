@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
+import { TargetCompany } from '@/types/user';
 
 // Debug helper
 const debug = {
@@ -143,6 +144,18 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
     
     const totalDuration = performance.now() - requestStartTime;
     debug.log(`Initial level type determined successfully in ${Math.round(totalDuration)}ms`);
+    
+    // Log initial level type determination
+    console.log('[Crackd Analytics] Initial level type determined via AI:', {
+      method: 'openai-initial-determination',
+      level: 1,
+      determinedType: parsedResponse.levelType,
+      reasoning: parsedResponse.reasoning,
+      criticalGap: parsedResponse.criticalGap,
+      targetCompanies: targetCompanies.map((tc: TargetCompany) => tc.name),
+      duration: Math.round(totalDuration),
+      timestamp: new Date().toISOString()
+    });
     
     return NextResponse.json({
       success: true,

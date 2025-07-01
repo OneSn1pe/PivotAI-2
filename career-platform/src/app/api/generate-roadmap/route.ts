@@ -151,6 +151,16 @@ export async function POST(request: NextRequest) {
     debug.log('Calling OpenAI API...');
     const openaiStartTime = performance.now();
 
+    // Log v1 roadmap generation
+    console.log('[Crackd Analytics] Generating roadmap using v1 (no level types):', {
+      method: 'v1-route',
+      candidateId,
+      professionalField,
+      targetCompanies: companiesForRoadmap.map((c: TargetCompany) => c.name),
+      hasResumeAnalysis: !!resumeAnalysis,
+      timestamp: new Date().toISOString()
+    });
+
     // Call OpenAI with retry logic and proper error handling
     let completion;
     try {
@@ -1059,6 +1069,15 @@ function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalFi
 
 // Helper function to create a complete fallback roadmap
 function createFallbackRoadmap(resumeAnalysis: ResumeAnalysis, candidateId: string, professionalField: ProfessionalField = 'computer-science'): CareerRoadmap {
+  // Log fallback roadmap generation
+  console.warn('[Crackd Analytics] Using fallback roadmap generation:', {
+    reason: 'OpenAI API failure or timeout',
+    candidateId,
+    professionalField,
+    hasResumeAnalysis: !!resumeAnalysis,
+    timestamp: new Date().toISOString()
+  });
+  
   return {
     id: uuidv4(),
     candidateId: candidateId.toString(),

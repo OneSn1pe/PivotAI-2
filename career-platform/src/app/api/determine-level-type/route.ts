@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { getAdminFirestore, handleFirebaseError } from '@/utils/api-firebase';
-import { Milestone } from '@/types/user';
+import { Milestone, TargetCompany } from '@/types/user';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
 
 // Debug helper
@@ -188,6 +188,19 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
     
     const totalDuration = performance.now() - requestStartTime;
     debug.log(`Level type determined successfully in ${Math.round(totalDuration)}ms`);
+    
+    // Log level type determination
+    console.log('[Crackd Analytics] Level type determined via AI:', {
+      method: 'openai-determination',
+      nextLevel,
+      determinedType: parsedResponse.levelType,
+      reasoning: parsedResponse.reasoning,
+      criticalGap: parsedResponse.criticalGap,
+      targetCompanies: targetCompanies.map((tc: TargetCompany) => tc.name),
+      previousLevels: levelTypeCounts,
+      duration: Math.round(totalDuration),
+      timestamp: new Date().toISOString()
+    });
     
     return NextResponse.json({
       success: true,

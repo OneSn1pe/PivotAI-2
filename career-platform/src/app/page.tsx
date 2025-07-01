@@ -162,20 +162,20 @@ export default function WaitlistPage() {
   const SuccessMessage = () => (
     <div className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center px-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.15)] p-8 max-w-md w-full transform scale-100 animate-slideUp border border-[#E5E7EB]">
-        <div className="w-16 h-16 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-full flex items-center justify-center mx-auto mb-6 hover-scale shadow-[0_4px_14px_rgba(37,99,235,0.25)]">
+        <div className="w-16 h-16 glass-icon-success rounded-full flex items-center justify-center mx-auto mb-6 hover-scale">
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-light text-[#1E293B] mb-3 text-center">You're on the list!</h2>
-        <p className="text-[#4B5563] font-light text-center">
-          We'll notify you as soon as Crackd launches. Get ready to crack your career potential!
+        <h2 className="text-2xl font-bold text-[#1E293B] mb-3 text-center">You're Getting CRACKD!</h2>
+        <p className="text-[#4B5563] text-center">
+          Prepare to shatter your limits. We'll notify you the moment Crackd launches.
         </p>
         <button
           onClick={() => setSuccess(false)}
-          className="mt-6 w-full bg-gradient-to-r from-[#1E293B] to-[#334155] hover:from-[#334155] hover:to-[#475569] text-white font-light py-3 px-6 rounded-lg transition-all duration-300 hover-lift hover:shadow-[0_6px_20px_rgba(30,41,59,0.25)] hover:transform hover:-translate-y-[1px]"
+          className="mt-6 w-full glass-button text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
         >
-          Got it
+          I'm Ready
         </button>
       </div>
     </div>
@@ -214,20 +214,38 @@ export default function WaitlistPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-[#1E293B] to-[#334155]">
-        {/* Background elements */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
+        {/* Glass crack effect background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Pattern overlay */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#38BDF8] rounded-full filter blur-[120px] opacity-20" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FF6B6B] rounded-full filter blur-[120px] opacity-10" />
-          </div>
+          {/* Cracked glass overlay */}
           <div 
-            className="absolute -top-1/2 -right-1/2 w-full h-full opacity-5"
+            className="absolute inset-0"
             style={{
-              transform: `translateY(${scrollY * 0.3}px)`,
-              background: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-              backgroundSize: '50px 50px'
+              background: `
+                linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 31%, rgba(255,255,255,0.1) 31.5%, transparent 32%),
+                linear-gradient(-45deg, transparent 30%, rgba(255,255,255,0.1) 31%, rgba(255,255,255,0.1) 31.5%, transparent 32%),
+                linear-gradient(90deg, transparent 40%, rgba(255,255,255,0.05) 41%, rgba(255,255,255,0.05) 41.5%, transparent 42%),
+                linear-gradient(0deg, transparent 40%, rgba(255,255,255,0.05) 41%, rgba(255,255,255,0.05) 41.5%, transparent 42%)
+              `,
+              backgroundSize: '200px 200px',
+              transform: `translateY(${scrollY * 0.1}px)`,
+              opacity: 0.3
+            }}
+          />
+          
+          {/* Shatter points */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#38BDF8] rounded-full filter blur-[120px] opacity-30 animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#2563EB] rounded-full filter blur-[120px] opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-[#60A5FA] rounded-full filter blur-[100px] opacity-25 animate-pulse" style={{ animationDelay: '2s' }} />
+          
+          {/* Glass particles */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+              backgroundSize: '30px 30px',
+              transform: `translateY(${scrollY * -0.5}px)`,
+              opacity: 0.2
             }}
           />
         </div>
@@ -240,47 +258,74 @@ export default function WaitlistPage() {
               transform: `translateY(${scrollY * -0.2}px)`
             }}
           >
-            {/* Countdown Display */}
-            <div className="mb-12 p-4 sm:p-6 bg-white/10 backdrop-blur-sm rounded-2xl shadow-xl max-w-2xl mx-auto border border-white/20">
-              <p className="text-white/90 text-sm font-light mb-4 text-center">Launching in</p>
+            {/* Countdown Display with glass effect */}
+            <div className="mb-12 p-4 sm:p-6 glass-crack rounded-2xl shadow-xl max-w-2xl mx-auto">
+              <p className="text-white/90 text-sm font-medium mb-4 text-center uppercase tracking-wider">Launching in</p>
               <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
                 <div className="text-center">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300 hover:bg-white/20 hover:border-white/40 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number group-hover:scale-110 transition-transform">{timeLeft.days}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90">DAYS</div>
+                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{timeLeft.days}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">DAYS</div>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300 hover:bg-white/20 hover:border-white/40 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.hours).padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90">HOURS</div>
+                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.hours).padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">HOURS</div>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300 hover:bg-white/20 hover:border-white/40 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.minutes).padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90">MINUTES</div>
+                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">MINUTES</div>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover-lift transition-all duration-300 hover:bg-white/20 hover:border-white/40 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-light text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90">SECONDS</div>
+                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">SECONDS</div>
                   </div>
                 </div>
               </div>
-              <p className="text-white/60 text-xs text-center mt-4 font-light">July 20th, 2025 • 12:00 PM EST</p>
+              <p className="text-white/60 text-xs text-center mt-4 font-medium">July 20th, 2025 • 12:00 PM EST</p>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-light text-white mb-6 leading-tight drop-shadow-lg">
-              Your AI-Powered
-              <br />
-              <span className="font-normal text-[#38BDF8]">Career Navigator</span>
-            </h1>
+            {/* Main tagline with crack effect */}
+            <div className="mb-8">
+              <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none relative inline-block">
+                <span className="relative">
+                  GET
+                  <div className="absolute -inset-2 bg-gradient-to-r from-[#38BDF8] to-[#2563EB] opacity-30 blur-lg animate-pulse" />
+                </span>
+                {' '}
+                <span className="relative inline-block transform hover:scale-105 transition-transform duration-300">
+                  <span className="relative z-10 bg-gradient-to-r from-[#38BDF8] via-[#60A5FA] to-[#2563EB] text-transparent bg-clip-text">
+                    CRACKD
+                  </span>
+                  {/* Crack lines effect */}
+                  <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)]" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M20,50 L35,30 L50,50 L65,20 L80,50" 
+                          stroke="rgba(255,255,255,0.3)" 
+                          strokeWidth="0.5" 
+                          fill="none"
+                          className="animate-crack" />
+                    <path d="M30,40 L45,55 L60,35" 
+                          stroke="rgba(255,255,255,0.2)" 
+                          strokeWidth="0.3" 
+                          fill="none"
+                          className="animate-crack"
+                          style={{ animationDelay: '0.5s' }} />
+                  </svg>
+                </span>
+              </h1>
+              <p className="text-xl md:text-2xl text-white/80 font-light">
+                Become <span className="font-semibold text-[#38BDF8]">amazingly capable</span> and <span className="font-semibold text-[#60A5FA]">brilliantly smart</span>
+              </p>
+            </div>
             
-            <p className="text-lg text-white/85 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-              Crack the code to your dream career with AI-powered guidance 
-              and personalized development roadmaps.
+            <p className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+              Break through career barriers with AI-powered guidance. 
+              Shatter limitations. Transform your potential into unstoppable success.
             </p>
           </div>
 
@@ -311,7 +356,7 @@ export default function WaitlistPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#1E40AF] text-white font-light py-4 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-[0_4px_14px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)] hover:transform hover:-translate-y-[1px]"
+                className="w-full glass-button text-white font-medium py-4 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -328,13 +373,16 @@ export default function WaitlistPage() {
                     Joining waitlist...
                   </span>
                 ) : (
-                  <span className="relative z-10">Join the Waitlist</span>
+                  <>
+                    <span className="relative z-10 font-bold text-lg">GET CRACKD</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#38BDF8] to-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </>
                 )}
               </button>
             </form>
 
-            <p className="text-center text-sm text-white/70 mt-6 font-light">
-              Be among the first to crack your career potential.
+            <p className="text-center text-sm text-white/60 mt-6 font-medium">
+              Join the revolution. Become unstoppable.
             </p>
           </div>
         </div>
@@ -350,16 +398,20 @@ export default function WaitlistPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-4 bg-gradient-to-b from-[#F9FAFB] to-white relative overflow-hidden">
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-[#38BDF8] rounded-full filter blur-[80px] opacity-[0.15] -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#FF6B6B] rounded-full filter blur-[80px] opacity-[0.1] translate-x-1/2 translate-y-1/2" />
+      <section className="py-24 px-4 bg-gradient-to-b from-white to-[#F9FAFB] relative overflow-hidden">
+        {/* Glass shard decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-1 h-32 bg-gradient-to-b from-transparent via-[#38BDF8]/20 to-transparent transform rotate-45" />
+          <div className="absolute top-1/3 right-1/3 w-1 h-24 bg-gradient-to-b from-transparent via-[#2563EB]/20 to-transparent transform -rotate-12" />
+          <div className="absolute bottom-1/4 left-1/2 w-1 h-40 bg-gradient-to-b from-transparent via-[#60A5FA]/20 to-transparent transform rotate-30" />
+        </div>
+        
         <div className="max-w-7xl mx-auto relative z-10">
-          <h2 className="text-3xl font-light text-center text-[#1E293B] mb-4 scroll-animate opacity-0">
-            Redefining Career Development
+          <h2 className="text-4xl font-bold text-center text-[#1E293B] mb-4 scroll-animate opacity-0">
+            Crack Your Career Code
           </h2>
-          <p className="text-center text-[#4B5563] font-light mb-16 max-w-3xl mx-auto scroll-animate opacity-0">
-            Crackd combines cutting-edge AI technology with proven career development strategies to help you crack into your dream role
+          <p className="text-center text-[#4B5563] font-medium mb-16 max-w-3xl mx-auto scroll-animate opacity-0">
+            Four powerful ways to shatter career barriers and unlock your true potential
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -396,14 +448,14 @@ export default function WaitlistPage() {
                   animationDelay: `${index * 100}ms`
                 }}
               >
-                <div className="h-full bg-white rounded-xl p-6 border border-[#E5E7EB] hover:border-[#2563EB]/20 hover:shadow-[0_10px_40px_rgba(15,23,42,0.08),0_0_0_1px_rgba(37,99,235,0.1)] transition-all duration-300 hover:transform hover:-translate-y-[2px] group">
-                  <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4 transition-all duration-300 group-hover:bg-gradient-to-br group-hover:from-[#2563EB] group-hover:to-[#1D4ED8] group-hover:text-white group-hover:scale-110`}>
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={feature.icon} />
+                <div className="h-full glass-feature-card rounded-xl p-6 transition-all duration-300 hover:transform hover:-translate-y-[2px] group">
+                  <div className="w-14 h-14 glass-icon rounded-lg flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110">
+                    <svg className="w-7 h-7 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
                     </svg>
                   </div>
-                  <h3 className="font-medium text-[#1E293B] mb-2 text-lg group-hover:text-[#2563EB] transition-colors">{feature.title}</h3>
-                  <p className="text-sm text-[#4B5563] font-light leading-relaxed">{feature.description}</p>
+                  <h3 className="font-bold text-[#1E293B] mb-2 text-lg group-hover:text-[#2563EB] transition-colors">{feature.title}</h3>
+                  <p className="text-sm text-[#4B5563] leading-relaxed">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -626,13 +678,17 @@ export default function WaitlistPage() {
           }
         }
         
-        @keyframes countdownFlip {
+        @keyframes crack {
           0% {
-            transform: perspective(400px) rotateX(0);
+            stroke-dasharray: 0 100;
           }
           100% {
-            transform: perspective(400px) rotateX(-180deg);
+            stroke-dasharray: 100 0;
           }
+        }
+        
+        .animate-crack {
+          animation: crack 2s ease-out forwards;
         }
         
         .animate-fadeUp {
@@ -689,11 +745,78 @@ export default function WaitlistPage() {
           left: 100%;
         }
         
-        /* Glass morphism for cards */
+        /* Glass morphism styles */
         .glass-morphism {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-crack {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: 
+            inset 0 1px 1px rgba(255, 255, 255, 0.2),
+            0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .glass-card {
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          box-shadow: 
+            inset 0 1px 1px rgba(255, 255, 255, 0.25),
+            0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+        
+        .glass-button {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(37, 99, 235, 0.3));
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow: 
+            inset 0 1px 1px rgba(255, 255, 255, 0.3),
+            0 4px 16px rgba(37, 99, 235, 0.2);
+        }
+        
+        .glass-button:hover {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.5), rgba(37, 99, 235, 0.5));
+          transform: translateY(-2px);
+          box-shadow: 
+            inset 0 1px 1px rgba(255, 255, 255, 0.4),
+            0 8px 24px rgba(37, 99, 235, 0.3);
+        }
+        
+        .glass-feature-card {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(229, 231, 235, 0.6);
+          box-shadow: 
+            0 1px 3px rgba(0, 0, 0, 0.05),
+            0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+        
+        .glass-feature-card:hover {
+          border-color: rgba(37, 99, 235, 0.2);
+          box-shadow: 
+            0 1px 3px rgba(0, 0, 0, 0.05),
+            0 20px 50px rgba(37, 99, 235, 0.15),
+            inset 0 1px 1px rgba(255, 255, 255, 0.6);
+        }
+        
+        .glass-icon {
+          background: linear-gradient(135deg, rgba(224, 242, 254, 0.8), rgba(219, 234, 254, 0.8));
+          border: 1px solid rgba(147, 197, 253, 0.3);
+          box-shadow: 
+            inset 0 1px 1px rgba(255, 255, 255, 0.5),
+            0 2px 8px rgba(37, 99, 235, 0.1);
+        }
+        
+        .glass-icon-success {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(37, 99, 235, 0.9));
+          box-shadow: 
+            0 4px 16px rgba(37, 99, 235, 0.3),
+            0 8px 32px rgba(56, 189, 248, 0.2);
         }
         
         /* Gradient text effect */
