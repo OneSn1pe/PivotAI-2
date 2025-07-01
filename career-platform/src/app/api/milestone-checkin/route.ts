@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { MilestoneCheckIn } from '@/types/user';
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const userProgressRef = db.collection('userProgress').doc(userId);
     await userProgressRef.update({
       lastCheckInDate: new Date().toISOString(),
-      totalCheckIns: db.FieldValue.increment(1),
+      totalCheckIns: FieldValue.increment(1),
       [`checkInsByMilestone.${checkInData.milestoneId}`]: {
         checkInId: docRef.id,
         completedAt: checkIn.completedAt.toISOString(),
