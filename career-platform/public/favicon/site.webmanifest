@@ -1,6 +1,8 @@
 {
-  "name": "PivotAI",
-  "short_name": "PivotAI",
+  "name": "Crackd",
+  "short_name": "Crackd",
+  "description": "AI-powered career development platform",
+  "start_url": "https://crackd.app",
   "icons": [
     {
       "src": "/favicon/android-chrome-192x192.png",

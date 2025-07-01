@@ -6,7 +6,7 @@ import { Providers } from "../components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PivotAI - Career Development Platform",
+  title: "Crackd - Career Development Platform",
   description: "Your professional journey for career growth and development",
   icons: {
     icon: [

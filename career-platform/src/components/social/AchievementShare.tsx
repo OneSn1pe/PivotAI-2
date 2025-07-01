@@ -38,7 +38,7 @@ export function AchievementShare({
 
   const currentLevel = userProgress.levelsUnlocked || 1;
   const shareData = {
-    title: `I just earned the "${achievement.title}" achievement on PivotAI Career Quest!`,
+    title: `I just earned the "${achievement.title}" achievement on Crackd!`,
     text: `${achievement.description} - Level ${currentLevel}`,
     url: `${typeof window !== 'undefined' ? window.location.origin : ''}/achievements/${achievement.id}`,
   };
@@ -125,7 +125,7 @@ export function AchievementShare({
     ctx.fillText(achievement.description, 400, 250);
     
     ctx.font = '18px Arial';
-    ctx.fillText('PivotAI Career Quest', 400, 350);
+    ctx.fillText('Crackd - Career Development', 400, 350);
     
     // Convert to blob and download
     canvas.toBlob((blob) => {

@@ -1,7 +1,8 @@
 {
-    "name": "pivotai",
+    "name": "crackd",
     "version": "0.1.0",
     "private": true,
+    "homepage": "https://crackd.app",
     "scripts": {
         "dev": "next dev",
         "dev-local": "NODE_ENV=development NEXT_PUBLIC_DEVELOPMENT_MODE=true next dev",

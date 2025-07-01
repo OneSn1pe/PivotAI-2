@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'PivotAI Career',
+  title: 'Crackd Career',
   description: 'AI-powered career development platform',
 }
 

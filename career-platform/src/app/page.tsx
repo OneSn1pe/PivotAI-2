@@ -169,7 +169,7 @@ export default function WaitlistPage() {
         </div>
         <h2 className="text-2xl font-light text-[#1E293B] mb-3 text-center">You're on the list!</h2>
         <p className="text-[#4B5563] font-light text-center">
-          We'll notify you as soon as PivotAI launches. Thank you for your interest!
+          We'll notify you as soon as Crackd launches. Get ready to crack your career potential!
         </p>
         <button
           onClick={() => setSuccess(false)}
@@ -207,7 +207,7 @@ export default function WaitlistPage() {
                   className="hover:rotate-12 transition-transform duration-300 brightness-0 invert"
                 />
               </div>
-              <h1 className="text-xl font-light text-white hover:text-[#38BDF8] transition-colors">PivotAI</h1>
+              <h1 className="text-xl font-light text-white hover:text-[#38BDF8] transition-colors">Crackd</h1>
             </div>
           </div>
         </div>
@@ -279,8 +279,8 @@ export default function WaitlistPage() {
             </h1>
             
             <p className="text-lg text-white/85 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-              Transform your career trajectory with personalized AI-driven roadmaps 
-              and gamified learning experiences.
+              Crack the code to your dream career with AI-powered guidance 
+              and personalized development roadmaps.
             </p>
           </div>
 
@@ -334,7 +334,7 @@ export default function WaitlistPage() {
             </form>
 
             <p className="text-center text-sm text-white/70 mt-6 font-light">
-              Be among the first to experience the future of career development.
+              Be among the first to crack your career potential.
             </p>
           </div>
         </div>
@@ -359,7 +359,7 @@ export default function WaitlistPage() {
             Redefining Career Development
           </h2>
           <p className="text-center text-[#4B5563] font-light mb-16 max-w-3xl mx-auto scroll-animate opacity-0">
-            PivotAI combines cutting-edge AI technology with proven career development strategies to accelerate your professional growth
+            Crackd combines cutting-edge AI technology with proven career development strategies to help you crack into your dream role
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -434,8 +434,8 @@ export default function WaitlistPage() {
               Talented individuals are overlooked while positions remain unfilled. We believe this is broken.
             </p>
             <p className="text-lg text-white/80 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '300ms' }}>
-              PivotAI levels the playing field by showcasing what truly matters: your skills, potential, and dedication. 
-              Our AI-powered platform ensures that merit rises to the top, connecting the right talent with the right opportunities.
+              Crackd levels the playing field by showcasing what truly matters: your skills, potential, and dedication. 
+              Our AI-powered platform helps you crack through barriers and connect with the right opportunities.
             </p>
             <p className="text-lg text-white/80 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '400ms' }}>
               Together, we're building a future where careers are shaped by capability, not circumstance.
@@ -490,15 +490,15 @@ export default function WaitlistPage() {
         <div className="max-w-6xl mx-auto">
           {/* Social Links Section */}
           <div className="text-center">
-            <h3 className="text-lg font-medium text-[#1E293B] mb-6">Connect with PivotAI</h3>
+            <h3 className="text-lg font-medium text-[#1E293B] mb-6">Connect with Crackd</h3>
             <div className="flex justify-center items-center gap-6">
               {/* LinkedIn */}
               <a 
-                href="https://linkedin.com/company/pivotai" 
+                href="https://linkedin.com/company/crackd" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="group"
-                aria-label="Connect with PivotAI on LinkedIn"
+                aria-label="Connect with Crackd on LinkedIn"
               >
                 <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#0077B5] hover:border-[#0077B5] hover:shadow-[0_4px_14px_rgba(0,119,181,0.25)] hover-lift group-hover:scale-110">
                   <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -509,11 +509,11 @@ export default function WaitlistPage() {
 
               {/* YouTube */}
               <a 
-                href="https://youtube.com/@pivotai" 
+                href="https://youtube.com/@crackd" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="group"
-                aria-label="Subscribe to PivotAI on YouTube"
+                aria-label="Subscribe to Crackd on YouTube"
               >
                 <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#FF0000] hover:border-[#FF0000] hover:shadow-[0_4px_14px_rgba(255,0,0,0.25)] hover-lift group-hover:scale-110">
                   <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -524,11 +524,11 @@ export default function WaitlistPage() {
 
               {/* Instagram */}
               <a 
-                href="https://instagram.com/pivotai" 
+                href="https://instagram.com/crackd" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="group"
-                aria-label="Follow PivotAI on Instagram"
+                aria-label="Follow Crackd on Instagram"
               >
                 <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#E4405F] hover:border-[#E4405F] hover:shadow-[0_4px_14px_rgba(228,64,95,0.25)] hover-lift group-hover:scale-110">
                   <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -539,11 +539,11 @@ export default function WaitlistPage() {
 
               {/* X (Twitter) */}
               <a 
-                href="https://x.com/pivotai" 
+                href="https://x.com/crackd" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="group"
-                aria-label="Follow PivotAI on X"
+                aria-label="Follow Crackd on X"
               >
                 <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#1E293B] hover:border-[#1E293B] hover:shadow-[0_4px_14px_rgba(30,41,59,0.25)] hover-lift group-hover:scale-110">
                   <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -558,7 +558,7 @@ export default function WaitlistPage() {
           {/* Copyright */}
           <div className="mt-8 pt-8 border-t border-[#E5E7EB] text-center">
             <p className="text-sm text-[#9CA3AF] font-light">
-              © 2024 <span className="text-hover-underline cursor-pointer hover:text-[#1E293B] transition-colors">PivotAI</span>. Transforming careers with intelligence.
+              © 2024 <span className="text-hover-underline cursor-pointer hover:text-[#1E293B] transition-colors">Crackd</span>. Cracking the code to career success.
             </p>
           </div>
         </div>

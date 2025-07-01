@@ -71,7 +71,7 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/protected/candidate/dashboard" className="text-gray-900 text-base sm:text-lg font-semibold tracking-tight">
-                PivotAI
+                Crackd
               </Link>
             </div>
             

@@ -55,7 +55,7 @@ export default function Sidebar() {
     <aside className="sidebar bg-blue-700 text-white w-72 flex-shrink-0 min-h-screen shadow-lg">
       <div className="p-8 border-b border-blue-600">
         <Link href="/protected/candidate/dashboard" className="text-2xl font-bold flex items-center justify-center">
-          <span className="text-white hover:text-blue-200 transition-colors">PivotAI</span>
+          <span className="text-white hover:text-blue-200 transition-colors">Crackd</span>
         </Link>
       </div>
       
