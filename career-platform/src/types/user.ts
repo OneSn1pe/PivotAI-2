@@ -587,6 +587,52 @@ export enum UserRole {
     onSubmit: (feedback: Omit<LevelFeedback, 'id' | 'userId' | 'createdAt'>) => void;
   }
 
+  // Milestone Check-in Types
+  export interface MilestoneCheckIn {
+    id: string;
+    userId: string;
+    milestoneId: string;
+    milestoneTitle: string;
+    completedAt: Date;
+    createdAt: Date;
+    
+    // Resource feedback
+    resourcesHelpful: 1 | 2 | 3 | 4 | 5; // 1-5 rating
+    resourcesUsed: string[]; // Which resources were actually used
+    favoriteResource?: string; // Most helpful resource
+    missingResources?: string; // What additional resources would have helped
+    
+    // Objective feedback
+    objectiveClear: boolean; // Was the objective clear?
+    objectiveAchieved: boolean; // Did you achieve the objective?
+    timeToComplete: 'less-than-expected' | 'as-expected' | 'more-than-expected';
+    actualHours?: number; // Actual hours spent
+    
+    // Learning outcomes
+    skillsGained: string[]; // What skills did you gain?
+    confidenceLevel: 1 | 2 | 3 | 4 | 5; // Confidence with the material
+    applicability: 1 | 2 | 3 | 4 | 5; // How applicable to your goals?
+    
+    // Challenges and successes
+    challenges?: string; // What was challenging?
+    breakthroughs?: string; // Any breakthroughs or aha moments?
+    
+    // Next steps
+    readyForNext: boolean; // Ready for next milestone?
+    additionalPracticeNeeded?: string[]; // Areas needing more practice
+    
+    // Optional feedback
+    wouldRecommend: boolean; // Would recommend this milestone to others?
+    additionalComments?: string;
+  }
+
+  export interface MilestoneCheckInModalState {
+    isOpen: boolean;
+    milestone: Milestone;
+    onClose: () => void;
+    onSubmit: (checkIn: Omit<MilestoneCheckIn, 'id' | 'userId' | 'createdAt'>) => void;
+  }
+
   // Helper function to categorize milestones
   export const categorizeMilestone = (milestone: Partial<Milestone> | LegacyMilestone): MilestoneCategory => {
     const title = milestone.title?.toLowerCase() || '';

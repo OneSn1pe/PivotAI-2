@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight } from 'lucide-react';
 import { ProgressTrackingService } from '@/services/progressTracking';
-import { Milestone } from '@/types/user';
+import { Milestone, MilestoneCheckIn } from '@/types/user';
 import { toast } from 'sonner';
+import { MilestoneCheckInModal } from '@/components/feedback/MilestoneCheckInModal';
+import { getAuth } from 'firebase/auth';
 
 interface MilestoneTrackerProps {
   userId: string;
@@ -22,6 +24,7 @@ export function MilestoneTracker({
 }: MilestoneTrackerProps) {
   const [completing, setCompleting] = useState<string | null>(null);
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
+  const [checkInMilestone, setCheckInMilestone] = useState<Milestone | null>(null);
 
   const handleCompleteMilestone = async (milestone: Milestone) => {
     if (completing || completedMilestones.includes(milestone.id)) return;
@@ -43,11 +46,46 @@ export function MilestoneTracker({
       }
 
       onMilestoneComplete?.(milestone.id);
+      
+      // Show check-in modal after successful completion
+      setCheckInMilestone(milestone);
     } catch (error) {
       console.error('Error completing milestone:', error);
       toast.error('Failed to complete milestone');
     } finally {
       setCompleting(null);
+    }
+  };
+
+  const handleCheckInSubmit = async (checkIn: Omit<MilestoneCheckIn, 'id' | 'userId' | 'createdAt'>) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        toast.error('Please sign in to submit feedback');
+        return;
+      }
+
+      const token = await user.getIdToken();
+      
+      const response = await fetch('/api/milestone-checkin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(checkIn),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save check-in');
+      }
+
+      toast.success('Thank you for your feedback!');
+    } catch (error) {
+      console.error('Error saving check-in:', error);
+      toast.error('Failed to save feedback. Your progress is still saved.');
     }
   };
 
@@ -184,6 +222,16 @@ export function MilestoneTracker({
             View all {milestones.length} milestones →
           </button>
         </div>
+      )}
+
+      {/* Check-in Modal */}
+      {checkInMilestone && (
+        <MilestoneCheckInModal
+          isOpen={!!checkInMilestone}
+          milestone={checkInMilestone}
+          onClose={() => setCheckInMilestone(null)}
+          onSubmit={handleCheckInSubmit}
+        />
       )}
     </div>
   );

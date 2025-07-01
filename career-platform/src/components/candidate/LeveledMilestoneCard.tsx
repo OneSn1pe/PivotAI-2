@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Milestone, UserProgress, MicroMilestone } from '@/types/user';
+import { Milestone, UserProgress, MicroMilestone, MilestoneCheckIn } from '@/types/user';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,9 @@ import {
   ChevronUp,
   Clock
 } from 'lucide-react';
+import { MilestoneCheckInModal } from '@/components/feedback/MilestoneCheckInModal';
+import { getAuth } from 'firebase/auth';
+import { toast } from 'sonner';
 
 interface LeveledMilestoneCardProps {
   milestone: Milestone;
@@ -35,6 +38,7 @@ export function LeveledMilestoneCard({
   showMicroMilestones = true
 }: LeveledMilestoneCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
   
   // Check completion status
   const isCompleted = milestone.completed || (userProgress?.completedMilestones.includes(milestone.id) ?? false);
@@ -55,8 +59,45 @@ export function LeveledMilestoneCard({
   const microProgress = microMilestones.length > 0 ? (completedMicros / microMilestones.length) * 100 : 0;
 
   const handleComplete = () => {
-    if (onComplete && (canComplete || isCompleted)) {
+    if (onComplete && canComplete && !isCompleted) {
       onComplete(milestone.id);
+      // Show check-in modal after marking as complete
+      setShowCheckIn(true);
+    } else if (onComplete && isCompleted) {
+      // Allow uncompleting
+      onComplete(milestone.id);
+    }
+  };
+
+  const handleCheckInSubmit = async (checkIn: Omit<MilestoneCheckIn, 'id' | 'userId' | 'createdAt'>) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        toast.error('Please sign in to submit feedback');
+        return;
+      }
+
+      const token = await user.getIdToken();
+      
+      const response = await fetch('/api/milestone-checkin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(checkIn),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save check-in');
+      }
+
+      toast.success('Thank you for your feedback!');
+    } catch (error) {
+      console.error('Error saving check-in:', error);
+      toast.error('Failed to save feedback. Your progress is still saved.');
     }
   };
 
@@ -256,6 +297,16 @@ export function LeveledMilestoneCard({
           </Button>
         </div>
       </CardContent>
+
+      {/* Check-in Modal */}
+      {showCheckIn && (
+        <MilestoneCheckInModal
+          isOpen={showCheckIn}
+          milestone={milestone}
+          onClose={() => setShowCheckIn(false)}
+          onSubmit={handleCheckInSubmit}
+        />
+      )}
     </Card>
   );
 }
