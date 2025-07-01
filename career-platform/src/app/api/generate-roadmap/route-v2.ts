@@ -16,6 +16,9 @@ const debug = {
   },
   error: (...args: any[]) => {
     console.error('[API:generate-roadmap-v2:ERROR]', ...args);
+  },
+  warn: (...args: any[]) => {
+    console.warn('[API:generate-roadmap-v2:WARN]', ...args);
   }
 };
 
