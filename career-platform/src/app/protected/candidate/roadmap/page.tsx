@@ -18,6 +18,7 @@ import { ProgressTrackingService } from '@/services/progressTracking';
 import LevelCheckInModal from '@/components/feedback/LevelCheckInModal';
 import { feedbackService } from '@/services/feedbackService';
 import { LevelFeedback } from '@/types/user';
+import { LevelTypeIndicator } from '@/components/roadmap/LevelTypeIndicator';
 
 export default function CareerPathPage() {
   const { userProfile } = useAuth();
@@ -436,6 +437,15 @@ export default function CareerPathPage() {
     return '';
   };
 
+  const getLevelType = (level: number) => {
+    // Find the first milestone for this level to get its type
+    const levelMilestones = roadmap?.milestones.filter(m => (m.level || 1) === level) || [];
+    if (levelMilestones.length > 0 && levelMilestones[0].levelType) {
+      return levelMilestones[0].levelType;
+    }
+    return null;
+  };
+
   const handleGenerateNextLevel = async () => {
     if (!roadmapId || !userProfile || !roadmap) return;
     
@@ -565,6 +575,37 @@ export default function CareerPathPage() {
       
       {roadmap && userProgress && (
         <div>
+          {/* Level Type Overview */}
+          <div className="bg-white p-4 rounded-lg mb-8 border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Level Progression Overview</h3>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Set(roadmap.milestones.map(m => m.level || 1))).sort((a, b) => a - b).map(level => {
+                const levelType = getLevelType(level);
+                if (!levelType) return null;
+                return (
+                  <div 
+                    key={level}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs cursor-pointer transition-all ${
+                      level === selectedLevel 
+                        ? 'bg-gray-900 text-white' 
+                        : level <= (userProgress?.levelsUnlocked || 1)
+                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-gray-50 text-gray-400'
+                    }`}
+                    onClick={() => level <= (userProgress?.levelsUnlocked || 1) && setSelectedLevel(level)}
+                  >
+                    <span className="font-medium">L{level}</span>
+                    <span className="text-lg">
+                      {levelType === 'skill' && '📚'}
+                      {levelType === 'project' && '🛠️'}
+                      {levelType === 'position' && '🎯'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Level Navigation */}
           <LevelNavigator
             currentLevel={selectedLevel}
@@ -589,9 +630,17 @@ export default function CareerPathPage() {
             <div>
               <div className="bg-white p-6 rounded-lg mb-8">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">
-                    Level {selectedLevel}{getLevelTitle(selectedLevel) && ` - ${getLevelTitle(selectedLevel)}`}
-                  </h2>
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-bold text-gray-800">
+                      Level {selectedLevel}{getLevelTitle(selectedLevel) && ` - ${getLevelTitle(selectedLevel)}`}
+                    </h2>
+                    {getLevelType(selectedLevel) && (
+                      <LevelTypeIndicator 
+                        levelType={getLevelType(selectedLevel)!} 
+                        size="sm"
+                      />
+                    )}
+                  </div>
                   {/* Skip Level Button */}
                   {selectedLevel < Math.max(...roadmap.milestones.map(m => m.level || 1)) && 
                    selectedLevel <= userProgress.levelsUnlocked &&
