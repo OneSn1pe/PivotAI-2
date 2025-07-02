@@ -105,7 +105,7 @@ const nextConfig = {
       },
       {
         // Security headers for HTML pages only (not static assets)
-        source: '/((?!_next/static|_next/image|favicon.ico).*)',
+        source: '/((?!_next/static|_next/image|_next/webpack-hmr|favicon.ico).*)',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
