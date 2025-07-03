@@ -1,5 +1,6 @@
 import { ResumeAnalysis, TargetCompany, CareerRoadmap } from '@/types/user';
 import logger from '@/utils/logger';
+import { TIMEOUT_CONFIG, createTimeoutController, isTimeoutError } from '@/config/timeouts';
 
 // Create a namespaced logger for OpenAI service
 const log = logger.createNamespace('OpenAI');
@@ -159,11 +160,8 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
     logStep('apiUrl.built', { apiUrl, baseUrl });
     
     // Set up request with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      logStep('request.timeout', { timeout: 300000 });
-    }, 300000);
+    const { controller, clearTimeout: clearTimeoutFn } = createTimeoutController(TIMEOUT_CONFIG.client.fetchLongRunning);
+    logStep('timeout.configured', { timeout: TIMEOUT_CONFIG.client.fetchLongRunning });
     
     try {
       logStep('request.start');
@@ -181,7 +179,7 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       const fetchEndTime = performance.now();
       
       // Clear timeout
-      clearTimeout(timeoutId);
+      clearTimeoutFn();
       
       logStep('response.received', { 
         status: response.status, 
@@ -334,15 +332,20 @@ export async function analyzeResume(resumeText: string): Promise<ResumeAnalysis>
       
     } catch (fetchError: any) {
       // Handle network errors including timeouts
-      clearTimeout(timeoutId);
+      clearTimeoutFn();
       
       // Add more context to error
       let errorMessage = fetchError.message || 'Unknown error';
       let errorType = 'unknown';
       
-      if (fetchError.name === 'AbortError') {
+      if (isTimeoutError(fetchError)) {
         errorType = 'timeout';
-        errorMessage = 'Resume analysis timed out. Please try again.';
+        errorMessage = 'Resume analysis timed out. Please try again with a shorter resume.';
+        console.error('[Crackd Analytics] Client-side timeout in analyzeResume:', {
+          error: fetchError.message,
+          resumeLength: resumeText.length,
+          timestamp: new Date().toISOString()
+        });
       } else if (fetchError.message?.includes('NetworkError')) {
         errorType = 'network';
         errorMessage = 'Network error. Please check your internet connection and try again.';
@@ -419,8 +422,15 @@ export async function generateCareerRoadmap(
     const apiUrl = `${baseUrl}/api/generate-roadmap`;
     log.debug(`API URL: ${apiUrl}`);
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 300000);
+    // Log which route is being used
+    console.log('[Crackd Analytics] Generating roadmap using v1 (no level types):', {
+      apiUrl,
+      candidateId,
+      targetCompanies: targetCompanies.map(tc => tc.name),
+      timestamp: new Date().toISOString()
+    });
+    
+    const { controller, clearTimeout: clearTimeoutFn } = createTimeoutController(TIMEOUT_CONFIG.client.fetchLongRunning);
     
     try {
       const response = await fetch(apiUrl, {
@@ -436,7 +446,7 @@ export async function generateCareerRoadmap(
         signal: controller.signal
       });
       
-      clearTimeout(timeoutId);
+      clearTimeoutFn();
       
       if (!response.ok) {
         let errorMessage = `Failed to generate roadmap (HTTP ${response.status})`;
@@ -481,11 +491,17 @@ export async function generateCareerRoadmap(
       
       return data as CareerRoadmap;
     } catch (fetchError: any) {
-      clearTimeout(timeoutId);
+      clearTimeoutFn();
       
-      if (fetchError.name === 'AbortError') {
+      if (isTimeoutError(fetchError)) {
         log.error('Request timeout');
-        throw new Error('Roadmap generation timed out. Please try again.');
+        console.error('[Crackd Analytics] Client-side timeout in generateCareerRoadmap:', {
+          error: fetchError.message,
+          candidateId,
+          targetCompanies: targetCompanies.map(tc => tc.name),
+          timestamp: new Date().toISOString()
+        });
+        throw new Error('Roadmap generation timed out. This can happen with complex requests. Please try again or simplify your target companies.');
       }
       
       log.error('Fetch error:', fetchError);

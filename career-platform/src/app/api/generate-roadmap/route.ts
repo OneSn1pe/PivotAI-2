@@ -6,6 +6,7 @@ import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, upda
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
 import { generateRoadmapPrompt } from '@/prompts/roadmapPrompt';
+import { TIMEOUT_CONFIG, isTimeoutError, logTimeoutWarning } from '@/config/timeouts';
 
 // Debug helper
 const debug = {
@@ -22,11 +23,11 @@ if (!process.env.OPENAI_API_KEY) {
   console.error('OPENAI_API_KEY is not defined');
 }
 
-// Initialize OpenAI with extended timeout settings
+// Initialize OpenAI with timeout settings from config
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 300000, // 5 minute timeout (increased from 2 minutes)
-  maxRetries: 3,   // Retry 3 times on transient errors (increased from 2)
+  timeout: TIMEOUT_CONFIG.openai.timeout,
+  maxRetries: TIMEOUT_CONFIG.openai.maxRetries,
 });
 
 // Helper function to truncate large objects for API calls
@@ -188,6 +189,17 @@ export async function POST(request: NextRequest) {
     } catch (openaiError: any) {
       debug.error('OpenAI API call failed:', openaiError);
       
+      // Check if it's a timeout error
+      const isTimeout = isTimeoutError(openaiError);
+      if (isTimeout) {
+        console.error('[Crackd Analytics] OpenAI API timeout in generate-roadmap:', {
+          error: openaiError.message,
+          duration: Math.round(performance.now() - openaiStartTime),
+          candidateId,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
       // Generate fallback roadmap when OpenAI fails
       debug.log('Generating fallback roadmap due to OpenAI error');
       
@@ -196,8 +208,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         ...fallbackRoadmap,
         _error: {
-          message: 'Used fallback roadmap due to OpenAI timeout',
-          details: openaiError.message || String(openaiError)
+          message: isTimeout ? 'Used fallback roadmap due to OpenAI timeout' : 'Used fallback roadmap due to OpenAI error',
+          details: openaiError.message || String(openaiError),
+          isTimeout
         }
       });
     }
