@@ -204,13 +204,15 @@ export async function POST(request: NextRequest) {
     
     Extract and return JSON with this structure:
     {
-      "skills": [technical and soft skills],
-      "experience": [work experiences],
-      "education": [educational qualifications],
-      "strengths": [key strengths],
-      "weaknesses": [areas for improvement],
-      "recommendations": [recommended job roles]
+      "skills": ["skill1", "skill2", ...],
+      "experience": ["work experience description 1", "work experience description 2", ...],
+      "education": ["education detail 1", "education detail 2", ...],
+      "strengths": ["strength 1", "strength 2", ...],
+      "weaknesses": ["area for improvement 1", "area for improvement 2", ...],
+      "recommendations": ["recommended job role 1", "recommended job role 2", ...]
     }
+    
+    IMPORTANT: All arrays must contain strings only, not objects.
     
     ${PROMPT_CONSTANTS.FIELD_NAMES} For missing fields, use empty arrays.`;
     
@@ -253,7 +255,9 @@ export async function POST(request: NextRequest) {
         // Ensure all expected fields exist with proper format
         const transformed: any = {
           skills: Array.isArray(data.skills) ? data.skills : [],
-          experience: Array.isArray(data.experience) ? data.experience : [],
+          experience: Array.isArray(data.experience) ? data.experience.map((exp: any) => 
+            typeof exp === 'string' ? exp : (exp.description || exp.title || JSON.stringify(exp))
+          ) : [],
           education: Array.isArray(data.education) ? data.education : [],
           strengths: Array.isArray(data.strengths) ? data.strengths : [],
           weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],

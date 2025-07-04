@@ -35,19 +35,33 @@ function getFirebaseAdminApp(): FirebaseAdminApp | null {
         console.log('[Firebase Admin] Initializing Firebase Admin SDK');
         
         try {
-          // Use service account credentials if available
-          if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-            // If the service account is provided as a JSON string (e.g., in environment variables)
-            const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+          // Try to load service account from file first
+          try {
+            const serviceAccountPath = process.cwd() + '/firebase-admin-key.json';
+            const serviceAccount = require(serviceAccountPath);
             
             firebaseAdmin = admin.initializeApp({
-              credential: admin.credential.cert(serviceAccount)
+              credential: admin.credential.cert(serviceAccount),
+              projectId: serviceAccount.project_id
             });
-          } else if (
-            process.env.FIREBASE_PROJECT_ID && 
-            process.env.FIREBASE_CLIENT_EMAIL && 
-            process.env.FIREBASE_PRIVATE_KEY
-          ) {
+            
+            console.log('[Firebase Admin] Initialized with service account file');
+          } catch (fileError) {
+            console.log('[Firebase Admin] Service account file not found, trying environment variables');
+            
+            // Use service account credentials if available
+            if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+              // If the service account is provided as a JSON string (e.g., in environment variables)
+              const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+              
+              firebaseAdmin = admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount)
+              });
+            } else if (
+              process.env.FIREBASE_PROJECT_ID && 
+              process.env.FIREBASE_CLIENT_EMAIL && 
+              process.env.FIREBASE_PRIVATE_KEY
+            ) {
             // Use individual environment variables
             firebaseAdmin = admin.initializeApp({
               credential: admin.credential.cert({
@@ -57,9 +71,10 @@ function getFirebaseAdminApp(): FirebaseAdminApp | null {
                 privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
               }),
             });
-          } else {
-            console.warn('[Firebase Admin] Missing required environment variables for initialization');
-            return null;
+            } else {
+              console.warn('[Firebase Admin] Missing required environment variables for initialization');
+              return null;
+            }
           }
           
           if (firebaseAdmin) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '@/config/firebase';
+import { getAdminFirestore, handleFirebaseError } from '@/utils/api-firebase';
 import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
@@ -36,11 +36,17 @@ async function determineInitialLevelType(
 ): Promise<LevelType> {
   // Simple heuristic for initial level type
   const experienceYears = resumeAnalysis.experience?.length || 0;
-  const hasProjects = resumeAnalysis.experience?.some(exp => 
-    exp.toLowerCase().includes('project') || 
-    exp.toLowerCase().includes('built') ||
-    exp.toLowerCase().includes('developed')
-  );
+  const hasProjects = resumeAnalysis.experience?.some(exp => {
+    // Ensure exp is a string before calling toLowerCase
+    if (typeof exp !== 'string') {
+      console.warn('Non-string experience entry found:', exp);
+      return false;
+    }
+    const expLower = exp.toLowerCase();
+    return expLower.includes('project') || 
+           expLower.includes('built') ||
+           expLower.includes('developed');
+  });
   
   let levelType: LevelType;
   
@@ -111,7 +117,17 @@ export async function POST(request: NextRequest) {
   const requestStartTime = performance.now();
   debug.log('POST request received');
   
+  let db: Firestore;
+  
   try {
+    // Initialize Admin Firestore
+    try {
+      db = getAdminFirestore();
+    } catch (error) {
+      debug.error('Failed to initialize Firebase Admin:', error);
+      return handleFirebaseError(error);
+    }
+    
     const { resumeAnalysis, targetCompanies, candidateId } = await request.json();
 
     if (!candidateId) {
