@@ -5,89 +5,106 @@ import { db } from '@/config/firebase';
 import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
-import { generateRoadmapPrompt } from '@/prompts/roadmapPrompt';
-import { TIMEOUT_CONFIG, isTimeoutError, logTimeoutWarning } from '@/config/timeouts';
+import { generateTypedRoadmapPrompt } from '@/prompts/typedRoadmapPrompt';
+import { LevelType, RoadmapWithLevels, LevelStructure, getNextLevelType } from '@/types/levelTypes';
+import { validateMilestonesForLevelType, ensureLevelTypeConsistency } from '@/utils/levelValidation';
 
 // Debug helper
 const debug = {
   log: (...args: any[]) => {
-    console.log('[API:generate-roadmap]', ...args);
+    console.log('[API:generate-roadmap-v2]', ...args);
   },
   error: (...args: any[]) => {
-    console.error('[API:generate-roadmap:ERROR]', ...args);
+    console.error('[API:generate-roadmap-v2:ERROR]', ...args);
+  },
+  warn: (...args: any[]) => {
+    console.warn('[API:generate-roadmap-v2:WARN]', ...args);
   }
 };
 
-// Check if OpenAI API key is available
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY is not defined');
-}
-
-// Initialize OpenAI with timeout settings from config
+// Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: TIMEOUT_CONFIG.openai.timeout,
-  maxRetries: TIMEOUT_CONFIG.openai.maxRetries,
+  timeout: 300000,
+  maxRetries: 3,
 });
 
-// Helper function to truncate large objects for API calls
-function truncateForAPI(obj: any, maxLength = 4000): any {
-  if (typeof obj === 'string') {
-    return obj.length <= maxLength ? obj : obj.substring(0, maxLength) + '...';
-  } else if (Array.isArray(obj)) {
-    return obj.map(item => truncateForAPI(item, maxLength));
-  } else if (typeof obj === 'object' && obj !== null) {
-    const result: any = {};
-    for (const key in obj) {
-      result[key] = truncateForAPI(obj[key], maxLength);
-    }
-    return result;
+// Helper function to determine initial level type
+async function determineInitialLevelType(
+  resumeAnalysis: ResumeAnalysis,
+  targetCompanies: TargetCompany[]
+): Promise<LevelType> {
+  // Simple heuristic for initial level type
+  const experienceYears = resumeAnalysis.experience?.length || 0;
+  const hasProjects = resumeAnalysis.experience?.some(exp => 
+    exp.toLowerCase().includes('project') || 
+    exp.toLowerCase().includes('built') ||
+    exp.toLowerCase().includes('developed')
+  );
+  
+  let levelType: LevelType;
+  
+  // Beginners start with skills
+  if (experienceYears < 2 || !hasProjects) {
+    levelType = 'skill';
   }
-  return obj;
-}
-
-// Add retry helper with exponential backoff
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2, initialDelayMs = 1000): Promise<T> {
-  let retries = 0;
-  let lastError: any;
-
-  while (retries <= maxRetries) {
-    try {
-      // Create a timeout promise
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('Operation timed out after 5 minutes'));
-        }, 300000); // 5 minute client-side timeout
-      });
-      
-      // Race the function against the timeout
-      return await Promise.race([
-        fn(),
-        timeoutPromise
-      ]);
-    } catch (error: any) {
-      lastError = error;
-      
-      // Check if it's a timeout error from our client-side timeout
-      if (error.message === 'Operation timed out after 5 minutes') {
-        debug.error('Client-side timeout reached:', error.message);
-        throw error; // Don't retry on client-side timeouts
-      }
-      
-      // Only retry on rate limit errors or network issues
-      if ((error.status === 429 || error.code === 'ECONNRESET') && retries < maxRetries) {
-        const delay = initialDelayMs * Math.pow(2, retries);
-        debug.log(`API error, retrying in ${delay}ms (retry ${retries + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        retries++;
-      } else {
-        // Other errors or max retries reached, rethrow
-        throw error;
-      }
-    }
+  // Mid-level might benefit from projects
+  else if (experienceYears < 5) {
+    levelType = 'project';
+  }
+  // Senior level might focus on position advancement
+  else {
+    levelType = 'position';
   }
   
-  throw lastError;
+  // Log level type determination
+  console.log('[Crackd Analytics] Initial level type determined (v2 fallback):', {
+    method: 'heuristic',
+    experienceYears,
+    hasProjects,
+    determinedType: levelType,
+    targetCompanies: targetCompanies.map(tc => tc.name),
+    timestamp: new Date().toISOString()
+  });
+  
+  return levelType;
+}
+
+// Helper to store level structure in new format
+async function storeLevelStructure(
+  candidateId: string,
+  levelNumber: number,
+  levelType: LevelType,
+  milestoneIds: string[]
+): Promise<void> {
+  const levelStructureRef = doc(db as Firestore, 'levelStructures', candidateId);
+  
+  const levelData: { [key: string]: LevelStructure } = {
+    [levelNumber.toString()]: {
+      levelNumber,
+      levelType,
+      milestones: milestoneIds,
+      generatedAt: new Date()
+    }
+  };
+  
+  const existingDoc = await getDoc(levelStructureRef);
+  
+  if (existingDoc.exists()) {
+    await updateDoc(levelStructureRef, {
+      [`levels.${levelNumber}`]: levelData[levelNumber.toString()],
+      updatedAt: new Date()
+    });
+  } else {
+    await setDoc(levelStructureRef, {
+      candidateId,
+      levels: levelData,
+      currentLevel: 1,
+      totalLevels: 1,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -95,1008 +112,149 @@ export async function POST(request: NextRequest) {
   debug.log('POST request received');
   
   try {
-    // Verify Firebase is initialized properly
-    if (!db) {
-      throw new Error('Firebase Firestore is not initialized');
-    }
-
     const { resumeAnalysis, targetCompanies, candidateId } = await request.json();
 
-    // Validate candidateId is provided
     if (!candidateId) {
       throw new Error('candidateId is required to generate a roadmap');
     }
 
     debug.log(`Processing roadmap generation for candidate: ${candidateId}`);
 
-    // Determine professional field (default to computer-science for backward compatibility)
+    // Determine professional field
     let professionalField: ProfessionalField = 'computer-science';
     if (resumeAnalysis?.professionalField) {
       professionalField = resumeAnalysis.professionalField;
-    } else if (targetCompanies && targetCompanies.length > 0 && targetCompanies[0].industry) {
-      professionalField = targetCompanies[0].industry;
     }
 
-    // Check if targetCompanies is provided and valid
-    let companiesForRoadmap = targetCompanies;
+    // Determine initial level type
+    const levelType = await determineInitialLevelType(resumeAnalysis, targetCompanies || []);
+    debug.log(`Determined initial level type: ${levelType}`);
 
-    // If no target companies were provided or the array is empty, fetch from user profile
+    // Get target companies
+    let companiesForRoadmap = targetCompanies;
     if (!companiesForRoadmap || companiesForRoadmap.length === 0) {
-      debug.log('No target companies provided, attempting to fetch from user profile');
-      
-      if (!candidateId) {
-        throw new Error('Cannot generate roadmap: No target companies provided and no candidateId to fetch them');
-      }
-      
-      // Fetch the user profile to get target companies
       const userDoc = await getDoc(doc(db as Firestore, 'users', candidateId));
-      
-      if (!userDoc.exists()) {
-        throw new Error('User profile not found');
+      if (userDoc.exists()) {
+        companiesForRoadmap = userDoc.data().targetCompanies || [];
       }
-      
-      const userData = userDoc.data();
-      companiesForRoadmap = userData.targetCompanies || [];
-      
-      debug.log(`Found ${companiesForRoadmap.length} target companies in user profile`);
-      
-      // If still no target companies, use a default
       if (companiesForRoadmap.length === 0) {
-        debug.log('No target companies found in user profile, using default');
         companiesForRoadmap = [{ name: 'Tech Company', position: 'Software Developer' }];
       }
     }
 
-    // Truncate resume analysis to prevent large payloads
-    const truncatedAnalysis = truncateForAPI(resumeAnalysis);
-    debug.log('Calling OpenAI API...');
-    const openaiStartTime = performance.now();
-
-    // Log v1 roadmap generation
-    console.log('[Crackd Analytics] Generating roadmap using v1 (no level types):', {
-      method: 'v1-route',
-      candidateId,
-      professionalField,
-      targetCompanies: companiesForRoadmap.map((c: TargetCompany) => c.name),
-      hasResumeAnalysis: !!resumeAnalysis,
-      timestamp: new Date().toISOString()
+    // Call OpenAI with typed roadmap prompt
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.CAREER_COACH
+        },
+        {
+          role: "user",
+          content: generateTypedRoadmapPrompt(
+            companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', '),
+            resumeAnalysis,
+            professionalField,
+            levelType,
+            1 // Level 1
+          )
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: 3000,
     });
 
-    // Call OpenAI with retry logic and proper error handling
-    let completion;
-    try {
-      completion = await withRetry(async () => {
-        return await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.CAREER_COACH
-            },
-            {
-              role: "user",
-              content: generateRoadmapPrompt(
-                companiesForRoadmap.map((c: TargetCompany) => `${c.name} (${c.position})`).join(', '),
-                truncatedAnalysis,
-                professionalField
-              )
-            }
-          ],
-          temperature: 0.2, // Lower temperature for more consistent output
-          max_tokens: 3000, // Increased limit for 6 milestones
-        });
-      });
-    } catch (openaiError: any) {
-      debug.error('OpenAI API call failed:', openaiError);
-      
-      // Check if it's a timeout error
-      const isTimeout = isTimeoutError(openaiError);
-      if (isTimeout) {
-        console.error('[Crackd Analytics] OpenAI API timeout in generate-roadmap:', {
-          error: openaiError.message,
-          duration: Math.round(performance.now() - openaiStartTime),
-          candidateId,
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Generate fallback roadmap when OpenAI fails
-      debug.log('Generating fallback roadmap due to OpenAI error');
-      
-      // Return error response with fallback roadmap
-      const fallbackRoadmap = createFallbackRoadmap(resumeAnalysis, candidateId, professionalField);
-      return NextResponse.json({
-        ...fallbackRoadmap,
-        _error: {
-          message: isTimeout ? 'Used fallback roadmap due to OpenAI timeout' : 'Used fallback roadmap due to OpenAI error',
-          details: openaiError.message || String(openaiError),
-          isTimeout
-        }
-      });
-    }
+    // Parse milestones
+    const content = completion.choices[0].message.content;
+    if (!content) throw new Error('No content in OpenAI response');
     
-    const openaiDuration = performance.now() - openaiStartTime;
-    debug.log(`OpenAI response received (${Math.round(openaiDuration)}ms)`);
+    const jsonMatch = content.match(/({[\s\S]*})/);
+    if (!jsonMatch) throw new Error('No JSON found in response');
+    
+    const parsedResponse = JSON.parse(jsonMatch[0]);
+    
+    // Process milestones
+    let milestones = parsedResponse.milestones.map((milestone: any) => ({
+      ...milestone,
+      id: milestone.id || uuidv4(),
+      completed: false,
+      professionalField,
+      level: 1,
+      levelType: levelType
+    }));
 
-    // Parse the milestones from the OpenAI response
-    let milestones;
-    let candidateGapAnalysis;
-    let targetRoleRequirements;
-    let successMetrics;
-    
-    try {
-      const content = completion.choices[0].message.content;
-      
-      if (!content) {
-        throw new Error('No content in OpenAI response');
-      }
-      
-      // Extract the JSON part from the response
-      const jsonMatch = content.match(/({[\s\S]*})/);
-      
-      if (!jsonMatch) {
-        throw new Error('No JSON found in response');
-      }
-      
-      const parsedResponse = JSON.parse(jsonMatch[0]);
-      
-      if (!parsedResponse.milestones || !Array.isArray(parsedResponse.milestones)) {
-        throw new Error('Invalid milestones structure in response');
-      }
-      
-      // First, check if AI incorrectly generated multiple levels
-      const originalLevels = new Set(parsedResponse.milestones.map((m: any) => m.level || 1));
-      if (originalLevels.size > 1) {
-        debug.log(`WARNING: AI generated ${originalLevels.size} levels instead of just Level 1`);
-        debug.log(`Levels generated: ${Array.from(originalLevels).join(', ')}`);
-        debug.log(`Total milestones: ${parsedResponse.milestones.length}`);
-        
-        // Group milestones by level to understand the structure
-        const milestonesByLevel = parsedResponse.milestones.reduce((acc: any, m: any) => {
-          const level = m.level || 1;
-          if (!acc[level]) acc[level] = [];
-          acc[level].push(m.title);
-          return acc;
-        }, {});
-        
-        Object.entries(milestonesByLevel).forEach(([level, titles]: [string, any]) => {
-          debug.log(`Level ${level}: ${titles.length} milestone(s) - ${titles.join(', ')}`);
-        });
-        
-        // If we detect the "all levels with 1 milestone each" pattern, take only Level 1 milestones
-        if (Object.values(milestonesByLevel).every((titles: any) => titles.length === 1)) {
-          debug.log('Detected incorrect pattern: all levels with 1 milestone each. Using fallback milestones.');
-          throw new Error('Invalid milestone structure - all levels have only 1 milestone');
-        }
-      }
-      
-      // Filter to only Level 1 milestones if multiple levels were generated
-      let milestonesToProcess = parsedResponse.milestones;
-      if (originalLevels.size > 1) {
-        milestonesToProcess = parsedResponse.milestones.filter((m: any) => (m.level || 1) === 1);
-        debug.log(`Filtered to ${milestonesToProcess.length} Level 1 milestones`);
-        
-        // If no Level 1 milestones or too few, use all and force to Level 1
-        if (milestonesToProcess.length < 3) {
-          debug.log('Too few Level 1 milestones, using all milestones and forcing to Level 1');
-          milestonesToProcess = parsedResponse.milestones;
-        }
-      }
-      
-      // Ensure each milestone has a unique ID and add required fields
-      const idSet = new Set<string>();
-      milestones = milestonesToProcess.map((milestone: any) => {
-        // Generate a unique ID if missing or duplicate
-        let milestoneId = milestone.id;
-        if (!milestoneId || idSet.has(milestoneId)) {
-          milestoneId = uuidv4();
-          debug.log(`Generated new ID for milestone: ${milestone.title}`);
-        }
-        idSet.add(milestoneId);
-        
-        return {
-          ...milestone,
-          id: milestoneId,
-          completed: false, // Always start with uncompleted milestones for new roadmap
-          professionalField,
-          // Force all milestones to Level 1
-          level: 1
-        };
-      });
-      
-      // Validate level progression
-      milestones = milestones.sort((a: any, b: any) => a.level - b.level);
-      debug.log('Milestones sorted by level:', milestones.map((m: any) => `${m.title} (Level ${m.level})`));
-      
-      // Extract additional analysis components if available
-      candidateGapAnalysis = parsedResponse.candidateGapAnalysis;
-      targetRoleRequirements = parsedResponse.targetRoleRequirements;
-      successMetrics = parsedResponse.successMetrics;
-      
-    } catch (error) {
-      debug.error('Error parsing OpenAI response:', error);
-      debug.log('Raw response content:', completion.choices[0].message.content?.substring(0, 200) + '...');
-      
-      // Fallback: generate synthetic milestones
-      milestones = createFallbackMilestones(resumeAnalysis, professionalField);
+    // Validate milestones match level type
+    const validation = validateMilestonesForLevelType(milestones, levelType);
+    if (!validation.isValid) {
+      debug.warn('Milestone validation failed:', validation.errors);
+      // Ensure consistency
+      milestones = ensureLevelTypeConsistency(milestones, levelType);
     }
 
-    // Check if a roadmap already exists for this candidate
+    // Delete existing roadmaps
     const roadmapQuery = query(
       collection(db as Firestore, 'roadmaps'),
       where('candidateId', '==', candidateId)
     );
     
-    try {
-      const roadmapSnapshot = await getDocs(roadmapQuery);
-      
-      // Delete all existing roadmaps for this candidate
-      if (!roadmapSnapshot.empty) {
-        debug.log(`Deleting ${roadmapSnapshot.size} existing roadmaps for candidateId:`, candidateId);
-        
-        const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
-          deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
-        );
-        
-        await Promise.all(deletePromises);
-      }
-      
-      // Reset user progress when generating a new roadmap
-      debug.log('Resetting user progress for new roadmap generation');
-      const userProgressRef = doc(db as Firestore, 'userProgress', candidateId);
-      const progressDoc = await getDoc(userProgressRef);
-      
-      if (progressDoc.exists()) {
-        // Update existing progress document - reset to initial state
-        await updateDoc(userProgressRef, {
-          levelsUnlocked: 1,
-          completedMilestones: [],
-          completedMicroMilestones: [],
-          // Keep achievements and streak data
-          updatedAt: new Date()
-        });
-        debug.log('User progress reset to initial state');
-      } else {
-        // Create initial progress document if it doesn't exist
-        await setDoc(userProgressRef, {
-          userId: candidateId,
-          levelsUnlocked: 1,
-          completedMilestones: [],
-          completedMicroMilestones: [],
-          achievements: [],
-          streakDays: 0,
-          lastActiveDate: new Date(),
-          skillProficiencies: {},
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-        debug.log('Created initial user progress document');
-      }
-    } catch (deleteError) {
-      debug.error('Error deleting existing roadmaps or resetting progress:', deleteError);
-      // Continue with creating new roadmap even if deletion fails
+    const roadmapSnapshot = await getDocs(roadmapQuery);
+    if (!roadmapSnapshot.empty) {
+      const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
+        deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
+      );
+      await Promise.all(deletePromises);
     }
-    
-    // Create a new roadmap document
-    const roadmap: CareerRoadmap = {
+
+    // Reset user progress
+    const userProgressRef = doc(db as Firestore, 'userProgress', candidateId);
+    await setDoc(userProgressRef, {
+      userId: candidateId,
+      levelsUnlocked: 1,
+      completedMilestones: [],
+      completedMicroMilestones: [],
+      achievements: [],
+      streakDays: 0,
+      lastActiveDate: new Date(),
+      skillProficiencies: {},
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }, { merge: true });
+
+    // Store level structure
+    const milestoneIds = milestones.map((m: Milestone) => m.id);
+    await storeLevelStructure(candidateId, 1, levelType, milestoneIds);
+
+    // Create roadmap
+    const roadmap: CareerRoadmap & { levelType?: LevelType } = {
       id: uuidv4(),
       candidateId: candidateId.toString(),
       professionalField,
       milestones,
       createdAt: new Date(),
       updatedAt: new Date(),
+      levelType // Include level type in response
     };
     
     // Store in Firestore
-    try {
-      const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
-      roadmap.id = docRef.id; // Ensure we return the document ID from Firestore
-      
-      debug.log('Created new roadmap for candidateId:', candidateId);
-      
-      const totalDuration = performance.now() - requestStartTime;
-      debug.log(`Total request processed in ${Math.round(totalDuration)}ms`);
-      
-      return NextResponse.json({
-        ...roadmap,
-        _debug: {
-          processingTime: Math.round(totalDuration),
-          openaiTime: Math.round(openaiDuration),
-          milestonesCount: milestones.length
-        }
-      });
-    } catch (firestoreError) {
-      debug.error('Error storing roadmap in Firestore:', firestoreError);
-      
-      // Return the generated roadmap even if storage fails
-      return NextResponse.json({
-        ...roadmap,
-        _error: {
-          message: 'Generated roadmap but failed to store in database',
-          details: firestoreError instanceof Error ? firestoreError.message : String(firestoreError)
-        }
-      });
-    }
-  } catch (error) {
-    const totalDuration = performance.now() - requestStartTime;
-    debug.error(`Error generating roadmap after ${Math.round(totalDuration)}ms:`, error);
+    const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
+    roadmap.id = docRef.id;
     
+    debug.log('Created new typed roadmap for candidateId:', candidateId);
+    
+    return NextResponse.json({
+      ...roadmap,
+      _debug: {
+        levelType,
+        validationWarnings: validation.warnings
+      }
+    });
+    
+  } catch (error) {
+    debug.error('Error generating roadmap:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to generate roadmap', 
-        details: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
-      },
+      { error: 'Failed to generate roadmap', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
-}
-
-// Helper function to add level to milestone
-function enhanceMilestoneWithLevel(milestone: any, index: number): Milestone {
-  // Always assign level 1 for initial roadmap generation
-  const level = 1;
-  
-  return {
-    ...milestone,
-    level
-  };
-}
-
-// Helper function to create fallback milestones when OpenAI fails
-function createFallbackMilestones(resumeAnalysis: ResumeAnalysis, professionalField: ProfessionalField = 'computer-science'): Milestone[] {
-  const baseMilestones = [
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "Core Technical Skills Development",
-      description: "Focus on developing fundamental technical skills needed for target roles",
-      category: "technical" as const,
-      subcategory: "core-development",
-      skills: resumeAnalysis?.skills?.slice(0, 3) || ["JavaScript", "React", "Node.js"],
-      timeframe: "1-3 months",
-      completed: false,
-      difficulty: 3 as const,
-      priority: "high" as const,
-      estimatedHours: 60,
-      attributes: {
-        technical: {
-          technologies: ["JavaScript", "React", "Node.js"],
-          projectType: "fullstack",
-          complexityLevel: "intermediate",
-          deliverables: [
-            {
-              type: "code-repository",
-              description: "Personal project showcasing learned skills"
-            }
-          ],
-          learningPath: "self-directed"
-        }
-      },
-      resources: [
-        {
-          title: "JavaScript Algorithms and Data Structures",
-          url: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",
-          type: "course",
-          estimatedTime: "4 weeks",
-          cost: "free",
-          description: "Interactive coding challenges covering fundamental JavaScript concepts"
-        },
-        {
-          title: "The Odin Project - Full Stack JavaScript",
-          url: "https://www.theodinproject.com/paths/full-stack-javascript",
-          type: "tutorial",
-          estimatedTime: "3 months",
-          cost: "free",
-          description: "Comprehensive curriculum for learning full-stack web development"
-        },
-        {
-          title: "Build 30 JavaScript Projects in 30 Days",
-          url: "https://javascript30.com/",
-          type: "project",
-          estimatedTime: "30 days",
-          cost: "free",
-          description: "Hands-on JavaScript projects to build practical skills"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Complete online course modules",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Build a practice project",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Complete all learning modules",
-        "Build functional project",
-        "Pass skill assessment"
-      ]
-    },
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "System Design Fundamentals",
-      description: "Learn core system design principles and architectural patterns",
-      category: "fundamental" as const,
-      subcategory: "system-architecture",
-      skills: ["System Design", "Architecture", "Scalability"],
-      timeframe: "2-4 months",
-      completed: false,
-      difficulty: 4 as const,
-      priority: "high" as const,
-      estimatedHours: 80,
-      attributes: {
-        fundamental: {
-          competencyArea: "problem-solving",
-          industryScope: "tech-specific",
-          careerStage: "mid-level",
-          conceptualAreas: ["System Architecture", "Database Design", "Scalability"],
-          theoreticalDepth: "intermediate",
-          applicationAreas: ["Web Development", "Backend Systems"],
-          buildsUpon: ["Programming Fundamentals"],
-          enablesAdvancement: ["Senior Development Roles"],
-          knowledgeType: "conceptual"
-        }
-      },
-      resources: [
-        {
-          title: "System Design Primer - Complete Guide",
-          url: "https://github.com/donnemartin/system-design-primer",
-          type: "documentation",
-          estimatedTime: "6 weeks",
-          cost: "free",
-          description: "Learn how to design large-scale systems with examples from real companies"
-        },
-        {
-          title: "Designing Data-Intensive Applications",
-          url: "https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/",
-          type: "book",
-          estimatedTime: "8 weeks",
-          cost: "paid",
-          description: "The big ideas behind reliable, scalable, and maintainable systems"
-        },
-        {
-          title: "Grokking System Design Interview",
-          url: "https://www.educative.io/courses/grokking-the-system-design-interview",
-          type: "course",
-          estimatedTime: "4 weeks",
-          cost: "paid",
-          description: "Learn system design through practical examples and case studies"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Study system design patterns",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Practice designing scalable systems",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Understand key architectural patterns",
-        "Design a simple distributed system",
-        "Explain trade-offs in system design"
-      ]
-    },
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "AI/ML Specialization",
-      description: "Develop expertise in machine learning and artificial intelligence",
-      category: "niche" as const,
-      subcategory: "artificial-intelligence",
-      skills: ["Machine Learning", "Python", "Data Science"],
-      timeframe: "3-6 months",
-      completed: false,
-      difficulty: 5 as const,
-      priority: "medium" as const,
-      estimatedHours: 120,
-      attributes: {
-        niche: {
-          specializationDomain: "artificial-intelligence",
-          marketDemand: "growing",
-          expertiseLevel: "working-knowledge",
-          industryAdoption: "mainstream",
-          competitorLandscape: "moderate-competition",
-          careerImpact: "differentiator",
-          salaryPremium: 20,
-          learningCurve: "steep",
-          resourceAvailability: "abundant",
-          communitySize: "large",
-          trendDirection: "rising",
-          longevityEstimate: "5+ years"
-        }
-      },
-      resources: [
-        {
-          title: "Machine Learning Course",
-          url: "https://www.coursera.org/learn/machine-learning",
-          type: "course",
-          estimatedTime: "12 weeks",
-          cost: "freemium"
-        },
-        {
-          title: "TensorFlow Documentation",
-          url: "https://www.tensorflow.org/learn",
-          type: "documentation",
-          estimatedTime: "4 weeks",
-          cost: "free"
-        },
-        {
-          title: "Kaggle Learn",
-          url: "https://www.kaggle.com/learn",
-          type: "course",
-          estimatedTime: "8 weeks",
-          cost: "free"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Complete ML fundamentals course",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Build ML project using TensorFlow",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Understand ML algorithms",
-        "Build and deploy ML model",
-        "Demonstrate practical ML application"
-      ]
-    },
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "Professional Communication & Leadership",
-      description: "Develop effective communication and leadership skills for career advancement",
-      category: "soft" as const,
-      subcategory: "leadership-communication",
-      skills: ["Communication", "Leadership", "Team Management"],
-      timeframe: "2-4 months",
-      completed: false,
-      difficulty: 3 as const,
-      priority: "high" as const,
-      estimatedHours: 40,
-      attributes: {
-        soft: {
-          skillCategory: "leadership",
-          developmentMethod: "practice-based",
-          applicationScenarios: ["Team meetings", "Project presentations", "Client interactions"],
-          roleRelevance: "team-lead",
-          assessmentDifficulty: "somewhat-subjective",
-          measurementMethods: ["360-feedback", "peer-review"],
-          behavioralMarkers: [
-            {
-              indicator: "Leads team meetings effectively",
-              frequency: "weekly"
-            },
-            {
-              indicator: "Provides clear project updates",
-              frequency: "daily"
-            }
-          ],
-          developmentTimeframe: "months",
-          improvementPattern: "continuous"
-        }
-      },
-      resources: [
-        {
-          title: "Improving Communication Skills",
-          url: "https://www.coursera.org/learn/wharton-communication-skills",
-          type: "course",
-          estimatedTime: "4 weeks",
-          cost: "free",
-          description: "University of Pennsylvania course on business communication"
-        },
-        {
-          title: "How to Speak by Patrick Winston",
-          url: "https://www.youtube.com/watch?v=Unzc731iCUY",
-          type: "video",
-          estimatedTime: "1 hour",
-          cost: "free",
-          description: "MIT lecture on effective speaking and presentation skills"
-        },
-        {
-          title: "Crucial Conversations: Tools for Talking When Stakes Are High",
-          url: "https://www.amazon.com/Crucial-Conversations-Talking-Stakes-Second/dp/1260474186",
-          type: "book",
-          estimatedTime: "2 weeks",
-          cost: "paid",
-          description: "Master the art of dialogue in high-stakes situations"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Complete communication skills course",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Practice public speaking",
-          completed: false
-        },
-        {
-          id: "task-3",
-          description: "Lead a team project",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Deliver confident presentations",
-        "Receive positive team feedback",
-        "Successfully lead project to completion"
-      ]
-    },
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "Advanced Frontend Development",
-      description: "Master advanced frontend technologies and modern development practices",
-      category: "technical" as const,
-      subcategory: "frontend-specialization",
-      skills: ["React", "TypeScript", "Modern CSS", "Performance Optimization"],
-      timeframe: "2-3 months",
-      completed: false,
-      difficulty: 4 as const,
-      priority: "medium" as const,
-      estimatedHours: 70,
-      attributes: {
-        technical: {
-          technologies: ["React", "TypeScript", "Vite", "CSS-in-JS"],
-          projectType: "frontend",
-          complexityLevel: "advanced",
-          deliverables: [
-            {
-              type: "deployed-app",
-              description: "Advanced React application with TypeScript"
-            }
-          ],
-          learningPath: "self-directed"
-        }
-      },
-      resources: [
-        {
-          title: "Advanced React Patterns",
-          url: "https://epicreact.dev/",
-          type: "course",
-          estimatedTime: "6 weeks",
-          cost: "paid"
-        },
-        {
-          title: "TypeScript Deep Dive",
-          url: "https://www.typescriptlang.org/docs/",
-          type: "documentation",
-          estimatedTime: "4 weeks",
-          cost: "free"
-        },
-        {
-          title: "Frontend Masters",
-          url: "https://frontendmasters.com/",
-          type: "course",
-          estimatedTime: "8 weeks",
-          cost: "paid"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Build component library with TypeScript",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Implement performance optimizations",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Create reusable component library",
-        "Achieve 95+ Lighthouse performance score",
-        "Implement advanced React patterns"
-      ]
-    },
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "Algorithm & Data Structure Mastery",
-      description: "Strengthen computational thinking and problem-solving fundamentals",
-      category: "fundamental" as const,
-      subcategory: "computer-science-fundamentals",
-      skills: ["Algorithms", "Data Structures", "Problem Solving", "Computational Thinking"],
-      timeframe: "3-4 months",
-      completed: false,
-      difficulty: 4 as const,
-      priority: "high" as const,
-      estimatedHours: 90,
-      attributes: {
-        fundamental: {
-          competencyArea: "analytical-thinking",
-          industryScope: "universal",
-          careerStage: "all-levels",
-          conceptualAreas: ["Big O Notation", "Graph Theory", "Dynamic Programming"],
-          theoreticalDepth: "deep",
-          applicationAreas: ["Software Engineering", "Technical Interviews"],
-          buildsUpon: ["Basic Programming"],
-          enablesAdvancement: ["Senior Engineering Roles"],
-          knowledgeType: "procedural"
-        }
-      },
-      resources: [
-        {
-          title: "LeetCode Practice Platform",
-          url: "https://leetcode.com/",
-          type: "course",
-          estimatedTime: "Ongoing",
-          cost: "freemium"
-        },
-        {
-          title: "Introduction to Algorithms (CLRS)",
-          url: "https://mitpress.mit.edu/books/introduction-algorithms",
-          type: "book",
-          estimatedTime: "12 weeks",
-          cost: "paid"
-        },
-        {
-          title: "AlgoExpert",
-          url: "https://www.algoexpert.io/",
-          type: "course",
-          estimatedTime: "10 weeks",
-          cost: "paid"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Solve 100 algorithmic problems",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Implement common data structures",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Solve problems efficiently with optimal time complexity",
-        "Explain algorithmic trade-offs clearly",
-        "Pass technical coding interviews"
-      ]
-    },
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "Develop Effective Presentation Skills",
-      description: "Develop skills to effectively communicate and present information",
-      category: "soft" as const,
-      subcategory: "leadership-communication",
-      skills: ["Communication", "Leadership", "Presentation Skills"],
-      timeframe: "2-4 months",
-      completed: false,
-      difficulty: 3 as const,
-      priority: "high" as const,
-      estimatedHours: 40,
-      attributes: {
-        soft: {
-          skillCategory: "leadership",
-          developmentMethod: "practice-based",
-          applicationScenarios: ["Public speaking", "Meeting presentations", "Client interactions"],
-          roleRelevance: "team-lead",
-          assessmentDifficulty: "somewhat-subjective",
-          measurementMethods: ["360-feedback", "peer-review"],
-          behavioralMarkers: [
-            {
-              indicator: "Leads meetings effectively",
-              frequency: "weekly"
-            },
-            {
-              indicator: "Provides clear presentations",
-              frequency: "daily"
-            }
-          ],
-          developmentTimeframe: "months",
-          improvementPattern: "continuous"
-        }
-      },
-      resources: [
-        {
-          title: "Presentation Skills Course",
-          url: "https://www.coursera.org/learn/presentation-skills",
-          type: "course",
-          estimatedTime: "6 weeks",
-          cost: "freemium"
-        },
-        {
-          title: "Leadership and Presentation Skills",
-          url: "https://www.linkedin.com/learning/leadership-and-presentation-skills",
-          type: "course",
-          estimatedTime: "4 weeks",
-          cost: "paid"
-        },
-        {
-          title: "Toastmasters International",
-          url: "https://www.toastmasters.org/",
-          type: "course",
-          estimatedTime: "12 weeks",
-          cost: "paid"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Complete presentation skills course",
-          completed: false
-        },
-        {
-          id: "task-2",
-          description: "Practice public speaking",
-          completed: false
-        },
-        {
-          id: "task-3",
-          description: "Lead a team presentation",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Develop effective presentation skills",
-        "Build professional network",
-        "Complete leadership assessment"
-      ]
-    },
-    // NEW: Career Progression Milestone
-    {
-      id: uuidv4(),
-      professionalField,
-      title: "Secure Junior Developer Position",
-      description: "Land an entry-level software development role to gain professional experience and build a foundation for career advancement",
-      category: "career" as const,
-      subcategory: "entry-level-position",
-      skills: ["Professional Development", "Job Search", "Interview Skills", "Portfolio Building"],
-      timeframe: "2-4 months",
-      completed: false,
-      difficulty: 3 as const,
-      priority: "high" as const,
-      estimatedHours: 60,
-      attributes: {
-        career: {
-          positionLevel: "entry-level",
-          targetRole: "Junior Software Developer",
-          experienceRequired: "0-1 years",
-          keyResponsibilities: [
-            "Write and maintain clean, efficient code",
-            "Collaborate with team members on projects", 
-            "Participate in code reviews",
-            "Learn company technologies and processes"
-          ],
-          advancement_path: {
-            toRole: "Software Developer",
-            timeInRole: "12-18 months",
-            promotionCriteria: [
-              "Demonstrate proficiency in core technologies",
-              "Complete projects independently",
-              "Show ability to mentor newer team members"
-            ]
-          },
-          skillRequirements: {
-            technical: ["JavaScript", "React", "Git", "Basic algorithms"],
-            soft: ["Communication", "Teamwork", "Problem-solving", "Time management"]
-          },
-          compensation: {
-            salaryRange: "$50k-70k",
-            growthPotential: "Strong potential for rapid advancement with demonstrated skills"
-          },
-          applicationStrategy: {
-            whereToApply: ["Tech startups", "Mid-size companies", "Junior-friendly organizations"],
-            networking: [
-              "Attend local developer meetups",
-              "Connect with developers on LinkedIn",
-              "Participate in coding communities"
-            ],
-            portfolioNeeds: [
-              "2-3 well-documented projects",
-              "Clean GitHub profile",
-              "Professional website/portfolio"
-            ],
-            interviewPrep: [
-              "Practice coding problems on LeetCode",
-              "Review common behavioral interview questions",
-              "Prepare project presentations"
-            ]
-          },
-          experienceBuilding: {
-            projectTypes: ["Web applications", "API integrations", "Open source contributions"],
-            certifications: ["JavaScript fundamentals", "React certification"]
-          },
-          industryExperience: {
-            sectors: ["Technology", "Software Development"],
-            domainKnowledge: ["Web development", "Frontend technologies", "Version control"]
-          },
-          successMetrics: [
-            "Successfully complete assigned tasks",
-            "Receive positive performance feedback",
-            "Build professional relationships"
-          ],
-          careerImpact: "stepping-stone",
-          marketDemand: "high",
-          competitionLevel: "moderate"
-        }
-      },
-      resources: [
-        {
-          title: "How to Land Your First Developer Job",
-          url: "https://example.com/first-dev-job",
-          type: "article",
-          estimatedTime: "1 hour",
-          cost: "free"
-        },
-        {
-          title: "Junior Developer Interview Preparation",
-          url: "https://example.com/interview-prep",
-          type: "course",
-          estimatedTime: "2 weeks",
-          cost: "freemium"
-        }
-      ],
-      tasks: [
-        {
-          id: "task-1",
-          description: "Update resume with technical projects",
-          completed: false
-        },
-        {
-          id: "task-2", 
-          description: "Apply to 5 junior developer positions",
-          completed: false
-        },
-        {
-          id: "task-3",
-          description: "Practice technical interview questions",
-          completed: false
-        }
-      ],
-      successCriteria: [
-        "Receive interview invitations",
-        "Successfully complete technical interviews",
-        "Secure job offer for junior developer role"
-      ]
-    }
-  ];
-
-  // Enhance all milestones with level assignments
-  return baseMilestones.map((milestone, index) => enhanceMilestoneWithLevel(milestone, index));
-}
-
-// Helper function to create a complete fallback roadmap
-function createFallbackRoadmap(resumeAnalysis: ResumeAnalysis, candidateId: string, professionalField: ProfessionalField = 'computer-science'): CareerRoadmap {
-  // Log fallback roadmap generation
-  console.warn('[Crackd Analytics] Using fallback roadmap generation:', {
-    reason: 'OpenAI API failure or timeout',
-    candidateId,
-    professionalField,
-    hasResumeAnalysis: !!resumeAnalysis,
-    timestamp: new Date().toISOString()
-  });
-  
-  return {
-    id: uuidv4(),
-    candidateId: candidateId.toString(),
-    professionalField,
-    milestones: createFallbackMilestones(resumeAnalysis, professionalField),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
 }

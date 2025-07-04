@@ -13,16 +13,14 @@ export class LevelTypeService {
   }
 
   /**
-   * Generate a roadmap with or without level types based on feature flags
+   * Generate a roadmap with level types
    */
   async generateRoadmap(
     resumeAnalysis: any,
     targetCompanies: any[],
     candidateId: string
   ): Promise<any> {
-    const endpoint = this.enabled 
-      ? '/api/generate-roadmap/route-v2'
-      : '/api/generate-roadmap';
+    const endpoint = '/api/generate-roadmap';
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -36,8 +34,8 @@ export class LevelTypeService {
 
     const data = await response.json();
 
-    // If level types are enabled, add type information to response
-    if (this.enabled && data.milestones) {
+    // Add type information to response
+    if (data.milestones) {
       data.levelType = data.levelType || 'skill'; // Default to skill for level 1
       data._levelTypesEnabled = true;
     }
@@ -46,16 +44,14 @@ export class LevelTypeService {
   }
 
   /**
-   * Generate next level with or without type enforcement
+   * Generate next level with type enforcement
    */
   async generateNextLevel(
     roadmapId: string,
     candidateId: string,
     currentLevel: number
   ): Promise<any> {
-    const endpoint = this.enabled
-      ? '/api/generate-next-level/route-v2'
-      : '/api/generate-next-level';
+    const endpoint = '/api/generate-next-level';
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -69,8 +65,8 @@ export class LevelTypeService {
 
     const data = await response.json();
 
-    // Add level type information if enabled
-    if (this.enabled && data.milestones) {
+    // Add level type information
+    if (data.milestones) {
       const nextLevelType = getNextLevelType(currentLevel + 1);
       data.levelType = data.levelType || nextLevelType;
       data._levelTypesEnabled = true;

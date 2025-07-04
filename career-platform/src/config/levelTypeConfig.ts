@@ -3,16 +3,13 @@ import { LevelType } from '@/types/levelTypes';
 // Feature flag to enable/disable level type enforcement
 export const LEVEL_TYPE_FEATURES = {
   // Master switch for level type system
-  enabled: process.env.NEXT_PUBLIC_LEVEL_TYPES_ENABLED === 'true' || false,
+  enabled: process.env.NEXT_PUBLIC_LEVEL_TYPES_ENABLED === 'true' || true,
   
   // Enforce type validation on generation
-  enforceValidation: process.env.NEXT_PUBLIC_ENFORCE_LEVEL_TYPE_VALIDATION === 'true' || false,
+  enforceValidation: process.env.NEXT_PUBLIC_ENFORCE_LEVEL_TYPE_VALIDATION === 'true' || true,
   
   // Show level type in UI
-  showInUI: process.env.NEXT_PUBLIC_SHOW_LEVEL_TYPES === 'true' || false,
-  
-  // Use v2 endpoints
-  useV2Endpoints: process.env.NEXT_PUBLIC_USE_V2_ENDPOINTS === 'true' || false
+  showInUI: process.env.NEXT_PUBLIC_SHOW_LEVEL_TYPES === 'true' || true
 };
 
 // Configuration for gradual rollout
@@ -53,11 +50,9 @@ export function shouldEnableLevelTypes(userId: string): boolean {
   return userPercentage < LEVEL_TYPE_ROLLOUT.newUserPercentage;
 }
 
-// Get the appropriate API endpoint based on feature flags
+// Get the appropriate API endpoint
 export function getApiEndpoint(baseEndpoint: string, userId?: string): string {
-  if (LEVEL_TYPE_FEATURES.useV2Endpoints && userId && shouldEnableLevelTypes(userId)) {
-    return `${baseEndpoint}/route-v2`;
-  }
+  // Always use the standard endpoints (which now include level types)
   return baseEndpoint;
 }
 

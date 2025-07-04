@@ -423,7 +423,7 @@ export async function generateCareerRoadmap(
     log.debug(`API URL: ${apiUrl}`);
     
     // Log which route is being used
-    console.log('[Crackd Analytics] Generating roadmap using v1 (no level types):', {
+    console.log('[Crackd Analytics] Generating roadmap using v2 (with level types):', {
       apiUrl,
       candidateId,
       targetCompanies: targetCompanies.map(tc => tc.name),

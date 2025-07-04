@@ -3,23 +3,76 @@ import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { getAdminFirestore, handleFirebaseError } from '@/utils/api-firebase';
 import { Milestone, ProfessionalField } from '@/types/user';
+import { LevelType, getNextLevelType, LevelStructure } from '@/types/levelTypes';
+import { generateTypedRoadmapPrompt } from '@/prompts/typedRoadmapPrompt';
+import { validateMilestonesForLevelType, ensureLevelTypeConsistency } from '@/utils/levelValidation';
 
 // Debug helper
 const debug = {
   log: (...args: any[]) => {
-    console.log('[API:generate-next-level]', ...args);
+    console.log('[API:generate-next-level-v2]', ...args);
   },
   error: (...args: any[]) => {
-    console.error('[API:generate-next-level:ERROR]', ...args);
+    console.error('[API:generate-next-level-v2:ERROR]', ...args);
+  },
+  warn: (...args: any[]) => {
+    console.warn('[API:generate-next-level-v2:WARN]', ...args);
   }
 };
 
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  timeout: 120000, // 2 minute timeout
+  timeout: 120000,
   maxRetries: 2,
 });
+
+async function getLevelStructure(db: any, candidateId: string): Promise<{ [key: string]: LevelStructure }> {
+  const levelDoc = await db.collection('levelStructures').doc(candidateId).get();
+  if (levelDoc.exists) {
+    return levelDoc.data()?.levels || {};
+  }
+  return {};
+}
+
+async function updateLevelStructure(
+  db: any,
+  candidateId: string,
+  levelNumber: number,
+  levelType: LevelType,
+  milestoneIds: string[]
+): Promise<void> {
+  const levelStructureRef = db.collection('levelStructures').doc(candidateId);
+  
+  const levelData: LevelStructure = {
+    levelNumber,
+    levelType,
+    milestones: milestoneIds,
+    generatedAt: new Date()
+  };
+  
+  const existingDoc = await levelStructureRef.get();
+  
+  if (existingDoc.exists) {
+    await levelStructureRef.update({
+      [`levels.${levelNumber}`]: levelData,
+      currentLevel: levelNumber,
+      totalLevels: levelNumber,
+      updatedAt: new Date()
+    });
+  } else {
+    await levelStructureRef.set({
+      candidateId,
+      levels: {
+        [levelNumber.toString()]: levelData
+      },
+      currentLevel: levelNumber,
+      totalLevels: levelNumber,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+  }
+}
 
 export async function POST(request: NextRequest) {
   const requestStartTime = performance.now();
@@ -27,9 +80,8 @@ export async function POST(request: NextRequest) {
   try {
     const { roadmapId, candidateId, currentLevel } = await request.json();
     
-    debug.log('Generating next level:', { roadmapId, candidateId, currentLevel });
+    debug.log('Generating next typed level:', { roadmapId, candidateId, currentLevel });
     
-    // Validate inputs
     if (!roadmapId || !candidateId) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
@@ -60,175 +112,108 @@ export async function POST(request: NextRequest) {
     const professionalField = roadmapData.professionalField || 'computer-science';
     const nextLevel = (currentLevel || existingMilestones.length) + 1;
     
-    // Get candidate profile for context
+    // Get level structure to determine pattern
+    const levelStructures = await getLevelStructure(db, candidateId);
+    
+    // Determine next level type based on pattern
+    const nextLevelType = getNextLevelType(nextLevel);
+    debug.log(`Next level ${nextLevel} will be type: ${nextLevelType}`);
+    
+    // Get candidate profile
     const candidateDoc = await db.collection('users').doc(candidateId).get();
     const candidateData = candidateDoc.exists ? candidateDoc.data() : {};
     const resumeAnalysis = candidateData?.resumeAnalysis || {};
     
-    // Create prompt for next level generation
-    const prompt = `You are an expert career counselor creating Level ${nextLevel} milestones for a candidate's career roadmap.
-
-CANDIDATE PROFILE:
-${JSON.stringify(resumeAnalysis, null, 2)}
-
-TARGET COMPANIES:
-${JSON.stringify(targetCompanies, null, 2)}
-
-PROFESSIONAL FIELD: ${professionalField}
-
-PREVIOUS LEVELS COMPLETED:
-${existingMilestones.filter((m: Milestone) => m.level < nextLevel).map((m: Milestone) => `Level ${m.level}: ${m.title}`).join('\n')}
-
-Generate 3-5 milestones for Level ${nextLevel} that:
-1. Build upon the skills from previous levels
-2. Progressively move the candidate closer to their target roles
-3. Include a mix of technical skills, career progression, and soft skills
-4. Are appropriately challenging for this level
-
-Return ONLY valid JSON in this format:
-{
-  "milestones": [
-    {
-      "id": "unique-id",
-      "title": "Milestone Title",
-      "description": "Detailed description",
-      "professionalField": "${professionalField}",
-      "category": "technical|fundamental|niche|soft|career",
-      "subcategory": "specific-subcategory",
-      "skills": ["skill1", "skill2"],
-      "timeframe": "X weeks/months",
-      "completed": false,
-      "difficulty": 1-5,
-      "priority": "low|medium|high|critical",
-      "estimatedHours": 40,
-      "level": ${nextLevel},
-      "successCriteria": ["criterion1", "criterion2"],
-      "attributes": {
-        // Field-specific attributes based on category
-      },
-      "resources": [
-        {
-          "title": "Resource Title",
-          "url": "https://actual-url.com",
-          "type": "course|book|documentation|etc",
-          "estimatedTime": "2 weeks",
-          "cost": "free|paid|freemium",
-          "description": "Brief description"
-        }
-      ]
-    }
-  ]
-}`;
-
-    // Call OpenAI
-    const openaiStartTime = performance.now();
+    // Call OpenAI with typed prompt
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: "You are an expert career counselor specializing in creating progressive, level-based career development roadmaps."
+          content: "You are an expert career coach creating level-based career roadmaps. Each level has a specific type (skill, project, or position) and all milestones must match that type."
         },
         {
           role: "user",
-          content: prompt
+          content: generateTypedRoadmapPrompt(
+            targetCompanies.map((c: any) => `${c.name} (${c.position})`).join(', '),
+            resumeAnalysis,
+            professionalField,
+            nextLevelType,
+            nextLevel
+          )
         }
       ],
-      temperature: 0.7,
-      max_tokens: 2000
+      temperature: 0.3,
+      max_tokens: 2500,
+      response_format: { type: "json_object" }
     });
-
-    const openaiDuration = performance.now() - openaiStartTime;
-    debug.log(`OpenAI call completed in ${Math.round(openaiDuration)}ms`);
-
-    const responseText = completion.choices[0]?.message?.content || '';
     
-    // Log raw response for debugging
-    debug.log('Raw OpenAI response:', responseText.substring(0, 200) + '...');
-    
-    // Parse response - handle potential formatting issues
-    let parsedResponse;
-    try {
-      // Clean up response text - remove any markdown code blocks if present
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-      
-      parsedResponse = JSON.parse(cleanedText);
-    } catch (parseError) {
-      debug.error('Failed to parse OpenAI response:', parseError);
-      debug.error('Response text:', responseText);
-      throw new Error('Invalid response format from AI');
+    const response = completion.choices[0].message.content;
+    if (!response) {
+      throw new Error('No response from OpenAI');
     }
     
-    // Validate response structure
-    if (!parsedResponse || !parsedResponse.milestones || !Array.isArray(parsedResponse.milestones)) {
-      debug.error('Invalid response structure:', parsedResponse);
-      throw new Error('Invalid response structure from AI - missing milestones array');
-    }
+    const parsedResponse = JSON.parse(response);
     
-    // Process milestones and ensure unique IDs
-    // First, collect all existing milestone IDs to avoid duplicates
-    const idSet = new Set<string>(existingMilestones.map((m: any) => m.id));
-    const newMilestones = parsedResponse.milestones.map((milestone: any) => {
-      // Generate a unique ID if missing or duplicate
-      let milestoneId = milestone.id;
-      if (!milestoneId || idSet.has(milestoneId)) {
-        milestoneId = uuidv4();
-        debug.log(`Generated new ID for milestone: ${milestone.title}`);
-      }
-      idSet.add(milestoneId);
-      
-      return {
-        ...milestone,
-        id: milestoneId,
-        level: nextLevel,
-        createdAt: new Date(),
-        professionalField: professionalField as ProfessionalField
-      };
-    });
+    // Process milestones
+    let newMilestones = parsedResponse.milestones.map((milestone: any) => ({
+      ...milestone,
+      id: milestone.id || uuidv4(),
+      level: nextLevel,
+      levelType: nextLevelType,
+      completed: false,
+      professionalField,
+      createdAt: new Date()
+    }));
+    
+    // Validate milestones
+    const validation = validateMilestonesForLevelType(newMilestones, nextLevelType);
+    if (!validation.isValid) {
+      debug.warn('Milestone validation failed:', validation.errors);
+      // Ensure consistency
+      newMilestones = ensureLevelTypeConsistency(newMilestones, nextLevelType);
+    }
     
     // Update roadmap with new milestones
+    const updatedMilestones = [...existingMilestones, ...newMilestones];
+    
     await db.collection('roadmaps').doc(roadmapId).update({
-      milestones: [...existingMilestones, ...newMilestones],
-      lastUpdated: new Date(),
-      maxLevel: nextLevel
+      milestones: updatedMilestones,
+      updatedAt: new Date()
+    });
+    
+    // Update level structure
+    const milestoneIds = newMilestones.map((m: Milestone) => m.id);
+    await updateLevelStructure(db, candidateId, nextLevel, nextLevelType, milestoneIds);
+    
+    // Update user progress
+    await db.collection('userProgress').doc(candidateId).update({
+      levelsUnlocked: nextLevel,
+      updatedAt: new Date()
     });
     
     const totalDuration = performance.now() - requestStartTime;
-    debug.log(`Next level generated successfully in ${Math.round(totalDuration)}ms`);
+    debug.log(`Generated ${newMilestones.length} milestones for level ${nextLevel} (${nextLevelType}) in ${Math.round(totalDuration)}ms`);
     
     return NextResponse.json({
       success: true,
-      level: nextLevel,
       milestones: newMilestones,
+      level: nextLevel,
+      levelType: nextLevelType,
       _debug: {
         processingTime: Math.round(totalDuration),
-        openaiTime: Math.round(openaiDuration),
-        timestamp: new Date().toISOString()
+        validationWarnings: validation.warnings
       }
     });
     
-  } catch (error: any) {
-    const totalDuration = performance.now() - requestStartTime;
-    debug.error(`Error generating next level after ${Math.round(totalDuration)}ms:`, error);
-    
-    // Return more specific error information
-    if (error.message && error.message.includes('Invalid response')) {
-      return NextResponse.json(
-        {
-          error: 'Internal server error',
-          details: error.message,
-          timestamp: new Date().toISOString()
-        },
-        { status: 500 }
-      );
-    }
-    
-    // Use the centralized error handler for other errors
-    return handleFirebaseError(error);
+  } catch (error) {
+    debug.error('Error generating next level:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to generate next level', 
+        details: error instanceof Error ? error.message : String(error) 
+      },
+      { status: 500 }
+    );
   }
 }
