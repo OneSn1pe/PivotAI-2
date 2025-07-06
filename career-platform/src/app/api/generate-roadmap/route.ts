@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 import { getAdminFirestore, handleFirebaseError } from '@/utils/api-firebase';
-import { collection, addDoc, Firestore, getDoc, doc, query, where, getDocs, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import type { Firestore } from 'firebase-admin/firestore';
 import { ResumeAnalysis, TargetCompany, CareerRoadmap, Milestone, ProfessionalField } from '@/types/user';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
 import { generateTypedRoadmapPrompt } from '@/prompts/typedRoadmapPrompt';
@@ -78,12 +78,13 @@ async function determineInitialLevelType(
 
 // Helper to store level structure in new format
 async function storeLevelStructure(
+  db: Firestore,
   candidateId: string,
   levelNumber: number,
   levelType: LevelType,
   milestoneIds: string[]
 ): Promise<void> {
-  const levelStructureRef = doc(db as Firestore, 'levelStructures', candidateId);
+  const levelStructureRef = db.collection('levelStructures').doc(candidateId);
   
   const levelData: { [key: string]: LevelStructure } = {
     [levelNumber.toString()]: {
@@ -94,15 +95,15 @@ async function storeLevelStructure(
     }
   };
   
-  const existingDoc = await getDoc(levelStructureRef);
+  const existingDoc = await levelStructureRef.get();
   
-  if (existingDoc.exists()) {
-    await updateDoc(levelStructureRef, {
+  if (existingDoc.exists) {
+    await levelStructureRef.update({
       [`levels.${levelNumber}`]: levelData[levelNumber.toString()],
       updatedAt: new Date()
     });
   } else {
-    await setDoc(levelStructureRef, {
+    await levelStructureRef.set({
       candidateId,
       levels: levelData,
       currentLevel: 1,
@@ -149,9 +150,9 @@ export async function POST(request: NextRequest) {
     // Get target companies
     let companiesForRoadmap = targetCompanies;
     if (!companiesForRoadmap || companiesForRoadmap.length === 0) {
-      const userDoc = await getDoc(doc(db as Firestore, 'users', candidateId));
-      if (userDoc.exists()) {
-        companiesForRoadmap = userDoc.data().targetCompanies || [];
+      const userDoc = await db.collection('users').doc(candidateId).get();
+      if (userDoc.exists) {
+        companiesForRoadmap = userDoc.data()?.targetCompanies || [];
       }
       if (companiesForRoadmap.length === 0) {
         companiesForRoadmap = [{ name: 'Tech Company', position: 'Software Developer' }];
@@ -209,22 +210,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete existing roadmaps
-    const roadmapQuery = query(
-      collection(db as Firestore, 'roadmaps'),
-      where('candidateId', '==', candidateId)
-    );
+    const roadmapSnapshot = await db.collection('roadmaps')
+      .where('candidateId', '==', candidateId)
+      .get();
     
-    const roadmapSnapshot = await getDocs(roadmapQuery);
     if (!roadmapSnapshot.empty) {
       const deletePromises = roadmapSnapshot.docs.map(roadmapDoc => 
-        deleteDoc(doc(db as Firestore, 'roadmaps', roadmapDoc.id))
+        roadmapDoc.ref.delete()
       );
       await Promise.all(deletePromises);
     }
 
     // Reset user progress
-    const userProgressRef = doc(db as Firestore, 'userProgress', candidateId);
-    await setDoc(userProgressRef, {
+    const userProgressRef = db.collection('userProgress').doc(candidateId);
+    await userProgressRef.set({
       userId: candidateId,
       levelsUnlocked: 1,
       completedMilestones: [],
@@ -239,7 +238,7 @@ export async function POST(request: NextRequest) {
 
     // Store level structure
     const milestoneIds = milestones.map((m: Milestone) => m.id);
-    await storeLevelStructure(candidateId, 1, levelType, milestoneIds);
+    await storeLevelStructure(db, candidateId, 1, levelType, milestoneIds);
 
     // Create roadmap
     const roadmap: CareerRoadmap & { levelType?: LevelType } = {
@@ -253,7 +252,7 @@ export async function POST(request: NextRequest) {
     };
     
     // Store in Firestore
-    const docRef = await addDoc(collection(db as Firestore, 'roadmaps'), roadmap);
+    const docRef = await db.collection('roadmaps').add(roadmap);
     roadmap.id = docRef.id;
     
     debug.log('Created new typed roadmap for candidateId:', candidateId);
