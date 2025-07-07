@@ -5,6 +5,7 @@ import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase-lite';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 export default function WaitlistPage() {
   // Color palette
@@ -37,7 +38,8 @@ export default function WaitlistPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [scrollY, setScrollY] = useState(0);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [cracks, setCracks] = useState<{ id: number; x: number; y: number }[]>([]);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -51,13 +53,17 @@ export default function WaitlistPage() {
   const featuresRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
+  const { scrollY } = useScroll();
+  const crackOpacity = useTransform(scrollY, [0, 300], [0.3, 0.8]);
+  const glassDistortion = useTransform(scrollY, [0, 500], [0, 10]);
+
   useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   useEffect(() => {
@@ -86,24 +92,24 @@ export default function WaitlistPage() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    // Intersection Observer for fade-in animations
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate-fadeUp');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    const elements = document.querySelectorAll('.scroll-animate');
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, []);
+  const handleInteraction = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const newCrack = {
+      id: Date.now(),
+      x: (x / rect.width) * 100,
+      y: (y / rect.height) * 100
+    };
+    
+    setCracks(prev => [...prev, newCrack]);
+    
+    // Remove crack after animation
+    setTimeout(() => {
+      setCracks(prev => prev.filter(crack => crack.id !== newCrack.id));
+    }, 3000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,46 +164,120 @@ export default function WaitlistPage() {
     }
   };
 
+  // Glass crack SVG component
+  const GlassCrack = ({ x, y, id }: { x: number; y: number; id: number }) => (
+    <motion.svg
+      key={id}
+      className="absolute pointer-events-none"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        transform: 'translate(-50%, -50%)',
+      }}
+      width="200"
+      height="200"
+      viewBox="0 0 200 200"
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.5 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.path
+        d="M100,100 L80,60 L120,70 L90,40 L130,80 L100,100 L70,90 L100,130 L110,90"
+        stroke="rgba(255,255,255,0.4)"
+        strokeWidth="1"
+        fill="none"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      />
+      <motion.path
+        d="M100,100 L60,100 L85,120 L100,100 L115,110 L100,85"
+        stroke="rgba(255,255,255,0.3)"
+        strokeWidth="0.5"
+        fill="none"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      />
+      <motion.circle
+        cx="100"
+        cy="100"
+        r="3"
+        fill="rgba(255,255,255,0.6)"
+        initial={{ scale: 0 }}
+        animate={{ scale: [0, 2, 1] }}
+        transition={{ duration: 0.5 }}
+      />
+    </motion.svg>
+  );
+
   // Success message overlay
   const SuccessMessage = () => (
-    <div className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center px-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.15)] p-8 max-w-md w-full transform scale-100 animate-slideUp border border-[#E5E7EB]">
-        <div className="w-16 h-16 glass-icon-success rounded-full flex items-center justify-center mx-auto mb-6 hover-scale">
+    <motion.div 
+      className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div 
+        className="bg-white rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.15)] p-8 max-w-md w-full border border-[#E5E7EB] relative overflow-hidden"
+        initial={{ scale: 0.8, y: 50 }}
+        animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        onClick={handleInteraction}
+      >
+        <AnimatePresence>
+          {cracks.map(crack => (
+            <GlassCrack key={crack.id} x={crack.x} y={crack.y} id={crack.id} />
+          ))}
+        </AnimatePresence>
+        
+        <motion.div 
+          className="w-16 h-16 glass-icon-success rounded-full flex items-center justify-center mx-auto mb-6"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
-        </div>
+        </motion.div>
         <h2 className="text-2xl font-bold text-[#1E293B] mb-3 text-center">You're Getting CRACKD!</h2>
         <p className="text-[#4B5563] text-center">
           Prepare to shatter your limits. We'll notify you the moment Crackd launches.
         </p>
-        <button
+        <motion.button
           onClick={() => setSuccess(false)}
-          className="mt-6 w-full glass-button text-white font-bold py-3 px-6 rounded-lg transition-all duration-300"
+          className="mt-6 w-full glass-button text-white font-bold py-3 px-6 rounded-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           I'm Ready
-        </button>
-      </div>
-    </div>
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Success Message Overlay */}
-      {success && <SuccessMessage />}
+    <div className="min-h-screen bg-white overflow-hidden">
+      <AnimatePresence>
+        {success && <SuccessMessage />}
+      </AnimatePresence>
       
       {/* Navigation */}
-      <nav 
-        className="fixed top-0 left-0 right-0 z-[9999] bg-[#1E293B]/95 backdrop-blur-md transition-all duration-300"
+      <motion.nav 
+        className="fixed top-0 left-0 right-0 z-[9999] bg-[#1E293B]/95 backdrop-blur-md"
         style={{
-          borderBottom: scrollY > 50 ? '1px solid rgba(30, 41, 59, 0.08)' : '1px solid transparent',
-          boxShadow: scrollY > 50 ? '0 1px 3px rgba(15, 23, 42, 0.08)' : 'none',
-          isolation: 'isolate'
+          borderBottom: scrollY.get() > 50 ? '1px solid rgba(30, 41, 59, 0.08)' : '1px solid transparent',
+          boxShadow: scrollY.get() > 50 ? '0 1px 3px rgba(15, 23, 42, 0.08)' : 'none',
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2 hover-scale cursor-pointer">
+            <motion.div 
+              className="flex items-center space-x-2 cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+            >
               <div className="relative">
                 <Image 
                   src="/favicon/favicon-32x32.png" 
@@ -208,138 +288,228 @@ export default function WaitlistPage() {
                 />
               </div>
               <h1 className="text-xl font-light text-white hover:text-[#38BDF8] transition-colors">Crackd</h1>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
-        {/* Glass crack effect background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Cracked glass overlay */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: `
-                linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 31%, rgba(255,255,255,0.1) 31.5%, transparent 32%),
-                linear-gradient(-45deg, transparent 30%, rgba(255,255,255,0.1) 31%, rgba(255,255,255,0.1) 31.5%, transparent 32%),
-                linear-gradient(90deg, transparent 40%, rgba(255,255,255,0.05) 41%, rgba(255,255,255,0.05) 41.5%, transparent 42%),
-                linear-gradient(0deg, transparent 40%, rgba(255,255,255,0.05) 41%, rgba(255,255,255,0.05) 41.5%, transparent 42%)
-              `,
-              backgroundSize: '200px 200px',
-              transform: `translateY(${scrollY * 0.1}px)`,
-              opacity: 0.3
+      <section className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
+        {/* Dynamic glass crack overlay */}
+        <motion.div 
+          className="absolute inset-0 pointer-events-none"
+          style={{ opacity: crackOpacity }}
+        >
+          <svg className="absolute inset-0 w-full h-full">
+            <defs>
+              <filter id="glassDistortion">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="5" result="noise" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale={glassDistortion} />
+              </filter>
+            </defs>
+            
+            {/* Dynamic crack pattern */}
+            <motion.g filter="url(#glassDistortion)">
+              <motion.path
+                d="M0,300 Q150,250 300,350 T600,300 T900,400 T1200,300"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="2"
+                fill="none"
+                animate={{
+                  d: [
+                    "M0,300 Q150,250 300,350 T600,300 T900,400 T1200,300",
+                    "M0,350 Q200,300 350,400 T650,350 T950,450 T1250,350",
+                    "M0,300 Q150,250 300,350 T600,300 T900,400 T1200,300"
+                  ]
+                }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              />
+              <motion.path
+                d="M200,0 L250,200 L200,400 L300,600"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="1"
+                fill="none"
+                animate={{
+                  opacity: [0.1, 0.3, 0.1]
+                }}
+                transition={{ duration: 5, repeat: Infinity }}
+              />
+              <motion.path
+                d="M800,0 L750,150 L850,300 L800,500"
+                stroke="rgba(255,255,255,0.1)"
+                strokeWidth="1.5"
+                fill="none"
+                animate={{
+                  opacity: [0.1, 0.2, 0.1]
+                }}
+                transition={{ duration: 7, repeat: Infinity }}
+              />
+            </motion.g>
+          </svg>
+          
+          {/* Interactive glass particles */}
+          <motion.div
+            className="absolute w-full h-full"
+            animate={{
+              background: [
+                `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.1) 0%, transparent 10%)`,
+                `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.05) 0%, transparent 15%)`
+              ]
             }}
+            transition={{ duration: 0.3 }}
           />
           
-          {/* Shatter points */}
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#38BDF8] rounded-full filter blur-[120px] opacity-30 animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#2563EB] rounded-full filter blur-[120px] opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-[#60A5FA] rounded-full filter blur-[100px] opacity-25 animate-pulse" style={{ animationDelay: '2s' }} />
-          
-          {/* Glass particles */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
-              backgroundSize: '30px 30px',
-              transform: `translateY(${scrollY * -0.5}px)`,
-              opacity: 0.2
+          {/* Animated shatter points */}
+          <motion.div 
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#38BDF8] rounded-full filter blur-[120px] opacity-30"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.5, 0.3]
             }}
+            transition={{ duration: 4, repeat: Infinity }}
           />
-        </div>
+          <motion.div 
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#2563EB] rounded-full filter blur-[120px] opacity-20"
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.2, 0.4, 0.2]
+            }}
+            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+          />
+        </motion.div>
 
-        <div className="max-w-4xl w-full relative">
-          <div 
+        <div className="max-w-4xl w-full relative" onClick={handleInteraction}>
+          <AnimatePresence>
+            {cracks.map(crack => (
+              <GlassCrack key={crack.id} x={crack.x} y={crack.y} id={crack.id} />
+            ))}
+          </AnimatePresence>
+          
+          <motion.div 
             ref={heroRef}
-            className="text-center scroll-animate opacity-0"
-            style={{
-              transform: `translateY(${scrollY * -0.2}px)`
-            }}
+            className="text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
             {/* Countdown Display with glass effect */}
-            <div className="mb-12 p-4 sm:p-6 glass-crack rounded-2xl shadow-xl max-w-2xl mx-auto">
+            <motion.div 
+              className="mb-12 p-4 sm:p-6 glass-crack rounded-2xl shadow-xl max-w-2xl mx-auto"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <p className="text-white/90 text-sm font-medium mb-4 text-center uppercase tracking-wider">Launching in</p>
               <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
-                <div className="text-center">
-                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{timeLeft.days}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">DAYS</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.hours).padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">HOURS</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.minutes).padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">MINUTES</div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="glass-card rounded-lg p-2 sm:p-3 hover-lift transition-all duration-300 group hover:shadow-lg">
-                    <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white countdown-number group-hover:scale-110 transition-transform">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                    <div className="text-[10px] sm:text-xs text-white/70 mt-1 group-hover:text-white/90 font-medium">SECONDS</div>
-                  </div>
-                </div>
+                {Object.entries(timeLeft).map(([unit, value], index) => (
+                  <motion.div 
+                    key={unit}
+                    className="text-center"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <motion.div 
+                      className="glass-card rounded-lg p-2 sm:p-3 group"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <motion.div 
+                        className="text-2xl sm:text-3xl md:text-4xl font-bold text-white"
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1, repeat: Infinity, repeatDelay: 59 }}
+                      >
+                        {unit === 'days' ? value : String(value).padStart(2, '0')}
+                      </motion.div>
+                      <div className="text-[10px] sm:text-xs text-white/70 mt-1 font-medium uppercase">
+                        {unit.toUpperCase()}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                ))}
               </div>
               <p className="text-white/60 text-xs text-center mt-4 font-medium">July 20th, 2025 • 12:00 PM EST</p>
-            </div>
+            </motion.div>
             
             {/* Main tagline with crack effect */}
             <div className="mb-8">
               <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none relative inline-block">
-                <span className="relative">
+                <motion.span 
+                  className="relative"
+                  animate={{
+                    textShadow: [
+                      "0 0 20px rgba(56, 189, 248, 0.3)",
+                      "0 0 40px rgba(56, 189, 248, 0.5)",
+                      "0 0 20px rgba(56, 189, 248, 0.3)"
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
                   GET
-                  <div className="absolute -inset-2 bg-gradient-to-r from-[#38BDF8] to-[#2563EB] opacity-30 blur-lg animate-pulse" />
-                </span>
+                </motion.span>
                 {' '}
-                <span className="relative inline-block transform hover:scale-105 transition-transform duration-300">
+                <motion.span 
+                  className="relative inline-block"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
                   <span className="relative z-10 bg-gradient-to-r from-[#38BDF8] via-[#60A5FA] to-[#2563EB] text-transparent bg-clip-text">
                     CRACKD
                   </span>
-                  {/* Crack lines effect */}
+                  {/* Animated crack lines */}
                   <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)]" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M20,50 L35,30 L50,50 L65,20 L80,50" 
-                          stroke="rgba(255,255,255,0.3)" 
-                          strokeWidth="0.5" 
-                          fill="none"
-                          className="animate-crack" />
-                    <path d="M30,40 L45,55 L60,35" 
-                          stroke="rgba(255,255,255,0.2)" 
-                          strokeWidth="0.3" 
-                          fill="none"
-                          className="animate-crack"
-                          style={{ animationDelay: '0.5s' }} />
+                    <motion.path
+                      d="M20,50 L35,30 L50,50 L65,20 L80,50"
+                      stroke="rgba(255,255,255,0.3)"
+                      strokeWidth="0.5"
+                      fill="none"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 2, ease: "easeOut" }}
+                    />
+                    <motion.path
+                      d="M30,40 L45,55 L60,35"
+                      stroke="rgba(255,255,255,0.2)"
+                      strokeWidth="0.3"
+                      fill="none"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                    />
                   </svg>
-                </span>
+                </motion.span>
               </h1>
-              <p className="text-xl md:text-2xl text-white/80 font-light">
+              <motion.p 
+                className="text-xl md:text-2xl text-white/80 font-light"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
                 Become <span className="font-semibold text-[#38BDF8]">amazingly capable</span> and <span className="font-semibold text-[#60A5FA]">brilliantly smart</span>
-              </p>
+              </motion.p>
             </div>
             
-            <p className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+            <motion.p 
+              className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
               Break through career barriers with AI-powered guidance. 
               Shatter limitations. Transform your potential into unstoppable success.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
           {/* Email Form */}
-          <div 
+          <motion.div 
             ref={formRef}
-            className="max-w-md mx-auto scroll-animate opacity-0"
-            style={{
-              transform: `translateY(${scrollY * -0.1}px)`
-            }}
+            className="max-w-md mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
           >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="relative">
-                <input
+                <motion.input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -347,72 +517,117 @@ export default function WaitlistPage() {
                   className="w-full px-6 py-4 text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-0 focus:border-[#2563EB] focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)] transition-all bg-white font-light hover:border-gray-300"
                   required
                   disabled={loading}
+                  whileFocus={{ scale: 1.02 }}
                 />
-                {error && (
-                  <p className="absolute -bottom-6 left-0 text-sm text-red-600 font-light animate-slideInRight">{error}</p>
-                )}
+                <AnimatePresence>
+                  {error && (
+                    <motion.p 
+                      className="absolute -bottom-6 left-0 text-sm text-red-600 font-light"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
               
-              <button
+              <motion.button
                 type="submit"
                 disabled={loading}
-                className="w-full glass-button text-white font-medium py-4 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                className="w-full glass-button text-white font-medium py-4 px-8 rounded-lg relative overflow-hidden group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <defs>
-                        <linearGradient id="spinner-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#38BDF8" />
-                          <stop offset="100%" stopColor="#2563EB" />
-                        </linearGradient>
-                      </defs>
+                    <motion.svg 
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
+                      fill="none" 
+                      viewBox="0 0 24 24"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
+                    </motion.svg>
                     Joining waitlist...
                   </span>
                 ) : (
                   <>
                     <span className="relative z-10 font-bold text-lg">GET CRACKD</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#38BDF8] to-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-[#38BDF8] to-[#2563EB]"
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    />
                   </>
                 )}
-              </button>
+              </motion.button>
             </form>
 
             <p className="text-center text-sm text-white/60 mt-6 font-medium">
               Join the revolution. Become unstoppable.
             </p>
-          </div>
+          </motion.div>
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hover-float group cursor-pointer">
+        <motion.div 
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          whileHover={{ scale: 1.2 }}
+        >
           <div className="p-3 rounded-full transition-all duration-300 hover:bg-white/10">
-            <svg className="w-6 h-6 text-white/60 group-hover:text-white/90 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-white/60 hover:text-white/90 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
       <section className="py-24 px-4 bg-gradient-to-b from-white to-[#F9FAFB] relative overflow-hidden">
-        {/* Glass shard decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-1 h-32 bg-gradient-to-b from-transparent via-[#38BDF8]/20 to-transparent transform rotate-45" />
-          <div className="absolute top-1/3 right-1/3 w-1 h-24 bg-gradient-to-b from-transparent via-[#2563EB]/20 to-transparent transform -rotate-12" />
-          <div className="absolute bottom-1/4 left-1/2 w-1 h-40 bg-gradient-to-b from-transparent via-[#60A5FA]/20 to-transparent transform rotate-30" />
-        </div>
+        {/* Animated glass shard decorations */}
+        <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div 
+            className="absolute top-0 left-1/4 w-1 h-32 bg-gradient-to-b from-transparent via-[#38BDF8]/20 to-transparent"
+            animate={{ rotate: [45, 50, 45] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          <motion.div 
+            className="absolute top-1/3 right-1/3 w-1 h-24 bg-gradient-to-b from-transparent via-[#2563EB]/20 to-transparent"
+            animate={{ rotate: [-12, -8, -12] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div 
+            className="absolute bottom-1/4 left-1/2 w-1 h-40 bg-gradient-to-b from-transparent via-[#60A5FA]/20 to-transparent"
+            animate={{ rotate: [30, 35, 30] }}
+            transition={{ duration: 5, repeat: Infinity }}
+          />
+        </motion.div>
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <h2 className="text-4xl font-bold text-center text-[#1E293B] mb-4 scroll-animate opacity-0">
+          <motion.h2 
+            className="text-4xl font-bold text-center text-[#1E293B] mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
             Crack Your Career Code
-          </h2>
-          <p className="text-center text-[#4B5563] font-medium mb-16 max-w-3xl mx-auto scroll-animate opacity-0">
+          </motion.h2>
+          <motion.p 
+            className="text-center text-[#4B5563] font-medium mb-16 max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
             Four powerful ways to shatter career barriers and unlock your true potential
-          </p>
+          </motion.p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
@@ -441,98 +656,160 @@ export default function WaitlistPage() {
                 color: "bg-gradient-to-br from-[#E0F2FE] to-[#DBEAFE] text-[#1E293B]"
               }
             ].map((feature, index) => (
-              <div 
+              <motion.div 
                 key={index}
-                className="scroll-animate opacity-0 group"
-                style={{
-                  animationDelay: `${index * 100}ms`
-                }}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -5 }}
+                onClick={handleInteraction}
+                className="relative"
               >
-                <div className="h-full glass-feature-card rounded-xl p-6 transition-all duration-300 hover:transform hover:-translate-y-[2px] group">
-                  <div className="w-14 h-14 glass-icon rounded-lg flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110">
+                <div className="h-full glass-feature-card rounded-xl p-6 transition-all duration-300 group">
+                  <motion.div 
+                    className="w-14 h-14 glass-icon rounded-lg flex items-center justify-center mb-4"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
                     <svg className="w-7 h-7 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
                     </svg>
-                  </div>
+                  </motion.div>
                   <h3 className="font-bold text-[#1E293B] mb-2 text-lg group-hover:text-[#2563EB] transition-colors">{feature.title}</h3>
                   <p className="text-sm text-[#4B5563] leading-relaxed">{feature.description}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-
         </div>
       </section>
 
       {/* Mission Section */}
       <section className="py-24 px-4 bg-gradient-to-br from-[#1E293B] to-[#334155] text-white relative overflow-hidden">
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
-                            radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`
-          }} />
-        </div>
+        {/* Dynamic pattern overlay */}
+        <motion.div 
+          className="absolute inset-0 opacity-10"
+          animate={{
+            background: [
+              `radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
+               radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`,
+              `radial-gradient(circle at 30% 60%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
+               radial-gradient(circle at 70% 70%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`,
+              `radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
+               radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`
+            ]
+          }}
+          transition={{ duration: 10, repeat: Infinity }}
+        />
+        
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-light mb-8 scroll-animate opacity-0">
+          <motion.h2 
+            className="text-3xl md:text-4xl font-light mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
             Our Mission
-          </h2>
-          <p className="text-xl md:text-2xl font-light leading-relaxed mb-8 scroll-animate opacity-0" style={{ animationDelay: '100ms' }}>
+          </motion.h2>
+          
+          <motion.p 
+            className="text-xl md:text-2xl font-light leading-relaxed mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
             Making job acquisition and hiring <span className="font-normal text-[#38BDF8]">meritocratic again</span>
-          </p>
+          </motion.p>
+          
           <div className="space-y-6 max-w-3xl mx-auto">
-            <p className="text-lg text-white/80 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '200ms' }}>
-              The hiring landscape has become a maze of keywords, connections, and chance encounters. 
-              Talented individuals are overlooked while positions remain unfilled. We believe this is broken.
-            </p>
-            <p className="text-lg text-white/80 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '300ms' }}>
-              Crackd levels the playing field by showcasing what truly matters: your skills, potential, and dedication. 
-              Our AI-powered platform helps you crack through barriers and connect with the right opportunities.
-            </p>
-            <p className="text-lg text-white/80 font-light leading-relaxed scroll-animate opacity-0" style={{ animationDelay: '400ms' }}>
-              Together, we're building a future where careers are shaped by capability, not circumstance.
-            </p>
+            {[
+              "The hiring landscape has become a maze of keywords, connections, and chance encounters. Talented individuals are overlooked while positions remain unfilled. We believe this is broken.",
+              "Crackd levels the playing field by showcasing what truly matters: your skills, potential, and dedication. Our AI-powered platform helps you crack through barriers and connect with the right opportunities.",
+              "Together, we're building a future where careers are shaped by capability, not circumstance."
+            ].map((text, index) => (
+              <motion.p 
+                key={index}
+                className="text-lg text-white/80 font-light leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+              >
+                {text}
+              </motion.p>
+            ))}
           </div>
         </div>
       </section>
 
-
       {/* Team Section */}
       <section className="py-24 px-4 bg-[#F9FAFB]">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-light text-[#1E293B] mb-4 scroll-animate opacity-0">
+          <motion.h2 
+            className="text-3xl font-light text-[#1E293B] mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
             Our Team
-          </h2>
-          <p className="text-lg text-[#4B5563] font-light mb-12 scroll-animate opacity-0">
+          </motion.h2>
+          <motion.p 
+            className="text-lg text-[#4B5563] font-light mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
             Built by talented individuals from world-class institutions
-          </p>
+          </motion.p>
           
           <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-16">
-            <div className="scroll-animate opacity-0 group" style={{ animationDelay: '100ms' }}>
-              <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover-lift hover:shadow-xl hover:border-2 hover:border-[#2563EB]/20 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#E0F2FE] to-[#DBEAFE] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Image 
-                  src="/images/universities/georgia-tech-logo.png" 
-                  alt="Georgia Tech" 
-                  fill
-                  className="object-contain hover-scale relative z-10"
-                />
-              </div>
-              <p className="mt-4 text-sm text-[#4B5563] font-light group-hover:text-[#2563EB] transition-colors">Georgia Tech</p>
-            </div>
-            
-            <div className="scroll-animate opacity-0 group" style={{ animationDelay: '200ms' }}>
-              <div className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover-lift hover:shadow-xl hover:border-2 hover:border-[#FF6B6B]/20 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FEF3C7] to-[#FED7AA] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Image 
-                  src="/images/universities/uwmadison.png" 
-                  alt="University of Wisconsin-Madison" 
-                  fill
-                  className="object-contain hover-scale relative z-10"
-                />
-              </div>
-              <p className="mt-4 text-sm text-[#4B5563] font-light group-hover:text-[#FF6B6B] transition-colors">University of Wisconsin-Madison</p>
-            </div>
+            {[
+              { logo: "/images/universities/georgia-tech-logo.png", name: "Georgia Tech", color: "#2563EB" },
+              { logo: "/images/universities/uwmadison.png", name: "University of Wisconsin-Madison", color: "#FF6B6B" }
+            ].map((university, index) => (
+              <motion.div 
+                key={index}
+                className="group"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 + index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div 
+                  className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover:shadow-xl transition-all duration-300"
+                  whileHover={{ y: -5 }}
+                  style={{
+                    borderColor: university.color,
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    borderOpacity: 0
+                  }}
+                  animate={{
+                    borderOpacity: [0, 0.2, 0]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <motion.div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: `linear-gradient(to br, ${university.color}10, ${university.color}05)`
+                    }}
+                  />
+                  <Image 
+                    src={university.logo} 
+                    alt={university.name} 
+                    fill
+                    className="object-contain relative z-10"
+                  />
+                </motion.div>
+                <p className="mt-4 text-sm text-[#4B5563] font-light group-hover:text-[#2563EB] transition-colors">
+                  {university.name}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -544,68 +821,38 @@ export default function WaitlistPage() {
           <div className="text-center">
             <h3 className="text-lg font-medium text-[#1E293B] mb-6">Connect with Crackd</h3>
             <div className="flex justify-center items-center gap-6">
-              {/* LinkedIn */}
-              <a 
-                href="https://linkedin.com/company/crackd" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-                aria-label="Connect with Crackd on LinkedIn"
-              >
-                <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#0077B5] hover:border-[#0077B5] hover:shadow-[0_4px_14px_rgba(0,119,181,0.25)] hover-lift group-hover:scale-110">
-                  <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </div>
-              </a>
-
-              {/* YouTube */}
-              <a 
-                href="https://youtube.com/@crackd" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-                aria-label="Subscribe to Crackd on YouTube"
-              >
-                <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#FF0000] hover:border-[#FF0000] hover:shadow-[0_4px_14px_rgba(255,0,0,0.25)] hover-lift group-hover:scale-110">
-                  <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                  </svg>
-                </div>
-              </a>
-
-              {/* Instagram */}
-              <a 
-                href="https://instagram.com/crackd" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-                aria-label="Follow Crackd on Instagram"
-              >
-                <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#E4405F] hover:border-[#E4405F] hover:shadow-[0_4px_14px_rgba(228,64,95,0.25)] hover-lift group-hover:scale-110">
-                  <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.405a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
-                  </svg>
-                </div>
-              </a>
-
-              {/* X (Twitter) */}
-              <a 
-                href="https://x.com/crackd" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group"
-                aria-label="Follow Crackd on X"
-              >
-                <div className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300 hover:bg-[#1E293B] hover:border-[#1E293B] hover:shadow-[0_4px_14px_rgba(30,41,59,0.25)] hover-lift group-hover:scale-110">
-                  <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </div>
-              </a>
+              {[
+                { name: "LinkedIn", href: "https://linkedin.com/company/crackd", color: "#0077B5", icon: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" },
+                { name: "YouTube", href: "https://youtube.com/@crackd", color: "#FF0000", icon: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" },
+                { name: "Instagram", href: "https://instagram.com/crackd", color: "#E4405F", icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.405a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z" },
+                { name: "X", href: "https://x.com/crackd", color: "#1E293B", icon: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" }
+              ].map((social, index) => (
+                <motion.a 
+                  key={index}
+                  href={social.href} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group"
+                  aria-label={`Connect with Crackd on ${social.name}`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div 
+                    className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300"
+                    whileHover={{ 
+                      backgroundColor: social.color,
+                      borderColor: social.color,
+                      boxShadow: `0 4px 14px ${social.color}40`
+                    }}
+                  >
+                    <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                      <path d={social.icon} />
+                    </svg>
+                  </motion.div>
+                </motion.a>
+              ))}
             </div>
           </div>
-
 
           {/* Copyright */}
           <div className="mt-8 pt-8 border-t border-[#E5E7EB] text-center">
@@ -618,133 +865,6 @@ export default function WaitlistPage() {
 
       {/* Add animation styles */}
       <style jsx>{`
-        /* Custom easing functions */
-        :root {
-          --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
-          --ease-in-out: cubic-bezier(0.4, 0, 1, 1);
-          --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        
-        @keyframes countdownPulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          50% {
-            transform: scale(1.05);
-            opacity: 0.9;
-          }
-        }
-        
-        @keyframes crack {
-          0% {
-            stroke-dasharray: 0 100;
-          }
-          100% {
-            stroke-dasharray: 100 0;
-          }
-        }
-        
-        .animate-crack {
-          animation: crack 2s ease-out forwards;
-        }
-        
-        .animate-fadeUp {
-          animation: fadeUp 0.8s ease-out forwards;
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-        
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-
-        .animate-slideInRight {
-          animation: slideInRight 0.3s ease-out;
-        }
-        
-        .scroll-animate {
-          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-        
-        .countdown-number {
-          animation: countdownPulse 1s ease-in-out infinite;
-        }
-        
-        /* Enhanced hover effects */
-        .hover-lift {
-          transition: all 0.3s var(--ease-out);
-        }
-        
-        .hover-lift:hover {
-          transform: translateY(-4px);
-        }
-        
-        /* Button gradient animation */
-        button {
-          position: relative;
-          overflow: hidden;
-        }
-        
-        button::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transition: left 0.5s;
-        }
-        
-        button:hover::after {
-          left: 100%;
-        }
-        
         /* Glass morphism styles */
         .glass-morphism {
           background: rgba(255, 255, 255, 0.1);
@@ -817,14 +937,6 @@ export default function WaitlistPage() {
           box-shadow: 
             0 4px 16px rgba(37, 99, 235, 0.3),
             0 8px 32px rgba(56, 189, 248, 0.2);
-        }
-        
-        /* Gradient text effect */
-        .gradient-text {
-          background: linear-gradient(135deg, #2563EB 0%, #38BDF8 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
         }
       `}</style>
     </div>
