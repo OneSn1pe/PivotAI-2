@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import RotatingText from '@/components/RotatingText';
+import ScrollReveal from '@/components/ScrollReveal';
 
 export default function WaitlistPage() {
   // Color palette
@@ -697,16 +698,16 @@ export default function WaitlistPage() {
               "Crackd levels the playing field by showcasing what truly matters: your skills, potential, and dedication. Our AI-powered platform helps you crack through barriers and connect with the right opportunities.",
               "Together, we're building a future where careers are shaped by capability, not circumstance."
             ].map((text, index) => (
-              <motion.p 
+              <ScrollReveal
                 key={index}
+                baseOpacity={0}
+                enableBlur={true}
+                baseRotation={3}
+                blurStrength={8}
                 className="text-lg text-white/80 font-light leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 + index * 0.1 }}
               >
                 {text}
-              </motion.p>
+              </ScrollReveal>
             ))}
           </div>
         </div>
