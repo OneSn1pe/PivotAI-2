@@ -318,15 +318,15 @@ export default function WaitlistPage() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-black">
         {/* Lightning Background */}
-        <div className="absolute inset-0" style={{ zIndex: 1 }}>
+        <div className="absolute inset-0" style={{ width: '100%', height: '100%', position: 'relative' }}>
           <Lightning
             hue={220}
             xOffset={0}
-            speed={0.8}
-            intensity={0.7}
-            size={1.2}
+            speed={1}
+            intensity={1}
+            size={1}
           />
         </div>
         
