@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import RotatingText from '@/components/RotatingText';
 import ScrollReveal from '@/components/ScrollReveal';
+import Dock from '@/components/Dock';
+import { FiHome, FiTarget, FiHeart, FiUsers, FiMail } from 'react-icons/fi';
 
 export default function WaitlistPage() {
   // Color palette
@@ -50,9 +52,11 @@ export default function WaitlistPage() {
   });
   const router = useRouter();
   
-  // Refs for scroll animations
+  // Refs for scroll animations and navigation
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
+  const missionRef = useRef<HTMLDivElement>(null);
+  const teamRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
@@ -93,6 +97,20 @@ export default function WaitlistPage() {
     
     return () => clearInterval(interval);
   }, []);
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const dockItems = [
+    { icon: <FiHome size={20} />, label: 'Home', onClick: () => scrollToSection(heroRef) },
+    { icon: <FiTarget size={20} />, label: 'Features', onClick: () => scrollToSection(featuresRef) },
+    { icon: <FiHeart size={20} />, label: 'Mission', onClick: () => scrollToSection(missionRef) },
+    { icon: <FiUsers size={20} />, label: 'Team', onClick: () => scrollToSection(teamRef) },
+    { icon: <FiMail size={20} />, label: 'Join', onClick: () => scrollToSection(formRef) },
+  ];
 
   const handleInteraction = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -296,7 +314,7 @@ export default function WaitlistPage() {
       </motion.nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
         {/* Dynamic glass crack overlay */}
         <motion.div 
           className="absolute inset-0 pointer-events-none"
@@ -560,7 +578,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 px-4 bg-gradient-to-b from-white to-[#F9FAFB] relative overflow-hidden">
+      <section ref={featuresRef} className="py-24 px-4 bg-gradient-to-b from-white to-[#F9FAFB] relative overflow-hidden">
         {/* Animated glass shard decorations */}
         <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div 
@@ -655,7 +673,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-24 px-4 bg-gradient-to-br from-[#1E293B] to-[#334155] text-white relative overflow-hidden">
+      <section ref={missionRef} className="py-24 px-4 bg-gradient-to-br from-[#1E293B] to-[#334155] text-white relative overflow-hidden">
         {/* Dynamic pattern overlay */}
         <motion.div 
           className="absolute inset-0 opacity-10"
@@ -714,7 +732,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-24 px-4 bg-[#F9FAFB]">
+      <section ref={teamRef} className="py-24 px-4 bg-[#F9FAFB]">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h2 
             className="text-3xl font-light text-[#1E293B] mb-4"
@@ -906,6 +924,14 @@ export default function WaitlistPage() {
             0 8px 32px rgba(56, 189, 248, 0.2);
         }
       `}</style>
+
+      {/* Dock Navigation */}
+      <Dock 
+        items={dockItems}
+        panelHeight={68}
+        baseItemSize={48}
+        magnification={65}
+      />
     </div>
   );
 }
