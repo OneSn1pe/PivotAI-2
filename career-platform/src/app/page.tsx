@@ -315,35 +315,6 @@ export default function WaitlistPage() {
       <AnimatePresence>
         {success && <SuccessMessage />}
       </AnimatePresence>
-      
-      {/* Navigation */}
-      <motion.nav 
-        className="fixed top-0 left-0 right-0 z-[9999] bg-[#1E293B]/95 backdrop-blur-md border-b border-transparent"
-        style={{
-          borderBottomColor: useTransform(scrollY, [0, 50], ['transparent', 'rgba(30, 41, 59, 0.08)']),
-          boxShadow: useTransform(scrollY, [0, 50], ['none', '0 1px 3px rgba(15, 23, 42, 0.08)']),
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <motion.div 
-              className="flex items-center space-x-2 cursor-pointer"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="relative">
-                <Image 
-                  src="/favicon/favicon-32x32.png" 
-                  alt="PivotAI Logo" 
-                  width={28}
-                  height={28}
-                  className="hover:rotate-12 transition-transform duration-300 brightness-0 invert"
-                />
-              </div>
-              <h1 className="text-xl font-light text-white hover:text-[#38BDF8] transition-colors">Crackd</h1>
-            </motion.div>
-          </div>
-        </div>
-      </motion.nav>
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
