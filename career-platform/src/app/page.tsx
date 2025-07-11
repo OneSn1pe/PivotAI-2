@@ -138,11 +138,10 @@ export default function WaitlistPage() {
   };
 
   const dockItems = [
-    { id: 'home', icon: <FiHome size={20} />, label: 'Home', onClick: () => scrollToSection(heroRef) },
+    { id: 'home', icon: <FiMail size={20} />, label: 'Join', onClick: () => scrollToSection(heroRef) },
     { id: 'features', icon: <FiTarget size={20} />, label: 'Features', onClick: () => scrollToSection(featuresRef) },
     { id: 'mission', icon: <FiHeart size={20} />, label: 'Mission', onClick: () => scrollToSection(missionRef) },
     { id: 'team', icon: <FiUsers size={20} />, label: 'Team', onClick: () => scrollToSection(teamRef) },
-    { id: 'join', icon: <FiMail size={20} />, label: 'Join', onClick: () => scrollToSection(heroRef) },
   ];
 
   const handleInteraction = (e: React.MouseEvent) => {
