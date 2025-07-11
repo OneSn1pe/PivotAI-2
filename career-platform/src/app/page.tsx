@@ -433,98 +433,39 @@ export default function WaitlistPage() {
             
             {/* Main tagline with crack effect */}
             <div className="mb-8">
-              <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none relative inline-block">
-                <motion.span 
-                  className="relative"
-                  animate={{
-                    textShadow: [
-                      "0 0 20px rgba(56, 189, 248, 0.3)",
-                      "0 0 40px rgba(56, 189, 248, 0.5)",
-                      "0 0 20px rgba(56, 189, 248, 0.3)"
-                    ]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  GET
-                </motion.span>
-                {' '}
-                <motion.span 
-                  className="relative inline-block"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <span className="relative z-10 bg-gradient-to-r from-[#38BDF8] via-[#60A5FA] to-[#2563EB] text-transparent bg-clip-text">
-                    CRACKD
-                  </span>
-                  {/* Animated crack lines */}
-                  <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)]" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <motion.path
-                      d="M20,50 L35,30 L50,50 L65,20 L80,50"
-                      stroke="rgba(255,255,255,0.3)"
-                      strokeWidth="0.5"
-                      fill="none"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 2, ease: "easeOut" }}
-                    />
-                    <motion.path
-                      d="M30,40 L45,55 L60,35"
-                      stroke="rgba(255,255,255,0.2)"
-                      strokeWidth="0.3"
-                      fill="none"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
-                    />
-                  </svg>
-                </motion.span>
-              </h1>
-              <motion.div 
-                className="text-xl md:text-2xl text-white/80 font-light"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                Become{' '}
+              <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none">
                 <RotatingText
-                  texts={['amazingly capable', 'brilliantly smart', 'highly sought after', 'unstoppably successful']}
-                  mainClassName="px-2 bg-gradient-to-r from-[#38BDF8] to-[#60A5FA] text-transparent bg-clip-text font-semibold overflow-hidden justify-center rounded-lg"
+                  texts={['GET CRACKD', 'GET SMART', 'GET PREPARED']}
+                  mainClassName="inline-flex items-center justify-center"
                   staggerFrom="last"
                   initial={{ y: "100%" }}
                   animate={{ y: 0 }}
                   exit={{ y: "-120%" }}
                   staggerDuration={0.025}
-                  splitLevelClassName="overflow-hidden pb-0.5"
+                  splitLevelClassName="overflow-hidden inline-block"
                   transition={{ type: "spring", damping: 30, stiffness: 400 }}
-                  rotationInterval={2000}
+                  rotationInterval={2500}
                 />
-              </motion.div>
+              </h1>
+              <motion.p 
+                className="text-xl md:text-2xl text-white/80 font-light"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                Become <span className="font-semibold text-[#38BDF8]">amazingly capable</span> and <span className="font-semibold text-[#60A5FA]">brilliantly smart</span>
+              </motion.p>
             </div>
             
-            <motion.div 
+            <motion.p 
               className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
-              <RotatingText
-                texts={[
-                  'Break through career barriers with AI-powered guidance',
-                  'Shatter limitations and unlock your true potential',
-                  'Transform your career into unstoppable success',
-                  'Get personalized roadmaps to achieve your goals'
-                ]}
-                mainClassName="inline-block text-center"
-                staggerFrom="first"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                staggerDuration={0.015}
-                splitLevelClassName="inline-block"
-                transition={{ type: "tween", duration: 0.3 }}
-                rotationInterval={3000}
-              />
-            </motion.div>
+              Break through career barriers with AI-powered guidance. 
+              Shatter limitations. Transform your potential into unstoppable success.
+            </motion.p>
           </motion.div>
 
           {/* Email Form */}

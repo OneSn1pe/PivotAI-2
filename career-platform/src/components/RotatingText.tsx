@@ -39,31 +39,59 @@ const RotatingText: React.FC<RotatingTextProps> = ({
   }, [texts.length, rotationInterval]);
 
   const currentText = texts[currentIndex];
-  const letters = currentText.split('');
+  const words = currentText.split(' ');
 
   return (
     <span className={`inline-flex ${mainClassName}`}>
       <AnimatePresence mode="wait">
         <motion.span key={currentIndex} className="inline-flex">
-          {letters.map((letter, index) => {
-            const staggerDelay = staggerFrom === 'first' 
-              ? index * staggerDuration 
-              : (letters.length - 1 - index) * staggerDuration;
-
+          {words.map((word, wordIndex) => {
+            const wordLetters = word.split('');
+            const isHighlightWord = word === 'CRACKD' || word === 'SMART' || word === 'PREPARED';
+            
             return (
-              <span key={index} className={splitLevelClassName}>
-                <motion.span
-                  className="inline-block"
-                  initial={initial}
-                  animate={animate}
-                  exit={exit}
-                  transition={{
-                    ...transition,
-                    delay: staggerDelay,
-                  }}
-                >
-                  {letter === ' ' ? '\u00A0' : letter}
-                </motion.span>
+              <span key={wordIndex} className="inline-flex">
+                {wordLetters.map((letter, letterIndex) => {
+                  const globalIndex = words.slice(0, wordIndex).join(' ').length + (wordIndex > 0 ? 1 : 0) + letterIndex;
+                  const staggerDelay = staggerFrom === 'first' 
+                    ? globalIndex * staggerDuration 
+                    : (currentText.length - 1 - globalIndex) * staggerDuration;
+
+                  return (
+                    <span key={`${wordIndex}-${letterIndex}`} className={splitLevelClassName}>
+                      <motion.span
+                        className={`inline-block ${isHighlightWord ? 'bg-gradient-to-r from-[#38BDF8] via-[#60A5FA] to-[#2563EB] text-transparent bg-clip-text' : ''}`}
+                        initial={initial}
+                        animate={animate}
+                        exit={exit}
+                        transition={{
+                          ...transition,
+                          delay: staggerDelay,
+                        }}
+                      >
+                        {letter}
+                      </motion.span>
+                    </span>
+                  );
+                })}
+                {wordIndex < words.length - 1 && (
+                  <span className={splitLevelClassName}>
+                    <motion.span
+                      className="inline-block"
+                      initial={initial}
+                      animate={animate}
+                      exit={exit}
+                      transition={{
+                        ...transition,
+                        delay: staggerFrom === 'first' 
+                          ? (words.slice(0, wordIndex + 1).join(' ').length) * staggerDuration
+                          : (currentText.length - words.slice(0, wordIndex + 1).join(' ').length) * staggerDuration,
+                      }}
+                    >
+                      {'\u00A0'}
+                    </motion.span>
+                  </span>
+                )}
               </span>
             );
           })}
