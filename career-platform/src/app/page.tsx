@@ -807,16 +807,13 @@ export default function WaitlistPage() {
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div 
-                  className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover:shadow-xl transition-all duration-300"
+                  className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover:shadow-xl transition-all duration-300 border-2"
                   whileHover={{ y: -5 }}
-                  style={{
-                    borderColor: university.color,
-                    borderWidth: '2px',
-                    borderStyle: 'solid',
-                    borderOpacity: 0
+                  initial={{
+                    borderColor: `${university.color}00`
                   }}
                   animate={{
-                    borderOpacity: [0, 0.2, 0]
+                    borderColor: [`${university.color}00`, `${university.color}33`, `${university.color}00`]
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
