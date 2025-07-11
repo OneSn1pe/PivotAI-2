@@ -267,10 +267,10 @@ export default function WaitlistPage() {
       
       {/* Navigation */}
       <motion.nav 
-        className="fixed top-0 left-0 right-0 z-[9999] bg-[#1E293B]/95 backdrop-blur-md"
+        className="fixed top-0 left-0 right-0 z-[9999] bg-[#1E293B]/95 backdrop-blur-md border-b border-transparent"
         style={{
-          borderBottom: scrollY.get() > 50 ? '1px solid rgba(30, 41, 59, 0.08)' : '1px solid transparent',
-          boxShadow: scrollY.get() > 50 ? '0 1px 3px rgba(15, 23, 42, 0.08)' : 'none',
+          borderBottomColor: useTransform(scrollY, [0, 50], ['transparent', 'rgba(30, 41, 59, 0.08)']),
+          boxShadow: useTransform(scrollY, [0, 50], ['none', '0 1px 3px rgba(15, 23, 42, 0.08)']),
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -305,7 +305,7 @@ export default function WaitlistPage() {
             <defs>
               <filter id="glassDistortion">
                 <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="5" result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale={glassDistortion} />
+                <motion.feDisplacementMap in="SourceGraphic" in2="noise" scale={glassDistortion} />
               </filter>
             </defs>
             
