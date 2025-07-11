@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, MotionValue } from 'framer-motion';
 
 interface DockItem {
   icon: React.ReactNode;
@@ -85,7 +85,7 @@ const Dock: React.FC<DockProps> = ({
 interface DockItemProps {
   item: DockItem;
   index: number;
-  mouseX: any;
+  mouseX: MotionValue<number>;
   baseItemSize: number;
   magnification: number;
   totalItems: number;
@@ -102,7 +102,7 @@ const DockItem: React.FC<DockItemProps> = ({
   const ref = useRef<HTMLButtonElement>(null);
   const [showLabel, setShowLabel] = useState(false);
 
-  const distance = useTransform(mouseX, (val) => {
+  const distance = useTransform(mouseX, (val: number) => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
       const itemCenter = rect.left + rect.width / 2 - ref.current.offsetParent!.getBoundingClientRect().left;
