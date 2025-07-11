@@ -10,6 +10,7 @@ import RotatingText from '@/components/RotatingText';
 import ScrollReveal from '@/components/ScrollReveal';
 import Dock from '@/components/Dock';
 import { FiHome, FiTarget, FiHeart, FiUsers, FiMail } from 'react-icons/fi';
+import Lightning from '@/components/Lightning';
 
 export default function WaitlistPage() {
   // Color palette
@@ -318,10 +319,21 @@ export default function WaitlistPage() {
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
+        {/* Lightning Background */}
+        <div className="absolute inset-0" style={{ zIndex: 1 }}>
+          <Lightning
+            hue={220}
+            xOffset={0}
+            speed={0.8}
+            intensity={0.7}
+            size={1.2}
+          />
+        </div>
+        
         {/* Dynamic glass crack overlay */}
         <motion.div 
           className="absolute inset-0 pointer-events-none"
-          style={{ opacity: crackOpacity }}
+          style={{ opacity: crackOpacity, zIndex: 2 }}
         >
           <svg className="absolute inset-0 w-full h-full">
             <defs>
@@ -401,7 +413,7 @@ export default function WaitlistPage() {
           />
         </motion.div>
 
-        <div className="max-w-4xl w-full relative" onClick={handleInteraction}>
+        <div className="max-w-4xl w-full relative" style={{ zIndex: 3 }} onClick={handleInteraction}>
           <AnimatePresence>
             {cracks.map(crack => (
               <GlassCrack key={crack.id} x={crack.x} y={crack.y} id={crack.id} />
