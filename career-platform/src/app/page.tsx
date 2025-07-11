@@ -6,6 +6,7 @@ import { db } from '@/config/firebase-lite';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import RotatingText from '@/components/RotatingText';
 
 export default function WaitlistPage() {
   // Color palette
@@ -478,25 +479,52 @@ export default function WaitlistPage() {
                   </svg>
                 </motion.span>
               </h1>
-              <motion.p 
+              <motion.div 
                 className="text-xl md:text-2xl text-white/80 font-light"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
               >
-                Become <span className="font-semibold text-[#38BDF8]">amazingly capable</span> and <span className="font-semibold text-[#60A5FA]">brilliantly smart</span>
-              </motion.p>
+                Become{' '}
+                <RotatingText
+                  texts={['amazingly capable', 'brilliantly smart', 'highly sought after', 'unstoppably successful']}
+                  mainClassName="px-2 bg-gradient-to-r from-[#38BDF8] to-[#60A5FA] text-transparent bg-clip-text font-semibold overflow-hidden justify-center rounded-lg"
+                  staggerFrom="last"
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "-120%" }}
+                  staggerDuration={0.025}
+                  splitLevelClassName="overflow-hidden pb-0.5"
+                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
+                  rotationInterval={2000}
+                />
+              </motion.div>
             </div>
             
-            <motion.p 
+            <motion.div 
               className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
-              Break through career barriers with AI-powered guidance. 
-              Shatter limitations. Transform your potential into unstoppable success.
-            </motion.p>
+              <RotatingText
+                texts={[
+                  'Break through career barriers with AI-powered guidance',
+                  'Shatter limitations and unlock your true potential',
+                  'Transform your career into unstoppable success',
+                  'Get personalized roadmaps to achieve your goals'
+                ]}
+                mainClassName="inline-block text-center"
+                staggerFrom="first"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                staggerDuration={0.015}
+                splitLevelClassName="inline-block"
+                transition={{ type: "tween", duration: 0.3 }}
+                rotationInterval={3000}
+              />
+            </motion.div>
           </motion.div>
 
           {/* Email Form */}
