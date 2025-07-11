@@ -370,17 +370,6 @@ export default function WaitlistPage() {
             </motion.g>
           </svg>
           
-          {/* Interactive glass particles */}
-          <motion.div
-            className="absolute w-full h-full"
-            animate={{
-              background: [
-                `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.1) 0%, transparent 10%)`,
-                `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.05) 0%, transparent 15%)`
-              ]
-            }}
-            transition={{ duration: 0.3 }}
-          />
           
           {/* Animated shatter points */}
           <motion.div 
