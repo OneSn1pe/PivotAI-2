@@ -50,6 +50,7 @@ export default function WaitlistPage() {
     minutes: 0,
     seconds: 0
   });
+  const [activeSection, setActiveSection] = useState('home');
   const router = useRouter();
   
   // Refs for scroll animations and navigation
@@ -98,6 +99,38 @@ export default function WaitlistPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Track active section based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100; // Add offset for better detection
+      
+      const sections = [
+        { id: 'home', ref: heroRef },
+        { id: 'features', ref: featuresRef },
+        { id: 'mission', ref: missionRef },
+        { id: 'team', ref: teamRef },
+      ];
+      
+      let currentSection = 'home';
+      
+      for (const section of sections) {
+        if (section.ref.current) {
+          const { offsetTop, offsetHeight } = section.ref.current;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            currentSection = section.id;
+          }
+        }
+      }
+      
+      setActiveSection(currentSection);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -105,11 +138,11 @@ export default function WaitlistPage() {
   };
 
   const dockItems = [
-    { icon: <FiHome size={20} />, label: 'Home', onClick: () => scrollToSection(heroRef) },
-    { icon: <FiTarget size={20} />, label: 'Features', onClick: () => scrollToSection(featuresRef) },
-    { icon: <FiHeart size={20} />, label: 'Mission', onClick: () => scrollToSection(missionRef) },
-    { icon: <FiUsers size={20} />, label: 'Team', onClick: () => scrollToSection(teamRef) },
-    { icon: <FiMail size={20} />, label: 'Join', onClick: () => scrollToSection(formRef) },
+    { id: 'home', icon: <FiHome size={20} />, label: 'Home', onClick: () => scrollToSection(heroRef) },
+    { id: 'features', icon: <FiTarget size={20} />, label: 'Features', onClick: () => scrollToSection(featuresRef) },
+    { id: 'mission', icon: <FiHeart size={20} />, label: 'Mission', onClick: () => scrollToSection(missionRef) },
+    { id: 'team', icon: <FiUsers size={20} />, label: 'Team', onClick: () => scrollToSection(teamRef) },
+    { id: 'join', icon: <FiMail size={20} />, label: 'Join', onClick: () => scrollToSection(heroRef) },
   ];
 
   const handleInteraction = (e: React.MouseEvent) => {
@@ -931,6 +964,7 @@ export default function WaitlistPage() {
         panelHeight={68}
         baseItemSize={48}
         magnification={65}
+        activeItem={activeSection}
       />
     </div>
   );

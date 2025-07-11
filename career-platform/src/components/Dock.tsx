@@ -7,6 +7,7 @@ interface DockItem {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  id?: string;
 }
 
 interface DockProps {
@@ -15,6 +16,7 @@ interface DockProps {
   baseItemSize?: number;
   magnification?: number;
   className?: string;
+  activeItem?: string;
 }
 
 const Dock: React.FC<DockProps> = ({
@@ -23,6 +25,7 @@ const Dock: React.FC<DockProps> = ({
   baseItemSize = 50,
   magnification = 70,
   className = '',
+  activeItem,
 }) => {
   const [hovered, setHovered] = useState(false);
   const mouseX = useMotionValue(Infinity);
@@ -75,6 +78,7 @@ const Dock: React.FC<DockProps> = ({
             baseItemSize={baseItemSize}
             magnification={magnification}
             totalItems={items.length}
+            isActive={item.id === activeItem}
           />
         ))}
       </motion.div>
@@ -89,6 +93,7 @@ interface DockItemProps {
   baseItemSize: number;
   magnification: number;
   totalItems: number;
+  isActive?: boolean;
 }
 
 const DockItem: React.FC<DockItemProps> = ({
@@ -98,6 +103,7 @@ const DockItem: React.FC<DockItemProps> = ({
   baseItemSize,
   magnification,
   totalItems,
+  isActive = false,
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
   const [showLabel, setShowLabel] = useState(false);
@@ -134,7 +140,11 @@ const DockItem: React.FC<DockItemProps> = ({
 
       <motion.button
         ref={ref}
-        className="relative flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-xl transition-colors cursor-pointer backdrop-blur-sm border border-white/10"
+        className={`relative flex items-center justify-center rounded-xl transition-colors cursor-pointer backdrop-blur-sm border ${
+          isActive 
+            ? 'bg-white/40 border-white/30' 
+            : 'bg-white/20 hover:bg-white/30 border-white/10'
+        }`}
         style={{
           width: size,
           height: size,
@@ -145,13 +155,21 @@ const DockItem: React.FC<DockItemProps> = ({
         whileTap={{ scale: 0.95 }}
       >
         <motion.div
-          className="text-white"
+          className={`${isActive ? 'text-white' : 'text-white/90'}`}
           style={{
             scale: useTransform(scale, (s) => Math.min(1.2, s * 0.8)),
           }}
         >
           {item.icon}
         </motion.div>
+        {isActive && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-t from-[#38BDF8]/20 to-transparent rounded-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
       </motion.button>
     </div>
   );
