@@ -559,8 +559,8 @@ export default function WaitlistPage() {
 
       </section>
 
-      {/* Features Section */}
-      <section ref={featuresRef} className="py-24 px-4 relative overflow-hidden">
+      {/* Mission Section */}
+      <section ref={missionRef} className="py-24 px-4 text-white relative overflow-hidden">
         
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.h2 
