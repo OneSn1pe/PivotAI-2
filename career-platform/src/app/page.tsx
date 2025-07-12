@@ -649,23 +649,54 @@ export default function WaitlistPage() {
             Making Hiring <span className="text-[#38BDF8]">Meritocratic Again</span>
           </motion.h2>
           
-          <div className="space-y-6 max-w-3xl mx-auto">
-            {[
-              "The hiring landscape has become a maze of keywords, connections, and chance encounters. Talented individuals are overlooked while positions remain unfilled. We believe this is broken.",
-              "Crackd levels the playing field by showcasing what truly matters: your skills, potential, and dedication. Our AI-powered platform helps you crack through barriers and connect with the right opportunities.",
-              "Together, we're building a future where careers are shaped by capability, not circumstance."
-            ].map((text, index) => (
-              <ScrollReveal
-                key={index}
-                baseOpacity={0}
-                enableBlur={true}
-                baseRotation={3}
-                blurStrength={8}
-                className="text-lg text-white/80 font-light leading-relaxed"
-              >
-                {text}
-              </ScrollReveal>
-            ))}
+          <div className="max-w-3xl mx-auto">
+            <ul className="space-y-6 text-left">
+              {[
+                {
+                  title: "The Problem",
+                  points: [
+                    "Hiring has become a maze of keywords, connections, and chance encounters",
+                    "Talented individuals are overlooked while positions remain unfilled",
+                    "The system is fundamentally broken"
+                  ]
+                },
+                {
+                  title: "Our Solution",
+                  points: [
+                    "Level the playing field by showcasing what truly matters",
+                    "Focus on your skills, potential, and dedication",
+                    "AI-powered platform to crack through barriers and connect with opportunities"
+                  ]
+                },
+                {
+                  title: "The Future",
+                  points: [
+                    "Building a world where careers are shaped by capability, not circumstance",
+                    "Making merit the primary driver of professional success",
+                    "Creating equal opportunities for all talented individuals"
+                  ]
+                }
+              ].map((section, sectionIndex) => (
+                <ScrollReveal
+                  key={sectionIndex}
+                  baseOpacity={0}
+                  enableBlur={true}
+                  baseRotation={3}
+                  blurStrength={8}
+                  className="space-y-3"
+                >
+                  <h3 className="text-xl font-semibold text-[#38BDF8] mb-3">{section.title}</h3>
+                  <ul className="space-y-2">
+                    {section.points.map((point, pointIndex) => (
+                      <li key={pointIndex} className="flex items-start">
+                        <span className="text-[#38BDF8] mr-3 mt-1">•</span>
+                        <span className="text-lg text-white/80 font-light leading-relaxed">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollReveal>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
