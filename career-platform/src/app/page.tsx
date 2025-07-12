@@ -641,7 +641,7 @@ export default function WaitlistPage() {
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.h2 
-            className="text-3xl md:text-4xl font-light mb-8"
+            className="text-3xl md:text-4xl font-bold mb-8"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -656,7 +656,7 @@ export default function WaitlistPage() {
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
           >
-            Making job acquisition and hiring <span className="font-normal text-[#38BDF8]">meritocratic again</span>
+            Making job acquisition and hiring <span className="font-normal text-[#38BDF8] whitespace-nowrap">meritocratic again</span>
           </motion.p>
           
           <div className="space-y-6 max-w-3xl mx-auto">
