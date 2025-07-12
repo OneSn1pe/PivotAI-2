@@ -31,10 +31,11 @@ const Dock: React.FC<DockProps> = ({
   const mouseX = useMotionValue(Infinity);
   const dockRef = useRef<HTMLDivElement>(null);
 
-  // Calculate total width needed for the dock
-  const gap = 8; // gap between items in pixels
+  // Calculate total width needed for the dock with extra space for magnification
+  const gap = 4; // Reduced gap since we'll have overflow space
   const padding = 24; // total horizontal padding
-  const minDockWidth = items.length * baseItemSize + (items.length - 1) * gap + padding;
+  const extraSpacePerItem = 20; // Extra space to accommodate magnification
+  const minDockWidth = items.length * (baseItemSize + extraSpacePerItem) + (items.length - 1) * gap + padding;
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -65,7 +66,7 @@ const Dock: React.FC<DockProps> = ({
     <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] ${className}`}>
       <motion.div
         ref={dockRef}
-        className="relative px-3 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl"
+        className="relative px-3 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl overflow-visible"
         style={{ 
           height: panelHeight,
           minWidth: minDockWidth,
@@ -89,6 +90,7 @@ const Dock: React.FC<DockProps> = ({
               totalItems={items.length}
               isActive={item.id === activeItem}
               gap={gap}
+              extraSpace={extraSpacePerItem}
             />
           ))}
         </div>
@@ -106,6 +108,7 @@ interface DockItemProps {
   totalItems: number;
   isActive?: boolean;
   gap: number;
+  extraSpace: number;
 }
 
 const DockItem: React.FC<DockItemProps> = ({
@@ -117,32 +120,48 @@ const DockItem: React.FC<DockItemProps> = ({
   totalItems,
   isActive = false,
   gap,
+  extraSpace,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [showLabel, setShowLabel] = useState(false);
 
-  // Calculate item position based on index
-  const itemPosition = index * (baseItemSize + gap) + baseItemSize / 2 + 12; // 12px for left padding
+  // Calculate item position based on index with extra space
+  const itemWidth = baseItemSize + extraSpace;
+  const itemPosition = index * (itemWidth + gap) + itemWidth / 2 + 12; // 12px for left padding
 
   const distance = useTransform(mouseX, (val: number) => {
     return Math.abs(val - itemPosition);
   });
 
-  const scale = useTransform(distance, [0, 80, 150], [magnification / baseItemSize, 1.2, 1]);
+  // Adjusted scale for better control
+  const maxScale = magnification / baseItemSize;
+  const scale = useTransform(
+    distance, 
+    [0, 60, 120], 
+    [maxScale, 1.1, 1]
+  );
+  
   const size = useSpring(useTransform(scale, (s) => s * baseItemSize), {
     stiffness: 400,
     damping: 30,
   });
 
+  // Calculate z-index based on scale to ensure hovered items appear on top
+  const zIndex = useTransform(scale, (s) => Math.round(s * 100));
+
   return (
-    <div 
+    <motion.div 
       ref={ref}
       className="relative flex items-center justify-center"
-      style={{ width: baseItemSize, height: baseItemSize }}
+      style={{ 
+        width: itemWidth,
+        height: baseItemSize,
+        zIndex,
+      }}
     >
       {/* Label tooltip */}
       <motion.div
-        className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none"
+        className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none z-50"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: showLabel ? 1 : 0, y: showLabel ? 0 : 10 }}
         transition={{ duration: 0.2 }}
@@ -162,6 +181,9 @@ const DockItem: React.FC<DockItemProps> = ({
         style={{
           width: size,
           height: size,
+          // Ensure button doesn't exceed container bounds
+          maxWidth: magnification,
+          maxHeight: magnification,
         }}
         onClick={item.onClick}
         onMouseEnter={() => setShowLabel(true)}
@@ -171,7 +193,7 @@ const DockItem: React.FC<DockItemProps> = ({
         <motion.div
           className={`${isActive ? 'text-white' : 'text-white/90'}`}
           style={{
-            scale: useTransform(scale, (s) => Math.min(1.2, s * 0.8)),
+            scale: useTransform(scale, (s) => Math.min(1, s * 0.7)),
           }}
         >
           {item.icon}
@@ -185,7 +207,7 @@ const DockItem: React.FC<DockItemProps> = ({
           />
         )}
       </motion.button>
-    </div>
+    </motion.div>
   );
 };
 
