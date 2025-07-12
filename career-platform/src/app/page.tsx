@@ -6,11 +6,13 @@ import { db } from '@/config/firebase-lite';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import RotatingText from '@/components/RotatingText';
+import RotatingTextOptimized from '@/components/ui/RotatingTextOptimized';
+import { useSafariOptimization } from '@/hooks/useSafariOptimization';
+import '@/styles/safari-optimizations.css';
 import ScrollReveal from '@/components/ScrollReveal';
 import Dock from '@/components/Dock';
 import { FiHome, FiTarget, FiHeart, FiUsers, FiMail } from 'react-icons/fi';
-import Lightning from '@/components/Lightning';
+import Lightning from '@/components/LightningOptimized';
 
 export default function WaitlistPage() {
   // Color palette
@@ -52,6 +54,7 @@ export default function WaitlistPage() {
     seconds: 0
   });
   const [activeSection, setActiveSection] = useState('home');
+  const { isSafari, shouldReduceAnimations } = useSafariOptimization();
   const router = useRouter();
   
   // Refs for scroll animations and navigation
@@ -321,6 +324,8 @@ export default function WaitlistPage() {
           speed={1}
           intensity={1}
           size={1}
+          quality="medium"
+          enableOnSafari={false}
         />
       </div>
       
@@ -334,8 +339,8 @@ export default function WaitlistPage() {
       <section ref={heroRef} className="relative min-h-screen">
         {/* Dynamic glass crack overlay */}
         <motion.div 
-          className="absolute inset-0 pointer-events-none"
-          style={{ opacity: crackOpacity, zIndex: 2 }}
+          className="absolute inset-0 pointer-events-none hardware-accelerated"
+          style={{ opacity: crackOpacity, zIndex: 2, transform: 'translateZ(0)' }}
         >
           <svg className="absolute inset-0 w-full h-full">
             <defs>
@@ -422,9 +427,10 @@ export default function WaitlistPage() {
           >
             {/* Countdown Display with glass effect */}
             <motion.div 
-              className="mb-12 p-4 sm:p-6 glass-crack rounded-2xl shadow-xl max-w-2xl mx-auto"
-              whileHover={{ scale: 1.02 }}
+              className={`mb-12 p-4 sm:p-6 ${isSafari ? 'glass-effect-light' : 'glass-crack'} rounded-2xl shadow-xl max-w-2xl mx-auto hardware-accelerated`}
+              whileHover={shouldReduceAnimations ? {} : { scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300 }}
+              style={{ transform: 'translateZ(0)' }}
             >
               <p className="text-white/90 text-sm font-medium mb-4 text-center uppercase tracking-wider">Launching in</p>
               <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-md mx-auto">
@@ -437,13 +443,14 @@ export default function WaitlistPage() {
                     transition={{ delay: index * 0.1 }}
                   >
                     <motion.div 
-                      className="glass-card rounded-lg p-2 sm:p-3 group"
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
+                      className={`${isSafari ? 'glass-effect-medium' : 'glass-card'} rounded-lg p-2 sm:p-3 group hardware-accelerated`}
+                      whileHover={shouldReduceAnimations ? {} : { scale: 1.05, y: -2 }}
+                      whileTap={shouldReduceAnimations ? {} : { scale: 0.95 }}
+                      style={{ transform: 'translateZ(0)' }}
                     >
                       <motion.div 
                         className="text-2xl sm:text-3xl md:text-4xl font-bold text-white"
-                        animate={{ scale: [1, 1.1, 1] }}
+                        animate={shouldReduceAnimations ? {} : { scale: [1, 1.1, 1] }}
                         transition={{ duration: 1, repeat: Infinity, repeatDelay: 59 }}
                       >
                         {unit === 'days' ? value : String(value).padStart(2, '0')}
@@ -461,16 +468,9 @@ export default function WaitlistPage() {
             {/* Main tagline with crack effect */}
             <div className="mb-12">
               <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none">
-                <RotatingText
+                <RotatingTextOptimized
                   texts={['GET CRACKD', 'GET SMART', 'GET PREPARED']}
                   mainClassName="inline-flex items-center justify-center"
-                  staggerFrom="last"
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "-120%" }}
-                  staggerDuration={0.025}
-                  splitLevelClassName="overflow-hidden inline-block"
-                  transition={{ type: "spring", damping: 30, stiffness: 400 }}
                   rotationInterval={2500}
                 />
               </h1>

@@ -1,0 +1,160 @@
+/* Safari-specific performance optimizations */
+
+/* Force hardware acceleration for transforms */
+.hardware-accelerated {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+
+/* Optimize will-change for animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-auto {
+  will-change: auto;
+}
+
+/* Reduce paint areas */
+.contain-paint {
+  contain: paint;
+}
+
+.contain-layout {
+  contain: layout;
+}
+
+.contain-strict {
+  contain: strict;
+}
+
+/* Safari-specific backdrop-filter optimization */
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  .glass-morphism-optimized {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Fallback for Safari without backdrop-filter support */
+@supports not ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  .glass-morphism-optimized {
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+  }
+}
+
+/* Reduce motion for accessibility and performance */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .motion-reduce-transform {
+    transform: none !important;
+  }
+  
+  .motion-reduce-opacity {
+    opacity: 1 !important;
+  }
+}
+
+/* Safari-specific fixes for smooth scrolling */
+@supports (-webkit-touch-callout: none) {
+  html {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .smooth-scroll-safari {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Optimize SVG animations for Safari */
+.svg-animation-optimized {
+  transform-origin: center;
+  -webkit-transform-origin: center;
+  transform-box: fill-box;
+  -webkit-transform-box: fill-box;
+}
+
+/* Reduce complexity for mobile Safari */
+@media (max-width: 768px) {
+  .mobile-simplified {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+  
+  .disable-animation-mobile {
+    animation: none !important;
+    transition: opacity 0.2s ease !important;
+  }
+}
+
+/* GPU-accelerated animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale3d(0.95, 0.95, 1);
+    opacity: 0;
+  }
+  to {
+    transform: scale3d(1, 1, 1);
+    opacity: 1;
+  }
+}
+
+/* Optimized glass effect classes */
+.glass-effect-light {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-effect-medium {
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.glass-effect-heavy {
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Disable expensive effects on low-end devices */
+@media (max-device-memory: 2GB), (max-device-memory: 4GB) {
+  .performance-mode {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+  }
+}
