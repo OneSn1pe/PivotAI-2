@@ -461,8 +461,9 @@ export default function WaitlistPage() {
             {/* Main tagline with crack effect */}
             <div className="mb-12">
               <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none">
+                <span>GET </span>
                 <RotatingText
-                  texts={['GET CRACKD', 'GET SMART', 'GET PREPARED']}
+                  texts={['CRACKD', 'SMART', 'PREPARED']}
                   mainClassName="inline-flex items-center justify-center"
                   staggerFrom="last"
                   initial={{ y: "100%" }}
