@@ -31,6 +31,11 @@ const Dock: React.FC<DockProps> = ({
   const mouseX = useMotionValue(Infinity);
   const dockRef = useRef<HTMLDivElement>(null);
 
+  // Calculate total width needed for the dock
+  const gap = 8; // gap between items in pixels
+  const padding = 24; // total horizontal padding
+  const minDockWidth = items.length * baseItemSize + (items.length - 1) * gap + padding;
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (dockRef.current) {
@@ -60,8 +65,11 @@ const Dock: React.FC<DockProps> = ({
     <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] ${className}`}>
       <motion.div
         ref={dockRef}
-        className="flex items-end gap-2 px-3 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl"
-        style={{ height: panelHeight }}
+        className="relative px-3 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl"
+        style={{ 
+          height: panelHeight,
+          minWidth: minDockWidth,
+        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         animate={{
@@ -69,18 +77,21 @@ const Dock: React.FC<DockProps> = ({
         }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
-        {items.map((item, index) => (
-          <DockItem
-            key={index}
-            item={item}
-            index={index}
-            mouseX={mouseX}
-            baseItemSize={baseItemSize}
-            magnification={magnification}
-            totalItems={items.length}
-            isActive={item.id === activeItem}
-          />
-        ))}
+        <div className="relative flex items-end justify-center h-full" style={{ gap: `${gap}px` }}>
+          {items.map((item, index) => (
+            <DockItem
+              key={index}
+              item={item}
+              index={index}
+              mouseX={mouseX}
+              baseItemSize={baseItemSize}
+              magnification={magnification}
+              totalItems={items.length}
+              isActive={item.id === activeItem}
+              gap={gap}
+            />
+          ))}
+        </div>
       </motion.div>
     </div>
   );
@@ -94,6 +105,7 @@ interface DockItemProps {
   magnification: number;
   totalItems: number;
   isActive?: boolean;
+  gap: number;
 }
 
 const DockItem: React.FC<DockItemProps> = ({
@@ -104,27 +116,30 @@ const DockItem: React.FC<DockItemProps> = ({
   magnification,
   totalItems,
   isActive = false,
+  gap,
 }) => {
-  const ref = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [showLabel, setShowLabel] = useState(false);
 
+  // Calculate item position based on index
+  const itemPosition = index * (baseItemSize + gap) + baseItemSize / 2 + 12; // 12px for left padding
+
   const distance = useTransform(mouseX, (val: number) => {
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect();
-      const itemCenter = rect.left + rect.width / 2 - ref.current.offsetParent!.getBoundingClientRect().left;
-      return Math.abs(val - itemCenter);
-    }
-    return Infinity;
+    return Math.abs(val - itemPosition);
   });
 
-  const scale = useTransform(distance, [0, 100, 200], [magnification / baseItemSize, 1.2, 1]);
+  const scale = useTransform(distance, [0, 80, 150], [magnification / baseItemSize, 1.2, 1]);
   const size = useSpring(useTransform(scale, (s) => s * baseItemSize), {
     stiffness: 400,
     damping: 30,
   });
 
   return (
-    <div className="relative">
+    <div 
+      ref={ref}
+      className="relative flex items-center justify-center"
+      style={{ width: baseItemSize, height: baseItemSize }}
+    >
       {/* Label tooltip */}
       <motion.div
         className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none"
@@ -139,8 +154,7 @@ const DockItem: React.FC<DockItemProps> = ({
       </motion.div>
 
       <motion.button
-        ref={ref}
-        className={`relative flex items-center justify-center rounded-xl transition-colors cursor-pointer backdrop-blur-sm border ${
+        className={`absolute flex items-center justify-center rounded-xl transition-colors cursor-pointer backdrop-blur-sm border ${
           isActive 
             ? 'bg-white/40 border-white/30' 
             : 'bg-white/20 hover:bg-white/30 border-white/10'
