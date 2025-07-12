@@ -459,7 +459,7 @@ export default function WaitlistPage() {
             </motion.div>
             
             {/* Main tagline with crack effect */}
-            <div className="mb-8">
+            <div className="mb-12">
               <h1 className="text-6xl md:text-8xl font-black text-white mb-2 leading-none">
                 <RotatingText
                   texts={['GET CRACKD', 'GET SMART', 'GET PREPARED']}
@@ -483,16 +483,6 @@ export default function WaitlistPage() {
                 Become <span className="font-semibold text-[#38BDF8]">amazingly capable</span> and <span className="font-semibold text-[#60A5FA]">brilliantly smart</span>
               </motion.p>
             </div>
-            
-            <motion.p 
-              className="text-lg text-white/70 mb-12 max-w-2xl mx-auto font-light leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              Break through career barriers with AI-powered guidance. 
-              Shatter limitations. Transform your potential into unstoppable success.
-            </motion.p>
           </motion.div>
 
           {/* Email Form */}
