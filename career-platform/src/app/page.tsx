@@ -564,22 +564,13 @@ export default function WaitlistPage() {
         
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.h2 
-            className="text-4xl font-bold text-center text-white mb-4"
+            className="text-4xl font-bold text-center text-white mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
             Crack Your Career Code
           </motion.h2>
-          <motion.p 
-            className="text-center text-gray-400 font-medium mb-16 max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-          >
-            Four powerful ways to shatter career barriers and unlock your true potential
-          </motion.p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
