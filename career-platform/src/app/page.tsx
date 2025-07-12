@@ -322,7 +322,7 @@ export default function WaitlistPage() {
         {/* Lightning Background */}
         <div className="absolute inset-0" style={{ width: '100%', height: '100%', position: 'relative' }}>
           <Lightning
-            hue={220}
+            hue={230}
             xOffset={0}
             speed={1}
             intensity={1}
