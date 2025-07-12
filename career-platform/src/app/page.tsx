@@ -338,7 +338,7 @@ export default function WaitlistPage() {
             <defs>
               <filter id="glassDistortion">
                 <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="5" result="noise" />
-                <motion.feDisplacementMap in="SourceGraphic" in2="noise" scale={glassDistortion} />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" />
               </filter>
             </defs>
             
