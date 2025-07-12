@@ -159,19 +159,6 @@ const DockItem: React.FC<DockItemProps> = ({
         zIndex,
       }}
     >
-      {/* Label tooltip */}
-      <motion.div
-        className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none z-50"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: showLabel ? 1 : 0, y: showLabel ? 0 : 10 }}
-        transition={{ duration: 0.2 }}
-      >
-        {item.label}
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
-          <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900" />
-        </div>
-      </motion.div>
-
       <motion.button
         className={`absolute flex items-center justify-center rounded-xl transition-colors cursor-pointer backdrop-blur-sm border ${
           isActive 
@@ -190,6 +177,25 @@ const DockItem: React.FC<DockItemProps> = ({
         onMouseLeave={() => setShowLabel(false)}
         whileTap={{ scale: 0.95 }}
       >
+        {/* Label tooltip */}
+        <motion.div
+          className="absolute px-2 py-1 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap pointer-events-none z-50"
+          style={{
+            bottom: '100%',
+            marginBottom: '8px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: showLabel ? 1 : 0, y: showLabel ? 0 : 10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {item.label}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
+            <div className="w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-gray-900" />
+          </div>
+        </motion.div>
+
         <motion.div
           className={`${isActive ? 'text-white' : 'text-white/90'}`}
           style={{
