@@ -318,7 +318,7 @@ export default function WaitlistPage() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-black">
+      <section ref={heroRef} className="relative min-h-screen bg-black">
         {/* Lightning Background */}
         <div className="absolute inset-0" style={{ width: '100%', height: '100%', position: 'relative' }}>
           <Lightning
@@ -401,7 +401,9 @@ export default function WaitlistPage() {
           />
         </motion.div>
 
-        <div className="max-w-4xl w-full relative" style={{ zIndex: 3 }} onClick={handleInteraction}>
+        {/* Content Container */}
+        <div className="relative min-h-screen flex items-center justify-center px-4" style={{ zIndex: 3 }}>
+          <div className="max-w-4xl w-full" onClick={handleInteraction}>
           <AnimatePresence>
             {cracks.map(crack => (
               <GlassCrack key={crack.id} x={crack.x} y={crack.y} id={crack.id} />
@@ -563,6 +565,7 @@ export default function WaitlistPage() {
               Join the revolution. Become unstoppable.
             </p>
           </motion.div>
+          </div>
         </div>
 
         {/* Scroll indicator */}
