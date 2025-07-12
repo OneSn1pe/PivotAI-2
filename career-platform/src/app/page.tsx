@@ -560,27 +560,10 @@ export default function WaitlistPage() {
                 )}
               </motion.button>
             </form>
-
-            <p className="text-center text-sm text-white/60 mt-6 font-medium">
-              Join the revolution. Become unstoppable.
-            </p>
           </motion.div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          whileHover={{ scale: 1.2 }}
-        >
-          <div className="p-3 rounded-full transition-all duration-300 hover:bg-white/10">
-            <svg className="w-6 h-6 text-white/60 hover:text-white/90 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </motion.div>
       </section>
 
       {/* Features Section */}
