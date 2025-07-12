@@ -312,23 +312,26 @@ export default function WaitlistPage() {
   );
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
-      <AnimatePresence>
-        {success && <SuccessMessage />}
-      </AnimatePresence>
+    <div className="min-h-screen bg-black overflow-hidden relative">
+      {/* Lightning Background for entire page */}
+      <div className="fixed inset-0" style={{ width: '100%', height: '100%', zIndex: 0 }}>
+        <Lightning
+          hue={230}
+          xOffset={0}
+          speed={1}
+          intensity={1}
+          size={1}
+        />
+      </div>
+      
+      {/* Page Content */}
+      <div className="relative" style={{ zIndex: 1 }}>
+        <AnimatePresence>
+          {success && <SuccessMessage />}
+        </AnimatePresence>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen bg-black">
-        {/* Lightning Background */}
-        <div className="absolute inset-0" style={{ width: '100%', height: '100%', position: 'relative' }}>
-          <Lightning
-            hue={230}
-            xOffset={0}
-            speed={1}
-            intensity={1}
-            size={1}
-          />
-        </div>
+      <section ref={heroRef} className="relative min-h-screen">
         {/* Dynamic glass crack overlay */}
         <motion.div 
           className="absolute inset-0 pointer-events-none"
@@ -567,7 +570,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Features Section */}
-      <section ref={featuresRef} className="py-24 px-4 bg-black relative overflow-hidden">
+      <section ref={featuresRef} className="py-24 px-4 relative overflow-hidden">
         
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.h2 
@@ -644,7 +647,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Mission Section */}
-      <section ref={missionRef} className="py-24 px-4 bg-black text-white relative overflow-hidden">
+      <section ref={missionRef} className="py-24 px-4 text-white relative overflow-hidden">
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.h2 
@@ -688,7 +691,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Team Section */}
-      <section ref={teamRef} className="py-24 px-4 bg-black">
+      <section ref={teamRef} className="py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h2 
             className="text-3xl font-light text-white mb-4"
@@ -756,7 +759,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-black border-t border-gray-800">
+      <footer className="py-12 px-4 border-t border-gray-800">
         <div className="max-w-6xl mx-auto">
           {/* Social Links Section */}
           <div className="text-center">
@@ -890,6 +893,7 @@ export default function WaitlistPage() {
         magnification={65}
         activeItem={activeSection}
       />
+      </div>
     </div>
   );
 }
