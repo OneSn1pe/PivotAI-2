@@ -10,6 +10,7 @@ import RotatingText from '@/components/RotatingText';
 import ScrollReveal from '@/components/ScrollReveal';
 import Dock from '@/components/Dock';
 import { FiHome, FiTarget, FiHeart, FiUsers, FiMail } from 'react-icons/fi';
+import Lightning from '@/components/Lightning';
 
 export default function WaitlistPage() {
   // Color palette
@@ -311,17 +312,27 @@ export default function WaitlistPage() {
   );
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen bg-black overflow-hidden">
       <AnimatePresence>
         {success && <SuccessMessage />}
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#334155]">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 bg-black">
+        {/* Lightning Background */}
+        <div className="absolute inset-0" style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <Lightning
+            hue={220}
+            xOffset={0}
+            speed={1}
+            intensity={1}
+            size={1}
+          />
+        </div>
         {/* Dynamic glass crack overlay */}
         <motion.div 
           className="absolute inset-0 pointer-events-none"
-          style={{ opacity: crackOpacity }}
+          style={{ opacity: crackOpacity, zIndex: 2 }}
         >
           <svg className="absolute inset-0 w-full h-full">
             <defs>
@@ -390,7 +401,7 @@ export default function WaitlistPage() {
           />
         </motion.div>
 
-        <div className="max-w-4xl w-full relative" onClick={handleInteraction}>
+        <div className="max-w-4xl w-full relative" style={{ zIndex: 3 }} onClick={handleInteraction}>
           <AnimatePresence>
             {cracks.map(crack => (
               <GlassCrack key={crack.id} x={crack.x} y={crack.y} id={crack.id} />
@@ -570,29 +581,11 @@ export default function WaitlistPage() {
       </section>
 
       {/* Features Section */}
-      <section ref={featuresRef} className="py-24 px-4 bg-gradient-to-b from-white to-[#F9FAFB] relative overflow-hidden">
-        {/* Animated glass shard decorations */}
-        <motion.div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div 
-            className="absolute top-0 left-1/4 w-1 h-32 bg-gradient-to-b from-transparent via-[#38BDF8]/20 to-transparent"
-            animate={{ rotate: [45, 50, 45] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          />
-          <motion.div 
-            className="absolute top-1/3 right-1/3 w-1 h-24 bg-gradient-to-b from-transparent via-[#2563EB]/20 to-transparent"
-            animate={{ rotate: [-12, -8, -12] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          />
-          <motion.div 
-            className="absolute bottom-1/4 left-1/2 w-1 h-40 bg-gradient-to-b from-transparent via-[#60A5FA]/20 to-transparent"
-            animate={{ rotate: [30, 35, 30] }}
-            transition={{ duration: 5, repeat: Infinity }}
-          />
-        </motion.div>
+      <section ref={featuresRef} className="py-24 px-4 bg-black relative overflow-hidden">
         
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.h2 
-            className="text-4xl font-bold text-center text-[#1E293B] mb-4"
+            className="text-4xl font-bold text-center text-white mb-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -600,7 +593,7 @@ export default function WaitlistPage() {
             Crack Your Career Code
           </motion.h2>
           <motion.p 
-            className="text-center text-[#4B5563] font-medium mb-16 max-w-3xl mx-auto"
+            className="text-center text-gray-400 font-medium mb-16 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -646,17 +639,17 @@ export default function WaitlistPage() {
                 onClick={handleInteraction}
                 className="relative"
               >
-                <div className="h-full glass-feature-card rounded-xl p-6 transition-all duration-300 group">
+                <div className="h-full glass-feature-card rounded-xl p-6 transition-all duration-300 group cursor-pointer">
                   <motion.div 
                     className="w-14 h-14 glass-icon rounded-lg flex items-center justify-center mb-4"
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
-                    <svg className="w-7 h-7 text-[#2563EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-7 h-7 text-[#38BDF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feature.icon} />
                     </svg>
                   </motion.div>
-                  <h3 className="font-bold text-[#1E293B] mb-2 text-lg group-hover:text-[#2563EB] transition-colors">{feature.title}</h3>
-                  <p className="text-sm text-[#4B5563] leading-relaxed">{feature.description}</p>
+                  <h3 className="font-bold text-white mb-2 text-lg group-hover:text-[#38BDF8] transition-colors">{feature.title}</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -665,22 +658,7 @@ export default function WaitlistPage() {
       </section>
 
       {/* Mission Section */}
-      <section ref={missionRef} className="py-24 px-4 bg-gradient-to-br from-[#1E293B] to-[#334155] text-white relative overflow-hidden">
-        {/* Dynamic pattern overlay */}
-        <motion.div 
-          className="absolute inset-0 opacity-10"
-          animate={{
-            background: [
-              `radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
-               radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`,
-              `radial-gradient(circle at 30% 60%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
-               radial-gradient(circle at 70% 70%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`,
-              `radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.3) 0%, transparent 50%),
-               radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.2) 0%, transparent 50%)`
-            ]
-          }}
-          transition={{ duration: 10, repeat: Infinity }}
-        />
+      <section ref={missionRef} className="py-24 px-4 bg-black text-white relative overflow-hidden">
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <motion.h2 
@@ -724,10 +702,10 @@ export default function WaitlistPage() {
       </section>
 
       {/* Team Section */}
-      <section ref={teamRef} className="py-24 px-4 bg-[#F9FAFB]">
+      <section ref={teamRef} className="py-24 px-4 bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h2 
-            className="text-3xl font-light text-[#1E293B] mb-4"
+            className="text-3xl font-light text-white mb-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -735,7 +713,7 @@ export default function WaitlistPage() {
             Our Team
           </motion.h2>
           <motion.p 
-            className="text-lg text-[#4B5563] font-light mb-12"
+            className="text-lg text-gray-400 font-light mb-12"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -759,7 +737,7 @@ export default function WaitlistPage() {
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div 
-                  className="w-48 h-48 bg-white rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover:shadow-xl transition-all duration-300 border-2"
+                  className="w-48 h-48 bg-gray-900 rounded-lg shadow-sm p-8 flex items-center justify-center relative overflow-hidden hover:shadow-xl transition-all duration-300 border-2"
                   whileHover={{ y: -5 }}
                   initial={{
                     borderColor: `${university.color}00`
@@ -782,7 +760,7 @@ export default function WaitlistPage() {
                     className="object-contain relative z-10"
                   />
                 </motion.div>
-                <p className="mt-4 text-sm text-[#4B5563] font-light group-hover:text-[#2563EB] transition-colors">
+                <p className="mt-4 text-sm text-gray-400 font-light group-hover:text-[#38BDF8] transition-colors">
                   {university.name}
                 </p>
               </motion.div>
@@ -792,11 +770,11 @@ export default function WaitlistPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-white border-t border-[#E5E7EB]">
+      <footer className="py-12 px-4 bg-black border-t border-gray-800">
         <div className="max-w-6xl mx-auto">
           {/* Social Links Section */}
           <div className="text-center">
-            <h3 className="text-lg font-medium text-[#1E293B] mb-6">Connect with Crackd</h3>
+            <h3 className="text-lg font-medium text-white mb-6">Connect with Crackd</h3>
             <div className="flex justify-center items-center gap-6">
               {[
                 { name: "LinkedIn", href: "https://linkedin.com/company/crackd", color: "#0077B5", icon: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" },
@@ -815,14 +793,14 @@ export default function WaitlistPage() {
                   whileTap={{ scale: 0.95 }}
                 >
                   <motion.div 
-                    className="w-12 h-12 bg-white rounded-lg border-2 border-[#E5E7EB] flex items-center justify-center transition-all duration-300"
+                    className="w-12 h-12 bg-black rounded-lg border-2 border-gray-800 flex items-center justify-center transition-all duration-300"
                     whileHover={{ 
                       backgroundColor: social.color,
                       borderColor: social.color,
                       boxShadow: `0 4px 14px ${social.color}40`
                     }}
                   >
-                    <svg className="w-5 h-5 text-[#4B5563] group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
                       <path d={social.icon} />
                     </svg>
                   </motion.div>
@@ -832,9 +810,9 @@ export default function WaitlistPage() {
           </div>
 
           {/* Copyright */}
-          <div className="mt-8 pt-8 border-t border-[#E5E7EB] text-center">
-            <p className="text-sm text-[#9CA3AF] font-light">
-              © 2024 <span className="text-hover-underline cursor-pointer hover:text-[#1E293B] transition-colors">Crackd</span>. Cracking the code to career success.
+          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+            <p className="text-sm text-gray-500 font-light">
+              © 2024 <span className="text-hover-underline cursor-pointer hover:text-white transition-colors">Crackd</span>. Cracking the code to career success.
             </p>
           </div>
         </div>
@@ -885,28 +863,29 @@ export default function WaitlistPage() {
         }
         
         .glass-feature-card {
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(8px);
-          border: 1px solid rgba(229, 231, 235, 0.6);
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           box-shadow: 
-            0 1px 3px rgba(0, 0, 0, 0.05),
-            0 10px 40px rgba(0, 0, 0, 0.08);
+            0 1px 3px rgba(0, 0, 0, 0.3),
+            0 10px 40px rgba(0, 0, 0, 0.2);
         }
         
         .glass-feature-card:hover {
-          border-color: rgba(37, 99, 235, 0.2);
+          border-color: rgba(56, 189, 248, 0.3);
+          background: rgba(255, 255, 255, 0.08);
           box-shadow: 
-            0 1px 3px rgba(0, 0, 0, 0.05),
-            0 20px 50px rgba(37, 99, 235, 0.15),
-            inset 0 1px 1px rgba(255, 255, 255, 0.6);
+            0 1px 3px rgba(0, 0, 0, 0.3),
+            0 20px 50px rgba(56, 189, 248, 0.2),
+            inset 0 1px 1px rgba(255, 255, 255, 0.1);
         }
         
         .glass-icon {
-          background: linear-gradient(135deg, rgba(224, 242, 254, 0.8), rgba(219, 234, 254, 0.8));
-          border: 1px solid rgba(147, 197, 253, 0.3);
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(37, 99, 235, 0.2));
+          border: 1px solid rgba(56, 189, 248, 0.3);
           box-shadow: 
-            inset 0 1px 1px rgba(255, 255, 255, 0.5),
-            0 2px 8px rgba(37, 99, 235, 0.1);
+            inset 0 1px 1px rgba(255, 255, 255, 0.1),
+            0 2px 8px rgba(56, 189, 248, 0.2);
         }
         
         .glass-icon-success {
