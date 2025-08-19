@@ -9,7 +9,6 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import RotatingText from '@/components/RotatingText';
 import ScrollReveal from '@/components/ScrollReveal';
 import { FiHome, FiTarget, FiHeart, FiUsers, FiMail } from 'react-icons/fi';
-import Lightning from '@/components/Lightning';
 
 export default function WaitlistPage() {
   // Color palette
@@ -267,19 +266,8 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
-      {/* Lightning Background for entire page */}
-      <div className="fixed inset-0" style={{ width: '100%', height: '100%', zIndex: 0 }}>
-        <Lightning
-          hue={230}
-          xOffset={0}
-          speed={1}
-          intensity={1}
-          size={1}
-        />
-      </div>
-      
       {/* Page Content */}
-      <div className="relative" style={{ zIndex: 1 }}>
+      <div className="relative">
         <AnimatePresence>
           {success && <SuccessMessage />}
         </AnimatePresence>
@@ -289,7 +277,7 @@ export default function WaitlistPage() {
         {/* Dynamic glass crack overlay */}
         <motion.div 
           className="absolute inset-0 pointer-events-none"
-          style={{ opacity: crackOpacity, zIndex: 2 }}
+          style={{ opacity: crackOpacity }}
         >
           <svg className="absolute inset-0 w-full h-full">
             <defs>
@@ -359,7 +347,7 @@ export default function WaitlistPage() {
         </motion.div>
 
         {/* Content Container */}
-        <div className="relative min-h-screen flex items-center justify-center px-4" style={{ zIndex: 3 }}>
+        <div className="relative min-h-screen flex items-center justify-center px-4">
           <div className="max-w-4xl w-full" onClick={handleInteraction}>
           <AnimatePresence>
             {cracks.map(crack => (
