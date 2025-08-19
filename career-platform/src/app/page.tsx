@@ -273,8 +273,8 @@ export default function WaitlistPage() {
           color="#2563EB"
           speed={0.6}
           direction="forward"
-          scale={1.1}
-          opacity={0.3}
+          scale={1.2}
+          opacity={0.4}
           mouseInteractive={true}
         />
       </div>
