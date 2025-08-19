@@ -223,51 +223,6 @@ export default function WaitlistPage() {
     </motion.svg>
   );
 
-  // Success message overlay
-  const SuccessMessage = () => (
-    <motion.div 
-      className="fixed inset-0 z-[10000] bg-black/50 flex items-center justify-center px-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <motion.div 
-        className="bg-white rounded-2xl shadow-[0_20px_40px_rgba(15,23,42,0.15)] p-8 max-w-md w-full border border-[#E5E7EB] relative overflow-hidden"
-        initial={{ scale: 0.8, y: 50 }}
-        animate={{ scale: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        onClick={handleInteraction}
-      >
-        <AnimatePresence>
-          {cracks.map(crack => (
-            <GlassCrack key={crack.id} x={crack.x} y={crack.y} id={crack.id} />
-          ))}
-        </AnimatePresence>
-        
-        <motion.div 
-          className="w-16 h-16 glass-icon-success rounded-full flex items-center justify-center mx-auto mb-6"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
-        </motion.div>
-        <h2 className="text-2xl font-bold text-[#1E293B] mb-3 text-center">You're Getting CRACKD!</h2>
-        <p className="text-[#4B5563] text-center">
-          Prepare to shatter your limits. We'll notify you the moment Crackd launches.
-        </p>
-        <motion.button
-          onClick={() => setSuccess(false)}
-          className="mt-6 w-full glass-button text-white font-bold py-3 px-6 rounded-lg"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          I'm Ready
-        </motion.button>
-      </motion.div>
-    </motion.div>
-  );
 
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
@@ -285,9 +240,6 @@ export default function WaitlistPage() {
       
       {/* Page Content */}
       <div className="relative" style={{ zIndex: 1 }}>
-        <AnimatePresence>
-          {success && <SuccessMessage />}
-        </AnimatePresence>
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-screen">
@@ -498,6 +450,13 @@ export default function WaitlistPage() {
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </motion.svg>
                     Joining waitlist...
+                  </span>
+                ) : success ? (
+                  <span className="relative z-10 font-bold text-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Will Notify!
                   </span>
                 ) : (
                   <>
