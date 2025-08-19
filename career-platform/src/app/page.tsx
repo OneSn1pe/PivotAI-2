@@ -120,6 +120,10 @@ export default function WaitlistPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if already showing success
+    if (success) return;
+    
     setError('');
     setLoading(true);
 
@@ -156,10 +160,10 @@ export default function WaitlistPage() {
         throw new Error('Unable to add to waitlist. Please try again later.');
       }
 
-      setSuccess(true);
       setEmail('');
+      setSuccess(true);
       
-      // Reset success state after 5 seconds to allow another signup
+      // Reset success state after 5 seconds
       setTimeout(() => {
         setSuccess(false);
       }, 5000);
@@ -476,7 +480,7 @@ export default function WaitlistPage() {
               
               <motion.button
                 type="submit"
-                disabled={loading}
+                disabled={loading || success}
                 className="w-full glass-button text-white font-medium py-4 px-8 rounded-lg relative overflow-hidden group"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
