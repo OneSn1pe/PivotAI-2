@@ -73,8 +73,8 @@ export default function WaitlistPage() {
   }, []);
 
   useEffect(() => {
-    // Countdown timer for July 20th 12 PM EST
-    const targetDate = new Date('2025-07-20T12:00:00-04:00').getTime();
+    // Countdown timer for September 15th 12 PM EST
+    const targetDate = new Date('2025-09-15T12:00:00-04:00').getTime();
     
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -410,7 +410,7 @@ export default function WaitlistPage() {
                   </motion.div>
                 ))}
               </div>
-              <p className="text-white/60 text-xs text-center mt-4 font-medium">July 20th, 2025 • 12:00 PM EST</p>
+              <p className="text-white/60 text-xs text-center mt-4 font-medium">September 15th, 2025 • 12:00 PM EST</p>
             </motion.div>
             
             {/* Main tagline with crack effect */}
