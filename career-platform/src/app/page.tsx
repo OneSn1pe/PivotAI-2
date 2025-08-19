@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import RotatingText from '@/components/RotatingText';
 import ScrollReveal from '@/components/ScrollReveal';
+import Plasma from '@/components/Plasma';
 import { FiHome, FiTarget, FiHeart, FiUsers, FiMail } from 'react-icons/fi';
 
 export default function WaitlistPage() {
@@ -266,8 +267,20 @@ export default function WaitlistPage() {
 
   return (
     <div className="min-h-screen bg-black overflow-hidden relative">
+      {/* Plasma Background for entire page */}
+      <div className="fixed inset-0" style={{ width: '100%', height: '100%', zIndex: 0 }}>
+        <Plasma 
+          color="#2563EB"
+          speed={0.6}
+          direction="forward"
+          scale={1.1}
+          opacity={0.3}
+          mouseInteractive={true}
+        />
+      </div>
+      
       {/* Page Content */}
-      <div className="relative">
+      <div className="relative" style={{ zIndex: 1 }}>
         <AnimatePresence>
           {success && <SuccessMessage />}
         </AnimatePresence>
