@@ -161,7 +161,6 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
           content: prompt
         }
       ],
-      temperature: 0.3,
       max_completion_tokens: 500
     });
 

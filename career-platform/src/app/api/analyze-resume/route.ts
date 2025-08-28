@@ -244,7 +244,6 @@ export async function POST(request: NextRequest) {
           { role: 'system', content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.RESUME_ANALYST },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.2,
         max_completion_tokens: 1500,
         response_format: { type: 'json_object' }
       });
