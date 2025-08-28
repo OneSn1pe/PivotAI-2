@@ -631,7 +631,7 @@ export default function ResumeUpload() {
             {analysis.skills.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {analysis.skills.map((skill, index) => (
-                  <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded text-sm">
+                  <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                     {skill}
                   </span>
                 ))}

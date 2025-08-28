@@ -298,7 +298,7 @@ export default function WaitlistPage() {
           
           {/* Animated shatter points */}
           <motion.div 
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-gray-400 filter blur-[120px] opacity-20"
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#38BDF8] rounded-full filter blur-[120px] opacity-30"
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.5, 0.3]
@@ -306,7 +306,7 @@ export default function WaitlistPage() {
             transition={{ duration: 4, repeat: Infinity }}
           />
           <motion.div 
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gray-500 filter blur-[120px] opacity-15"
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#2563EB] rounded-full filter blur-[120px] opacity-20"
             animate={{
               scale: [1, 1.1, 1],
               opacity: [0.2, 0.4, 0.2]

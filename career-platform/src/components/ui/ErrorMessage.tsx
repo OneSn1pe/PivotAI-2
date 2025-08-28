@@ -16,7 +16,7 @@ export default function ErrorMessage({
   return (
     <div className="bg-white/80 backdrop-filter backdrop-blur-md p-6 rounded-2xl shadow-xl shadow-sky-200/50 max-w-lg mx-auto border border-slate-100">
       <div className="flex items-center mb-4">
-        <div className="bg-gray-100 p-3 rounded mr-3 relative">
+        <div className="bg-amber-100 p-3 rounded-full mr-3 relative">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             className="h-6 w-6 text-amber-600" 
