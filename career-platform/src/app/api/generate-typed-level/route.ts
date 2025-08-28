@@ -316,7 +316,7 @@ export async function POST(request: NextRequest) {
     // Call OpenAI
     const openaiStartTime = performance.now();
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5",
       messages: [
         {
           role: "system",

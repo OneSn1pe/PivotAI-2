@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     
     // Call OpenAI with typed prompt
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-5",
       messages: [
         {
           role: "system",

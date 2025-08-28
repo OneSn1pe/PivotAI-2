@@ -224,7 +224,7 @@ export async function POST(request: NextRequest) {
     
     const completion = await withRetry(async () => {
       return await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-5',
         messages: [
           { role: 'system', content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.RESUME_ANALYST },
           { role: 'user', content: prompt }
