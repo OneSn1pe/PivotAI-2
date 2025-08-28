@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { PROMPT_CONSTANTS } from '@/constants/promptConstants';
+import { ResumePreprocessor } from '@/utils/resumePreprocessor';
 
 // Add debug checkpoint utility
 const logApiCheckpoint = (message: string, data: any = {}) => {
@@ -82,11 +83,11 @@ export async function OPTIONS(request: NextRequest) {
   return response;
 }
 
-// Helper to truncate resume to a manageable size
+// Helper to truncate resume to a manageable size (kept for backwards compatibility)
 function truncateResume(text: string, maxLength = 4000): string {
-  if (text.length <= maxLength) return text;
-  
-  return text.substring(0, maxLength) + '...';
+  // Now using intelligent truncation in ResumePreprocessor
+  const result = ResumePreprocessor.preprocess(text, { maxLength });
+  return result.processedText;
 }
 
 // Handle GET requests with proper error message
@@ -189,12 +190,26 @@ export async function POST(request: NextRequest) {
       }, 400);
     }
     
-    // Extract and truncate resume text
-    const resumeText = truncateResume(requestData.resumeText);
-    checkpoints.push(logApiCheckpoint("Resume text processed", { 
+    // Server-side preprocessing: PII removal, noise removal, and structure parsing
+    // Input has already been cleaned by client (encoding, whitespace, bullets)
+    const preprocessResult = ResumePreprocessor.preprocess(requestData.resumeText, {
+      removePII: true,              // Server handles PII removal for privacy
+      normalizeWhitespace: false,    // Already done by client
+      removeNoise: true,            // Remove page numbers, headers, footers
+      standardizeSections: true,     // Parse and structure sections
+      parseStructure: true,         // Full structure parsing
+      maxLength: 4000
+    });
+    
+    const resumeText = preprocessResult.processedText;
+    
+    checkpoints.push(logApiCheckpoint("Server preprocessing completed", { 
       originalLength: requestData.resumeText.length,
       processedLength: resumeText.length,
-      truncated: requestData.resumeText.length !== resumeText.length
+      removedPII: preprocessResult.removedPII,
+      sectionsFound: preprocessResult.metadata.sectionsFound,
+      processingSteps: preprocessResult.metadata.processingSteps,
+      truncated: preprocessResult.metadata.processingSteps.includes('truncation')
     }));
     
     // Prepare the prompt for OpenAI
@@ -322,7 +337,7 @@ export async function POST(request: NextRequest) {
     const requestDuration = Math.round(performance.now() - requestStartTime);
     checkpoints.push(logApiCheckpoint("Processing complete", { totalDurationMs: requestDuration }));
     
-    // Return successful response
+    // Return successful response with preprocessing metadata
     return createResponse({
       success: true,
       analysis: parsedResponse,
@@ -330,6 +345,11 @@ export async function POST(request: NextRequest) {
         processingTimeMs: requestDuration,
         model: completion.model,
         tokensUsed: completion.usage?.total_tokens || 0,
+        preprocessing: {
+          removedPII: preprocessResult.removedPII,
+          steps: preprocessResult.metadata.processingSteps,
+          sectionsFound: preprocessResult.metadata.sectionsFound || []
+        },
         _debug: checkpoints
       }
     });

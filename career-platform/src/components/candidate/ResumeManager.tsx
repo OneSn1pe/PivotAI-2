@@ -8,6 +8,7 @@ import { db, storage } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ResumeAnalysis, CandidateProfile } from '@/types/user';
 import { ref, getDownloadURL, listAll, uploadBytes } from 'firebase/storage';
+import { ClientResumePreprocessor } from '@/utils/resumePreprocessor.client';
 // Dynamically import heavy libraries only when needed
 let pdfjsLib: any = null;
 let mammoth: any = null;
@@ -224,8 +225,32 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
         const plaintext = await convertToPlainText(selectedFile);
         console.log('Conversion completed. Length:', plaintext.length);
         
-        setPlainTextContent(plaintext);
-        setSuccessMessage('File converted to plaintext successfully');
+        // Client-side preprocessing (basic cleaning only, NO PII removal)
+        const preprocessResult = ClientResumePreprocessor.preprocess(plaintext, {
+          normalizeWhitespace: true,
+          fixEncoding: true,
+          removeNullChars: true,
+          standardizeBullets: true,
+          trimContent: true
+        });
+        
+        console.log('Client preprocessing completed:', {
+          originalLength: plaintext.length,
+          processedLength: preprocessResult.processedText.length,
+          steps: preprocessResult.metadata.processingSteps,
+          hasNonAscii: preprocessResult.metadata.hasNonAscii
+        });
+        
+        // Validate the text before proceeding
+        const validation = ClientResumePreprocessor.validate(preprocessResult.processedText);
+        if (!validation.isValid) {
+          console.error('Resume validation failed:', validation.issues);
+          setError('Resume processing failed: ' + validation.issues.join(', '));
+          return;
+        }
+        
+        setPlainTextContent(preprocessResult.processedText);
+        setSuccessMessage('File converted and cleaned successfully');
       } catch (err) {
         console.error('Error converting file:', err);
         setError('Error processing file: ' + (err instanceof Error ? err.message : String(err)));
@@ -255,16 +280,16 @@ export default function ResumeManager({ onUpdateComplete }: ResumeManagerProps) 
       // Create a unique path for the file that includes file extension
       const uniqueId = `${userProfile.uid}_${Date.now()}`;
       
-      // Create a text file containing the plaintext content
+      // Create a text file containing the client-cleaned plaintext content (NOT fully preprocessed)
       const plainTextBlob = new Blob([plainTextContent], { type: 'text/plain' });
-      const plainTextFile = new File([plainTextBlob], `${uniqueId}_plaintext.txt`, { type: 'text/plain' });
+      const plainTextFile = new File([plainTextBlob], `${uniqueId}_cleaned.txt`, { type: 'text/plain' });
       
-      // Upload the plaintext file
+      // Upload the cleaned plaintext file (PII still present)
       const filePath = `resumes/${userProfile.uid}/${uniqueId}_resume.txt`;
-      console.log(`Uploading plaintext version of ${originalFileName} to path: ${filePath}`);
+      console.log(`Uploading cleaned version of ${originalFileName} to path: ${filePath}`);
       
       const resumeUrl = await uploadFile(plainTextFile, filePath);
-      console.log('Plaintext file uploaded successfully, URL:', resumeUrl);
+      console.log('Cleaned file uploaded successfully, URL:', resumeUrl);
       
       // Analyze resume
       setAnalyzing(true);
