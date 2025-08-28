@@ -863,7 +863,7 @@ export class ResumePreprocessor {
     }
     
     // Remove duplicates and return
-    return [...new Set(skills)];
+    return Array.from(new Set(skills));
   }
 
   /**
