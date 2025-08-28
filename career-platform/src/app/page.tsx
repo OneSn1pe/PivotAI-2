@@ -584,16 +584,14 @@ export default function WaitlistPage() {
                     <h3 className="text-xl font-semibold text-white">Smart Resume Analysis</h3>
                   </div>
                   
-                  {/* Screenshot Placeholder */}
-                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
-                    </div>
+                  {/* Resume Analysis Screenshot */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] mb-4 overflow-hidden">
+                    <img 
+                      src="/images/waitlist/resume-analysis.png" 
+                      alt="AI-powered resume analysis showing strengths and optimization suggestions"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
                   </div>
                   
                   <p className="text-gray-300 text-sm leading-relaxed">
@@ -620,16 +618,14 @@ export default function WaitlistPage() {
                     <h3 className="text-xl font-semibold text-white">Job Diagnostic</h3>
                   </div>
                   
-                  {/* Screenshot Placeholder */}
-                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
-                    </div>
+                  {/* Job Diagnostic Screenshot */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] mb-4 overflow-hidden">
+                    <img 
+                      src="/images/waitlist/job-recomendation.png" 
+                      alt="Job diagnostic tool showing compatibility scores for current job opportunities"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
                   </div>
                   
                   <p className="text-gray-300 text-sm leading-relaxed">
@@ -659,16 +655,14 @@ export default function WaitlistPage() {
                     <h3 className="text-xl font-semibold text-white">Personalized Roadmaps</h3>
                   </div>
                   
-                  {/* Screenshot Placeholder */}
-                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
-                    </div>
+                  {/* Roadmap Generator Screenshot */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] mb-4 overflow-hidden">
+                    <img 
+                      src="/images/waitlist/roadmap-generation.png" 
+                      alt="Personalized career roadmap generation interface"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
                   </div>
                   
                   <p className="text-gray-300 text-sm leading-relaxed">
@@ -695,16 +689,14 @@ export default function WaitlistPage() {
                     <h3 className="text-xl font-semibold text-white">Provide Feedback</h3>
                   </div>
                   
-                  {/* Screenshot Placeholder */}
-                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
-                    <div className="text-center">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
-                    </div>
+                  {/* Feedback Screenshot */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] mb-4 overflow-hidden">
+                    <img 
+                      src="/images/waitlist/feedback.png" 
+                      alt="User feedback interface for platform improvement"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
                   </div>
                   
                   <p className="text-gray-300 text-sm leading-relaxed">
