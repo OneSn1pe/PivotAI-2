@@ -545,6 +545,222 @@ export default function WaitlistPage() {
         </div>
       </section>
 
+      {/* Screenshots Section */}
+      <section className="py-24 px-4 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl font-bold text-white mb-4">
+              See Crackd in Action
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              Experience how our platform transforms your career journey from analysis to achievement
+            </p>
+          </motion.div>
+
+          {/* Screenshots Grid */}
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Main Feature Screenshots */}
+            <div className="space-y-8">
+              {/* Screenshot 1 - Resume Analysis */}
+              <motion.div 
+                className="group"
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="glass-feature-card rounded-xl p-6 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 glass-icon rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-[#38BDF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">Smart Resume Analysis</h3>
+                  </div>
+                  
+                  {/* Screenshot Placeholder */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    AI-powered analysis identifies your strengths, gaps, and opportunities in seconds. Get instant feedback on ATS optimization.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Screenshot 2 - Dashboard */}
+              <motion.div 
+                className="group"
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="glass-feature-card rounded-xl p-6 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 glass-icon rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-[#38BDF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">Progress Dashboard</h3>
+                  </div>
+                  
+                  {/* Screenshot Placeholder */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Track your career progression through 10 levels. Monitor milestones, achievements, and skill development in real-time.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Secondary Feature Screenshots */}
+            <div className="space-y-8">
+              {/* Screenshot 3 - Roadmap Generator */}
+              <motion.div 
+                className="group"
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="glass-feature-card rounded-xl p-6 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 glass-icon rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-[#38BDF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">Personalized Roadmaps</h3>
+                  </div>
+                  
+                  {/* Screenshot Placeholder */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Generate custom career paths tailored to your goals. Step-by-step guidance from where you are to where you want to be.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Screenshot 4 - AI Coach */}
+              <motion.div 
+                className="group"
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+              >
+                <div className="glass-feature-card rounded-xl p-6 transition-all duration-300 hover:scale-[1.02]">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 glass-icon rounded-lg flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-[#38BDF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">AI Coaching Agent</h3>
+                  </div>
+                  
+                  {/* Screenshot Placeholder */}
+                  <div className="bg-gray-900 rounded-lg border-2 border-gray-800 aspect-[4/3] flex items-center justify-center mb-4 overflow-hidden">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#38BDF8] to-[#2563EB] rounded-lg flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-sm">Screenshot will be placed here</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Get 24/7 personalized guidance through conversational AI. Adapts to your learning style and career objectives.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Process Flow */}
+          <motion.div 
+            className="mt-20 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+          >
+            <h3 className="text-2xl font-semibold text-white mb-8">Your Journey to Success</h3>
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 max-w-4xl mx-auto">
+              {[
+                { step: "1", title: "Upload Resume", desc: "AI analysis in seconds" },
+                { step: "2", title: "Set Goals", desc: "Define your target roles" },
+                { step: "3", title: "Get Roadmap", desc: "Personalized career path" },
+                { step: "4", title: "Track Progress", desc: "Level up through milestones" }
+              ].map((item, index) => (
+                <React.Fragment key={index}>
+                  <motion.div 
+                    className="text-center"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                  >
+                    <div className="w-16 h-16 glass-card rounded-full flex items-center justify-center mx-auto mb-3">
+                      <span className="text-2xl font-bold text-[#38BDF8]">{item.step}</span>
+                    </div>
+                    <h4 className="text-white font-medium text-lg mb-1">{item.title}</h4>
+                    <p className="text-gray-400 text-sm">{item.desc}</p>
+                  </motion.div>
+                  {index < 3 && (
+                    <motion.div 
+                      className="hidden md:block w-12 h-0.5 bg-gradient-to-r from-[#38BDF8] to-[#2563EB] opacity-50"
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.8 + index * 0.1, duration: 0.5 }}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Mission Section */}
       <section ref={missionRef} className="py-24 px-4 text-white relative overflow-hidden">
         
