@@ -107,17 +107,17 @@ export class LevelTypeService {
 
     const displays = {
       skill: {
-        icon: '📚',
+        icon: '',
         label: 'Skill Level',
         description: 'Focus on learning and mastering new skills'
       },
       project: {
-        icon: '🛠️',
+        icon: '',
         label: 'Project Level',
         description: 'Apply skills through hands-on projects'
       },
       position: {
-        icon: '🎯',
+        icon: '',
         label: 'Position Level',
         description: 'Prepare for career advancement'
       }

@@ -52,9 +52,9 @@ export const LEVEL_TYPE_DESCRIPTIONS: Record<LevelType, string> = {
 };
 
 export const LEVEL_TYPE_ICONS: Record<LevelType, string> = {
-  skill: '📚',
-  project: '🛠️',
-  position: '🎯'
+  skill: '',
+  project: '',
+  position: ''
 };
 
 export function validateMilestoneForLevelType(

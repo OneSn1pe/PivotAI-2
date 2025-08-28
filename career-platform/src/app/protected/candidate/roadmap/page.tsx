@@ -625,10 +625,10 @@ export default function CareerPathPage() {
                   >
                     <span className="font-medium">L{level}</span>
                     {levelType && (
-                      <span className="text-lg">
-                        {levelType === 'skill' && '📚'}
-                        {levelType === 'project' && '🛠️'}
-                        {levelType === 'position' && '🎯'}
+                      <span className="text-sm font-semibold">
+                        {levelType === 'skill' && 'S'}
+                        {levelType === 'project' && 'P'}
+                        {levelType === 'position' && 'C'}
                       </span>
                     )}
                   </div>

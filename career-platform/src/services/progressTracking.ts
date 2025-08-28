@@ -240,7 +240,7 @@ export class ProgressTrackingService {
           id: `streak_${milestone}`,
           title: `${milestone}-Day Streak!`,
           description: `Maintained a ${milestone}-day learning streak`,
-          icon: '🔥',
+          icon: '',
           category: 'streak',
           rarity: milestone >= 50 ? 'legendary' : milestone >= 30 ? 'epic' : milestone >= 14 ? 'rare' : 'common',
         });
@@ -265,7 +265,7 @@ export class ProgressTrackingService {
           id: `milestones_${count}`,
           title: `${count} Milestones Completed!`,
           description: `Completed ${count} career milestones`,
-          icon: '🎯',
+          icon: '',
           category: 'progress',
           rarity: count >= 50 ? 'legendary' : count >= 25 ? 'epic' : count >= 10 ? 'rare' : 'common',
         });
