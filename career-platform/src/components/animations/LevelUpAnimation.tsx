@@ -85,7 +85,7 @@ export function LevelUpAnimation({
             {Array.from({ length: 50 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-2 h-2 bg-yellow-400 rounded-full"
+                className="absolute w-2 h-2 bg-gray-400"
                 initial={{
                   x: Math.random() * window.innerWidth,
                   y: -10,

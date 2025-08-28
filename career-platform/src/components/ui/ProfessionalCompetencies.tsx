@@ -275,7 +275,7 @@ const ProfessionalCompetenciesComponent: React.FC<ProfessionalCompetenciesProps>
         {showFieldSpecific && fieldSpecificCompetencies.length > 0 && (
           <div className="border-t border-slate-200 pt-6">
             <h4 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-              <span className="w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
+              <span className="w-2 h-2 bg-gray-500 mr-2"></span>
               {getFieldTitle(professionalField)} Competencies
             </h4>
             {fieldSpecificCompetencies.map(competency => (

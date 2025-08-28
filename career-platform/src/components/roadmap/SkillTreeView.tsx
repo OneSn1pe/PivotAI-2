@@ -172,19 +172,19 @@ export function SkillTreeView({
           <h4 className="font-semibold text-sm mb-2">Legend</h4>
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-gray-200 border-2 border-gray-300"></div>
+              <div className="w-4 h-4 bg-gray-200 border-2 border-gray-300"></div>
               <span>Locked</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-blue-50 border-2 border-blue-300"></div>
+              <div className="w-4 h-4 bg-gray-100 border-2 border-gray-400"></div>
               <span>Available</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-yellow-50 border-2 border-yellow-300"></div>
+              <div className="w-4 h-4 bg-gray-50 border-2 border-gray-500"></div>
               <span>In Progress</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-50 border-2 border-green-300"></div>
+              <div className="w-4 h-4 bg-gray-200 border-2 border-gray-600"></div>
               <span>Completed</span>
             </div>
           </div>

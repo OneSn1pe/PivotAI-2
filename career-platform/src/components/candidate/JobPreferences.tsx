@@ -220,7 +220,7 @@ export default function JobPreferencesForm() {
             {preferences.roles.map((role, index) => (
               <span 
                 key={index} 
-                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center"
+                className="bg-gray-100 text-gray-800 px-3 py-1 rounded text-sm flex items-center"
               >
                 {role}
                 <button
@@ -270,7 +270,7 @@ export default function JobPreferencesForm() {
             {preferences.locations.map((location, index) => (
               <span 
                 key={index} 
-                className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center"
+                className="bg-gray-100 text-gray-800 px-3 py-1 rounded text-sm flex items-center"
               >
                 {location}
                 <button
@@ -355,7 +355,7 @@ export default function JobPreferencesForm() {
             {preferences.industries.map((industry, index) => (
               <span 
                 key={index} 
-                className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center"
+                className="bg-gray-100 text-gray-800 px-3 py-1 rounded text-sm flex items-center"
               >
                 {industry}
                 <button
