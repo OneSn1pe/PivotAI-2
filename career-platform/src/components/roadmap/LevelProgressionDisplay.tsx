@@ -90,6 +90,10 @@ export const LevelProgressionDisplay: React.FC<LevelProgressionDisplayProps> = (
 
       <div className="mt-4 flex items-center gap-4 text-xs">
         <div className="flex items-center gap-1">
+          <span className="text-lg">{LEVEL_TYPE_ICONS.skill}</span>
+          <span className="text-gray-600">Skill</span>
+        </div>
+        <div className="flex items-center gap-1">
           <span className="text-lg">{LEVEL_TYPE_ICONS.project}</span>
           <span className="text-gray-600">Project</span>
         </div>
