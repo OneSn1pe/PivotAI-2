@@ -70,8 +70,7 @@ export async function POST(req: NextRequest) {
           content: prompt
         }
       ],
-      max_completion_tokens: 2000,
-      response_format: { type: "json_object" }
+      max_completion_tokens: 2000
     });
 
     const result = completion.choices[0]?.message?.content;

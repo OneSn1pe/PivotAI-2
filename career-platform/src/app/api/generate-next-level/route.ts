@@ -143,8 +143,7 @@ export async function POST(request: NextRequest) {
           )
         }
       ],
-      max_completion_tokens: 2500,
-      response_format: { type: "json_object" }
+      max_completion_tokens: 2500
     });
     
     const response = completion.choices[0].message.content;

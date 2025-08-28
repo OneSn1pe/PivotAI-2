@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call OpenAI with typed roadmap prompt
+    debug.log('Calling OpenAI with model gpt-5');
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [
@@ -181,9 +182,18 @@ export async function POST(request: NextRequest) {
       max_completion_tokens: 3000,
     });
 
+    debug.log('OpenAI response received:', {
+      choices: completion.choices?.length,
+      usage: completion.usage,
+      model: completion.model
+    });
+
     // Parse milestones
-    const content = completion.choices[0].message.content;
-    if (!content) throw new Error('No content in OpenAI response');
+    const content = completion.choices[0]?.message?.content;
+    if (!content) {
+      debug.error('No content in OpenAI response:', completion);
+      throw new Error('No content in OpenAI response');
+    }
     
     const jsonMatch = content.match(/({[\s\S]*})/);
     if (!jsonMatch) throw new Error('No JSON found in response');
