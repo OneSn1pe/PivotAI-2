@@ -677,7 +677,7 @@ export default function WaitlistPage() {
                 </div>
               </motion.div>
 
-              {/* Screenshot 4 - AI Coach */}
+              {/* Screenshot 4 - Provide Feedback */}
               <motion.div 
                 className="group"
                 initial={{ opacity: 0, x: 50 }}
@@ -689,10 +689,10 @@ export default function WaitlistPage() {
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 glass-icon rounded-lg flex items-center justify-center mr-4">
                       <svg className="w-6 h-6 text-[#38BDF8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7m0 0v10a2 2 0 002 2h6a2 2 0 002-2V8" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-semibold text-white">AI Coaching Agent</h3>
+                    <h3 className="text-xl font-semibold text-white">Provide Feedback</h3>
                   </div>
                   
                   {/* Screenshot Placeholder */}
@@ -708,7 +708,7 @@ export default function WaitlistPage() {
                   </div>
                   
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    Get 24/7 personalized guidance through conversational AI. Adapts to your learning style and career objectives.
+                    Share your experience to help us optimize future materials for all users. Your insights drive continuous improvement across the platform.
                   </p>
                 </div>
               </motion.div>
