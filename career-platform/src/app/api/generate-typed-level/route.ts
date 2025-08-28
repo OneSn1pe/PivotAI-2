@@ -327,7 +327,7 @@ export async function POST(request: NextRequest) {
           content: prompt
         }
       ],
-      max_completion_tokens: 6000  // Increased for GPT-5 reasoning
+      max_completion_tokens: 12000  // Significantly increased for GPT-5 reasoning
     });
 
     const openaiDuration = performance.now() - openaiStartTime;

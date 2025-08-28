@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.CAREER_COACH
+          content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.CAREER_COACH + "\n\nIMPORTANT: You must output ONLY valid JSON. Do not include any reasoning, explanation, or text before or after the JSON. Start your response with { and end with }."
         },
         {
           role: "user",
@@ -176,10 +176,10 @@ export async function POST(request: NextRequest) {
             professionalField,
             levelType,
             1 // Level 1
-          )
+          ) + "\n\nREMINDER: Output ONLY the JSON object starting with { and ending with }. No explanations or reasoning text."
         }
       ],
-      max_completion_tokens: 8000,  // Increased to allow for reasoning + output
+      max_completion_tokens: 25000,  // Increased further for GPT-5 reasoning + output
     });
 
     debug.log('OpenAI response received:', {

@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
           )
         }
       ],
-      max_completion_tokens: 7000  // Increased for GPT-5 reasoning
+      max_completion_tokens: 15000  // Significantly increased for GPT-5 reasoning
     });
     
     const response = completion.choices[0].message.content;
