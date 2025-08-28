@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           content: prompt
         }
       ],
-      max_completion_tokens: 2000
+      max_completion_tokens: 5000  // Increased for GPT-5 reasoning
     });
 
     const result = completion.choices[0]?.message?.content;

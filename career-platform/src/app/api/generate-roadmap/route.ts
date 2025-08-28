@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
           )
         }
       ],
-      max_completion_tokens: 3000,
+      max_completion_tokens: 8000,  // Increased to allow for reasoning + output
     });
 
     debug.log('OpenAI response received:', {
@@ -190,9 +190,19 @@ export async function POST(request: NextRequest) {
 
     // Parse milestones
     const content = completion.choices[0]?.message?.content;
-    if (!content) {
-      debug.error('No content in OpenAI response:', completion);
-      throw new Error('No content in OpenAI response');
+    
+    // Check if response was truncated
+    if (completion.choices[0]?.finish_reason === 'length') {
+      debug.warn('Response was truncated due to token limit. Attempting to parse partial response.');
+    }
+    
+    if (!content || content.trim() === '') {
+      debug.error('No content in OpenAI response:', {
+        response: completion,
+        messageContent: content,
+        finishReason: completion.choices[0]?.finish_reason
+      });
+      throw new Error(`No content in OpenAI response. Finish reason: ${completion.choices[0]?.finish_reason}`);
     }
     
     const jsonMatch = content.match(/({[\s\S]*})/);

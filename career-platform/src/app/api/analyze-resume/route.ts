@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
           { role: 'system', content: PROMPT_CONSTANTS.SYSTEM_MESSAGES.RESUME_ANALYST },
           { role: 'user', content: prompt }
         ],
-        max_completion_tokens: 1500
+        max_completion_tokens: 4000  // Increased for GPT-5 reasoning
       });
     });
     
