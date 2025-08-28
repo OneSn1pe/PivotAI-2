@@ -162,29 +162,29 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4 text-slate-800">Generate Career Roadmap</h2>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900">Generate Career Roadmap</h2>
         
         {!resumeAnalysis ? (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-md mb-4">
-            <p className="text-amber-700">
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded-md mb-4">
+            <p className="text-gray-700">
               Please upload your resume first to generate a career roadmap.
             </p>
           </div>
         ) : (
           <>
-            <p className="text-slate-600 mb-6">
+            <p className="text-gray-600 mb-6">
               Enter the companies and positions you're targeting for your career path, and we'll generate a personalized roadmap based on your resume and goals.
             </p>
             
             
             <div className="mb-6">
-              <h3 className="text-lg font-medium mb-3 text-slate-800">Target Companies</h3>
+              <h3 className="text-lg font-medium mb-3 text-gray-900">Target Companies</h3>
               
               {targetCompanies.map((company, index) => (
-                <div key={index} className="flex flex-col sm:flex-row gap-4 mb-4 p-4 border border-slate-200 rounded-lg bg-slate-50/50">
+                <div key={index} className="flex flex-col sm:flex-row gap-4 mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Company Name
                     </label>
                     <input
@@ -192,12 +192,12 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                       value={company.name}
                       onChange={(e) => updateTargetCompany(index, 'name', e.target.value)}
                       placeholder="e.g. Google, Amazon"
-                      className="w-full p-2 border border-slate-300 rounded focus:ring-teal-500 focus:border-teal-500"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-gray-500 focus:border-gray-500"
                     />
                   </div>
                   
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Target Position
                     </label>
                     <input
@@ -205,7 +205,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
                       value={company.position}
                       onChange={(e) => updateTargetCompany(index, 'position', e.target.value)}
                       placeholder="e.g. Senior Developer, Product Manager"
-                      className="w-full p-2 border border-slate-300 rounded focus:ring-teal-500 focus:border-teal-500"
+                      className="w-full p-2 border border-gray-300 rounded focus:ring-gray-500 focus:border-gray-500"
                     />
                   </div>
                   
@@ -228,7 +228,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
               <button
                 type="button"
                 onClick={addTargetCompany}
-                className="text-teal-600 hover:text-teal-800 flex items-center"
+                className="text-gray-700 hover:text-gray-900 flex items-center"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -246,7 +246,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
             <button
               onClick={handleGenerateRoadmap}
               disabled={generating}
-              className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded shadow-button disabled:opacity-50 transition-all duration-300"
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded disabled:opacity-50 transition-colors"
             >
               {generating ? (
                 <span className="flex items-center justify-center">
@@ -259,17 +259,17 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
               ) : 'Generate Career Roadmap'}
             </button>
             
-            <p className="text-center text-slate-500 mt-2 text-sm">
+            <p className="text-center text-gray-500 mt-2 text-sm">
               {generating ? (
                 <span className="inline-flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Generation in progress... (Under 1 minute)
                 </span>
               ) : (
                 <span className="inline-flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Expected generation time: Under 1 minute
@@ -282,7 +282,7 @@ const RoadmapGenerator: React.FC<RoadmapGeneratorProps> = ({
       
       {/* Display the generated roadmap */}
       {generatedRoadmap && (
-        <div className="bg-white rounded-lg shadow-lg p-6 border border-slate-200">
+        <div className="bg-white rounded-lg p-6 border border-gray-200">
           <CategorizedCareerRoadmap 
             roadmap={generatedRoadmap} 
             isEditable={true}
