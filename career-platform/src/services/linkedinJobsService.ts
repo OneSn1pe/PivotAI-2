@@ -290,7 +290,7 @@ class LinkedInJobsService {
       return regex.test(description);
     });
 
-    return [...new Set(foundSkills)]; // Remove duplicates
+    return Array.from(new Set(foundSkills)); // Remove duplicates
   }
 
   /**
@@ -360,10 +360,10 @@ class LinkedInJobsService {
     }
 
     // Location matching (10% of total score)
-    const locationMatch = !userProfile.preferences.locations?.length ||
+    const locationMatch: boolean = !userProfile.preferences.locations?.length ||
       userProfile.preferences.locations.some(loc =>
         job.location.toLowerCase().includes(loc.toLowerCase())
-      ) || (userProfile.preferences.remote && job.remote);
+      ) || Boolean(userProfile.preferences.remote && job.remote);
     
     if (locationMatch) {
       matchScore += 10;
@@ -375,7 +375,7 @@ class LinkedInJobsService {
     }
 
     // Salary matching (10% of total score)
-    const salaryMatch = !userProfile.preferences.salaryMin || 
+    const salaryMatch: boolean = !userProfile.preferences.salaryMin || 
       !job.salaryRange || 
       job.salaryRange.min >= userProfile.preferences.salaryMin;
     

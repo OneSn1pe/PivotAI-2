@@ -10,9 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface JobRecommendationsProps {
   candidateProfile: CandidateProfile | null;
   className?: string;
+  onRecommendationsUpdate?: (recommendations: JobMatchingResult[]) => void;
 }
 
-export default function JobRecommendations({ candidateProfile, className = '' }: JobRecommendationsProps) {
+export default function JobRecommendations({ candidateProfile, className = '', onRecommendationsUpdate }: JobRecommendationsProps) {
   const { currentUser } = useAuth();
   const [recommendations, setRecommendations] = useState<JobMatchingResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,9 +49,15 @@ export default function JobRecommendations({ candidateProfile, className = '' }:
       }
 
       const data = await response.json();
-      setRecommendations(data.data.recommendations || []);
+      const newRecommendations = data.data.recommendations || [];
+      setRecommendations(newRecommendations);
       
-      if (data.data.recommendations.length === 0) {
+      // Update parent component
+      if (onRecommendationsUpdate) {
+        onRecommendationsUpdate(newRecommendations);
+      }
+      
+      if (newRecommendations.length === 0) {
         setError('No job recommendations found. Try updating your profile or target roles.');
       }
     } catch (err) {
