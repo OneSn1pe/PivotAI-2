@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseAdminApp } from '@/config/firebase-admin';
+import { getAdminServices } from '@/config/firebase-admin';
 import { cookies } from 'next/headers';
 import { validateSession } from '@/utils/server-auth';
 import { normalizeRole } from '@/utils/environment';
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Get Firebase Admin services
-    const services = getFirebaseAdminApp();
+    const services = await getAdminServices();
     if (!services || !services.db) {
       return NextResponse.json({ 
         error: "Server Error", 

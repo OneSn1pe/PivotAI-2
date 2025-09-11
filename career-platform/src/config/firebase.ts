@@ -11,6 +11,9 @@ const log = logger.createNamespace('Firebase');
 const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true' ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost');
 
+// Check if we're in build time (no API keys available)
+const isBuildTime = !process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
@@ -24,29 +27,39 @@ log.info(`Environment: ${isProduction ? 'production' : 'development'}`);
 log.info(`Hostname: ${isBrowser ? window.location.hostname : 'server'}`);
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'build-time-placeholder',
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'build-time.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'build-time-project',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'build-time-project.appspot.com',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:abcdef',
 };
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const auth = getAuth(app);
+// Initialize Firebase (skip during build time to avoid errors)
+let app: any = null;
+let auth: any = null;
+let db: any = null;
+let storage: any = null;
+
+if (!isBuildTime) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} else {
+  log.info('Build time detected - skipping Firebase initialization');
+}
 
 // Set persistence to LOCAL to prevent frequent session timeouts
-// Only run in browser context
-if (isBrowser) {
+// Only run in browser context and when auth is available
+if (isBrowser && auth && !isBuildTime) {
   setPersistence(auth, browserLocalPersistence)
     .catch((error) => {
       log.error('Error setting auth persistence:', error);
     });
 }
 
-const db = getFirestore(app);
-const storage = getStorage(app);
+// db and storage are already initialized above
 
 // Helper function to set session cookie with appropriate settings
 export function setSessionCookie(token: string) {
@@ -77,10 +90,11 @@ export function setSessionCookie(token: string) {
   }
 }
 
-// In development mode, modify the cookie settings
-if (isBrowser) {
+// Set up auth state listener to maintain session cookie
+// Only run in browser context and when auth is available
+if (isBrowser && auth && !isBuildTime) {
   // Set up auth state listener to maintain session cookie
-  auth.onAuthStateChanged(async (user) => {
+  auth.onAuthStateChanged(async (user: any) => {
     if (user) {
       try {
         const token = await user.getIdToken();
@@ -103,4 +117,4 @@ if (isBrowser) {
   // }
 }
 
-export { app, auth, db, storage, isDevelopment, isProduction };
+export { app, auth, db, storage, isDevelopment, isProduction, isBuildTime };

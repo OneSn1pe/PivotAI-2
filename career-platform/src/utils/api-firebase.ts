@@ -4,11 +4,11 @@
  * instead of the client-side Firebase SDK
  */
 
-import { getFirebaseAdminApp } from '@/config/firebase-admin';
+import { getAdminServices } from '@/config/firebase-admin';
 import { NextResponse } from 'next/server';
 
-export function getAdminFirestore() {
-  const adminServices = getFirebaseAdminApp();
+export async function getAdminFirestore() {
+  const adminServices = await getAdminServices();
   
   if (!adminServices || !adminServices.db) {
     throw new Error('Firebase Admin not initialized. Check environment variables.');

@@ -9,12 +9,14 @@ const logApiCheckpoint = (message: string, data: any = {}) => {
   return { timestamp: new Date().toISOString(), message, ...data };
 };
 
-// Initialize OpenAI with API key and timeout
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 120000, // 2 minute timeout for API calls
-  maxRetries: 2,  // Built-in retries for transient errors
-});
+// Initialize OpenAI lazily to avoid build-time environment variable issues
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: 120000, // 2 minute timeout for API calls
+    maxRetries: 2,  // Built-in retries for transient errors
+  });
+}
 
 // Safe JSON stringify with error handling
 const safeStringify = (obj: any) => {
@@ -238,6 +240,7 @@ export async function POST(request: NextRequest) {
     checkpoints.push(logApiCheckpoint("Calling OpenAI API"));
     
     const completion = await withRetry(async () => {
+      const openai = getOpenAI();
       return await openai.chat.completions.create({
         model: 'gpt-5',
         messages: [

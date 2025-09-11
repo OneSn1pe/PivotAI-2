@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb, getFirebaseAdminApp } from '@/config/firebase-admin';
+import { getAdminServices } from '@/config/firebase-admin';
 import { UserRole } from '@/types/user';
 import { normalizeRole } from '@/utils/environment';
 
@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     // Ensure Firebase Admin is initialized
-    const services = getFirebaseAdminApp();
+    const services = await getAdminServices();
     if (!services || !services.auth || !services.db) {
       console.error('[normalize-all-roles] Firebase Admin not initialized');
       return NextResponse.json({ error: 'Firebase Admin not initialized' }, { status: 500 });

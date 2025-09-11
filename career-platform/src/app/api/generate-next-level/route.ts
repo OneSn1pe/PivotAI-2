@@ -21,11 +21,13 @@ const debug = {
 };
 
 // Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 120000,
-  maxRetries: 2,
-});
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: 120000,
+    maxRetries: 2,
+  });
+}
 
 async function getLevelStructure(db: any, candidateId: string): Promise<{ [key: string]: LevelStructure }> {
   const levelDoc = await db.collection('levelStructures').doc(candidateId).get();
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
     // Get Firebase Admin Firestore instance
     let db;
     try {
-      db = getAdminFirestore();
+      db = await getAdminFirestore();
     } catch (error) {
       return handleFirebaseError(error);
     }
@@ -125,6 +127,7 @@ export async function POST(request: NextRequest) {
     const resumeAnalysis = candidateData?.resumeAnalysis || {};
     
     // Call OpenAI with typed prompt
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [

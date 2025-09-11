@@ -13,12 +13,14 @@ const debug = {
   }
 };
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000, // 1 minute timeout
-  maxRetries: 2,
-});
+// Initialize OpenAI lazily to avoid build-time environment variable issues
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: 60000, // 1 minute timeout
+    maxRetries: 2,
+  });
+}
 
 export async function POST(request: NextRequest) {
   const requestStartTime = performance.now();
@@ -105,6 +107,7 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
 
     // Call OpenAI
     const openaiStartTime = performance.now();
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [

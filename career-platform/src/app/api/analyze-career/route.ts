@@ -12,9 +12,11 @@ const debug = {
 };
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 export async function POST(req: NextRequest) {
   debug.log('[analyze-career] Received request');
@@ -31,6 +33,7 @@ export async function POST(req: NextRequest) {
 
     debug.log('[analyze-career] Calling OpenAI API');
     
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [

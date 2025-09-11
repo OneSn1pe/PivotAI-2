@@ -23,11 +23,13 @@ const debug = {
 };
 
 // Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 300000,
-  maxRetries: 3,
-});
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: 300000,
+    maxRetries: 3,
+  });
+}
 
 // Helper function to determine initial level type
 async function determineInitialLevelType(
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
   try {
     // Initialize Admin Firestore
     try {
-      db = getAdminFirestore();
+      db = await getAdminFirestore();
     } catch (error) {
       debug.error('Failed to initialize Firebase Admin:', error);
       return handleFirebaseError(error);
@@ -161,6 +163,7 @@ export async function POST(request: NextRequest) {
 
     // Call OpenAI with typed roadmap prompt
     debug.log('Calling OpenAI with model gpt-5');
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [

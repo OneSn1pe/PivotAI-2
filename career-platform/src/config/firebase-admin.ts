@@ -7,6 +7,9 @@ const log = logger.createNamespace('FirebaseAdmin');
 // Check if we're in a browser environment (client-side)
 const isBrowser = typeof window !== 'undefined';
 
+// Check if we're in build time (prevent initialization)
+const isBuildTime = !process.env.FIREBASE_PROJECT_ID && !process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
 // Enhanced interface for Firebase Admin App
 interface FirebaseAdminApp {
   app: admin.app.App;
@@ -23,9 +26,15 @@ let isInitializing = false;
 
 // Enhanced initialization function with proper error handling
 async function getFirebaseAdminApp(): Promise<FirebaseAdminApp | null> {
-  // Only initialize on server-side
+  // Only initialize on server-side and not during build time
   if (isBrowser) {
     log.warn('Firebase Admin SDK cannot be initialized in browser environment');
+    return null;
+  }
+
+  // Skip initialization during build time
+  if (isBuildTime) {
+    log.info('Build time detected - skipping Firebase Admin initialization');
     return null;
   }
 
@@ -59,56 +68,41 @@ async function getFirebaseAdminApp(): Promise<FirebaseAdminApp | null> {
         log.info('Initializing Firebase Admin SDK');
         
         try {
-          // Try to load service account from file first
-          try {
-            const serviceAccountPath = process.cwd() + '/firebase-admin-key.json';
-            const serviceAccount = require(serviceAccountPath);
-            
-            firebaseAdmin = admin.initializeApp({
-              credential: admin.credential.cert(serviceAccount),
-              projectId: serviceAccount.project_id
-            });
-            
-            log.info('Firebase Admin initialized with service account file');
-          } catch (fileError) {
-            log.info('Service account file not found, trying environment variables');
-            
-            // Use service account credentials if available
-            if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-              try {
-                const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-                firebaseAdmin = admin.initializeApp({
-                  credential: admin.credential.cert(serviceAccount)
-                });
-                log.info('Firebase Admin initialized with service account from environment');
-              } catch (parseError) {
-                throw new Error(`Invalid FIREBASE_SERVICE_ACCOUNT_KEY JSON: ${parseError}`);
-              }
-            } else if (
-              process.env.FIREBASE_PROJECT_ID && 
-              process.env.FIREBASE_CLIENT_EMAIL && 
-              process.env.FIREBASE_PRIVATE_KEY
-            ) {
-              // Use individual environment variables
+          // Use environment variables for Firebase Admin initialization
+          if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+            try {
+              const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
               firebaseAdmin = admin.initializeApp({
-                credential: admin.credential.cert({
-                  projectId: process.env.FIREBASE_PROJECT_ID,
-                  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                  // Replace escaped newlines in the private key
-                  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-                }),
+                credential: admin.credential.cert(serviceAccount)
               });
-              log.info('Firebase Admin initialized with individual environment variables');
-            } else {
-              const missingVars = [];
-              if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-                if (!process.env.FIREBASE_PROJECT_ID) missingVars.push('FIREBASE_PROJECT_ID');
-                if (!process.env.FIREBASE_CLIENT_EMAIL) missingVars.push('FIREBASE_CLIENT_EMAIL');
-                if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push('FIREBASE_PRIVATE_KEY');
-              }
-              const errorMsg = `Missing Firebase Admin environment variables: ${missingVars.join(', ')}`;
-              throw new Error(errorMsg);
+              log.info('Firebase Admin initialized with service account from environment');
+            } catch (parseError) {
+              throw new Error(`Invalid FIREBASE_SERVICE_ACCOUNT_KEY JSON: ${parseError}`);
             }
+          } else if (
+            process.env.FIREBASE_PROJECT_ID && 
+            process.env.FIREBASE_CLIENT_EMAIL && 
+            process.env.FIREBASE_PRIVATE_KEY
+          ) {
+            // Use individual environment variables
+            firebaseAdmin = admin.initializeApp({
+              credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                // Replace escaped newlines in the private key
+                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+              }),
+            });
+            log.info('Firebase Admin initialized with individual environment variables');
+          } else {
+            const missingVars = [];
+            if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+              if (!process.env.FIREBASE_PROJECT_ID) missingVars.push('FIREBASE_PROJECT_ID');
+              if (!process.env.FIREBASE_CLIENT_EMAIL) missingVars.push('FIREBASE_CLIENT_EMAIL');
+              if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push('FIREBASE_PRIVATE_KEY');
+            }
+            const errorMsg = `Missing Firebase Admin environment variables: ${missingVars.join(', ')}`;
+            throw new Error(errorMsg);
           }
           
           if (firebaseAdmin) {

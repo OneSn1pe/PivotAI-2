@@ -15,11 +15,13 @@ const debug = {
 };
 
 // Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 60000, // 1 minute timeout
-  maxRetries: 2,
-});
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: 60000, // 1 minute timeout
+    maxRetries: 2,
+  });
+}
 
 export async function POST(request: NextRequest) {
   const requestStartTime = performance.now();
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Get Firebase Admin Firestore instance
     let db;
     try {
-      db = getAdminFirestore();
+      db = await getAdminFirestore();
     } catch (error) {
       return handleFirebaseError(error);
     }
@@ -149,6 +151,7 @@ ${PROMPT_CONSTANTS.JSON_FORMAT}`;
 
     // Call OpenAI
     const openaiStartTime = performance.now();
+    const openai = getOpenAI();
     const completion = await openai.chat.completions.create({
       model: "gpt-5",
       messages: [

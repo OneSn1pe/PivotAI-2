@@ -1,50 +1,19 @@
 import { NextResponse } from 'next/server';
-import * as admin from 'firebase-admin';
+import { getAdminServices } from '@/config/firebase-admin';
+import logger from '@/utils/logger';
 
-// Initialize Firebase Admin SDK if not already initialized
-let firebaseAdmin: admin.app.App | undefined;
-let adminAuth: admin.auth.Auth | null = null;
-
-try {
-  // Try to get an existing app
-  firebaseAdmin = admin.app();
-  adminAuth = firebaseAdmin.auth();
-} catch {
-  // Initialize a new app if none exists
-  try {
-    // Use service account credentials if available
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      // If the service account is provided as a JSON string
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      
-      firebaseAdmin = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    } else {
-      // Otherwise use the default application credentials
-      firebaseAdmin = admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          // Replace escaped newlines in the private key
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-        }),
-      });
-    }
-    
-    adminAuth = firebaseAdmin.auth();
-    console.log('[Firebase Admin] SDK initialized successfully in API route');
-  } catch (error) {
-    console.error('[Firebase Admin] SDK initialization error in API route:', error);
-  }
-}
+// Create namespaced logger
+const log = logger.createNamespace('SetCustomClaimsAPI');
 
 // API to set custom claims for a user
 export async function POST(request: Request) {
   try {
-    // Check if Firebase Admin SDK is initialized
-    if (!adminAuth) {
-      console.error('Firebase Admin SDK not initialized');
+    log.info('Setting custom claims request received');
+    
+    // Get Firebase Admin services
+    const services = await getAdminServices();
+    if (!services || !services.auth) {
+      log.error('Firebase Admin services not available');
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
@@ -68,14 +37,16 @@ export async function POST(request: Request) {
     }
     
     // Get current claims
-    const user = await adminAuth.getUser(uid);
+    const user = await services.auth.getUser(uid);
     const currentClaims = user.customClaims || {};
     
     // Merge with new claims
     const newClaims = { ...currentClaims, ...customClaims };
     
     // Set the custom claims
-    await adminAuth.setCustomUserClaims(uid, newClaims);
+    await services.auth.setCustomUserClaims(uid, newClaims);
+    
+    log.info(`Custom claims updated for user: ${uid}`, newClaims);
     
     return NextResponse.json({
       success: true,
