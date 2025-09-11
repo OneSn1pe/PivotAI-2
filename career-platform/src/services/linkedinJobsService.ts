@@ -79,7 +79,9 @@ class LinkedInJobsService {
     };
 
     if (!this.apiKey) {
-      log.warn('LinkedIn Jobs API key not configured');
+      log.warn('LinkedIn Jobs API key not configured - set RAPIDAPI_LINKEDIN_JOBS_KEY environment variable');
+    } else {
+      log.info('LinkedIn Jobs API configured with key:', this.apiKey.substring(0, 10) + '...');
     }
   }
 

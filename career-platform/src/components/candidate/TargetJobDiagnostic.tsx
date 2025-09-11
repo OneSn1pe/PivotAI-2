@@ -8,6 +8,7 @@ import linkedInJobsService, { JobMatchingResult, LinkedInJob } from '@/services/
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import logger from '@/utils/logger';
 import { 
   Target, 
   Briefcase, 
@@ -48,6 +49,8 @@ interface DiagnosticResult {
     industryTrends: string[];
   };
 }
+
+const log = logger.createNamespace('TargetJobDiagnostic');
 
 export default function TargetJobDiagnostic() {
   const { userProfile, currentUser } = useAuth();
@@ -97,8 +100,15 @@ export default function TargetJobDiagnostic() {
       if (useRealJobs && currentUser) {
         try {
           await fetchLinkedInJobs();
+          log.info(`Successfully fetched ${linkedInJobs.length} LinkedIn jobs`);
         } catch (linkedInError) {
           console.warn('LinkedIn Jobs API failed, falling back to AI analysis:', linkedInError);
+          
+          // Check if it's a configuration issue
+          if (linkedInError instanceof Error && linkedInError.message.includes('not configured')) {
+            setError('LinkedIn Jobs API not configured. Using AI analysis instead. To enable real job data, add RAPIDAPI_LINKEDIN_JOBS_KEY to environment variables.');
+          }
+          
           setUseRealJobs(false);
         }
       }
@@ -138,9 +148,6 @@ export default function TargetJobDiagnostic() {
       },
     };
 
-    // Build search keywords from target roles and skills
-    const keywords = userProfile.targetRoles[0] || userProfile.skills.slice(0, 3).join(' ');
-
     const response = await fetch('/api/jobs/recommendations', {
       method: 'GET',
       headers: {
@@ -150,7 +157,14 @@ export default function TargetJobDiagnostic() {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch LinkedIn jobs');
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (response.status === 503) {
+        // API not configured - this is expected if no RapidAPI key
+        throw new Error(errorData.details || 'LinkedIn Jobs API not configured - using AI analysis instead');
+      }
+      
+      throw new Error(errorData.details || `API error: ${response.status}`);
     }
 
     const data = await response.json();

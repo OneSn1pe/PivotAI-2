@@ -42,8 +42,13 @@ export async function GET(request: NextRequest) {
 
     // Check if LinkedIn Jobs API is configured
     if (!linkedInJobsService.isConfigured()) {
+      log.warn('LinkedIn Jobs API not configured - missing RAPIDAPI_LINKEDIN_JOBS_KEY');
       return NextResponse.json(
-        { error: 'Job search service not available' },
+        { 
+          error: 'Job search service not available',
+          details: 'LinkedIn Jobs API key not configured. Please set RAPIDAPI_LINKEDIN_JOBS_KEY environment variable.',
+          fallback: 'Use AI-powered job analysis instead'
+        },
         { status: 503 }
       );
     }

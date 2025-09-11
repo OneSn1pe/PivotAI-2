@@ -52,16 +52,33 @@ export async function validateSession(sessionCookie: string): Promise<admin.auth
       throw new Error('Invalid token format: token too short');
     }
     
-    // Verify the session cookie
+    // Try ID token verification first (more common), then session cookie
+    let decodedClaims;
+    let verificationMethod = 'unknown';
+    
     try {
-      log.debug('Attempting to verify session cookie');
-      const decodedClaims = await services.auth.verifySessionCookie(sessionCookie, true);
+      log.debug('Attempting to verify as ID token first');
+      decodedClaims = await services.auth.verifyIdToken(sessionCookie, true);
+      verificationMethod = 'id_token';
+      log.info('ID token verified successfully', { uid: decodedClaims.uid, role: decodedClaims.role });
+    } catch (idTokenError) {
+      log.debug('ID token verification failed, trying session cookie');
       
-      // Log the claims for debugging
-      log.info('Session cookie verified successfully', { uid: decodedClaims.uid, role: decodedClaims.role });
-      
-      // If role claim is missing, try to fetch from user record
-      if (!decodedClaims.role) {
+      try {
+        decodedClaims = await services.auth.verifySessionCookie(sessionCookie, true);
+        verificationMethod = 'session_cookie';
+        log.info('Session cookie verified successfully', { uid: decodedClaims.uid, role: decodedClaims.role });
+      } catch (sessionError) {
+        log.warn('Both ID token and session cookie verification failed', {
+          idTokenError: idTokenError instanceof Error ? idTokenError.message : String(idTokenError),
+          sessionError: sessionError instanceof Error ? sessionError.message : String(sessionError)
+        });
+        throw new Error('Invalid token: Failed both ID token and session cookie verification');
+      }
+    }
+    
+    // If role claim is missing, try to fetch from user record
+    if (!decodedClaims.role) {
         log.info('No role claim found in token, fetching from user record');
         try {
           const userRecord = await services.auth.getUser(decodedClaims.uid);
@@ -104,68 +121,6 @@ export async function validateSession(sessionCookie: string): Promise<admin.auth
       }
       
       return decodedClaims;
-    } catch (sessionError) {
-      console.error('[validateSession] Session cookie verification failed:', sessionError);
-      
-      // Try verifying as ID token instead as a fallback
-      try {
-        console.log('[validateSession] Attempting to verify as ID token instead');
-        const decodedToken = await services.auth.verifyIdToken(sessionCookie);
-        
-        // Log the claims for debugging
-        console.log('[validateSession] ID token verified successfully');
-        console.log('[validateSession] User ID:', decodedToken.uid);
-        console.log('[validateSession] Role claim:', decodedToken.role);
-        
-        // If role claim is missing, try to fetch from user record
-        if (!decodedToken.role) {
-          console.log('[validateSession] No role claim found in token, fetching from user record');
-          try {
-            const userRecord = await services.auth.getUser(decodedToken.uid);
-            if (userRecord.customClaims?.role) {
-              console.log('[validateSession] Found role in user record:', userRecord.customClaims.role);
-              decodedToken.role = userRecord.customClaims.role;
-            } else {
-              console.log('[validateSession] No role found in user record custom claims');
-              
-              // Try to get role from Firestore as a last resort
-              try {
-                const userDoc = await services.db.collection('users').doc(decodedToken.uid).get();
-                if (userDoc.exists && userDoc.data()?.role) {
-                  console.log('[validateSession] Found role in Firestore:', userDoc.data()?.role);
-                  decodedToken.role = userDoc.data()?.role;
-                } else {
-                  console.log('[validateSession] No role found in Firestore');
-                }
-              } catch (firestoreError) {
-                console.error('[validateSession] Error fetching role from Firestore:', firestoreError);
-              }
-            }
-          } catch (userError) {
-            console.error('[validateSession] Error fetching user record:', userError);
-          }
-        }
-        
-        // Normalize role for consistent comparison
-        if (decodedToken.role) {
-          const normalizedRole = normalizeRole(decodedToken.role as string);
-          
-          // Map normalized role back to enum value if it matches
-          if (normalizedRole === normalizeRole(UserRole.RECRUITER)) {
-            decodedToken.role = UserRole.RECRUITER;
-            console.log('[validateSession] Normalized recruiter role to:', decodedToken.role);
-          } else if (normalizedRole === normalizeRole(UserRole.CANDIDATE)) {
-            decodedToken.role = UserRole.CANDIDATE;
-            console.log('[validateSession] Normalized candidate role to:', decodedToken.role);
-          }
-        }
-        
-        return decodedToken;
-      } catch (idTokenError) {
-        console.error('[validateSession] ID token verification also failed:', idTokenError);
-        throw new Error('Invalid session: Failed both session cookie and ID token verification');
-      }
-    }
   } catch (error) {
     log.error('Error validating session:', error);
     throw new Error('Invalid session');

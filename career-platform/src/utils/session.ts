@@ -29,7 +29,7 @@ export class SessionManager {
     const cookieOptions = {
       maxAge: options.maxAge || this.DEFAULT_MAX_AGE,
       path: options.path || '/',
-      httpOnly: options.httpOnly ?? true,
+      httpOnly: options.httpOnly ?? false, // Set to false for client-side access
       secure: options.secure ?? (isProduction && !isLocalhost),
       sameSite: options.sameSite || (isProduction && !isLocalhost ? 'strict' : 'lax')
     };
@@ -45,14 +45,14 @@ export class SessionManager {
 
     try {
       if (typeof window !== 'undefined') {
-        // Client-side
+        // Client-side: Store ID token directly (Firebase Admin handles both)
         document.cookie = cookieString;
+        console.log('[SessionManager] Set ID token as session cookie');
       } else if (response) {
         // Server-side
         response.cookies.set(this.SESSION_COOKIE_NAME, token, cookieOptions);
       }
       
-      console.log(`[SessionManager] Set session cookie: ${cookieString}`);
       return true;
     } catch (error) {
       console.error('[SessionManager] Error setting cookie:', error);
