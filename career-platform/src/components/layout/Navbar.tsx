@@ -38,7 +38,6 @@ export default function Navbar() {
     { href: '/protected/candidate/dashboard', label: 'Dashboard' },
     { href: '/protected/candidate/profile', label: 'Profile' },
     { href: '/protected/candidate/roadmap', label: 'Roadmap' },
-    { href: '/protected/candidate/jobs', label: 'Jobs' },
   ];
 
   const handleLogout = async () => {

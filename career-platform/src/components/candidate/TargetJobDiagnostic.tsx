@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { CandidateProfile } from '@/types/user';
 import { analyzeCareerPath } from '@/services/openai';
+import linkedInJobsService, { JobMatchingResult, LinkedInJob } from '@/services/linkedinJobsService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,13 +50,15 @@ interface DiagnosticResult {
 }
 
 export default function TargetJobDiagnostic() {
-  const { userProfile } = useAuth();
+  const { userProfile, currentUser } = useAuth();
   const candidateProfile = userProfile as CandidateProfile | null;
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<DiagnosticResult | null>(null);
+  const [linkedInJobs, setLinkedInJobs] = useState<JobMatchingResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<'intro' | 'preferences' | 'analyzing' | 'results'>('intro');
+  const [useRealJobs, setUseRealJobs] = useState(true);
   
   // User preferences for job search
   const [preferences, setPreferences] = useState({
@@ -90,13 +93,78 @@ export default function TargetJobDiagnostic() {
     setStep('analyzing');
 
     try {
-      // Prepare the analysis prompt
-      const prompt = `Based on the following resume analysis and job preferences, provide detailed target job recommendations:
+      // Try to fetch real LinkedIn jobs first if API is configured
+      if (useRealJobs && currentUser) {
+        try {
+          await fetchLinkedInJobs();
+        } catch (linkedInError) {
+          console.warn('LinkedIn Jobs API failed, falling back to AI analysis:', linkedInError);
+          setUseRealJobs(false);
+        }
+      }
+
+      // If we don't have real jobs or API failed, use AI analysis as fallback
+      if (!useRealJobs || linkedInJobs.length === 0) {
+        await runAIAnalysis();
+      } else {
+        // Convert LinkedIn jobs to diagnostic results format
+        const diagnosticResults = convertLinkedInJobsToResults(linkedInJobs);
+        setResults(diagnosticResults);
+      }
+      
+      setStep('results');
+    } catch (err) {
+      console.error('Diagnostic error:', err);
+      setError('Failed to generate job recommendations. Please try again.');
+      setStep('intro');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLinkedInJobs = async () => {
+    if (!currentUser || !candidateProfile) return;
+
+    // Build user profile for LinkedIn job matching
+    const userProfile = {
+      skills: candidateProfile.resumeAnalysis?.skills || [],
+      experience: candidateProfile.resumeAnalysis?.experience || [],
+      targetRoles: candidateProfile.targetCompanies?.map(tc => tc.position).filter(Boolean) || ['Software Developer'],
+      targetCompanies: candidateProfile.targetCompanies?.map(tc => tc.name) || [],
+      preferences: {
+        remote: preferences.workType === 'remote',
+        locations: preferences.workType === 'onsite' ? ['United States'] : [],
+        salaryMin: undefined,
+      },
+    };
+
+    // Build search keywords from target roles and skills
+    const keywords = userProfile.targetRoles[0] || userProfile.skills.slice(0, 3).join(' ');
+
+    const response = await fetch('/api/jobs/recommendations', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${await currentUser.getIdToken()}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch LinkedIn jobs');
+    }
+
+    const data = await response.json();
+    setLinkedInJobs(data.data.recommendations || []);
+  };
+
+  const runAIAnalysis = async () => {
+    // Original AI-based analysis as fallback
+    const prompt = `Based on the following resume analysis and job preferences, provide detailed target job recommendations:
 
 Resume Analysis:
-- Skills: ${candidateProfile.resumeAnalysis.skills.join(', ')}
-- Strengths: ${candidateProfile.resumeAnalysis.strengths.join('. ')}
-- Experience: ${candidateProfile.resumeAnalysis.experience.join(', ') || 'Not specified'}
+- Skills: ${candidateProfile!.resumeAnalysis!.skills.join(', ')}
+- Strengths: ${candidateProfile!.resumeAnalysis!.strengths.join('. ')}
+- Experience: ${candidateProfile!.resumeAnalysis!.experience.join(', ') || 'Not specified'}
 
 Job Preferences:
 - Work Type: ${preferences.workType}
@@ -113,20 +181,45 @@ Please provide:
 
 Format the response as a structured JSON object.`;
 
-      // Call the OpenAI service
-      const response = await analyzeCareerPath(prompt);
-      
-      // Parse and validate the response
-      const parsedResults = parseAIResponse(response);
-      setResults(parsedResults);
-      setStep('results');
-    } catch (err) {
-      console.error('Diagnostic error:', err);
-      setError('Failed to generate job recommendations. Please try again.');
-      setStep('intro');
-    } finally {
-      setLoading(false);
-    }
+    const response = await analyzeCareerPath(prompt);
+    const parsedResults = parseAIResponse(response);
+    setResults(parsedResults);
+  };
+
+  const convertLinkedInJobsToResults = (jobs: JobMatchingResult[]): DiagnosticResult => {
+    const recommendations: JobRecommendation[] = jobs.slice(0, 5).map(jobResult => ({
+      title: jobResult.job.title,
+      matchScore: jobResult.matchScore,
+      description: jobResult.job.description.substring(0, 100) + '...',
+      requiredSkills: jobResult.job.skills || [],
+      matchingSkills: jobResult.skillsMatch.matching,
+      gapSkills: jobResult.skillsMatch.missing,
+      salaryRange: jobResult.job.salaryRange 
+        ? `$${jobResult.job.salaryRange.min.toLocaleString()} - $${jobResult.job.salaryRange.max.toLocaleString()}`
+        : 'Not specified',
+      seniorityLevel: jobResult.job.experienceLevel.replace('_', ' '),
+      growthPotential: jobResult.matchScore > 80 ? 'High' : jobResult.matchScore > 60 ? 'Medium' : 'Low'
+    }));
+
+    return {
+      recommendations,
+      careerPath: {
+        current: candidateProfile?.resumeAnalysis?.recommendations?.[0] || 'Current Role',
+        shortTerm: Array.from(new Set(jobs.slice(0, 3).map(j => j.job.title))),
+        longTerm: ['Senior ' + (jobs[0]?.job.title || 'Developer'), 'Technical Lead', 'Engineering Manager']
+      },
+      insights: {
+        strengths: candidateProfile?.resumeAnalysis?.strengths || [],
+        opportunities: Array.from(
+          new Set(jobs.flatMap(j => j.skillsMatch.missing).slice(0, 5))
+        ),
+        industryTrends: [
+          `${jobs.length} active opportunities found`,
+          `Average compatibility: ${Math.round(jobs.reduce((sum, j) => sum + j.matchScore, 0) / jobs.length)}%`,
+          `Top hiring companies: ${Array.from(new Set(jobs.slice(0, 3).map(j => j.job.company.name))).join(', ')}`
+        ]
+      }
+    };
   };
 
   const parseAIResponse = (response: any): DiagnosticResult => {
@@ -334,6 +427,42 @@ Format the response as a structured JSON object.`;
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Tell us your preferences</h3>
                   
+                  {/* Data Source Selection */}
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Job Data Source
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          checked={useRealJobs}
+                          onChange={() => setUseRealJobs(true)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">Real LinkedIn Jobs (Live Data)</span>
+                        <Badge variant="secondary" className="ml-2 text-xs bg-green-100 text-green-800">
+                          Recommended
+                        </Badge>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          checked={!useRealJobs}
+                          onChange={() => setUseRealJobs(false)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">AI Analysis (Simulated)</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {useRealJobs 
+                        ? 'Search current LinkedIn job postings for actual opportunities'
+                        : 'Generate career recommendations using AI analysis'
+                      }
+                    </p>
+                  </div>
+                  
                   {/* Work Type */}
                   <div className="mb-6">
                     <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -467,8 +596,16 @@ Format the response as a structured JSON object.`;
                 <RefreshCw className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-spin" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Analyzing Your Profile</h3>
                 <p className="text-sm text-gray-600">
-                  Matching your skills with thousands of job opportunities...
+                  {useRealJobs 
+                    ? 'Searching live LinkedIn job postings for matches...'
+                    : 'Generating AI-powered job recommendations...'
+                  }
                 </p>
+                {linkedInJobs.length > 0 && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Found {linkedInJobs.length} real job opportunities!
+                  </p>
+                )}
               </div>
             )}
 
@@ -477,21 +614,49 @@ Format the response as a structured JSON object.`;
               <div className="space-y-6">
                 {/* Job Recommendations */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Recommended Target Jobs</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Recommended Target Jobs</h3>
+                    {linkedInJobs.length > 0 && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        Live Jobs
+                      </Badge>
+                    )}
+                  </div>
                   <div className="space-y-4">
                     {results.recommendations.map((job, index) => (
                       <Card key={index} className="border-gray-200">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">
-                            <div>
+                            <div className="flex-1">
                               <h4 className="font-medium text-gray-900">{job.title}</h4>
                               <p className="text-sm text-gray-600 mt-1">{job.description}</p>
+                              {linkedInJobs.length > 0 && linkedInJobs[index] && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Building className="h-3 w-3 text-gray-500" />
+                                  <span className="text-xs text-gray-500">{linkedInJobs[index].job.company.name}</span>
+                                  <MapPin className="h-3 w-3 text-gray-500 ml-2" />
+                                  <span className="text-xs text-gray-500">{linkedInJobs[index].job.location}</span>
+                                </div>
+                              )}
                             </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-semibold text-gray-900">
-                                {job.matchScore}%
+                            <div className="text-right flex flex-col gap-2">
+                              <div>
+                                <div className="text-2xl font-semibold text-gray-900">
+                                  {job.matchScore}%
+                                </div>
+                                <p className="text-xs text-gray-500">match</p>
                               </div>
-                              <p className="text-xs text-gray-500">match</p>
+                              {linkedInJobs.length > 0 && linkedInJobs[index]?.job.applyUrl && linkedInJobs[index].job.applyUrl !== '#' && (
+                                <a
+                                  href={linkedInJobs[index].job.applyUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1 bg-gray-900 text-white text-xs rounded hover:bg-gray-800 transition-colors"
+                                >
+                                  Apply Now
+                                </a>
+                              )}
                             </div>
                           </div>
 
