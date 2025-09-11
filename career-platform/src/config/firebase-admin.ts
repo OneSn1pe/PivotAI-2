@@ -1,38 +1,62 @@
 import * as admin from 'firebase-admin';
+import logger from '@/utils/logger';
+
+// Create namespaced logger
+const log = logger.createNamespace('FirebaseAdmin');
 
 // Check if we're in a browser environment (client-side)
 const isBrowser = typeof window !== 'undefined';
 
-// Singleton pattern for Firebase Admin
+// Enhanced interface for Firebase Admin App
 interface FirebaseAdminApp {
   app: admin.app.App;
   auth: admin.auth.Auth;
   db: admin.firestore.Firestore;
 }
 
-// Don't attempt to initialize Firebase Admin SDK in browser
+// Singleton state
 let firebaseAdmin: admin.app.App | undefined;
 let adminAuth: admin.auth.Auth | null = null;
 let adminDb: admin.firestore.Firestore | null = null;
+let initializationError: Error | null = null;
+let isInitializing = false;
 
-// Singleton initialization function
-function getFirebaseAdminApp(): FirebaseAdminApp | null {
+// Enhanced initialization function with proper error handling
+async function getFirebaseAdminApp(): Promise<FirebaseAdminApp | null> {
   // Only initialize on server-side
-  if (isBrowser) return null;
+  if (isBrowser) {
+    log.warn('Firebase Admin SDK cannot be initialized in browser environment');
+    return null;
+  }
+
+  // Return cached error if initialization previously failed
+  if (initializationError) {
+    log.error('Firebase Admin SDK initialization previously failed:', initializationError.message);
+    return null;
+  }
   
   try {
     // If already initialized, return existing instance
     if (firebaseAdmin && adminAuth && adminDb) {
       return { app: firebaseAdmin, auth: adminAuth, db: adminDb };
     }
+
+    // Prevent concurrent initialization
+    if (isInitializing) {
+      log.warn('Firebase Admin SDK initialization already in progress');
+      return null;
+    }
+
+    isInitializing = true;
     
     // Try to get an existing app
     try {
       firebaseAdmin = admin.app();
+      log.info('Using existing Firebase Admin app');
     } catch {
       // Initialize Firebase Admin SDK only if not already initialized
       if (!admin.apps.length) {
-        console.log('[Firebase Admin] Initializing Firebase Admin SDK');
+        log.info('Initializing Firebase Admin SDK');
         
         try {
           // Try to load service account from file first
@@ -45,44 +69,55 @@ function getFirebaseAdminApp(): FirebaseAdminApp | null {
               projectId: serviceAccount.project_id
             });
             
-            console.log('[Firebase Admin] Initialized with service account file');
+            log.info('Firebase Admin initialized with service account file');
           } catch (fileError) {
-            console.log('[Firebase Admin] Service account file not found, trying environment variables');
+            log.info('Service account file not found, trying environment variables');
             
             // Use service account credentials if available
             if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-              // If the service account is provided as a JSON string (e.g., in environment variables)
-              const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-              
-              firebaseAdmin = admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount)
-              });
+              try {
+                const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+                firebaseAdmin = admin.initializeApp({
+                  credential: admin.credential.cert(serviceAccount)
+                });
+                log.info('Firebase Admin initialized with service account from environment');
+              } catch (parseError) {
+                throw new Error(`Invalid FIREBASE_SERVICE_ACCOUNT_KEY JSON: ${parseError}`);
+              }
             } else if (
               process.env.FIREBASE_PROJECT_ID && 
               process.env.FIREBASE_CLIENT_EMAIL && 
               process.env.FIREBASE_PRIVATE_KEY
             ) {
-            // Use individual environment variables
-            firebaseAdmin = admin.initializeApp({
-              credential: admin.credential.cert({
-                projectId: process.env.FIREBASE_PROJECT_ID,
-                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // Replace escaped newlines in the private key
-                privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-              }),
-            });
+              // Use individual environment variables
+              firebaseAdmin = admin.initializeApp({
+                credential: admin.credential.cert({
+                  projectId: process.env.FIREBASE_PROJECT_ID,
+                  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                  // Replace escaped newlines in the private key
+                  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+                }),
+              });
+              log.info('Firebase Admin initialized with individual environment variables');
             } else {
-              console.warn('[Firebase Admin] Missing required environment variables for initialization');
-              return null;
+              const missingVars = [];
+              if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+                if (!process.env.FIREBASE_PROJECT_ID) missingVars.push('FIREBASE_PROJECT_ID');
+                if (!process.env.FIREBASE_CLIENT_EMAIL) missingVars.push('FIREBASE_CLIENT_EMAIL');
+                if (!process.env.FIREBASE_PRIVATE_KEY) missingVars.push('FIREBASE_PRIVATE_KEY');
+              }
+              const errorMsg = `Missing Firebase Admin environment variables: ${missingVars.join(', ')}`;
+              throw new Error(errorMsg);
             }
           }
           
           if (firebaseAdmin) {
-            console.log('[Firebase Admin] SDK initialized successfully');
+            log.info('Firebase Admin SDK initialized successfully');
           }
         } catch (error) {
-          console.error('[Firebase Admin] SDK initialization error:', error);
-          return null;
+          initializationError = error instanceof Error ? error : new Error(String(error));
+          log.error('Firebase Admin SDK initialization error:', initializationError);
+          throw initializationError;
         }
       } else {
         firebaseAdmin = admin.app();
@@ -94,31 +129,46 @@ function getFirebaseAdminApp(): FirebaseAdminApp | null {
       try {
         adminAuth = firebaseAdmin.auth();
         adminDb = firebaseAdmin.firestore();
+        
+        // Test the services to ensure they work
+        await adminAuth.listUsers(1); // Test auth service
+        log.info('Firebase Admin services verified successfully');
+        
         return { app: firebaseAdmin, auth: adminAuth, db: adminDb };
       } catch (error) {
-        console.error('[Firebase Admin] Error initializing services:', error);
-        return null;
+        initializationError = error instanceof Error ? error : new Error(String(error));
+        log.error('Error initializing Firebase Admin services:', initializationError);
+        
+        // Clean up on failure
+        adminAuth = null;
+        adminDb = null;
+        throw initializationError;
       }
     }
     
-    return null;
+    throw new Error('Firebase Admin app not initialized');
   } catch (error) {
-    console.error('[Firebase Admin] Unexpected error during initialization:', error);
-    return null;
+    initializationError = error instanceof Error ? error : new Error(String(error));
+    log.error('Unexpected error during Firebase Admin initialization:', initializationError);
+    throw initializationError;
+  } finally {
+    isInitializing = false;
   }
 }
 
-// Initialize admin services
-const adminServices = isBrowser ? null : getFirebaseAdminApp();
-if (!isBrowser && adminServices) {
-  adminAuth = adminServices.auth;
-  adminDb = adminServices.db;
+// Safe wrapper for getting admin services
+export async function getAdminServices(): Promise<FirebaseAdminApp | null> {
+  if (isBrowser) return null;
+  return await getFirebaseAdminApp();
 }
+
+// Legacy sync exports for backward compatibility (may return null if not initialized)
+export { adminAuth, adminDb };
 
 // Function to set custom claims for a user
 export async function setUserRoleClaim(uid: string, role: string): Promise<void> {
   // Get admin auth on demand to ensure it's initialized
-  const services = getFirebaseAdminApp();
+  const services = await getFirebaseAdminApp();
   if (!services || !services.auth) {
     throw new Error('Firebase Admin Auth not initialized');
   }
@@ -145,7 +195,7 @@ export async function setUserRoleClaim(uid: string, role: string): Promise<void>
 // Function to get a user's custom claims
 export async function getUserClaims(uid: string): Promise<any> {
   // Get admin auth on demand to ensure it's initialized
-  const services = getFirebaseAdminApp();
+  const services = await getFirebaseAdminApp();
   if (!services || !services.auth) {
     throw new Error('Firebase Admin Auth not initialized');
   }
@@ -162,7 +212,7 @@ export async function getUserClaims(uid: string): Promise<any> {
 // Function to verify and refresh a Firebase ID token
 export async function verifyToken(token: string): Promise<admin.auth.DecodedIdToken> {
   // Get admin auth on demand to ensure it's initialized
-  const services = getFirebaseAdminApp();
+  const services = await getFirebaseAdminApp();
   if (!services || !services.auth) {
     throw new Error('Firebase Admin Auth not initialized');
   }
@@ -175,5 +225,5 @@ export async function verifyToken(token: string): Promise<admin.auth.DecodedIdTo
   }
 }
 
-// Export the admin SDK and Firestore database
-export { firebaseAdmin, adminAuth, adminDb, getFirebaseAdminApp }; 
+// Export the admin SDK and functions
+export { firebaseAdmin, getFirebaseAdminApp }; 

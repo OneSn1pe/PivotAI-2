@@ -18,7 +18,8 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { User, UserRole } from '@/types/user';
 import { useRouter } from 'next/navigation';
-import { isDevelopmentMode, setCookie, deleteCookie, logEnvironmentInfo } from '@/utils/environment';
+import { isDevelopmentMode, logEnvironmentInfo } from '@/utils/environment';
+import { SessionManager } from '@/utils/session';
 import logger from '@/utils/logger';
 
 // Create a namespaced logger for auth
@@ -144,9 +145,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const token = await currentUser.getIdToken(true);
           log.info('Token refreshed with new claims');
           
-          // Update the session cookie with the new token using our utility
-          if (typeof document !== 'undefined') {
-            setCookie('session', token, 3600);
+          // Update the session cookie with the new token using SessionManager
+          if (SessionManager.setSessionCookie(token)) {
             log.info('Updated session cookie with fresh token');
           }
         } catch (refreshError) {
@@ -194,9 +194,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   // Get the token without forcing refresh
                   const token = await user.getIdToken(false);
                   
-                  // Set the cookie using our utility function
-                  setCookie('session', token, 3600);
-                  log.info('Set session cookie');
+                  // Set the cookie using SessionManager
+                  if (SessionManager.setSessionCookie(token)) {
+                    log.info('Set session cookie');
+                  }
                 } catch (tokenErr) {
                   log.error('Error getting token:', tokenErr);
                 }
@@ -215,9 +216,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         } else {
           setUserProfile(null);
-          // Clear the session cookie using our utility
-          deleteCookie('session');
-          log.info('Cleared session cookie');
+          // Clear the session cookie using SessionManager
+          if (SessionManager.clearSessionCookie()) {
+            log.info('Cleared session cookie');
+          }
         }
       } catch (error) {
         log.error('Error in auth state change:', error);
@@ -252,9 +254,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Set custom claims
       await setCustomClaims(user.uid);
       
-      // Get and set the token
+      // Get and set the token using SessionManager
       const token = await user.getIdToken(true); // Force refresh to get updated claims
-      document.cookie = `session=${token}; path=/; max-age=3600; secure; samesite=strict`;
+      SessionManager.setSessionCookie(token);
       
       router.push('/protected/candidate/dashboard');
     } catch (error) {
@@ -270,9 +272,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Set custom claims
       await setCustomClaims(user.uid);
       
-      // Get and set the token
+      // Get and set the token using SessionManager
       const token = await user.getIdToken(true); // Force refresh to get updated claims
-      setCookie('session', token, 3600);
+      SessionManager.setSessionCookie(token);
       
       // Update last login time
       await setDoc(doc(db, 'users', user.uid), 
@@ -320,9 +322,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Set custom claims
       await setCustomClaims(user.uid);
       
-      // Get and set the token
+      // Get and set the token using SessionManager
       const token = await user.getIdToken(true); // Force refresh to get updated claims
-      setCookie('session', token, 3600);
+      SessionManager.setSessionCookie(token);
       
       // Always redirect to candidate dashboard
       router.push('/protected/candidate/dashboard');
@@ -438,8 +440,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUserProfile(null);
       setCurrentUser(null);
       
-      // Clear session cookies
-      deleteCookie('session');
+      // Clear session cookies using SessionManager
+      SessionManager.clearSessionCookie();
       
       // Perform Firebase signout
       await signOut(auth);

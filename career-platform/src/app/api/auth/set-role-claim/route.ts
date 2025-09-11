@@ -1,58 +1,26 @@
 import { NextResponse } from 'next/server';
-import * as admin from 'firebase-admin';
+import { getAdminServices } from '@/config/firebase-admin';
+import logger from '@/utils/logger';
 
-// Initialize Firebase Admin SDK if not already initialized
-let firebaseAdmin: admin.app.App | undefined;
-let adminAuth: admin.auth.Auth | null = null;
-let adminDb: admin.firestore.Firestore | null = null;
-
-try {
-  // Try to get an existing app
-  firebaseAdmin = admin.app();
-  adminAuth = firebaseAdmin.auth();
-  adminDb = firebaseAdmin.firestore();
-} catch {
-  // Initialize a new app if none exists
-  try {
-    // Use service account credentials if available
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      // If the service account is provided as a JSON string
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      
-      firebaseAdmin = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-    } else {
-      // Otherwise use the default application credentials
-      firebaseAdmin = admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          // Replace escaped newlines in the private key
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-        }),
-      });
-    }
-    
-    adminAuth = firebaseAdmin.auth();
-    adminDb = firebaseAdmin.firestore();
-    console.log('[Firebase Admin] SDK initialized successfully in set-role-claim API');
-  } catch (error) {
-    console.error('[Firebase Admin] SDK initialization error in set-role-claim API:', error);
-  }
-}
+// Create namespaced logger
+const log = logger.createNamespace('SetRoleClaimAPI');
 
 // API to set role claim for a user
 export async function POST(request: Request) {
   try {
-    // Ensure Firebase services are initialized
-    if (!adminAuth || !adminDb) {
-      console.error('Firebase services not initialized');
+    log.info('Setting role claim request received');
+    
+    // Get Firebase Admin services
+    const services = await getAdminServices();
+    if (!services) {
+      log.error('Firebase Admin services not available');
       return NextResponse.json(
-        { error: 'Server configuration error' },
+        { error: 'Server configuration error - Firebase Admin not initialized' },
         { status: 500 }
       );
     }
+
+    const { auth: adminAuth, db: adminDb } = services;
 
     const { uid, role } = await request.json();
     
@@ -122,14 +90,14 @@ export async function POST(request: Request) {
         claims: { ...currentClaims, role }
       });
     } catch (error: any) {
-      console.error('Error setting role claim:', error);
+      log.error('Error setting role claim:', error);
       return NextResponse.json(
         { error: error.message || 'Failed to set role claim' },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error('Error in set-role-claim API:', error);
+    log.error('Error in set-role-claim API:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to process request' },
       { status: 500 }

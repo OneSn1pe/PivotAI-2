@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { validateSession } from '@/utils/server-auth';
-import { adminAuth } from '@/config/firebase-admin';
+import { validateTokenWithDetails, extractTokenFromRequest } from '@/utils/server-auth';
+import { getAdminServices } from '@/config/firebase-admin';
+import logger from '@/utils/logger';
+
+// Create namespaced logger
+const log = logger.createNamespace('VerifyTokenAPI');
 
 // Mark as Node.js runtime to use Firebase Admin
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const start = Date.now();
-  const sessionCookie = cookies().get('session')?.value;
+  log.info('Token verification request received');
+  
+  // Extract token from multiple sources
+  const sessionCookie = cookies().get('session')?.value || extractTokenFromRequest(request);
   
   // Response structure
   const response: {
@@ -44,65 +51,39 @@ export async function GET(request: NextRequest) {
   
   if (!sessionCookie) {
     response.error = 'No session cookie found';
+    log.warn('Token verification failed: no token provided');
     return NextResponse.json(response, { status: 401 });
   }
   
   try {
-    // First try validateSession (uses verifySessionCookie)
-    try {
-      console.log('[verify-token] Attempting to validate with verifySessionCookie');
-      response.validationMethod = 'verifySessionCookie';
-      const sessionStart = Date.now();
-      
-      const decodedClaims = await validateSession(sessionCookie);
-      
-      response.validationTime = Date.now() - sessionStart;
-      response.validationSuccess = true;
+    // Use enhanced token validation
+    log.debug('Starting token validation');
+    response.validationMethod = 'validateTokenWithDetails';
+    const sessionStart = Date.now();
+    
+    const validationResult = await validateTokenWithDetails(sessionCookie);
+    
+    response.validationTime = Date.now() - sessionStart;
+    response.validationSuccess = validationResult.valid;
+    
+    if (validationResult.valid && validationResult.decodedToken) {
       response.decodedToken = {
-        uid: decodedClaims.uid,
-        email: decodedClaims.email,
-        role: decodedClaims.role,
-        emailVerified: decodedClaims.email_verified,
-        issuer: decodedClaims.iss,
-        subject: decodedClaims.sub,
-        audience: decodedClaims.aud,
-        issuedAt: new Date(decodedClaims.iat * 1000).toISOString(),
-        expiration: new Date(decodedClaims.exp * 1000).toISOString(),
-        authTime: new Date(decodedClaims.auth_time * 1000).toISOString(),
+        uid: validationResult.decodedToken.uid,
+        email: validationResult.decodedToken.email,
+        role: validationResult.role,
+        emailVerified: validationResult.decodedToken.email_verified,
+        issuer: validationResult.decodedToken.iss,
+        subject: validationResult.decodedToken.sub,
+        audience: validationResult.decodedToken.aud,
+        issuedAt: new Date(validationResult.decodedToken.iat * 1000).toISOString(),
+        expiration: new Date(validationResult.decodedToken.exp * 1000).toISOString(),
+        authTime: new Date(validationResult.decodedToken.auth_time * 1000).toISOString(),
       };
-    } catch (sessionError) {
-      console.log('[verify-token] Session cookie validation failed, trying ID token verification');
-      
-      // If session validation fails, try verifyIdToken as fallback
-      try {
-        response.validationMethod = 'verifyIdToken';
-        const idTokenStart = Date.now();
-        
-        if (!adminAuth) {
-          throw new Error('Firebase Admin Auth not initialized');
-        }
-        
-        const decodedToken = await adminAuth.verifyIdToken(sessionCookie);
-        
-        response.validationTime = Date.now() - idTokenStart;
-        response.validationSuccess = true;
-        response.decodedToken = {
-          uid: decodedToken.uid,
-          email: decodedToken.email,
-          role: decodedToken.role,
-          emailVerified: decodedToken.email_verified,
-          issuer: decodedToken.iss,
-          subject: decodedToken.sub,
-          audience: decodedToken.aud,
-          issuedAt: new Date(decodedToken.iat * 1000).toISOString(),
-          expiration: new Date(decodedToken.exp * 1000).toISOString(),
-          authTime: new Date(decodedToken.auth_time * 1000).toISOString(),
-        };
-      } catch (idTokenError) {
-        // Both methods failed
-        response.error = `Session validation failed: ${sessionError}. ID token validation failed: ${idTokenError}`;
-        return NextResponse.json(response, { status: 401 });
-      }
+      log.info('Token validation successful', { uid: validationResult.uid, role: validationResult.role });
+    } else {
+      response.error = validationResult.error || 'Token validation failed';
+      log.warn('Token validation failed', { reason: validationResult.reason, error: validationResult.error });
+      return NextResponse.json(response, { status: 401 });
     }
     
     // Add total processing time
@@ -112,6 +93,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     response.error = String(error);
     response.totalTime = Date.now() - start;
+    log.error('Unexpected error during token verification:', error);
     return NextResponse.json(response, { status: 500 });
   }
 } 

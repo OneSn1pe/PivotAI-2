@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { simpleTokenCheck } from '@/utils/client-auth';
+import type { SimpleTokenResult } from '@/utils/client-auth';
 
 // Check if we're in development mode
 const isDevelopment = process.env.NEXT_PUBLIC_DEVELOPMENT_MODE === 'true';
@@ -24,9 +25,14 @@ export async function middleware(request: NextRequest) {
   // Get the token from the session
   const token = request.cookies.get('session')?.value;
   
-  // If we're in development mode or running locally, we can bypass some auth checks
-  if ((isDevelopment || isLocalhost) && path.includes('/protected')) {
-    // For localhost development, we'll still pass through all protected routes
+  // Restrict development bypasses - only for localhost and still require token
+  if (isDevelopment && isLocalhost && path.includes('/protected')) {
+    // Even in development, require a token to be present
+    if (!token) {
+      console.log('[Middleware] Development mode: redirecting to login due to missing token');
+      return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
+    console.log('[Middleware] Development mode on localhost: allowing access but token is present');
     return NextResponse.next();
   }
   
@@ -68,29 +74,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // Handle candidate detail paths
-  if (path.match(/\/protected\/(recruiter|candidate)\/candidate\/[^\/]+$/)) {
+  // Handle all protected paths with proper token validation
+  if (path.startsWith('/protected')) {
     if (token) {
       try {
-        // Use simple token check instead of full verification
-        const checkResult = await simpleTokenCheck(token);
+        // Use improved token validation
+        const checkResult: SimpleTokenResult = await simpleTokenCheck(token);
         
         if (checkResult.valid) {
+          console.log(`[Middleware] Token validated for protected path: ${path}`);
           return NextResponse.next();
         } else {
-          // Special bypass for production to help with short token issues
-          // This is a temporary fix until the proper session cookie handling is implemented
-          if (isProduction && token.length > 20) {
-            return NextResponse.next();
-          }
+          console.log(`[Middleware] Token validation failed: ${checkResult.reason}`);
           
-          // If token check fails, redirect to login
+          // Remove the overly permissive production bypass
+          // All invalid tokens should redirect to login
           return NextResponse.redirect(new URL('/auth/login', request.url));
         }
       } catch (error) {
-        // If token verification fails, redirect to login
+        console.error('[Middleware] Token validation error:', error);
         return NextResponse.redirect(new URL('/auth/login', request.url));
       }
+    } else {
+      console.log('[Middleware] No token found for protected path, redirecting to login');
+      return NextResponse.redirect(new URL('/auth/login', request.url));
     }
   }
 

@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/config/firebase';
 import { UserRole } from '@/types/user';
 import { useAuth } from '@/contexts/AuthContext';
+import { SessionManager } from '@/utils/session';
 import { AnimatedInput } from '@/components/ui/animated-form';
 
 export default function LoginForm() {
@@ -63,8 +64,9 @@ export default function LoginForm() {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         
-        // Set session cookie
-        document.cookie = `session=${userCredential.user.uid}; path=/; max-age=86400`;
+        // Set session cookie using SessionManager
+        const token = await userCredential.user.getIdToken();
+        SessionManager.setSessionCookie(token);
         
         // Redirect based on user role
         if (userData.role === UserRole.CANDIDATE) {
